@@ -1,0 +1,710 @@
+{
+  "address": "0xB8fD6A51c0F73ceBB6cFCa14bEa8FDeaa8876d7B",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "marketId",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "hasProxy",
+          "type": "bool"
+        }
+      ],
+      "name": "AddressSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "ConfigurationAdminUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "EmergencyAdminUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LendingPoolCollateralManagerUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LendingPoolConfiguratorUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LendingPoolUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LendingRateOracleUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "newMarketId",
+          "type": "string"
+        }
+      ],
+      "name": "MarketIdSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "PriceOracleUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "ProxyCreated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEmergencyAdmin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLendingPool",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLendingPoolCollateralManager",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLendingPoolConfigurator",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLendingRateOracle",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLiquidationFeeTo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMarketId",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPoolAdmin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPriceOracle",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "implementationAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setAddressAsProxy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "emergencyAdmin",
+          "type": "address"
+        }
+      ],
+      "name": "setEmergencyAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "manager",
+          "type": "address"
+        }
+      ],
+      "name": "setLendingPoolCollateralManager",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "configurator",
+          "type": "address"
+        }
+      ],
+      "name": "setLendingPoolConfiguratorImpl",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "pool",
+          "type": "address"
+        }
+      ],
+      "name": "setLendingPoolImpl",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "lendingRateOracle",
+          "type": "address"
+        }
+      ],
+      "name": "setLendingRateOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "liquidationFeeTo",
+          "type": "address"
+        }
+      ],
+      "name": "setLiquidationFeeTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "marketId",
+          "type": "string"
+        }
+      ],
+      "name": "setMarketId",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        }
+      ],
+      "name": "setPoolAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "priceOracle",
+          "type": "address"
+        }
+      ],
+      "name": "setPriceOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x30e79c5d28ccb00ac5d710c8f7cae7b048d9c0127ee7edb810010af9fbb5f98a",
+  "receipt": {
+    "to": null,
+    "from": "0xA3De96858FD006fd978eA2D55Efe6b125012f485",
+    "contractAddress": "0xB8fD6A51c0F73ceBB6cFCa14bEa8FDeaa8876d7B",
+    "transactionIndex": 1,
+    "gasUsed": "1660932",
+    "logsBloom": "0x00000000000000000000000000000000000010000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003001000000000000000000000000000000000020000000000000000000800000000000000000200000000000000400000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000010000000000000000000000000000000000000000000000000000000000000100000000000020000020000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xafd920bac237749f5b36d06bd2e0ae12a956d07185dd81c70eb3339e2b7061e6",
+    "transactionHash": "0x30e79c5d28ccb00ac5d710c8f7cae7b048d9c0127ee7edb810010af9fbb5f98a",
+    "logs": [
+      {
+        "transactionIndex": 1,
+        "blockNumber": 9905308,
+        "transactionHash": "0x30e79c5d28ccb00ac5d710c8f7cae7b048d9c0127ee7edb810010af9fbb5f98a",
+        "address": "0xB8fD6A51c0F73ceBB6cFCa14bEa8FDeaa8876d7B",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x000000000000000000000000a3de96858fd006fd978ea2d55efe6b125012f485"
+        ],
+        "data": "0x",
+        "logIndex": 0,
+        "blockHash": "0xafd920bac237749f5b36d06bd2e0ae12a956d07185dd81c70eb3339e2b7061e6"
+      },
+      {
+        "transactionIndex": 1,
+        "blockNumber": 9905308,
+        "transactionHash": "0x30e79c5d28ccb00ac5d710c8f7cae7b048d9c0127ee7edb810010af9fbb5f98a",
+        "address": "0xB8fD6A51c0F73ceBB6cFCa14bEa8FDeaa8876d7B",
+        "topics": [
+          "0x5e667c32fd847cf8bce48ab3400175cbf107bdc82b2dea62e3364909dfaee799"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000752616469616e7400000000000000000000000000000000000000000000000000",
+        "logIndex": 1,
+        "blockHash": "0xafd920bac237749f5b36d06bd2e0ae12a956d07185dd81c70eb3339e2b7061e6"
+      }
+    ],
+    "blockNumber": 9905308,
+    "cumulativeGasUsed": "1660932",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "Radiant"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "78995fe69be866012cdea8ea4c4842de",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"marketId\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"hasProxy\",\"type\":\"bool\"}],\"name\":\"AddressSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"ConfigurationAdminUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"EmergencyAdminUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"LendingPoolCollateralManagerUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"LendingPoolConfiguratorUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"LendingPoolUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"LendingRateOracleUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"newMarketId\",\"type\":\"string\"}],\"name\":\"MarketIdSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"PriceOracleUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"ProxyCreated\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"}],\"name\":\"getAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getEmergencyAdmin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingPoolCollateralManager\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingPoolConfigurator\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingRateOracle\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLiquidationFeeTo\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMarketId\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPoolAdmin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPriceOracle\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"id\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"implementationAddress\",\"type\":\"address\"}],\"name\":\"setAddressAsProxy\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"emergencyAdmin\",\"type\":\"address\"}],\"name\":\"setEmergencyAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"manager\",\"type\":\"address\"}],\"name\":\"setLendingPoolCollateralManager\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"configurator\",\"type\":\"address\"}],\"name\":\"setLendingPoolConfiguratorImpl\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"pool\",\"type\":\"address\"}],\"name\":\"setLendingPoolImpl\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"lendingRateOracle\",\"type\":\"address\"}],\"name\":\"setLendingRateOracle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"liquidationFeeTo\",\"type\":\"address\"}],\"name\":\"setLiquidationFeeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"marketId\",\"type\":\"string\"}],\"name\":\"setMarketId\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"}],\"name\":\"setPoolAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"priceOracle\",\"type\":\"address\"}],\"name\":\"setPriceOracle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Aave*\",\"details\":\"Main registry of addresses part of or connected to the protocol, including permissioned roles - Acting also as factory of proxies and admin of those, so with right to change its implementations - Owned by the Aave Governance\",\"kind\":\"dev\",\"methods\":{\"getAddress(bytes32)\":{\"details\":\"Returns an address by id\",\"returns\":{\"_0\":\"The address\"}},\"getLendingPool()\":{\"details\":\"Returns the address of the LendingPool proxy\",\"returns\":{\"_0\":\"The LendingPool proxy address*\"}},\"getLendingPoolCollateralManager()\":{\"details\":\"Returns the address of the LendingPoolCollateralManager. Since the manager is used through delegateCall within the LendingPool contract, the proxy contract pattern does not work properly hence the addresses are changed directly\",\"returns\":{\"_0\":\"The address of the LendingPoolCollateralManager*\"}},\"getLendingPoolConfigurator()\":{\"details\":\"Returns the address of the LendingPoolConfigurator proxy\",\"returns\":{\"_0\":\"The LendingPoolConfigurator proxy address*\"}},\"getMarketId()\":{\"details\":\"Returns the id of the Aave market to which this contracts points to\",\"returns\":{\"_0\":\"The market id*\"}},\"getPoolAdmin()\":{\"details\":\"The functions below are getters/setters of addresses that are outside the context of the protocol hence the upgradable proxy pattern is not used*\"},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"setAddress(bytes32,address)\":{\"details\":\"Sets an address for an id replacing the address saved in the addresses map IMPORTANT Use this function carefully, as it will do a hard replacement\",\"params\":{\"id\":\"The id\",\"newAddress\":\"The address to set\"}},\"setAddressAsProxy(bytes32,address)\":{\"details\":\"General function to update the implementation of a proxy registered with certain `id`. If there is no proxy registered, it will instantiate one and set as implementation the `implementationAddress` IMPORTANT Use this function carefully, only for ids that don't have an explicit setter function, in order to avoid unexpected consequences\",\"params\":{\"id\":\"The id\",\"implementationAddress\":\"The address of the new implementation\"}},\"setLendingPoolCollateralManager(address)\":{\"details\":\"Updates the address of the LendingPoolCollateralManager\",\"params\":{\"manager\":\"The new LendingPoolCollateralManager address*\"}},\"setLendingPoolConfiguratorImpl(address)\":{\"details\":\"Updates the implementation of the LendingPoolConfigurator, or creates the proxy setting the new `configurator` implementation on the first time calling it\",\"params\":{\"configurator\":\"The new LendingPoolConfigurator implementation*\"}},\"setLendingPoolImpl(address)\":{\"details\":\"Updates the implementation of the LendingPool, or creates the proxy setting the new `pool` implementation on the first time calling it\",\"params\":{\"pool\":\"The new LendingPool implementation*\"}},\"setMarketId(string)\":{\"details\":\"Allows to set the market which this LendingPoolAddressesProvider represents\",\"params\":{\"marketId\":\"The market id\"}},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"title\":\"LendingPoolAddressesProvider contract\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/protocol/configuration/LendingPoolAddressesProvider.sol\":\"LendingPoolAddressesProvider\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"contracts/dependencies/openzeppelin/contracts/Address.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @dev Collection of functions related to the address type\\n */\\nlibrary Address {\\n  /**\\n   * @dev Returns true if `account` is a contract.\\n   *\\n   * [IMPORTANT]\\n   * ====\\n   * It is unsafe to assume that an address for which this function returns\\n   * false is an externally-owned account (EOA) and not a contract.\\n   *\\n   * Among others, `isContract` will return false for the following\\n   * types of addresses:\\n   *\\n   *  - an externally-owned account\\n   *  - a contract in construction\\n   *  - an address where a contract will be created\\n   *  - an address where a contract lived, but was destroyed\\n   * ====\\n   */\\n  function isContract(address account) internal view returns (bool) {\\n    // According to EIP-1052, 0x0 is the value returned for not-yet created accounts\\n    // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned\\n    // for accounts without code, i.e. `keccak256('')`\\n    bytes32 codehash;\\n    bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;\\n    // solhint-disable-next-line no-inline-assembly\\n    assembly {\\n      codehash := extcodehash(account)\\n    }\\n    return (codehash != accountHash && codehash != 0x0);\\n  }\\n\\n  /**\\n   * @dev Replacement for Solidity's `transfer`: sends `amount` wei to\\n   * `recipient`, forwarding all available gas and reverting on errors.\\n   *\\n   * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost\\n   * of certain opcodes, possibly making contracts go over the 2300 gas limit\\n   * imposed by `transfer`, making them unable to receive funds via\\n   * `transfer`. {sendValue} removes this limitation.\\n   *\\n   * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].\\n   *\\n   * IMPORTANT: because control is transferred to `recipient`, care must be\\n   * taken to not create reentrancy vulnerabilities. Consider using\\n   * {ReentrancyGuard} or the\\n   * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].\\n   */\\n  function sendValue(address payable recipient, uint256 amount) internal {\\n    require(address(this).balance >= amount, 'Address: insufficient balance');\\n\\n    // solhint-disable-next-line avoid-low-level-calls, avoid-call-value\\n    (bool success, ) = recipient.call{value: amount}('');\\n    require(success, 'Address: unable to send value, recipient may have reverted');\\n  }\\n}\\n\",\"keccak256\":\"0x4e990f6c2c10cda8ab25f171af1776b3bc871c2802607913893468742d29e51e\",\"license\":\"agpl-3.0\"},\"contracts/dependencies/openzeppelin/contracts/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.7.6;\\n\\n/*\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with GSN meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n  function _msgSender() internal view virtual returns (address payable) {\\n    return msg.sender;\\n  }\\n\\n  function _msgData() internal view virtual returns (bytes memory) {\\n    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\\n    return msg.data;\\n  }\\n}\\n\",\"keccak256\":\"0xdf8525cd148276c372bf07a4b90630053d76c7a52649c7740df86a1a1a75cc7a\",\"license\":\"MIT\"},\"contracts/dependencies/openzeppelin/contracts/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\n\\nimport './Context.sol';\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\ncontract Ownable is Context {\\n  address private _owner;\\n\\n  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n  /**\\n   * @dev Initializes the contract setting the deployer as the initial owner.\\n   */\\n  constructor() {\\n    address msgSender = _msgSender();\\n    _owner = msgSender;\\n    emit OwnershipTransferred(address(0), msgSender);\\n  }\\n\\n  /**\\n   * @dev Returns the address of the current owner.\\n   */\\n  function owner() public view returns (address) {\\n    return _owner;\\n  }\\n\\n  /**\\n   * @dev Throws if called by any account other than the owner.\\n   */\\n  modifier onlyOwner() {\\n    require(_owner == _msgSender(), 'Ownable: caller is not the owner');\\n    _;\\n  }\\n\\n  /**\\n   * @dev Leaves the contract without owner. It will not be possible to call\\n   * `onlyOwner` functions anymore. Can only be called by the current owner.\\n   *\\n   * NOTE: Renouncing ownership will leave the contract without an owner,\\n   * thereby removing any functionality that is only available to the owner.\\n   */\\n  function renounceOwnership() public virtual onlyOwner {\\n    emit OwnershipTransferred(_owner, address(0));\\n    _owner = address(0);\\n  }\\n\\n  /**\\n   * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n   * Can only be called by the current owner.\\n   */\\n  function transferOwnership(address newOwner) public virtual onlyOwner {\\n    require(newOwner != address(0), 'Ownable: new owner is the zero address');\\n    emit OwnershipTransferred(_owner, newOwner);\\n    _owner = newOwner;\\n  }\\n}\\n\",\"keccak256\":\"0x0b0ab32430f6def166e85816b37c61c175168c96519305001b5a209cfb5856dd\",\"license\":\"MIT\"},\"contracts/dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport './Proxy.sol';\\nimport '../contracts/Address.sol';\\n\\n/**\\n * @title BaseUpgradeabilityProxy\\n * @dev This contract implements a proxy that allows to change the\\n * implementation address to which it will delegate.\\n * Such a change is called an implementation upgrade.\\n */\\ncontract BaseUpgradeabilityProxy is Proxy {\\n  /**\\n   * @dev Emitted when the implementation is upgraded.\\n   * @param implementation Address of the new implementation.\\n   */\\n  event Upgraded(address indexed implementation);\\n\\n  /**\\n   * @dev Storage slot with the address of the current implementation.\\n   * This is the keccak-256 hash of \\\"eip1967.proxy.implementation\\\" subtracted by 1, and is\\n   * validated in the constructor.\\n   */\\n  bytes32 internal constant IMPLEMENTATION_SLOT =\\n    0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;\\n\\n  /**\\n   * @dev Returns the current implementation.\\n   * @return impl Address of the current implementation\\n   */\\n  function _implementation() internal view override returns (address impl) {\\n    bytes32 slot = IMPLEMENTATION_SLOT;\\n    //solium-disable-next-line\\n    assembly {\\n      impl := sload(slot)\\n    }\\n  }\\n\\n  /**\\n   * @dev Upgrades the proxy to a new implementation.\\n   * @param newImplementation Address of the new implementation.\\n   */\\n  function _upgradeTo(address newImplementation) internal {\\n    _setImplementation(newImplementation);\\n    emit Upgraded(newImplementation);\\n  }\\n\\n  /**\\n   * @dev Sets the implementation address of the proxy.\\n   * @param newImplementation Address of the new implementation.\\n   */\\n  function _setImplementation(address newImplementation) internal {\\n    require(\\n      Address.isContract(newImplementation),\\n      'Cannot set a proxy implementation to a non-contract address'\\n    );\\n\\n    bytes32 slot = IMPLEMENTATION_SLOT;\\n\\n    //solium-disable-next-line\\n    assembly {\\n      sstore(slot, newImplementation)\\n    }\\n  }\\n}\\n\",\"keccak256\":\"0x67aab2df50d9c03c9898e867e6243a09f6f04b3fdb7adbb965f393b3f357e6a1\",\"license\":\"agpl-3.0\"},\"contracts/dependencies/openzeppelin/upgradeability/InitializableUpgradeabilityProxy.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport './BaseUpgradeabilityProxy.sol';\\n\\n/**\\n * @title InitializableUpgradeabilityProxy\\n * @dev Extends BaseUpgradeabilityProxy with an initializer for initializing\\n * implementation and init data.\\n */\\ncontract InitializableUpgradeabilityProxy is BaseUpgradeabilityProxy {\\n  /**\\n   * @dev Contract initializer.\\n   * @param _logic Address of the initial implementation.\\n   * @param _data Data to send as msg.data to the implementation to initialize the proxied contract.\\n   * It should include the signature and the parameters of the function to be called, as described in\\n   * https://solidity.readthedocs.io/en/v0.4.24/abi-spec.html#function-selector-and-argument-encoding.\\n   * This parameter is optional, if no data is given the initialization call to proxied contract will be skipped.\\n   */\\n  function initialize(address _logic, bytes memory _data) public payable {\\n    require(_implementation() == address(0));\\n    assert(IMPLEMENTATION_SLOT == bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1));\\n    _setImplementation(_logic);\\n    if (_data.length > 0) {\\n      (bool success, ) = _logic.delegatecall(_data);\\n      require(success);\\n    }\\n  }\\n}\\n\",\"keccak256\":\"0xde3e58a215a8916bc7dc78bfe255f65996e0ff9bee58bfa3bbe4666eb3095940\",\"license\":\"agpl-3.0\"},\"contracts/dependencies/openzeppelin/upgradeability/Proxy.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @title Proxy\\n * @dev Implements delegation of calls to other contracts, with proper\\n * forwarding of return values and bubbling of failures.\\n * It defines a fallback function that delegates all calls to the address\\n * returned by the abstract _implementation() internal function.\\n */\\nabstract contract Proxy {\\n  /**\\n   * @dev Fallback function.\\n   * Implemented entirely in `_fallback`.\\n   */\\n  fallback() external payable {\\n    _fallback();\\n  }\\n\\n  /**\\n   * @return The Address of the implementation.\\n   */\\n  function _implementation() internal view virtual returns (address);\\n\\n  /**\\n   * @dev Delegates execution to an implementation contract.\\n   * This is a low level function that doesn't return to its internal call site.\\n   * It will return to the external caller whatever the implementation returns.\\n   * @param implementation Address to delegate.\\n   */\\n  function _delegate(address implementation) internal {\\n    //solium-disable-next-line\\n    assembly {\\n      // Copy msg.data. We take full control of memory in this inline assembly\\n      // block because it will not return to Solidity code. We overwrite the\\n      // Solidity scratch pad at memory position 0.\\n      calldatacopy(0, 0, calldatasize())\\n\\n      // Call the implementation.\\n      // out and outsize are 0 because we don't know the size yet.\\n      let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)\\n\\n      // Copy the returned data.\\n      returndatacopy(0, 0, returndatasize())\\n\\n      switch result\\n        // delegatecall returns 0 on error.\\n        case 0 {\\n          revert(0, returndatasize())\\n        }\\n        default {\\n          return(0, returndatasize())\\n        }\\n    }\\n  }\\n\\n  /**\\n   * @dev Function that is run as the first thing in the fallback function.\\n   * Can be redefined in derived contracts to add functionality.\\n   * Redefinitions must call super._willFallback().\\n   */\\n  function _willFallback() internal virtual {}\\n\\n  /**\\n   * @dev fallback implementation.\\n   * Extracted to enable manual triggering.\\n   */\\n  function _fallback() internal {\\n    _willFallback();\\n    _delegate(_implementation());\\n  }\\n}\\n\",\"keccak256\":\"0xb3ade743228512ae4b9139a688a1cde3de269664ab2b712bb4df4a282e70f055\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/ILendingPoolAddressesProvider.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @title LendingPoolAddressesProvider contract\\n * @dev Main registry of addresses part of or connected to the protocol, including permissioned roles\\n * - Acting also as factory of proxies and admin of those, so with right to change its implementations\\n * - Owned by the Aave Governance\\n * @author Aave\\n **/\\ninterface ILendingPoolAddressesProvider {\\n  event MarketIdSet(string newMarketId);\\n  event LendingPoolUpdated(address indexed newAddress);\\n  event ConfigurationAdminUpdated(address indexed newAddress);\\n  event EmergencyAdminUpdated(address indexed newAddress);\\n  event LendingPoolConfiguratorUpdated(address indexed newAddress);\\n  event LendingPoolCollateralManagerUpdated(address indexed newAddress);\\n  event PriceOracleUpdated(address indexed newAddress);\\n  event LendingRateOracleUpdated(address indexed newAddress);\\n  event ProxyCreated(bytes32 id, address indexed newAddress);\\n  event AddressSet(bytes32 id, address indexed newAddress, bool hasProxy);\\n\\n  function getMarketId() external view returns (string memory);\\n\\n  function setMarketId(string calldata marketId) external;\\n\\n  function setAddress(bytes32 id, address newAddress) external;\\n\\n  function setAddressAsProxy(bytes32 id, address impl) external;\\n\\n  function getAddress(bytes32 id) external view returns (address);\\n\\n  function getLendingPool() external view returns (address);\\n\\n  function setLendingPoolImpl(address pool) external;\\n\\n  function getLendingPoolConfigurator() external view returns (address);\\n\\n  function setLendingPoolConfiguratorImpl(address configurator) external;\\n\\n  function getLendingPoolCollateralManager() external view returns (address);\\n\\n  function setLendingPoolCollateralManager(address manager) external;\\n\\n  function getPoolAdmin() external view returns (address);\\n\\n  function setPoolAdmin(address admin) external;\\n\\n  function getEmergencyAdmin() external view returns (address);\\n\\n  function setEmergencyAdmin(address admin) external;\\n\\n  function getPriceOracle() external view returns (address);\\n\\n  function setPriceOracle(address priceOracle) external;\\n\\n  function getLendingRateOracle() external view returns (address);\\n\\n  function setLendingRateOracle(address lendingRateOracle) external;\\n\\n  function getLiquidationFeeTo() external view returns (address);\\n\\n  function setLiquidationFeeTo(address liquidationFeeTo) external;\\n}\\n\",\"keccak256\":\"0x106ef9420d874acfc948c140b0b4ffff258a8fa664febf805c686fdbff278f62\",\"license\":\"agpl-3.0\"},\"contracts/protocol/configuration/LendingPoolAddressesProvider.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';\\n\\n// Prettier ignore to prevent buidler flatter bug\\n// prettier-ignore\\nimport {InitializableImmutableAdminUpgradeabilityProxy} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';\\n\\nimport {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';\\n\\n/**\\n * @title LendingPoolAddressesProvider contract\\n * @dev Main registry of addresses part of or connected to the protocol, including permissioned roles\\n * - Acting also as factory of proxies and admin of those, so with right to change its implementations\\n * - Owned by the Aave Governance\\n * @author Aave\\n **/\\ncontract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider {\\n  string private _marketId;\\n  mapping(bytes32 => address) private _addresses;\\n  address private _liquidationFeeTo;\\n\\n  bytes32 private constant LENDING_POOL = 'LENDING_POOL';\\n  bytes32 private constant LENDING_POOL_CONFIGURATOR = 'LENDING_POOL_CONFIGURATOR';\\n  bytes32 private constant POOL_ADMIN = 'POOL_ADMIN';\\n  bytes32 private constant EMERGENCY_ADMIN = 'EMERGENCY_ADMIN';\\n  bytes32 private constant LENDING_POOL_COLLATERAL_MANAGER = 'COLLATERAL_MANAGER';\\n  bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';\\n  bytes32 private constant LENDING_RATE_ORACLE = 'LENDING_RATE_ORACLE';\\n\\n  constructor(string memory marketId) {\\n    _setMarketId(marketId);\\n    _liquidationFeeTo = 0xF90C69D16599A5C657A05Fe76Cd22fD9Cab44598;\\n  }\\n\\n  /**\\n   * @dev Returns the id of the Aave market to which this contracts points to\\n   * @return The market id\\n   **/\\n  function getMarketId() external view override returns (string memory) {\\n    return _marketId;\\n  }\\n\\n  /**\\n   * @dev Allows to set the market which this LendingPoolAddressesProvider represents\\n   * @param marketId The market id\\n   */\\n  function setMarketId(string memory marketId) external override onlyOwner {\\n    _setMarketId(marketId);\\n  }\\n\\n  /**\\n   * @dev General function to update the implementation of a proxy registered with\\n   * certain `id`. If there is no proxy registered, it will instantiate one and\\n   * set as implementation the `implementationAddress`\\n   * IMPORTANT Use this function carefully, only for ids that don't have an explicit\\n   * setter function, in order to avoid unexpected consequences\\n   * @param id The id\\n   * @param implementationAddress The address of the new implementation\\n   */\\n  function setAddressAsProxy(bytes32 id, address implementationAddress)\\n    external\\n    override\\n    onlyOwner\\n  {\\n    _updateImpl(id, implementationAddress);\\n    emit AddressSet(id, implementationAddress, true);\\n  }\\n\\n  /**\\n   * @dev Sets an address for an id replacing the address saved in the addresses map\\n   * IMPORTANT Use this function carefully, as it will do a hard replacement\\n   * @param id The id\\n   * @param newAddress The address to set\\n   */\\n  function setAddress(bytes32 id, address newAddress) external override onlyOwner {\\n    _addresses[id] = newAddress;\\n    emit AddressSet(id, newAddress, false);\\n  }\\n\\n  /**\\n   * @dev Returns an address by id\\n   * @return The address\\n   */\\n  function getAddress(bytes32 id) public view override returns (address) {\\n    return _addresses[id];\\n  }\\n\\n  /**\\n   * @dev Returns the address of the LendingPool proxy\\n   * @return The LendingPool proxy address\\n   **/\\n  function getLendingPool() external view override returns (address) {\\n    return getAddress(LENDING_POOL);\\n  }\\n\\n  /**\\n   * @dev Updates the implementation of the LendingPool, or creates the proxy\\n   * setting the new `pool` implementation on the first time calling it\\n   * @param pool The new LendingPool implementation\\n   **/\\n  function setLendingPoolImpl(address pool) external override onlyOwner {\\n    _updateImpl(LENDING_POOL, pool);\\n    emit LendingPoolUpdated(pool);\\n  }\\n\\n  /**\\n   * @dev Returns the address of the LendingPoolConfigurator proxy\\n   * @return The LendingPoolConfigurator proxy address\\n   **/\\n  function getLendingPoolConfigurator() external view override returns (address) {\\n    return getAddress(LENDING_POOL_CONFIGURATOR);\\n  }\\n\\n  /**\\n   * @dev Updates the implementation of the LendingPoolConfigurator, or creates the proxy\\n   * setting the new `configurator` implementation on the first time calling it\\n   * @param configurator The new LendingPoolConfigurator implementation\\n   **/\\n  function setLendingPoolConfiguratorImpl(address configurator) external override onlyOwner {\\n    _updateImpl(LENDING_POOL_CONFIGURATOR, configurator);\\n    emit LendingPoolConfiguratorUpdated(configurator);\\n  }\\n\\n  /**\\n   * @dev Returns the address of the LendingPoolCollateralManager. Since the manager is used\\n   * through delegateCall within the LendingPool contract, the proxy contract pattern does not work properly hence\\n   * the addresses are changed directly\\n   * @return The address of the LendingPoolCollateralManager\\n   **/\\n\\n  function getLendingPoolCollateralManager() external view override returns (address) {\\n    return getAddress(LENDING_POOL_COLLATERAL_MANAGER);\\n  }\\n\\n  /**\\n   * @dev Updates the address of the LendingPoolCollateralManager\\n   * @param manager The new LendingPoolCollateralManager address\\n   **/\\n  function setLendingPoolCollateralManager(address manager) external override onlyOwner {\\n    _addresses[LENDING_POOL_COLLATERAL_MANAGER] = manager;\\n    emit LendingPoolCollateralManagerUpdated(manager);\\n  }\\n\\n  /**\\n   * @dev The functions below are getters/setters of addresses that are outside the context\\n   * of the protocol hence the upgradable proxy pattern is not used\\n   **/\\n\\n  function getPoolAdmin() external view override returns (address) {\\n    return getAddress(POOL_ADMIN);\\n  }\\n\\n  function setPoolAdmin(address admin) external override onlyOwner {\\n    _addresses[POOL_ADMIN] = admin;\\n    emit ConfigurationAdminUpdated(admin);\\n  }\\n\\n  function getEmergencyAdmin() external view override returns (address) {\\n    return getAddress(EMERGENCY_ADMIN);\\n  }\\n\\n  function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {\\n    _addresses[EMERGENCY_ADMIN] = emergencyAdmin;\\n    emit EmergencyAdminUpdated(emergencyAdmin);\\n  }\\n\\n  function getPriceOracle() external view override returns (address) {\\n    return getAddress(PRICE_ORACLE);\\n  }\\n\\n  function setPriceOracle(address priceOracle) external override onlyOwner {\\n    _addresses[PRICE_ORACLE] = priceOracle;\\n    emit PriceOracleUpdated(priceOracle);\\n  }\\n\\n  function getLendingRateOracle() external view override returns (address) {\\n    return getAddress(LENDING_RATE_ORACLE);\\n  }\\n\\n  function setLendingRateOracle(address lendingRateOracle) external override onlyOwner {\\n    _addresses[LENDING_RATE_ORACLE] = lendingRateOracle;\\n    emit LendingRateOracleUpdated(lendingRateOracle);\\n  }\\n\\n  function getLiquidationFeeTo() external view override returns (address) {\\n    return _liquidationFeeTo;\\n  }\\n\\n  function setLiquidationFeeTo(address liquidationFeeTo) external override onlyOwner {\\n    _liquidationFeeTo = liquidationFeeTo;\\n  }\\n\\n  /**\\n   * @dev Internal function to update the implementation of a specific proxied component of the protocol\\n   * - If there is no proxy registered in the given `id`, it creates the proxy setting `newAdress`\\n   *   as implementation and calls the initialize() function on the proxy\\n   * - If there is already a proxy registered, it just updates the implementation to `newAddress` and\\n   *   calls the initialize() function via upgradeToAndCall() in the proxy\\n   * @param id The id of the proxy to be updated\\n   * @param newAddress The address of the new implementation\\n   **/\\n  function _updateImpl(bytes32 id, address newAddress) internal {\\n    address payable proxyAddress = payable(_addresses[id]);\\n\\n    InitializableImmutableAdminUpgradeabilityProxy proxy =\\n      InitializableImmutableAdminUpgradeabilityProxy(proxyAddress);\\n    bytes memory params = abi.encodeWithSignature('initialize(address)', address(this));\\n\\n    if (proxyAddress == address(0)) {\\n      proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));\\n      proxy.initialize(newAddress, params);\\n      _addresses[id] = address(proxy);\\n      emit ProxyCreated(id, address(proxy));\\n    } else {\\n      proxy.upgradeToAndCall(newAddress, params);\\n    }\\n  }\\n\\n  function _setMarketId(string memory marketId) internal {\\n    _marketId = marketId;\\n    emit MarketIdSet(marketId);\\n  }\\n}\\n\",\"keccak256\":\"0xf5796a6597f51e07b26e0cf31c7a27fe4ebb511788f9bae3c30597764c538f66\",\"license\":\"agpl-3.0\"},\"contracts/protocol/libraries/aave-upgradeability/BaseImmutableAdminUpgradeabilityProxy.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport '../../../dependencies/openzeppelin/upgradeability/BaseUpgradeabilityProxy.sol';\\n\\n/**\\n * @title BaseImmutableAdminUpgradeabilityProxy\\n * @author Aave, inspired by the OpenZeppelin upgradeability proxy pattern\\n * @dev This contract combines an upgradeability proxy with an authorization\\n * mechanism for administrative tasks. The admin role is stored in an immutable, which\\n * helps saving transactions costs\\n * All external functions in this contract must be guarded by the\\n * `ifAdmin` modifier. See ethereum/solidity#3864 for a Solidity\\n * feature proposal that would enable this to be done automatically.\\n */\\ncontract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {\\n  address immutable ADMIN;\\n\\n  constructor(address _admin) {\\n    ADMIN = _admin;\\n  }\\n\\n  modifier ifAdmin() {\\n    if (msg.sender == ADMIN) {\\n      _;\\n    } else {\\n      _fallback();\\n    }\\n  }\\n\\n  /**\\n   * @return _address The address of the proxy admin.\\n   */\\n  function admin() external ifAdmin returns (address _address) {\\n    return ADMIN;\\n  }\\n\\n  /**\\n   * @return _address The address of the implementation.\\n   */\\n  function implementation() external ifAdmin returns (address _address) {\\n    return _implementation();\\n  }\\n\\n  /**\\n   * @dev Upgrade the backing implementation of the proxy.\\n   * Only the admin can call this function.\\n   * @param newImplementation Address of the new implementation.\\n   */\\n  function upgradeTo(address newImplementation) external ifAdmin {\\n    _upgradeTo(newImplementation);\\n  }\\n\\n  /**\\n   * @dev Upgrade the backing implementation of the proxy and call a function\\n   * on the new implementation.\\n   * This is useful to initialize the proxied contract.\\n   * @param newImplementation Address of the new implementation.\\n   * @param data Data to send as msg.data in the low level call.\\n   * It should include the signature and the parameters of the function to be called, as described in\\n   * https://solidity.readthedocs.io/en/v0.4.24/abi-spec.html#function-selector-and-argument-encoding.\\n   */\\n  function upgradeToAndCall(address newImplementation, bytes calldata data)\\n    external\\n    payable\\n    ifAdmin\\n  {\\n    _upgradeTo(newImplementation);\\n    (bool success, ) = newImplementation.delegatecall(data);\\n    require(success);\\n  }\\n\\n  /**\\n   * @dev Only fall back when the sender is not the admin.\\n   */\\n  function _willFallback() internal virtual override {\\n    require(msg.sender != ADMIN, 'Cannot call fallback function from the proxy admin');\\n    super._willFallback();\\n  }\\n}\\n\",\"keccak256\":\"0x8920f181099c29287123de2a9bf33ca837abfb7acdc0b47f93681ae8949275f0\",\"license\":\"agpl-3.0\"},\"contracts/protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport './BaseImmutableAdminUpgradeabilityProxy.sol';\\nimport '../../../dependencies/openzeppelin/upgradeability/InitializableUpgradeabilityProxy.sol';\\n\\n/**\\n * @title InitializableAdminUpgradeabilityProxy\\n * @dev Extends BaseAdminUpgradeabilityProxy with an initializer function\\n */\\ncontract InitializableImmutableAdminUpgradeabilityProxy is\\n  BaseImmutableAdminUpgradeabilityProxy,\\n  InitializableUpgradeabilityProxy\\n{\\n  constructor(address admin) BaseImmutableAdminUpgradeabilityProxy(admin) {}\\n\\n  /**\\n   * @dev Only fall back when the sender is not the admin.\\n   */\\n  function _willFallback() internal override(BaseImmutableAdminUpgradeabilityProxy, Proxy) {\\n    BaseImmutableAdminUpgradeabilityProxy._willFallback();\\n  }\\n}\\n\",\"keccak256\":\"0xf0bca36d591df0d7e3d1f1e5b7ad1e39bcb8898b2212a1fa4f9f878e4ec0eb29\",\"license\":\"agpl-3.0\"}},\"version\":1}",
+  "bytecode": "0x60806040523480156200001157600080fd5b5060405162001e9938038062001e99833981810160405260208110156200003757600080fd5b81019080805160405193929190846401000000008211156200005857600080fd5b9083019060208201858111156200006e57600080fd5b82516401000000008111828201881017156200008957600080fd5b82525081516020918201929091019080838360005b83811015620000b85781810151838201526020016200009e565b50505050905090810190601f168015620000e65780820380516001836020036101000a031916815260200191505b506040525050506000620000ff6200018160201b60201c565b600080546001600160a01b0319166001600160a01b0383169081178255604051929350917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908290a350620001548162000185565b50600380546001600160a01b03191673f90c69d16599a5c657a05fe76cd22fd9cab44598179055620002e6565b3390565b80516200019a9060019060208401906200023a565b507f5e667c32fd847cf8bce48ab3400175cbf107bdc82b2dea62e3364909dfaee799816040518080602001828103825283818151815260200191508051906020019080838360005b83811015620001fc578181015183820152602001620001e2565b50505050905090810190601f1680156200022a5780820380516001836020036101000a031916815260200191505b509250505060405180910390a150565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282620002725760008555620002bd565b82601f106200028d57805160ff1916838001178555620002bd565b82800160010185558215620002bd579182015b82811115620002bd578251825591602001919060010190620002a0565b50620002cb929150620002cf565b5090565b5b80821115620002cb5760008155600101620002d0565b611ba380620002f66000396000f3fe608060405234801561001057600080fd5b50600436106101285760003560e01c80630261bf8b1461012d57806321f8a72114610151578063283d62ad1461016e57806335da3394146101965780633618abba146101bc578063398e5553146101c4578063530e784f146101ea578063568ef470146102105780635aef021f1461028d5780635afaf018146102b35780635dcc528c146102bb578063712d9171146102e7578063715018a6146102ef578063820d1274146102f757806385c858b11461031d5780638da5cb5b14610325578063aecda3781461032d578063c12542df14610335578063ca446dd91461035b578063ddcaa9ea14610387578063e216ab441461038f578063f2fde38b146103b5578063f67b1847146103db578063fca513a81461047f575b600080fd5b610135610487565b604080516001600160a01b039092168252519081900360200190f35b6101356004803603602081101561016757600080fd5b50356104a6565b6101946004803603602081101561018457600080fd5b50356001600160a01b03166104c1565b005b610194600480360360208110156101ac57600080fd5b50356001600160a01b0316610599565b610135610676565b610194600480360360208110156101da57600080fd5b50356001600160a01b0316610697565b6101946004803603602081101561020057600080fd5b50356001600160a01b0316610777565b610218610851565b6040805160208082528351818301528351919283929083019185019080838360005b8381101561025257818101518382015260200161023a565b50505050905090810190601f16801561027f5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b610194600480360360208110156102a357600080fd5b50356001600160a01b03166108e6565b61013561098e565b610194600480360360408110156102d157600080fd5b50803590602001356001600160a01b031661099d565b610135610a34565b610194610a54565b6101946004803603602081101561030d57600080fd5b50356001600160a01b0316610ae4565b610135610bc5565b610135610bec565b610135610bfb565b6101946004803603602081101561034b57600080fd5b50356001600160a01b0316610c13565b6101946004803603604081101561037157600080fd5b50803590602001356001600160a01b0316610cc8565b610135610d77565b610194600480360360208110156103a557600080fd5b50356001600160a01b0316610d94565b610194600480360360208110156103cb57600080fd5b50356001600160a01b0316610e0e565b610194600480360360208110156103f157600080fd5b810190602081018135600160201b81111561040b57600080fd5b82018360208201111561041d57600080fd5b803590602001918460018302840111600160201b8311171561043e57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550610ef4945050505050565b610135610f58565b60006104a16b13115391125391d7d413d3d360a21b6104a6565b905090565b6000908152600260205260409020546001600160a01b031690565b6104c9610f72565b6000546001600160a01b03908116911614610519576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b692827a7a62fa0a226a4a760b11b600090815260026020527f8625fbc469bac10fd11de1d783dcd446542784dbcc535ef64a1da61860fda74c80546001600160a01b0319166001600160a01b03841690811790915560405190917fc20a317155a9e7d84e06b716b4b355d47742ab9f8c5d630e7f556553f582430d91a250565b6105a1610f72565b6000546001600160a01b039081169116146105f1576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6e22a6a2a923a2a721acafa0a226a4a760891b600090815260026020527f767aa9c986e1d88108b2558f00fbd21b689a0397581446e2e868cd70421026cc80546001600160a01b0319166001600160a01b03841690811790915560405190917fe19673fc861bfeb894cf2d6b7662505497ef31c0f489b742db24ee331082691691a250565b60006104a1724c454e44494e475f524154455f4f5241434c4560681b6104a6565b61069f610f72565b6000546001600160a01b039081169116146106ef576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b7121a7a62620aa22a920a62fa6a0a720a3a2a960711b600090815260026020527f65e3f3080e9127c1765503a54b8dbb495249e66169f096dfc87ee63bed17e22c80546001600160a01b0319166001600160a01b03841690811790915560405190917f991888326f0eab3df6084aadb82bee6781b5c9aa75379e8bc50ae8693454163891a250565b61077f610f72565b6000546001600160a01b039081169116146107cf576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6b50524943455f4f5241434c4560a01b600090815260026020527f740f710666bd7a12af42df98311e541e47f7fd33d382d11602457a6d540cbd6380546001600160a01b0319166001600160a01b03841690811790915560405190917fefe8ab924ca486283a79dc604baa67add51afb82af1db8ac386ebbba643cdffd91a250565b60018054604080516020601f600260001961010087891615020190951694909404938401819004810282018101909252828152606093909290918301828280156108dc5780601f106108b1576101008083540402835291602001916108dc565b820191906000526020600020905b8154815290600101906020018083116108bf57829003601f168201915b5050505050905090565b6108ee610f72565b6000546001600160a01b0390811691161461093e576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6109576b13115391125391d7d413d3d360a21b82610f76565b6040516001600160a01b038216907fc4e6c6cdf28d0edbd8bcf071d724d33cc2e7a30be7d06443925656e9cb492aa490600090a250565b6003546001600160a01b031690565b6109a5610f72565b6000546001600160a01b039081169116146109f5576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6109ff8282610f76565b604080518381526001602082015281516001600160a01b03841692600080516020611b0e833981519152928290030190a25050565b60006104a17121a7a62620aa22a920a62fa6a0a720a3a2a960711b6104a6565b610a5c610f72565b6000546001600160a01b03908116911614610aac576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600080546040516001600160a01b0390911690600080516020611b4e833981519152908390a3600080546001600160a01b0319169055565b610aec610f72565b6000546001600160a01b03908116911614610b3c576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b724c454e44494e475f524154455f4f5241434c4560681b600090815260026020527f10f0e20294ece4bd93e7a467dbf22ab9ab1740ebd0a532cc53066601e880c0cf80546001600160a01b0319166001600160a01b03841690811790915560405190917f5c29179aba6942020a8a2d38f65de02fb6b7f784e7f049ed3a3cab97621859b591a250565b60006104a1782622a72224a723afa827a7a62fa1a7a72324a3aaa920aa27a960391b6104a6565b6000546001600160a01b031690565b60006104a1692827a7a62fa0a226a4a760b11b6104a6565b610c1b610f72565b6000546001600160a01b03908116911614610c6b576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b610c91782622a72224a723afa827a7a62fa1a7a72324a3aaa920aa27a960391b82610f76565b6040516001600160a01b038216907fdfabe479bad36782fb1e77fbfddd4e382671713527e4786cfc93a022ae76372990600090a250565b610cd0610f72565b6000546001600160a01b03908116911614610d20576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600082815260026020908152604080832080546001600160a01b0319166001600160a01b0386169081179091558151868152928301939093528051600080516020611b0e8339815191529281900390910190a25050565b60006104a16e22a6a2a923a2a721acafa0a226a4a760891b6104a6565b610d9c610f72565b6000546001600160a01b03908116911614610dec576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600380546001600160a01b0319166001600160a01b0392909216919091179055565b610e16610f72565b6000546001600160a01b03908116911614610e66576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6001600160a01b038116610eab5760405162461bcd60e51b8152600401808060200182810382526026815260200180611ae86026913960400191505060405180910390fd5b600080546040516001600160a01b0380851693921691600080516020611b4e83398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b610efc610f72565b6000546001600160a01b03908116911614610f4c576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b610f558161121e565b50565b60006104a16b50524943455f4f5241434c4560a01b6104a6565b3390565b6000828152600260209081526040918290205482513060248083019190915284518083039091018152604490910190935290820180516001600160e01b031663189acdbd60e31b1790526001600160a01b0316908190816111455730604051610fde906112ce565b6001600160a01b03909116815260405190819003602001906000f08015801561100b573d6000803e3d6000fd5b509150816001600160a01b031663d1f5789485836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200180602001828103825283818151815260200191508051906020019080838360005b8381101561107a578181015183820152602001611062565b50505050905090810190601f1680156110a75780820380516001836020036101000a031916815260200191505b509350505050600060405180830381600087803b1580156110c757600080fd5b505af11580156110db573d6000803e3d6000fd5b50505060008681526002602090815260409182902080546001600160a01b0319166001600160a01b038716908117909155825189815292519093507f1eb35cb4b5bbb23d152f3b4016a5a46c37a07ae930ed0956aba951e2311424389281900390910190a2611217565b816001600160a01b0316634f1ef28685836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200180602001828103825283818151815260200191508051906020019080838360005b838110156111b1578181015183820152602001611199565b50505050905090810190601f1680156111de5780820380516001836020036101000a031916815260200191505b509350505050600060405180830381600087803b1580156111fe57600080fd5b505af1158015611212573d6000803e3d6000fd5b505050505b5050505050565b80516112319060019060208401906112db565b507f5e667c32fd847cf8bce48ab3400175cbf107bdc82b2dea62e3364909dfaee799816040518080602001828103825283818151815260200191508051906020019080838360005b83811015611291578181015183820152602001611279565b50505050905090810190601f1680156112be5780820380516001836020036101000a031916815260200191505b509250505060405180910390a150565b61076b8061137d83390190565b828054600181600116156101000203166002900490600052602060002090601f0160209004810192826113115760008555611357565b82601f1061132a57805160ff1916838001178555611357565b82800160010185558215611357579182015b8281111561135757825182559160200191906001019061133c565b50611363929150611367565b5090565b5b80821115611363576000815560010161136856fe60a060405234801561001057600080fd5b5060405161076b38038061076b8339818101604052602081101561003357600080fd5b5051606081901b6001600160601b0319166080526001600160a01b03166106eb61008060003980610224528061026e528061032d528061045a5280610483528061058752506106eb6000f3fe60806040526004361061004a5760003560e01c80633659cfe6146100545780634f1ef286146100875780635c60da1b14610105578063d1f5789414610136578063f851a440146101ea575b6100526101ff565b005b34801561006057600080fd5b506100526004803603602081101561007757600080fd5b50356001600160a01b0316610219565b6100526004803603604081101561009d57600080fd5b6001600160a01b038235169190810190604081016020820135600160201b8111156100c757600080fd5b8201836020820111156100d957600080fd5b803590602001918460018302840111600160201b831117156100fa57600080fd5b509092509050610263565b34801561011157600080fd5b5061011a610320565b604080516001600160a01b039092168252519081900360200190f35b6100526004803603604081101561014c57600080fd5b6001600160a01b038235169190810190604081016020820135600160201b81111561017657600080fd5b82018360208201111561018857600080fd5b803590602001918460018302840111600160201b831117156101a957600080fd5b91908080601f01602080910402602001604051908101604052809392919081815260200183838082843760009201919091525092955061036d945050505050565b3480156101f657600080fd5b5061011a61044d565b6102076104a7565b6102176102126104af565b6104c2565b565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016141561025857610253816104e6565b610260565b6102606101ff565b50565b336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156103135761029d836104e6565b6000836001600160a01b031683836040518083838082843760405192019450600093509091505080830381855af49150503d80600081146102fa576040519150601f19603f3d011682016040523d82523d6000602084013e6102ff565b606091505b505090508061030d57600080fd5b5061031b565b61031b6101ff565b505050565b6000336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156103625761035b6104af565b905061036a565b61036a6101ff565b90565b60006103776104af565b6001600160a01b03161461038a57600080fd5b61039382610526565b805115610449576000826001600160a01b0316826040518082805190602001908083835b602083106103d65780518252601f1990920191602091820191016103b7565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d8060008114610436576040519150601f19603f3d011682016040523d82523d6000602084013e61043b565b606091505b505090508061031b57600080fd5b5050565b6000336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016141561036257507f000000000000000000000000000000000000000000000000000000000000000061036a565b61021761057c565b60008051602061065b8339815191525490565b3660008037600080366000845af43d6000803e8080156104e1573d6000f35b3d6000fd5b6104ef81610526565b6040516001600160a01b038216907fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b90600090a250565b61052f816105ec565b61056a5760405162461bcd60e51b815260040180806020018281038252603b81526020018061067b603b913960400191505060405180910390fd5b60008051602061065b83398151915255565b336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156105e45760405162461bcd60e51b81526004018080602001828103825260328152602001806106296032913960400191505060405180910390fd5b610217610217565b6000813f7fc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a47081811480159061062057508115155b94935050505056fe43616e6e6f742063616c6c2066616c6c6261636b2066756e6374696f6e2066726f6d207468652070726f78792061646d696e360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc43616e6e6f742073657420612070726f787920696d706c656d656e746174696f6e20746f2061206e6f6e2d636f6e74726163742061646472657373a264697066735822122065aa17e8869e8f2c3764b5472ef9fc2cc2ab2d07b340a697f45e69b09b36d8dc64736f6c634300070600334f776e61626c653a206e6577206f776e657220697320746865207a65726f2061646472657373f2689d5d5cd0c639e137642cae5d40afced201a1a0327e7ac9358461dc9fff314f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a264697066735822122043bcd8ad0f9590a831f591118cf953bc1feab32c3efef58b92c70c7b0a34a9c264736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106101285760003560e01c80630261bf8b1461012d57806321f8a72114610151578063283d62ad1461016e57806335da3394146101965780633618abba146101bc578063398e5553146101c4578063530e784f146101ea578063568ef470146102105780635aef021f1461028d5780635afaf018146102b35780635dcc528c146102bb578063712d9171146102e7578063715018a6146102ef578063820d1274146102f757806385c858b11461031d5780638da5cb5b14610325578063aecda3781461032d578063c12542df14610335578063ca446dd91461035b578063ddcaa9ea14610387578063e216ab441461038f578063f2fde38b146103b5578063f67b1847146103db578063fca513a81461047f575b600080fd5b610135610487565b604080516001600160a01b039092168252519081900360200190f35b6101356004803603602081101561016757600080fd5b50356104a6565b6101946004803603602081101561018457600080fd5b50356001600160a01b03166104c1565b005b610194600480360360208110156101ac57600080fd5b50356001600160a01b0316610599565b610135610676565b610194600480360360208110156101da57600080fd5b50356001600160a01b0316610697565b6101946004803603602081101561020057600080fd5b50356001600160a01b0316610777565b610218610851565b6040805160208082528351818301528351919283929083019185019080838360005b8381101561025257818101518382015260200161023a565b50505050905090810190601f16801561027f5780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b610194600480360360208110156102a357600080fd5b50356001600160a01b03166108e6565b61013561098e565b610194600480360360408110156102d157600080fd5b50803590602001356001600160a01b031661099d565b610135610a34565b610194610a54565b6101946004803603602081101561030d57600080fd5b50356001600160a01b0316610ae4565b610135610bc5565b610135610bec565b610135610bfb565b6101946004803603602081101561034b57600080fd5b50356001600160a01b0316610c13565b6101946004803603604081101561037157600080fd5b50803590602001356001600160a01b0316610cc8565b610135610d77565b610194600480360360208110156103a557600080fd5b50356001600160a01b0316610d94565b610194600480360360208110156103cb57600080fd5b50356001600160a01b0316610e0e565b610194600480360360208110156103f157600080fd5b810190602081018135600160201b81111561040b57600080fd5b82018360208201111561041d57600080fd5b803590602001918460018302840111600160201b8311171561043e57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550610ef4945050505050565b610135610f58565b60006104a16b13115391125391d7d413d3d360a21b6104a6565b905090565b6000908152600260205260409020546001600160a01b031690565b6104c9610f72565b6000546001600160a01b03908116911614610519576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b692827a7a62fa0a226a4a760b11b600090815260026020527f8625fbc469bac10fd11de1d783dcd446542784dbcc535ef64a1da61860fda74c80546001600160a01b0319166001600160a01b03841690811790915560405190917fc20a317155a9e7d84e06b716b4b355d47742ab9f8c5d630e7f556553f582430d91a250565b6105a1610f72565b6000546001600160a01b039081169116146105f1576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6e22a6a2a923a2a721acafa0a226a4a760891b600090815260026020527f767aa9c986e1d88108b2558f00fbd21b689a0397581446e2e868cd70421026cc80546001600160a01b0319166001600160a01b03841690811790915560405190917fe19673fc861bfeb894cf2d6b7662505497ef31c0f489b742db24ee331082691691a250565b60006104a1724c454e44494e475f524154455f4f5241434c4560681b6104a6565b61069f610f72565b6000546001600160a01b039081169116146106ef576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b7121a7a62620aa22a920a62fa6a0a720a3a2a960711b600090815260026020527f65e3f3080e9127c1765503a54b8dbb495249e66169f096dfc87ee63bed17e22c80546001600160a01b0319166001600160a01b03841690811790915560405190917f991888326f0eab3df6084aadb82bee6781b5c9aa75379e8bc50ae8693454163891a250565b61077f610f72565b6000546001600160a01b039081169116146107cf576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6b50524943455f4f5241434c4560a01b600090815260026020527f740f710666bd7a12af42df98311e541e47f7fd33d382d11602457a6d540cbd6380546001600160a01b0319166001600160a01b03841690811790915560405190917fefe8ab924ca486283a79dc604baa67add51afb82af1db8ac386ebbba643cdffd91a250565b60018054604080516020601f600260001961010087891615020190951694909404938401819004810282018101909252828152606093909290918301828280156108dc5780601f106108b1576101008083540402835291602001916108dc565b820191906000526020600020905b8154815290600101906020018083116108bf57829003601f168201915b5050505050905090565b6108ee610f72565b6000546001600160a01b0390811691161461093e576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6109576b13115391125391d7d413d3d360a21b82610f76565b6040516001600160a01b038216907fc4e6c6cdf28d0edbd8bcf071d724d33cc2e7a30be7d06443925656e9cb492aa490600090a250565b6003546001600160a01b031690565b6109a5610f72565b6000546001600160a01b039081169116146109f5576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6109ff8282610f76565b604080518381526001602082015281516001600160a01b03841692600080516020611b0e833981519152928290030190a25050565b60006104a17121a7a62620aa22a920a62fa6a0a720a3a2a960711b6104a6565b610a5c610f72565b6000546001600160a01b03908116911614610aac576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600080546040516001600160a01b0390911690600080516020611b4e833981519152908390a3600080546001600160a01b0319169055565b610aec610f72565b6000546001600160a01b03908116911614610b3c576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b724c454e44494e475f524154455f4f5241434c4560681b600090815260026020527f10f0e20294ece4bd93e7a467dbf22ab9ab1740ebd0a532cc53066601e880c0cf80546001600160a01b0319166001600160a01b03841690811790915560405190917f5c29179aba6942020a8a2d38f65de02fb6b7f784e7f049ed3a3cab97621859b591a250565b60006104a1782622a72224a723afa827a7a62fa1a7a72324a3aaa920aa27a960391b6104a6565b6000546001600160a01b031690565b60006104a1692827a7a62fa0a226a4a760b11b6104a6565b610c1b610f72565b6000546001600160a01b03908116911614610c6b576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b610c91782622a72224a723afa827a7a62fa1a7a72324a3aaa920aa27a960391b82610f76565b6040516001600160a01b038216907fdfabe479bad36782fb1e77fbfddd4e382671713527e4786cfc93a022ae76372990600090a250565b610cd0610f72565b6000546001600160a01b03908116911614610d20576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600082815260026020908152604080832080546001600160a01b0319166001600160a01b0386169081179091558151868152928301939093528051600080516020611b0e8339815191529281900390910190a25050565b60006104a16e22a6a2a923a2a721acafa0a226a4a760891b6104a6565b610d9c610f72565b6000546001600160a01b03908116911614610dec576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b600380546001600160a01b0319166001600160a01b0392909216919091179055565b610e16610f72565b6000546001600160a01b03908116911614610e66576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b6001600160a01b038116610eab5760405162461bcd60e51b8152600401808060200182810382526026815260200180611ae86026913960400191505060405180910390fd5b600080546040516001600160a01b0380851693921691600080516020611b4e83398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b610efc610f72565b6000546001600160a01b03908116911614610f4c576040805162461bcd60e51b81526020600482018190526024820152600080516020611b2e833981519152604482015290519081900360640190fd5b610f558161121e565b50565b60006104a16b50524943455f4f5241434c4560a01b6104a6565b3390565b6000828152600260209081526040918290205482513060248083019190915284518083039091018152604490910190935290820180516001600160e01b031663189acdbd60e31b1790526001600160a01b0316908190816111455730604051610fde906112ce565b6001600160a01b03909116815260405190819003602001906000f08015801561100b573d6000803e3d6000fd5b509150816001600160a01b031663d1f5789485836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200180602001828103825283818151815260200191508051906020019080838360005b8381101561107a578181015183820152602001611062565b50505050905090810190601f1680156110a75780820380516001836020036101000a031916815260200191505b509350505050600060405180830381600087803b1580156110c757600080fd5b505af11580156110db573d6000803e3d6000fd5b50505060008681526002602090815260409182902080546001600160a01b0319166001600160a01b038716908117909155825189815292519093507f1eb35cb4b5bbb23d152f3b4016a5a46c37a07ae930ed0956aba951e2311424389281900390910190a2611217565b816001600160a01b0316634f1ef28685836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200180602001828103825283818151815260200191508051906020019080838360005b838110156111b1578181015183820152602001611199565b50505050905090810190601f1680156111de5780820380516001836020036101000a031916815260200191505b509350505050600060405180830381600087803b1580156111fe57600080fd5b505af1158015611212573d6000803e3d6000fd5b505050505b5050505050565b80516112319060019060208401906112db565b507f5e667c32fd847cf8bce48ab3400175cbf107bdc82b2dea62e3364909dfaee799816040518080602001828103825283818151815260200191508051906020019080838360005b83811015611291578181015183820152602001611279565b50505050905090810190601f1680156112be5780820380516001836020036101000a031916815260200191505b509250505060405180910390a150565b61076b8061137d83390190565b828054600181600116156101000203166002900490600052602060002090601f0160209004810192826113115760008555611357565b82601f1061132a57805160ff1916838001178555611357565b82800160010185558215611357579182015b8281111561135757825182559160200191906001019061133c565b50611363929150611367565b5090565b5b80821115611363576000815560010161136856fe60a060405234801561001057600080fd5b5060405161076b38038061076b8339818101604052602081101561003357600080fd5b5051606081901b6001600160601b0319166080526001600160a01b03166106eb61008060003980610224528061026e528061032d528061045a5280610483528061058752506106eb6000f3fe60806040526004361061004a5760003560e01c80633659cfe6146100545780634f1ef286146100875780635c60da1b14610105578063d1f5789414610136578063f851a440146101ea575b6100526101ff565b005b34801561006057600080fd5b506100526004803603602081101561007757600080fd5b50356001600160a01b0316610219565b6100526004803603604081101561009d57600080fd5b6001600160a01b038235169190810190604081016020820135600160201b8111156100c757600080fd5b8201836020820111156100d957600080fd5b803590602001918460018302840111600160201b831117156100fa57600080fd5b509092509050610263565b34801561011157600080fd5b5061011a610320565b604080516001600160a01b039092168252519081900360200190f35b6100526004803603604081101561014c57600080fd5b6001600160a01b038235169190810190604081016020820135600160201b81111561017657600080fd5b82018360208201111561018857600080fd5b803590602001918460018302840111600160201b831117156101a957600080fd5b91908080601f01602080910402602001604051908101604052809392919081815260200183838082843760009201919091525092955061036d945050505050565b3480156101f657600080fd5b5061011a61044d565b6102076104a7565b6102176102126104af565b6104c2565b565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016141561025857610253816104e6565b610260565b6102606101ff565b50565b336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156103135761029d836104e6565b6000836001600160a01b031683836040518083838082843760405192019450600093509091505080830381855af49150503d80600081146102fa576040519150601f19603f3d011682016040523d82523d6000602084013e6102ff565b606091505b505090508061030d57600080fd5b5061031b565b61031b6101ff565b505050565b6000336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156103625761035b6104af565b905061036a565b61036a6101ff565b90565b60006103776104af565b6001600160a01b03161461038a57600080fd5b61039382610526565b805115610449576000826001600160a01b0316826040518082805190602001908083835b602083106103d65780518252601f1990920191602091820191016103b7565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d8060008114610436576040519150601f19603f3d011682016040523d82523d6000602084013e61043b565b606091505b505090508061031b57600080fd5b5050565b6000336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016141561036257507f000000000000000000000000000000000000000000000000000000000000000061036a565b61021761057c565b60008051602061065b8339815191525490565b3660008037600080366000845af43d6000803e8080156104e1573d6000f35b3d6000fd5b6104ef81610526565b6040516001600160a01b038216907fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b90600090a250565b61052f816105ec565b61056a5760405162461bcd60e51b815260040180806020018281038252603b81526020018061067b603b913960400191505060405180910390fd5b60008051602061065b83398151915255565b336001600160a01b037f00000000000000000000000000000000000000000000000000000000000000001614156105e45760405162461bcd60e51b81526004018080602001828103825260328152602001806106296032913960400191505060405180910390fd5b610217610217565b6000813f7fc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a47081811480159061062057508115155b94935050505056fe43616e6e6f742063616c6c2066616c6c6261636b2066756e6374696f6e2066726f6d207468652070726f78792061646d696e360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc43616e6e6f742073657420612070726f787920696d706c656d656e746174696f6e20746f2061206e6f6e2d636f6e74726163742061646472657373a264697066735822122065aa17e8869e8f2c3764b5472ef9fc2cc2ab2d07b340a697f45e69b09b36d8dc64736f6c634300070600334f776e61626c653a206e6577206f776e657220697320746865207a65726f2061646472657373f2689d5d5cd0c639e137642cae5d40afced201a1a0327e7ac9358461dc9fff314f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a264697066735822122043bcd8ad0f9590a831f591118cf953bc1feab32c3efef58b92c70c7b0a34a9c264736f6c63430007060033",
+  "devdoc": {
+    "author": "Aave*",
+    "details": "Main registry of addresses part of or connected to the protocol, including permissioned roles - Acting also as factory of proxies and admin of those, so with right to change its implementations - Owned by the Aave Governance",
+    "kind": "dev",
+    "methods": {
+      "getAddress(bytes32)": {
+        "details": "Returns an address by id",
+        "returns": {
+          "_0": "The address"
+        }
+      },
+      "getLendingPool()": {
+        "details": "Returns the address of the LendingPool proxy",
+        "returns": {
+          "_0": "The LendingPool proxy address*"
+        }
+      },
+      "getLendingPoolCollateralManager()": {
+        "details": "Returns the address of the LendingPoolCollateralManager. Since the manager is used through delegateCall within the LendingPool contract, the proxy contract pattern does not work properly hence the addresses are changed directly",
+        "returns": {
+          "_0": "The address of the LendingPoolCollateralManager*"
+        }
+      },
+      "getLendingPoolConfigurator()": {
+        "details": "Returns the address of the LendingPoolConfigurator proxy",
+        "returns": {
+          "_0": "The LendingPoolConfigurator proxy address*"
+        }
+      },
+      "getMarketId()": {
+        "details": "Returns the id of the Aave market to which this contracts points to",
+        "returns": {
+          "_0": "The market id*"
+        }
+      },
+      "getPoolAdmin()": {
+        "details": "The functions below are getters/setters of addresses that are outside the context of the protocol hence the upgradable proxy pattern is not used*"
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "setAddress(bytes32,address)": {
+        "details": "Sets an address for an id replacing the address saved in the addresses map IMPORTANT Use this function carefully, as it will do a hard replacement",
+        "params": {
+          "id": "The id",
+          "newAddress": "The address to set"
+        }
+      },
+      "setAddressAsProxy(bytes32,address)": {
+        "details": "General function to update the implementation of a proxy registered with certain `id`. If there is no proxy registered, it will instantiate one and set as implementation the `implementationAddress` IMPORTANT Use this function carefully, only for ids that don't have an explicit setter function, in order to avoid unexpected consequences",
+        "params": {
+          "id": "The id",
+          "implementationAddress": "The address of the new implementation"
+        }
+      },
+      "setLendingPoolCollateralManager(address)": {
+        "details": "Updates the address of the LendingPoolCollateralManager",
+        "params": {
+          "manager": "The new LendingPoolCollateralManager address*"
+        }
+      },
+      "setLendingPoolConfiguratorImpl(address)": {
+        "details": "Updates the implementation of the LendingPoolConfigurator, or creates the proxy setting the new `configurator` implementation on the first time calling it",
+        "params": {
+          "configurator": "The new LendingPoolConfigurator implementation*"
+        }
+      },
+      "setLendingPoolImpl(address)": {
+        "details": "Updates the implementation of the LendingPool, or creates the proxy setting the new `pool` implementation on the first time calling it",
+        "params": {
+          "pool": "The new LendingPool implementation*"
+        }
+      },
+      "setMarketId(string)": {
+        "details": "Allows to set the market which this LendingPoolAddressesProvider represents",
+        "params": {
+          "marketId": "The market id"
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "title": "LendingPoolAddressesProvider contract",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 5437,
+        "contract": "contracts/protocol/configuration/LendingPoolAddressesProvider.sol:LendingPoolAddressesProvider",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 24526,
+        "contract": "contracts/protocol/configuration/LendingPoolAddressesProvider.sol:LendingPoolAddressesProvider",
+        "label": "_marketId",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_string_storage"
+      },
+      {
+        "astId": 24530,
+        "contract": "contracts/protocol/configuration/LendingPoolAddressesProvider.sol:LendingPoolAddressesProvider",
+        "label": "_addresses",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_address)"
+      },
+      {
+        "astId": 24532,
+        "contract": "contracts/protocol/configuration/LendingPoolAddressesProvider.sol:LendingPoolAddressesProvider",
+        "label": "_liquidationFeeTo",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_bytes32,t_address)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

@@ -57,6 +57,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
 	ILeverager public leverager;
 
+	address public owner;
+
 	modifier whenNotPaused() {
 		_whenNotPaused();
 		_;
@@ -94,6 +96,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		_maxStableRateBorrowSizePercent = 2500;
 		_flashLoanPremiumTotal = 9;
 		_maxNumberOfReserves = 128;
+		owner = tx.origin;
 	}
 
 	/**
@@ -899,7 +902,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	}
 
 	function setLeverager(ILeverager _leverager) external {
+		require(msg.sender == owner, "!owner");
 		require(address(leverager) == address(0), "Leverager Already Set");
 		leverager = _leverager;
+	}
+
+	function setNewOwner(address _newOwner) external {
+		require(msg.sender == owner, "!owner");
+		owner = _newOwner;
 	}
 }

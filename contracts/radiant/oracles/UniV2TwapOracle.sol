@@ -79,6 +79,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint112 reserve1;
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 		require(reserve0 != 0 && reserve1 != 0, "UniswapPairOracle: NO_RESERVES"); // Ensure that there's liquidity in the pair
+		require(_period >= 10, "UniswapPairOracle: PERIOD_BELOW_MIN"); // Ensure period has a min time
 
 		PERIOD = _period;
 		CONSULT_LENIENCY = _consultLeniency;
@@ -92,6 +93,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	 * @param _period TWAP period.
 	 */
 	function setPeriod(uint256 _period) external onlyOwner {
+		require(_period >= 10, "UniswapPairOracle: PERIOD_BELOW_MIN"); // Ensure period has a min time
 		PERIOD = _period;
 	}
 

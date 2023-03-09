@@ -10,8 +10,7 @@ import { setupTest } from "../setup";
 
 chai.use(solidity);
 
-// TODO: make work w/ hardhat-deploy upgrades
-xdescribe("Upgradeable Contracts", () => {
+describe("Upgradeable Contracts", () => {
   let deployData: DeployData;
   let chefIncentivesController: ChefIncentivesController;
   let deployer: SignerWithAddress;
@@ -22,7 +21,27 @@ xdescribe("Upgradeable Contracts", () => {
     deployer = fixture.deployer;
 
     chefIncentivesController = fixture.chefIncentivesController;
-  });
+
+		const ChefIncentivesController = await ethers.getContractFactory(
+      "ChefIncentivesController"
+    );
+		const MiddleFeeDistribution = await ethers.getContractFactory(
+      "MiddleFeeDistribution"
+    );
+		const MultiFeeDistribution = await ethers.getContractFactory(
+      "MultiFeeDistribution"
+    );
+		const PriceProvider = await ethers.getContractFactory(
+      "PriceProvider"
+    );
+
+		await upgrades.forceImport(deployData.chefIncentivesController, ChefIncentivesController);
+		await upgrades.forceImport(deployData.middleFeeDistribution, MiddleFeeDistribution);
+		await upgrades.forceImport(deployData.multiFeeDistribution, MultiFeeDistribution);
+		await upgrades.forceImport(deployData.lpFeeDistribution, MultiFeeDistribution);
+		await upgrades.forceImport(deployData.priceProvider, PriceProvider);
+
+	});
 
   it("Upgradeable ChefIncentivesController works.", async () => {
     const newRps = ethers.utils.parseUnits("42", 18);
@@ -31,7 +50,7 @@ xdescribe("Upgradeable Contracts", () => {
       .setRewardsPerSecond(newRps, true);
     const rps1 = await chefIncentivesController.rewardsPerSecond();
 
-    const MockNewChefIncentivesController = await ethers.getContractFactory(
+		const MockNewChefIncentivesController = await ethers.getContractFactory(
       "MockNewChefIncentivesController"
     );
     const mockNewChefIncentivesController = await upgrades.upgradeProxy(

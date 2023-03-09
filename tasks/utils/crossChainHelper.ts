@@ -76,11 +76,7 @@ export const getProvider = (network: string) => {
 }
 
 export const getWallet = (index, provider) => {
-    console.log(`pk`);
-    console.log(process.env.PRIVATE_KEY_ARBI_GOERLI);
-
     const signer = new ethers.Wallet(process.env.PRIVATE_KEY_ARBI_GOERLI, provider);
-    console.log(`CURRENT SIGNER!!: ${signer.address}`)
     return signer;
     // return ethers.Wallet.fromMnemonic(process.env.MNEMONIC || "", `m/44'/60'/0'/0/${index}`)
 }

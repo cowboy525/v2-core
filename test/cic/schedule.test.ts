@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
+import chai from "chai";
 import assert from "assert";
 import { ethers, upgrades } from "hardhat";
 import { advanceTimeAndBlock } from "../shared/helpers";
@@ -7,6 +7,10 @@ import { ChefIncentivesController } from "../../typechain-types";
 import { getLatestBlockTimestamp } from "../../scripts/utils";
 import { BigNumber } from "ethers";
 import { setupTest } from "../setup";
+import { solidity } from "ethereum-waffle";
+
+chai.use(solidity);
+const { expect } = chai;
 
 describe("ChefIncentivesController Rewards Schedule and Manual Setting RPS.", () => {
   let deployer: SignerWithAddress;
@@ -20,7 +24,7 @@ describe("ChefIncentivesController Rewards Schedule and Manual Setting RPS.", ()
     chefIncentivesController = fixture.chefIncentivesController;
   });
 
-  xit("setEmissionSchedule before start", async () => {
+  it("setEmissionSchedule before start", async () => {
     const chefFactory = await ethers.getContractFactory(
       "ChefIncentivesController"
     );

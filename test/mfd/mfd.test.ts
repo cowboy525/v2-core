@@ -1,5 +1,4 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
 import hre, { ethers, upgrades } from "hardhat";
 import {
   advanceTimeAndBlock,
@@ -195,8 +194,7 @@ describe("MultiFeeDistribution", () => {
     expect(await radiant.balanceOf(mfd.address)).to.be.equal(mintAmount.mul(2));
   });
 
-  // TODO: uncomment when recover re-added (for contract size)
-  xit("recover ERC20", async () => {
+  it("recover ERC20", async () => {
     const mintAmount = ethers.utils.parseUnits("604800", 18);
     await radiant.mint(mfd.address, mintAmount);
 

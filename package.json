@@ -75,6 +75,7 @@
     "@uniswap/v3-periphery": "https://github.com/Uniswap/v3-periphery.git#0.8",
     "cli-ux": "^6.0.9",
     "defender-admin-client": "^1.39.0",
+    "defender-relay-client": "^1.39.0",
     "ethereum-waffle": "^4.0.10",
     "git": "^0.1.5",
     "glob": "^9.2.1",
