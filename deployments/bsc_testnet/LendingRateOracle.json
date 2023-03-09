@@ -1,0 +1,235 @@
+{
+  "address": "0xFDF09af02FA6561FDf9546eed7DC5eeD87db73c2",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        }
+      ],
+      "name": "getMarketBorrowRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        }
+      ],
+      "name": "getMarketLiquidityRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMarketBorrowRate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_asset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMarketLiquidityRate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xeca28602d5c6d580cdd7ce0e3b029f97a43e74eddb146e8d202824b3eda9942a",
+  "receipt": {
+    "to": null,
+    "from": "0xA3De96858FD006fd978eA2D55Efe6b125012f485",
+    "contractAddress": "0xFDF09af02FA6561FDf9546eed7DC5eeD87db73c2",
+    "transactionIndex": 4,
+    "gasUsed": "339496",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001001000000000000000000000000000000000020000000000000000000800000000000000000000000000000000400004000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000100000000000020000000000000000000000000800000000000000000000000000000000000000000",
+    "blockHash": "0xd02b7ba66175a51784dd0d795323665aa3e9d4200b6cd369e468d17de2c8c041",
+    "transactionHash": "0xeca28602d5c6d580cdd7ce0e3b029f97a43e74eddb146e8d202824b3eda9942a",
+    "logs": [
+      {
+        "transactionIndex": 4,
+        "blockNumber": 27738505,
+        "transactionHash": "0xeca28602d5c6d580cdd7ce0e3b029f97a43e74eddb146e8d202824b3eda9942a",
+        "address": "0xFDF09af02FA6561FDf9546eed7DC5eeD87db73c2",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x000000000000000000000000a3de96858fd006fd978ea2d55efe6b125012f485"
+        ],
+        "data": "0x",
+        "logIndex": 8,
+        "blockHash": "0xd02b7ba66175a51784dd0d795323665aa3e9d4200b6cd369e468d17de2c8c041"
+      }
+    ],
+    "blockNumber": 27738505,
+    "cumulativeGasUsed": "961772",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "78995fe69be866012cdea8ea4c4842de",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"}],\"name\":\"getMarketBorrowRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"}],\"name\":\"getMarketLiquidityRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_rate\",\"type\":\"uint256\"}],\"name\":\"setMarketBorrowRate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_asset\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_rate\",\"type\":\"uint256\"}],\"name\":\"setMarketLiquidityRate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/mocks/oracle/LendingRateOracle.sol\":\"LendingRateOracle\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"contracts/dependencies/openzeppelin/contracts/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.7.6;\\n\\n/*\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with GSN meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n  function _msgSender() internal view virtual returns (address payable) {\\n    return msg.sender;\\n  }\\n\\n  function _msgData() internal view virtual returns (bytes memory) {\\n    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\\n    return msg.data;\\n  }\\n}\\n\",\"keccak256\":\"0xdf8525cd148276c372bf07a4b90630053d76c7a52649c7740df86a1a1a75cc7a\",\"license\":\"MIT\"},\"contracts/dependencies/openzeppelin/contracts/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\n\\nimport './Context.sol';\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\ncontract Ownable is Context {\\n  address private _owner;\\n\\n  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n  /**\\n   * @dev Initializes the contract setting the deployer as the initial owner.\\n   */\\n  constructor() {\\n    address msgSender = _msgSender();\\n    _owner = msgSender;\\n    emit OwnershipTransferred(address(0), msgSender);\\n  }\\n\\n  /**\\n   * @dev Returns the address of the current owner.\\n   */\\n  function owner() public view returns (address) {\\n    return _owner;\\n  }\\n\\n  /**\\n   * @dev Throws if called by any account other than the owner.\\n   */\\n  modifier onlyOwner() {\\n    require(_owner == _msgSender(), 'Ownable: caller is not the owner');\\n    _;\\n  }\\n\\n  /**\\n   * @dev Leaves the contract without owner. It will not be possible to call\\n   * `onlyOwner` functions anymore. Can only be called by the current owner.\\n   *\\n   * NOTE: Renouncing ownership will leave the contract without an owner,\\n   * thereby removing any functionality that is only available to the owner.\\n   */\\n  function renounceOwnership() public virtual onlyOwner {\\n    emit OwnershipTransferred(_owner, address(0));\\n    _owner = address(0);\\n  }\\n\\n  /**\\n   * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n   * Can only be called by the current owner.\\n   */\\n  function transferOwnership(address newOwner) public virtual onlyOwner {\\n    require(newOwner != address(0), 'Ownable: new owner is the zero address');\\n    emit OwnershipTransferred(_owner, newOwner);\\n    _owner = newOwner;\\n  }\\n}\\n\",\"keccak256\":\"0x0b0ab32430f6def166e85816b37c61c175168c96519305001b5a209cfb5856dd\",\"license\":\"MIT\"},\"contracts/interfaces/ILendingRateOracle.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @title ILendingRateOracle interface\\n * @notice Interface for the Aave borrow rate oracle. Provides the average market borrow rate to be used as a base for the stable borrow rate calculations\\n **/\\n\\ninterface ILendingRateOracle {\\n  /**\\n    @dev returns the market borrow rate in ray\\n    **/\\n  function getMarketBorrowRate(address asset) external view returns (uint256);\\n\\n  /**\\n    @dev sets the market borrow rate. Rate value must be in ray\\n    **/\\n  function setMarketBorrowRate(address asset, uint256 rate) external;\\n}\\n\",\"keccak256\":\"0xbe09d11c311e3f59e118f1d3565153077ec9bb80f671b07fd8743f2f4ed275f4\",\"license\":\"agpl-3.0\"},\"contracts/mocks/oracle/LendingRateOracle.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport {ILendingRateOracle} from '../../interfaces/ILendingRateOracle.sol';\\nimport {Ownable} from '../../dependencies/openzeppelin/contracts/Ownable.sol';\\n\\ncontract LendingRateOracle is ILendingRateOracle, Ownable {\\n  mapping(address => uint256) borrowRates;\\n  mapping(address => uint256) liquidityRates;\\n\\n  function getMarketBorrowRate(address _asset) external view override returns (uint256) {\\n    return borrowRates[_asset];\\n  }\\n\\n  function setMarketBorrowRate(address _asset, uint256 _rate) external override onlyOwner {\\n    borrowRates[_asset] = _rate;\\n  }\\n\\n  function getMarketLiquidityRate(address _asset) external view returns (uint256) {\\n    return liquidityRates[_asset];\\n  }\\n\\n  function setMarketLiquidityRate(address _asset, uint256 _rate) external onlyOwner {\\n    liquidityRates[_asset] = _rate;\\n  }\\n}\\n\",\"keccak256\":\"0x1c286419db0d551b026df137f9c3469f23a52769c43fc7d9f04edc4a2eac7827\",\"license\":\"agpl-3.0\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50600061001b61006a565b600080546001600160a01b0319166001600160a01b0383169081178255604051929350917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908290a35061006e565b3390565b6104bf8061007d6000396000f3fe608060405234801561001057600080fd5b506004361061006d5760003560e01c8063715018a61461007257806372eb293d1461007c5780638da5cb5b146100a85780639f86a0ee146100cc578063bb85c0bb146100f8578063f2fde38b14610130578063fbe5ba1e14610156575b600080fd5b61007a61017c565b005b61007a6004803603604081101561009257600080fd5b506001600160a01b03813516906020013561020c565b6100b0610280565b604080516001600160a01b039092168252519081900360200190f35b61007a600480360360408110156100e257600080fd5b506001600160a01b03813516906020013561028f565b61011e6004803603602081101561010e57600080fd5b50356001600160a01b0316610303565b60408051918252519081900360200190f35b61007a6004803603602081101561014657600080fd5b50356001600160a01b031661031e565b61011e6004803603602081101561016c57600080fd5b50356001600160a01b0316610404565b61018461041f565b6000546001600160a01b039081169116146101d4576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b600080546040516001600160a01b039091169060008051602061046a833981519152908390a3600080546001600160a01b0319169055565b61021461041f565b6000546001600160a01b03908116911614610264576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b03909116600090815260016020526040902055565b6000546001600160a01b031690565b61029761041f565b6000546001600160a01b039081169116146102e7576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b03909116600090815260026020526040902055565b6001600160a01b031660009081526001602052604090205490565b61032661041f565b6000546001600160a01b03908116911614610376576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b0381166103bb5760405162461bcd60e51b81526004018080602001828103825260268152602001806104246026913960400191505060405180910390fd5b600080546040516001600160a01b038085169392169160008051602061046a83398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b6001600160a01b031660009081526002602052604090205490565b339056fe4f776e61626c653a206e6577206f776e657220697320746865207a65726f20616464726573734f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a2646970667358221220b300e049fa1866be0b5b68169a9af7f06aeac07723d8abfb39d06c4d6772cd7464736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061006d5760003560e01c8063715018a61461007257806372eb293d1461007c5780638da5cb5b146100a85780639f86a0ee146100cc578063bb85c0bb146100f8578063f2fde38b14610130578063fbe5ba1e14610156575b600080fd5b61007a61017c565b005b61007a6004803603604081101561009257600080fd5b506001600160a01b03813516906020013561020c565b6100b0610280565b604080516001600160a01b039092168252519081900360200190f35b61007a600480360360408110156100e257600080fd5b506001600160a01b03813516906020013561028f565b61011e6004803603602081101561010e57600080fd5b50356001600160a01b0316610303565b60408051918252519081900360200190f35b61007a6004803603602081101561014657600080fd5b50356001600160a01b031661031e565b61011e6004803603602081101561016c57600080fd5b50356001600160a01b0316610404565b61018461041f565b6000546001600160a01b039081169116146101d4576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b600080546040516001600160a01b039091169060008051602061046a833981519152908390a3600080546001600160a01b0319169055565b61021461041f565b6000546001600160a01b03908116911614610264576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b03909116600090815260016020526040902055565b6000546001600160a01b031690565b61029761041f565b6000546001600160a01b039081169116146102e7576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b03909116600090815260026020526040902055565b6001600160a01b031660009081526001602052604090205490565b61032661041f565b6000546001600160a01b03908116911614610376576040805162461bcd60e51b8152602060048201819052602482015260008051602061044a833981519152604482015290519081900360640190fd5b6001600160a01b0381166103bb5760405162461bcd60e51b81526004018080602001828103825260268152602001806104246026913960400191505060405180910390fd5b600080546040516001600160a01b038085169392169160008051602061046a83398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b6001600160a01b031660009081526002602052604090205490565b339056fe4f776e61626c653a206e6577206f776e657220697320746865207a65726f20616464726573734f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a2646970667358221220b300e049fa1866be0b5b68169a9af7f06aeac07723d8abfb39d06c4d6772cd7464736f6c63430007060033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 5437,
+        "contract": "contracts/mocks/oracle/LendingRateOracle.sol:LendingRateOracle",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 19860,
+        "contract": "contracts/mocks/oracle/LendingRateOracle.sol:LendingRateOracle",
+        "label": "borrowRates",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 19864,
+        "contract": "contracts/mocks/oracle/LendingRateOracle.sol:LendingRateOracle",
+        "label": "liquidityRates",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_uint256)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

@@ -186,9 +186,9 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 
 		if (address(_getIncentivesController()) != address(0)) {
 			uint256 currentTotalSupply = _totalSupply;
-			_getIncentivesController().handleActionAfter(sender, senderBalance, currentTotalSupply);
+			_getIncentivesController().handleActionAfter(sender, _balances[sender], currentTotalSupply);
 			if (sender != recipient) {
-				_getIncentivesController().handleActionAfter(recipient, recipientBalance, currentTotalSupply);
+				_getIncentivesController().handleActionAfter(recipient, _balances[recipient], currentTotalSupply);
 			}
 		}
 	}

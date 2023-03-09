@@ -1,0 +1,857 @@
+{
+  "address": "0x9927c9b2F8dBD0ee6EBf2bAD97b5aaf132Ea6A86",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract ILendingPool",
+          "name": "_lendingPool",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IMiddleFeeDistribution",
+          "name": "_middleFeeDistribution",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IPriceProvider",
+          "name": "_priceProvider",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "AddToken",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "contract IChefIncentivesController",
+          "name": "_chef",
+          "type": "address"
+        }
+      ],
+      "name": "ChefIncentivesControllerUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_time",
+          "type": "uint256"
+        }
+      ],
+      "name": "DqTimeUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_lpToken",
+          "type": "address"
+        }
+      ],
+      "name": "LPTokenUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "requiredDepositRatio",
+          "type": "uint256"
+        }
+      ],
+      "name": "RequiredDepositRatioUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "RATIO_DIVISOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "chef",
+      "outputs": [
+        {
+          "internalType": "contract IChefIncentivesController",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "disqualifiedTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getDqTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "isEligibleForRewards",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "isEligible",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "isMarketDisqualified",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "lastEligibleStatus",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "lastEligibleTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lastEligibleTimestamp",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lendingPool",
+      "outputs": [
+        {
+          "internalType": "contract ILendingPool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "lockedUsdValue",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lpToken",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "middleFeeDistribution",
+      "outputs": [
+        {
+          "internalType": "contract IMiddleFeeDistribution",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceProvider",
+      "outputs": [
+        {
+          "internalType": "contract IPriceProvider",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "refresh",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "requiredDepositRatio",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "requiredUsdValue",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IChefIncentivesController",
+          "name": "_chef",
+          "type": "address"
+        }
+      ],
+      "name": "setChefIncentivesController",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_time",
+          "type": "uint256"
+        }
+      ],
+      "name": "setDqTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_lpToken",
+          "type": "address"
+        }
+      ],
+      "name": "setLPToken",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_requiredDepositRatio",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRequiredDepositRatio",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "updatePrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userDeposits",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xca1e193f0b2c2bd27a563814e32e3163c3ec3d5db7ad539edf7549f4f712a367",
+  "receipt": {
+    "to": null,
+    "from": "0xA3De96858FD006fd978eA2D55Efe6b125012f485",
+    "contractAddress": "0x9927c9b2F8dBD0ee6EBf2bAD97b5aaf132Ea6A86",
+    "transactionIndex": 3,
+    "gasUsed": "1437613",
+    "logsBloom": "0x00000000000000000000000000000000000000000000400000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001001000000000000000000010000000000000020000000000000000000800000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000040000000000000000000000000000000000000000000000000000000000000000000000100000000000020000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x89f18bfd370219ce6950b8753c6b8bdd75cc969c9e4e4a7179cc3db6046ae85a",
+    "transactionHash": "0xca1e193f0b2c2bd27a563814e32e3163c3ec3d5db7ad539edf7549f4f712a367",
+    "logs": [
+      {
+        "transactionIndex": 3,
+        "blockNumber": 27738589,
+        "transactionHash": "0xca1e193f0b2c2bd27a563814e32e3163c3ec3d5db7ad539edf7549f4f712a367",
+        "address": "0x9927c9b2F8dBD0ee6EBf2bAD97b5aaf132Ea6A86",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x000000000000000000000000a3de96858fd006fd978ea2d55efe6b125012f485"
+        ],
+        "data": "0x",
+        "logIndex": 5,
+        "blockHash": "0x89f18bfd370219ce6950b8753c6b8bdd75cc969c9e4e4a7179cc3db6046ae85a"
+      }
+    ],
+    "blockNumber": 27738589,
+    "cumulativeGasUsed": "1823559",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x00175A6E2c1d498F04B471C85194C1bed6b3950d",
+    "0x3416Df75dE762901acB29Ecea32d6Fc845Fe26D8",
+    "0xA63e4C860bEB53989aFc0CF0dC78351E6fDC63F1"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "78995fe69be866012cdea8ea4c4842de",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract ILendingPool\",\"name\":\"_lendingPool\",\"type\":\"address\"},{\"internalType\":\"contract IMiddleFeeDistribution\",\"name\":\"_middleFeeDistribution\",\"type\":\"address\"},{\"internalType\":\"contract IPriceProvider\",\"name\":\"_priceProvider\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"}],\"name\":\"AddToken\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"contract IChefIncentivesController\",\"name\":\"_chef\",\"type\":\"address\"}],\"name\":\"ChefIncentivesControllerUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_time\",\"type\":\"uint256\"}],\"name\":\"DqTimeUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_lpToken\",\"type\":\"address\"}],\"name\":\"LPTokenUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"requiredDepositRatio\",\"type\":\"uint256\"}],\"name\":\"RequiredDepositRatioUpdated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"RATIO_DIVISOR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"chef\",\"outputs\":[{\"internalType\":\"contract IChefIncentivesController\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"disqualifiedTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getDqTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"isEligibleForRewards\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"isEligible\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"isMarketDisqualified\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"lastEligibleStatus\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"lastEligibleTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lastEligibleTimestamp\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lendingPool\",\"outputs\":[{\"internalType\":\"contract ILendingPool\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"lockedUsdValue\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lpToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"middleFeeDistribution\",\"outputs\":[{\"internalType\":\"contract IMiddleFeeDistribution\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"priceProvider\",\"outputs\":[{\"internalType\":\"contract IPriceProvider\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"refresh\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"requiredDepositRatio\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"requiredUsdValue\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"required\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IChefIncentivesController\",\"name\":\"_chef\",\"type\":\"address\"}],\"name\":\"setChefIncentivesController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_time\",\"type\":\"uint256\"}],\"name\":\"setDqTime\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_lpToken\",\"type\":\"address\"}],\"name\":\"setLPToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_requiredDepositRatio\",\"type\":\"uint256\"}],\"name\":\"setRequiredDepositRatio\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"updatePrice\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"userDeposits\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Radiant Labs\",\"details\":\"All function calls are currently implemented without side effects\",\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"_lendingPool\":\"Address of lending pool.\",\"_middleFeeDistribution\":\"MiddleFeeDistribution address.\",\"_priceProvider\":\"PriceProvider address.\"}},\"getDqTime(address)\":{\"params\":{\"_user\":\"'s address\"}},\"isEligibleForRewards(address)\":{\"params\":{\"_user\":\"'s address\"}},\"isMarketDisqualified(address)\":{\"params\":{\"_user\":\"'s address\"}},\"lastEligibleTime(address)\":{\"details\":\"If user is still eligible, it will return future time  CAUTION: this function only works perfect when the array  is ordered by lock time. This is assured when _stake happens.\",\"params\":{\"user\":\"'s address\"}},\"lockedUsdValue(address)\":{\"params\":{\"user\":\"'s address\"}},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"refresh(address)\":{\"params\":{\"user\":\"'s address\"}},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"requiredUsdValue(address)\":{\"params\":{\"user\":\"'s address\"},\"returns\":{\"required\":\"USD value.\"}},\"setChefIncentivesController(address)\":{\"params\":{\"_chef\":\"address.\"}},\"setDqTime(address,uint256)\":{\"details\":\"Only callable by CIC\",\"params\":{\"_time\":\"for DQ\",\"_user\":\"'s address\"}},\"setRequiredDepositRatio(uint256)\":{\"params\":{\"_requiredDepositRatio\":\"Ratio in bips.\"}},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"title\":\"Eligible Deposit Provider\",\"version\":1},\"userdoc\":{\"events\":{\"AddToken(address)\":{\"notice\":\"Emitted when a new token is added\"},\"ChefIncentivesControllerUpdated(address)\":{\"notice\":\"Emitted when CIC is set\"},\"DqTimeUpdated(address,uint256)\":{\"notice\":\"Emitted when DQ time is set\"},\"LPTokenUpdated(address)\":{\"notice\":\"Emitted when LP token is set\"},\"RequiredDepositRatioUpdated(uint256)\":{\"notice\":\"Emitted when required TVL ratio is updated\"}},\"kind\":\"user\",\"methods\":{\"RATIO_DIVISOR()\":{\"notice\":\"RATIO BASE equal to 100%\"},\"chef()\":{\"notice\":\"Address of CIC\"},\"constructor\":{\"notice\":\"Constructor\"},\"disqualifiedTime(address)\":{\"notice\":\"Disqualified time of the user\"},\"getDqTime(address)\":{\"notice\":\"Returns DQ time of the user\"},\"isEligibleForRewards(address)\":{\"notice\":\"Returns if the user is eligible to receive rewards\"},\"isMarketDisqualified(address)\":{\"notice\":\"Is user DQed due to lock expire or price update\"},\"lastEligibleStatus(address)\":{\"notice\":\"Last eligible status of the user\"},\"lastEligibleTime(address)\":{\"notice\":\"Returns last eligible time of the user\"},\"lendingPool()\":{\"notice\":\"Address of Lending Pool\"},\"lockedUsdValue(address)\":{\"notice\":\"Returns locked RDNT and LP token value in eth\"},\"lpToken()\":{\"notice\":\"RDNT-ETH LP token\"},\"middleFeeDistribution()\":{\"notice\":\"Address of Middle fee distribution\"},\"priceProvider()\":{\"notice\":\"RDNT + LP price provider\"},\"refresh(address)\":{\"notice\":\"Refresh token amount for eligibility\"},\"requiredDepositRatio()\":{\"notice\":\"Required ratio of TVL to get reward; in bips\"},\"requiredUsdValue(address)\":{\"notice\":\"Returns USD value required to be locked\"},\"setChefIncentivesController(address)\":{\"notice\":\"Set CIC\"},\"setDqTime(address,uint256)\":{\"notice\":\"Sets DQ time of the user\"},\"setLPToken(address)\":{\"notice\":\"Set LP token\"},\"setRequiredDepositRatio(uint256)\":{\"notice\":\"Sets required tvl ratio. Can only be called by the owner.\"},\"updatePrice()\":{\"notice\":\"Update token price\"},\"userDeposits(address,address)\":{\"notice\":\"User's deposits per rToken; rToken => user => amount\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/eligibility/EligibilityDataProvider.sol\":\"EligibilityDataProvider\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"contracts/dependencies/openzeppelin/contracts/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.7.6;\\n\\n/*\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with GSN meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n  function _msgSender() internal view virtual returns (address payable) {\\n    return msg.sender;\\n  }\\n\\n  function _msgData() internal view virtual returns (bytes memory) {\\n    this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\\n    return msg.data;\\n  }\\n}\\n\",\"keccak256\":\"0xdf8525cd148276c372bf07a4b90630053d76c7a52649c7740df86a1a1a75cc7a\",\"license\":\"MIT\"},\"contracts/dependencies/openzeppelin/contracts/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\n\\nimport './Context.sol';\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\ncontract Ownable is Context {\\n  address private _owner;\\n\\n  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n  /**\\n   * @dev Initializes the contract setting the deployer as the initial owner.\\n   */\\n  constructor() {\\n    address msgSender = _msgSender();\\n    _owner = msgSender;\\n    emit OwnershipTransferred(address(0), msgSender);\\n  }\\n\\n  /**\\n   * @dev Returns the address of the current owner.\\n   */\\n  function owner() public view returns (address) {\\n    return _owner;\\n  }\\n\\n  /**\\n   * @dev Throws if called by any account other than the owner.\\n   */\\n  modifier onlyOwner() {\\n    require(_owner == _msgSender(), 'Ownable: caller is not the owner');\\n    _;\\n  }\\n\\n  /**\\n   * @dev Leaves the contract without owner. It will not be possible to call\\n   * `onlyOwner` functions anymore. Can only be called by the current owner.\\n   *\\n   * NOTE: Renouncing ownership will leave the contract without an owner,\\n   * thereby removing any functionality that is only available to the owner.\\n   */\\n  function renounceOwnership() public virtual onlyOwner {\\n    emit OwnershipTransferred(_owner, address(0));\\n    _owner = address(0);\\n  }\\n\\n  /**\\n   * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n   * Can only be called by the current owner.\\n   */\\n  function transferOwnership(address newOwner) public virtual onlyOwner {\\n    require(newOwner != address(0), 'Ownable: new owner is the zero address');\\n    emit OwnershipTransferred(_owner, newOwner);\\n    _owner = newOwner;\\n  }\\n}\\n\",\"keccak256\":\"0x0b0ab32430f6def166e85816b37c61c175168c96519305001b5a209cfb5856dd\",\"license\":\"MIT\"},\"contracts/dependencies/openzeppelin/contracts/SafeMath.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @dev Wrappers over Solidity's arithmetic operations with added overflow\\n * checks.\\n *\\n * Arithmetic operations in Solidity wrap on overflow. This can easily result\\n * in bugs, because programmers usually assume that an overflow raises an\\n * error, which is the standard behavior in high level programming languages.\\n * `SafeMath` restores this intuition by reverting the transaction when an\\n * operation overflows.\\n *\\n * Using this library instead of the unchecked operations eliminates an entire\\n * class of bugs, so it's recommended to use it always.\\n */\\nlibrary SafeMath {\\n  /**\\n   * @dev Returns the addition of two unsigned integers, reverting on\\n   * overflow.\\n   *\\n   * Counterpart to Solidity's `+` operator.\\n   *\\n   * Requirements:\\n   * - Addition cannot overflow.\\n   */\\n  function add(uint256 a, uint256 b) internal pure returns (uint256) {\\n    uint256 c = a + b;\\n    require(c >= a, 'SafeMath: addition overflow');\\n\\n    return c;\\n  }\\n\\n  /**\\n   * @dev Returns the subtraction of two unsigned integers, reverting on\\n   * overflow (when the result is negative).\\n   *\\n   * Counterpart to Solidity's `-` operator.\\n   *\\n   * Requirements:\\n   * - Subtraction cannot overflow.\\n   */\\n  function sub(uint256 a, uint256 b) internal pure returns (uint256) {\\n    return sub(a, b, 'SafeMath: subtraction overflow');\\n  }\\n\\n  /**\\n   * @dev Returns the subtraction of two unsigned integers, reverting with custom message on\\n   * overflow (when the result is negative).\\n   *\\n   * Counterpart to Solidity's `-` operator.\\n   *\\n   * Requirements:\\n   * - Subtraction cannot overflow.\\n   */\\n  function sub(\\n    uint256 a,\\n    uint256 b,\\n    string memory errorMessage\\n  ) internal pure returns (uint256) {\\n    require(b <= a, errorMessage);\\n    uint256 c = a - b;\\n\\n    return c;\\n  }\\n\\n  /**\\n   * @dev Returns the multiplication of two unsigned integers, reverting on\\n   * overflow.\\n   *\\n   * Counterpart to Solidity's `*` operator.\\n   *\\n   * Requirements:\\n   * - Multiplication cannot overflow.\\n   */\\n  function mul(uint256 a, uint256 b) internal pure returns (uint256) {\\n    // Gas optimization: this is cheaper than requiring 'a' not being zero, but the\\n    // benefit is lost if 'b' is also tested.\\n    // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522\\n    if (a == 0) {\\n      return 0;\\n    }\\n\\n    uint256 c = a * b;\\n    require(c / a == b, 'SafeMath: multiplication overflow');\\n\\n    return c;\\n  }\\n\\n  /**\\n   * @dev Returns the integer division of two unsigned integers. Reverts on\\n   * division by zero. The result is rounded towards zero.\\n   *\\n   * Counterpart to Solidity's `/` operator. Note: this function uses a\\n   * `revert` opcode (which leaves remaining gas untouched) while Solidity\\n   * uses an invalid opcode to revert (consuming all remaining gas).\\n   *\\n   * Requirements:\\n   * - The divisor cannot be zero.\\n   */\\n  function div(uint256 a, uint256 b) internal pure returns (uint256) {\\n    return div(a, b, 'SafeMath: division by zero');\\n  }\\n\\n  /**\\n   * @dev Returns the integer division of two unsigned integers. Reverts with custom message on\\n   * division by zero. The result is rounded towards zero.\\n   *\\n   * Counterpart to Solidity's `/` operator. Note: this function uses a\\n   * `revert` opcode (which leaves remaining gas untouched) while Solidity\\n   * uses an invalid opcode to revert (consuming all remaining gas).\\n   *\\n   * Requirements:\\n   * - The divisor cannot be zero.\\n   */\\n  function div(\\n    uint256 a,\\n    uint256 b,\\n    string memory errorMessage\\n  ) internal pure returns (uint256) {\\n    // Solidity only automatically asserts when dividing by 0\\n    require(b > 0, errorMessage);\\n    uint256 c = a / b;\\n    // assert(a == b * c + a % b); // There is no case in which this doesn't hold\\n\\n    return c;\\n  }\\n\\n  /**\\n   * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n   * Reverts when dividing by zero.\\n   *\\n   * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n   * opcode (which leaves remaining gas untouched) while Solidity uses an\\n   * invalid opcode to revert (consuming all remaining gas).\\n   *\\n   * Requirements:\\n   * - The divisor cannot be zero.\\n   */\\n  function mod(uint256 a, uint256 b) internal pure returns (uint256) {\\n    return mod(a, b, 'SafeMath: modulo by zero');\\n  }\\n\\n  /**\\n   * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n   * Reverts with custom message when dividing by zero.\\n   *\\n   * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n   * opcode (which leaves remaining gas untouched) while Solidity uses an\\n   * invalid opcode to revert (consuming all remaining gas).\\n   *\\n   * Requirements:\\n   * - The divisor cannot be zero.\\n   */\\n  function mod(\\n    uint256 a,\\n    uint256 b,\\n    string memory errorMessage\\n  ) internal pure returns (uint256) {\\n    require(b != 0, errorMessage);\\n    return a % b;\\n  }\\n\\n  function min(uint x, uint y) internal pure returns (uint z) {\\n        z = x < y ? x : y;\\n    }\\n}\\n\",\"keccak256\":\"0x4679f49c198f8ee52a6b2107ccd543c89eaf718c4c9db6ac7aa01b4c2c832a8b\",\"license\":\"agpl-3.0\"},\"contracts/eligibility/EligibilityDataProvider.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"../interfaces/ILendingPool.sol\\\";\\nimport \\\"../interfaces/IMultiFeeDistribution.sol\\\";\\nimport \\\"../interfaces/IChefIncentivesController.sol\\\";\\nimport \\\"../interfaces/IPriceProvider.sol\\\";\\nimport \\\"../interfaces/IMiddleFeeDistribution.sol\\\";\\nimport \\\"../interfaces/LockedBalance.sol\\\";\\nimport \\\"../interfaces/uniswap/IUniswapV2Router02.sol\\\";\\nimport \\\"../interfaces/uniswap/IUniswapV2Factory.sol\\\";\\nimport \\\"../interfaces/uniswap/IUniswapV2Pair.sol\\\";\\nimport \\\"../interfaces/IChainlinkAggregator.sol\\\";\\n\\nimport \\\"../dependencies/openzeppelin/contracts/SafeMath.sol\\\";\\nimport \\\"../dependencies/openzeppelin/contracts/Ownable.sol\\\";\\n\\n/// @title Eligible Deposit Provider\\n/// @author Radiant Labs\\n/// @dev All function calls are currently implemented without side effects\\ncontract EligibilityDataProvider is Ownable {\\n    using SafeMath for uint256;\\n\\n    /********************** Common Info ***********************/\\n\\n    /// @notice RATIO BASE equal to 100%\\n    uint256 public constant RATIO_DIVISOR = 10000;\\n\\n    /// @notice Address of Lending Pool\\n    ILendingPool public lendingPool;\\n\\n    /// @notice Address of CIC\\n    IChefIncentivesController public chef;\\n\\n    /// @notice Address of Middle fee distribution\\n    IMiddleFeeDistribution public middleFeeDistribution;\\n\\n    /// @notice RDNT + LP price provider\\n    IPriceProvider public priceProvider;\\n\\n    /// @notice Required ratio of TVL to get reward; in bips\\n    uint256 public requiredDepositRatio;\\n\\n    /// @notice RDNT-ETH LP token\\n    address public lpToken;\\n\\n    /********************** Eligible info ***********************/\\n\\n    /// @notice Last eligible status of the user\\n    mapping(address => bool) public lastEligibleStatus;\\n\\n    /// @notice Disqualified time of the user\\n    mapping(address => uint256) public disqualifiedTime;\\n\\n    // Elgible deposits per rToken\\n    mapping(address => uint256) private eligibleDeposits;\\n\\n    /// @notice User's deposits per rToken; rToken => user => amount\\n    mapping(address => mapping(address => uint256)) public userDeposits;\\n\\n    /********************** Events ***********************/\\n\\n     /// @notice Emitted when CIC is set\\n    event ChefIncentivesControllerUpdated(IChefIncentivesController _chef);\\n\\n    /// @notice Emitted when LP token is set\\n    event LPTokenUpdated(address _lpToken);\\n\\n    /// @notice Emitted when required TVL ratio is updated\\n    event RequiredDepositRatioUpdated(uint256 requiredDepositRatio);\\n\\n    /// @notice Emitted when DQ time is set\\n    event DqTimeUpdated(address _user, uint256 _time);\\n\\n    /// @notice Emitted when a new token is added\\n    event AddToken(address indexed token);\\n\\n    /**\\n     * @notice Constructor\\n     * @param _lendingPool Address of lending pool.\\n     * @param _middleFeeDistribution MiddleFeeDistribution address.\\n     * @param _priceProvider PriceProvider address.\\n     */\\n    constructor(\\n        ILendingPool _lendingPool,\\n        IMiddleFeeDistribution _middleFeeDistribution,\\n        IPriceProvider _priceProvider\\n    ) Ownable() {\\n        require(address(_lendingPool) != address(0), \\\"Not a valid address\\\");\\n        require(address(_middleFeeDistribution) != (address(0)), \\\"Not a valid address\\\");\\n        require(address(_priceProvider) != (address(0)), \\\"Not a valid address\\\");\\n\\n        lendingPool = _lendingPool;\\n        middleFeeDistribution = _middleFeeDistribution;\\n        priceProvider = _priceProvider;\\n        requiredDepositRatio = 500;\\n    }\\n\\n    /********************** Setters ***********************/\\n\\n    /**\\n     * @notice Set CIC\\n     * @param _chef address.\\n     */\\n    function setChefIncentivesController(IChefIncentivesController _chef)\\n        external\\n        onlyOwner\\n    {\\n        chef = _chef;\\n        emit ChefIncentivesControllerUpdated(_chef);\\n    }\\n\\n    /**\\n     * @notice Set LP token\\n     */\\n    function setLPToken(address _lpToken) external onlyOwner {\\n        require(lpToken == address(0), \\\"LP token already set\\\");\\n        lpToken = _lpToken;\\n\\n        emit LPTokenUpdated(_lpToken);\\n    }\\n\\n    /**\\n     * @notice Sets required tvl ratio. Can only be called by the owner.\\n     * @param _requiredDepositRatio Ratio in bips.\\n     */\\n    function setRequiredDepositRatio(uint256 _requiredDepositRatio) external onlyOwner {\\n        require(_requiredDepositRatio <= RATIO_DIVISOR, \\\"Invalid ratio\\\");\\n        requiredDepositRatio = _requiredDepositRatio;\\n\\n        emit RequiredDepositRatioUpdated(_requiredDepositRatio);\\n    }\\n\\n    /**\\n     * @notice Sets DQ time of the user\\n     * @dev Only callable by CIC\\n     * @param _user's address\\n     * @param _time for DQ\\n     */\\n    function setDqTime(address _user, uint256 _time) external {\\n        require(msg.sender == address(chef), \\\"Only CIC\\\");\\n        disqualifiedTime[_user] = _time;\\n\\n        emit DqTimeUpdated(_user, _time);\\n    }\\n\\n    /********************** View functions ***********************/\\n\\n    /**\\n     * @notice Returns locked RDNT and LP token value in eth\\n     * @param user's address\\n     */\\n    function lockedUsdValue(address user) public view returns (uint256) {\\n        IMultiFeeDistribution lpFeeDistribution = IMultiFeeDistribution(\\n            middleFeeDistribution.getLPFeeDistributionAddress()\\n        );\\n        IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(\\n            middleFeeDistribution.getMultiFeeDistributionAddress()\\n        );\\n        (, , uint256 lockedLP, ,) = lpFeeDistribution.lockedBalances(user);\\n        (, , uint256 lockedRdnt, ,) = multiFeeDistribution.lockedBalances(user);\\n        return _lockedUsdValue(lockedLP, lockedRdnt);\\n    }\\n\\n    /**\\n     * @notice Returns USD value required to be locked\\n     * @param user's address\\n     * @return required USD value.\\n     */\\n    function requiredUsdValue(address user)\\n        public\\n        view\\n        returns (uint256 required)\\n    {\\n        (uint256 totalCollateralUSD, , , , , ) = lendingPool.getUserAccountData(\\n            user\\n        );\\n        required = totalCollateralUSD.mul(requiredDepositRatio).div(RATIO_DIVISOR);\\n    }\\n\\n    /**\\n     * @notice Is user DQed due to lock expire or price update\\n     * @param _user's address\\n     */\\n    function isMarketDisqualified(address _user)\\n        public\\n        view\\n        returns (bool)\\n    {\\n        return \\n            requiredUsdValue(_user) > 0 &&\\n            !isEligibleForRewards(_user) && \\n            lastEligibleTime(_user) > block.timestamp;\\n    }\\n\\n    /**\\n     * @notice Returns if the user is eligible to receive rewards\\n     * @param _user's address\\n     */\\n    function isEligibleForRewards(address _user)\\n        public\\n        view\\n        returns (bool isEligible)\\n    {\\n        uint256 lockedValue = lockedUsdValue(_user);\\n        uint256 requiredValue = requiredUsdValue(_user);\\n        return requiredValue != 0 && lockedValue >= requiredValue;\\n    }\\n\\n    /**\\n     * @notice Returns DQ time of the user\\n     * @param _user's address\\n     */\\n    function getDqTime(address _user) public view returns (uint256) {\\n        return disqualifiedTime[_user];\\n    }\\n\\n    /**\\n     * @notice Returns last eligible time of the user\\n     * @dev If user is still eligible, it will return future time\\n     *  CAUTION: this function only works perfect when the array\\n     *  is ordered by lock time. This is assured when _stake happens.\\n     * @param user's address\\n     */\\n    function lastEligibleTime(address user)\\n        public\\n        view\\n        returns (uint256 lastEligibleTimestamp)\\n    {\\n        uint256 requiredValue = requiredUsdValue(user);\\n\\n        IMultiFeeDistribution lpFeeDistribution = IMultiFeeDistribution(\\n            middleFeeDistribution.getLPFeeDistributionAddress()\\n        );\\n        IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(\\n            middleFeeDistribution.getMultiFeeDistributionAddress()\\n        );\\n        LockedBalance[] memory lpLockData = lpFeeDistribution.lockInfo(user);\\n        LockedBalance[] memory rndtLockData = multiFeeDistribution.lockInfo(\\n            user\\n        );\\n\\n        uint256 lockedLP;\\n        uint256 lockedRdnt;\\n        uint256 i = lpLockData.length;\\n        uint256 j = rndtLockData.length;\\n        while (true) {\\n            if (i == 0 && j == 0) {\\n                // return 0;\\n                break;\\n            }\\n            if (i == 0) {\\n                j = j - 1;\\n                lastEligibleTimestamp = rndtLockData[j].unlockTime;\\n                lockedRdnt = lockedRdnt + rndtLockData[j].amount;\\n            } else if (j == 0) {\\n                i = i - 1;\\n                lastEligibleTimestamp = lpLockData[i].unlockTime;\\n                lockedLP = lockedLP + lpLockData[i].amount;\\n            } else if (\\n                lpLockData[i - 1].unlockTime < rndtLockData[j - 1].unlockTime\\n            ) {\\n                j = j - 1;\\n                lastEligibleTimestamp = rndtLockData[j].unlockTime;\\n                lockedRdnt = lockedRdnt + rndtLockData[j].amount;\\n            } else {\\n                i = i - 1;\\n                lastEligibleTimestamp = lpLockData[i].unlockTime;\\n                lockedLP = lockedLP + lpLockData[i].amount;\\n            }\\n\\n            if (_lockedUsdValue(lockedLP, lockedRdnt) >= requiredValue) {\\n                break;\\n            }\\n        }\\n    }\\n\\n    /********************** Operate functions ***********************/\\n\\n    /**\\n     * @notice Update token price\\n     */\\n    function updatePrice() public {\\n        priceProvider.update();\\n    }\\n\\n    /**\\n     * @notice Refresh token amount for eligibility\\n     * @param user's address\\n     */\\n    function refresh(address user) external {\\n        require(msg.sender == address(chef), \\\"Can only be called by CIC\\\");\\n        assert(user != address(0));\\n\\n        updatePrice();\\n\\n        bool currentEligble = isEligibleForRewards(user);\\n        if (currentEligble && disqualifiedTime[user] != 0) {\\n            disqualifiedTime[user] = 0;\\n        }\\n        lastEligibleStatus[user] = currentEligble;\\n    }\\n\\n    /********************** Internal functions ***********************/\\n\\n    /**\\n     * @notice Returns locked RDNT and LP token value in eth\\n     * @param lockedLP is locked lp amount\\n     * @param lockedRdnt is locked RDNT amount\\n     */\\n    function _lockedUsdValue(uint256 lockedLP, uint256 lockedRdnt)\\n        internal\\n        view\\n        returns (uint256)\\n    {\\n        uint256 rdntPrice = priceProvider.getTokenPriceUsd();\\n        uint256 lpPrice = priceProvider.getLpTokenPriceUsd();\\n\\n        uint256 userRdntValueUsd = lockedRdnt.mul(rdntPrice).div(10**18);\\n        uint256 userLpValueUsd = lockedLP.mul(lpPrice).div(10**18);\\n\\n        uint256 usdLockedVal = userRdntValueUsd.add(userLpValueUsd);\\n        return usdLockedVal;\\n    }\\n}\\n\",\"keccak256\":\"0xf7153f3ac3ede71b1901478c19e8c57f4caf282f2128f26410b3a7fbb2de6b83\",\"license\":\"MIT\"},\"contracts/interfaces/AggregatorInterface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.0;\\n\\ninterface AggregatorInterface {\\n  function latestAnswer() external view returns (int256);\\n\\n  function latestTimestamp() external view returns (uint256);\\n\\n  function latestRound() external view returns (uint256);\\n\\n  function getAnswer(uint256 roundId) external view returns (int256);\\n\\n  function getTimestamp(uint256 roundId) external view returns (uint256);\\n\\n  event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);\\n\\n  event NewRound(uint256 indexed roundId, address indexed startedBy, uint256 startedAt);\\n}\\n\",\"keccak256\":\"0x682963fa630d6afc8e1fcc5b3ee6b49ec1216f30ac698bca43747bd6e8a19fd6\",\"license\":\"MIT\"},\"contracts/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.0;\\n\\ninterface AggregatorV3Interface {\\n  function decimals() external view returns (uint8);\\n\\n  function description() external view returns (string memory);\\n\\n  function version() external view returns (uint256);\\n\\n  // getRoundData and latestRoundData should both raise \\\"No data present\\\"\\n  // if they do not have data to report, instead of returning unset values\\n  // which could be misinterpreted as actual reported values.\\n  function getRoundData(uint80 _roundId)\\n    external\\n    view\\n    returns (\\n      uint80 roundId,\\n      int256 answer,\\n      uint256 startedAt,\\n      uint256 updatedAt,\\n      uint80 answeredInRound\\n    );\\n\\n  function latestRoundData()\\n    external\\n    view\\n    returns (\\n      uint80 roundId,\\n      int256 answer,\\n      uint256 startedAt,\\n      uint256 updatedAt,\\n      uint80 answeredInRound\\n    );\\n}\\n\",\"keccak256\":\"0x5cf082133e64f5f90f446c011681ea7ab719e2992c7247074b943771c176494a\",\"license\":\"MIT\"},\"contracts/interfaces/IChainlinkAggregator.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// Code from https://github.com/smartcontractkit/chainlink/blob/master/evm-contracts/src/v0.6/interfaces/AggregatorV3Interface.sol\\n\\npragma solidity 0.7.6;\\n\\nimport './AggregatorInterface.sol';\\nimport './AggregatorV3Interface.sol';\\n\\ninterface IChainlinkAggregator is AggregatorInterface, AggregatorV3Interface {}\\n\",\"keccak256\":\"0x0c3f73420cf8c3a80f3a9a3380c3fb54f7279e697c641382614971c2238edc26\",\"license\":\"MIT\"},\"contracts/interfaces/IChefIncentivesController.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\npragma experimental ABIEncoderV2;\\n\\ninterface IChefIncentivesController {\\n\\n  /**\\n   * @dev Called by the corresponding asset on any update that affects the rewards distribution\\n   * @param user The address of the user\\n   **/\\n  function handleActionBefore(\\n    address user\\n  ) external;\\n\\n  /**\\n   * @dev Called by the corresponding asset on any update that affects the rewards distribution\\n   * @param user The address of the user\\n   * @param userBalance The balance of the user of the asset in the lending pool\\n   * @param totalSupply The total supply of the asset in the lending pool\\n   **/\\n  function handleActionAfter(\\n    address user,\\n    uint256 userBalance,\\n    uint256 totalSupply\\n  ) external;\\n\\n  /**\\n   * @dev Called by the locking contracts after locking or unlocking happens\\n   * @param user The address of the user\\n   **/\\n  function beforeLockUpdate(address user) external;\\n\\n  /**\\n    * @notice Hook for lock update.\\n    * @dev Called by the locking contracts after locking or unlocking happens\\n    */\\n  function afterLockUpdate(address _user) external;\\n\\n  function addPool(address _token, uint256 _allocPoint) external;\\n\\n  function claim(address _user, address[] calldata _tokens) external;\\n\\n  function setClaimReceiver(address _user, address _receiver) external;\\n  function getRegisteredTokens () external view returns (address[] memory);\\n  function disqualifyUser(address _user, address _hunter) external returns (uint256 bounty);\\n  function bountyForUser(address _user) external view returns (uint256 bounty);\\n\\n  function allPendingRewards(address _user) external view returns (uint256 pending);\\n  function claimAll(address _user) external;\\n\\n  function claimBounty(address _user, bool _execute) external returns (uint256 bountyAmt, bool useBountyReserve);\\n}\\n\",\"keccak256\":\"0x9c1b78487694af724a72b47d4910833a406533169c23412b819830de0876ce91\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/IFeeDistribution.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"./LockedBalance.sol\\\";\\n\\ninterface IFeeDistribution {\\n    struct RewardData {\\n        address token;\\n        uint256 amount;\\n    }\\n    function addReward(address rewardsToken) external;\\n    function lockedBalances(address user) external view returns (uint256, uint256, uint256, uint256, LockedBalance[] memory);\\n}\",\"keccak256\":\"0x34593f732405652613fca6e84a22485acd7851b2a5dcb045773abcb6c512bc24\",\"license\":\"MIT\"},\"contracts/interfaces/ILendingPool.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\npragma experimental ABIEncoderV2;\\n\\nimport {ILendingPoolAddressesProvider} from './ILendingPoolAddressesProvider.sol';\\nimport {DataTypes} from '../protocol/libraries/types/DataTypes.sol';\\n\\ninterface ILendingPool {\\n  /**\\n   * @dev Emitted on deposit()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The address initiating the deposit\\n   * @param onBehalfOf The beneficiary of the deposit, receiving the aTokens\\n   * @param amount The amount deposited\\n   * @param referral The referral code used\\n   **/\\n  event Deposit(\\n    address indexed reserve,\\n    address user,\\n    address indexed onBehalfOf,\\n    uint256 amount,\\n    uint16 indexed referral\\n  );\\n\\n  /**\\n   * @dev Emitted on withdraw()\\n   * @param reserve The address of the underlyng asset being withdrawn\\n   * @param user The address initiating the withdrawal, owner of aTokens\\n   * @param to Address that will receive the underlying\\n   * @param amount The amount to be withdrawn\\n   **/\\n  event Withdraw(address indexed reserve, address indexed user, address indexed to, uint256 amount);\\n\\n  /**\\n   * @dev Emitted on borrow() and flashLoan() when debt needs to be opened\\n   * @param reserve The address of the underlying asset being borrowed\\n   * @param user The address of the user initiating the borrow(), receiving the funds on borrow() or just\\n   * initiator of the transaction on flashLoan()\\n   * @param onBehalfOf The address that will be getting the debt\\n   * @param amount The amount borrowed out\\n   * @param borrowRateMode The rate mode: 1 for Stable, 2 for Variable\\n   * @param borrowRate The numeric rate at which the user has borrowed\\n   * @param referral The referral code used\\n   **/\\n  event Borrow(\\n    address indexed reserve,\\n    address user,\\n    address indexed onBehalfOf,\\n    uint256 amount,\\n    uint256 borrowRateMode,\\n    uint256 borrowRate,\\n    uint16 indexed referral\\n  );\\n\\n  /**\\n   * @dev Emitted on repay()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The beneficiary of the repayment, getting his debt reduced\\n   * @param repayer The address of the user initiating the repay(), providing the funds\\n   * @param amount The amount repaid\\n   **/\\n  event Repay(\\n    address indexed reserve,\\n    address indexed user,\\n    address indexed repayer,\\n    uint256 amount\\n  );\\n\\n  /**\\n   * @dev Emitted on swapBorrowRateMode()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The address of the user swapping his rate mode\\n   * @param rateMode The rate mode that the user wants to swap to\\n   **/\\n  event Swap(address indexed reserve, address indexed user, uint256 rateMode);\\n\\n  /**\\n   * @dev Emitted on setUserUseReserveAsCollateral()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The address of the user enabling the usage as collateral\\n   **/\\n  event ReserveUsedAsCollateralEnabled(address indexed reserve, address indexed user);\\n\\n  /**\\n   * @dev Emitted on setUserUseReserveAsCollateral()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The address of the user enabling the usage as collateral\\n   **/\\n  event ReserveUsedAsCollateralDisabled(address indexed reserve, address indexed user);\\n\\n  /**\\n   * @dev Emitted on rebalanceStableBorrowRate()\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param user The address of the user for which the rebalance has been executed\\n   **/\\n  event RebalanceStableBorrowRate(address indexed reserve, address indexed user);\\n\\n  /**\\n   * @dev Emitted on flashLoan()\\n   * @param target The address of the flash loan receiver contract\\n   * @param initiator The address initiating the flash loan\\n   * @param asset The address of the asset being flash borrowed\\n   * @param amount The amount flash borrowed\\n   * @param premium The fee flash borrowed\\n   * @param referralCode The referral code used\\n   **/\\n  event FlashLoan(\\n    address indexed target,\\n    address indexed initiator,\\n    address indexed asset,\\n    uint256 amount,\\n    uint256 premium,\\n    uint16 referralCode\\n  );\\n\\n  /**\\n   * @dev Emitted when the pause is triggered.\\n   */\\n  event Paused();\\n\\n  /**\\n   * @dev Emitted when the pause is lifted.\\n   */\\n  event Unpaused();\\n\\n  /**\\n   * @dev Emitted when a borrower is liquidated. This event is emitted by the LendingPool via\\n   * LendingPoolCollateral manager using a DELEGATECALL\\n   * This allows to have the events in the generated ABI for LendingPool.\\n   * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation\\n   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation\\n   * @param user The address of the borrower getting liquidated\\n   * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover\\n   * @param liquidatedCollateralAmount The amount of collateral received by the liiquidator\\n   * @param liquidator The address of the liquidator\\n   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants\\n   * to receive the underlying collateral asset directly\\n   **/\\n  event LiquidationCall(\\n    address indexed collateralAsset,\\n    address indexed debtAsset,\\n    address indexed user,\\n    uint256 debtToCover,\\n    uint256 liquidatedCollateralAmount,\\n    address liquidator,\\n    bool receiveAToken\\n  );\\n\\n  /**\\n   * @dev Emitted when the state of a reserve is updated. NOTE: This event is actually declared\\n   * in the ReserveLogic library and emitted in the updateInterestRates() function. Since the function is internal,\\n   * the event will actually be fired by the LendingPool contract. The event is therefore replicated here so it\\n   * gets added to the LendingPool ABI\\n   * @param reserve The address of the underlying asset of the reserve\\n   * @param liquidityRate The new liquidity rate\\n   * @param stableBorrowRate The new stable borrow rate\\n   * @param variableBorrowRate The new variable borrow rate\\n   * @param liquidityIndex The new liquidity index\\n   * @param variableBorrowIndex The new variable borrow index\\n   **/\\n  event ReserveDataUpdated(\\n    address indexed reserve,\\n    uint256 liquidityRate,\\n    uint256 stableBorrowRate,\\n    uint256 variableBorrowRate,\\n    uint256 liquidityIndex,\\n    uint256 variableBorrowIndex\\n  );\\n\\n  /**\\n   * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.\\n   * - E.g. User deposits 100 USDC and gets in return 100 aUSDC\\n   * @param asset The address of the underlying asset to deposit\\n   * @param amount The amount to be deposited\\n   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user\\n   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens\\n   *   is a different wallet\\n   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.\\n   *   0 if the action is executed directly by the user, without any middle-man\\n   **/\\n  function deposit(\\n    address asset,\\n    uint256 amount,\\n    address onBehalfOf,\\n    uint16 referralCode\\n  ) external;\\n\\n  function depositWithAutoDLP(\\n    address asset,\\n    uint256 amount,\\n    address onBehalfOf,\\n    uint16 referralCode\\n  ) external;\\n\\n  /**\\n   * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned\\n   * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC\\n   * @param asset The address of the underlying asset to withdraw\\n   * @param amount The underlying amount to be withdrawn\\n   *   - Send the value type(uint256).max in order to withdraw the whole aToken balance\\n   * @param to Address that will receive the underlying, same as msg.sender if the user\\n   *   wants to receive it on his own wallet, or a different address if the beneficiary is a\\n   *   different wallet\\n   * @return The final amount withdrawn\\n   **/\\n  function withdraw(\\n    address asset,\\n    uint256 amount,\\n    address to\\n  ) external returns (uint256);\\n\\n  /**\\n   * @dev Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower\\n   * already deposited enough collateral, or he was given enough allowance by a credit delegator on the\\n   * corresponding debt token (StableDebtToken or VariableDebtToken)\\n   * - E.g. User borrows 100 USDC passing as `onBehalfOf` his own address, receiving the 100 USDC in his wallet\\n   *   and 100 stable/variable debt tokens, depending on the `interestRateMode`\\n   * @param asset The address of the underlying asset to borrow\\n   * @param amount The amount to be borrowed\\n   * @param interestRateMode The interest rate mode at which the user wants to borrow: 1 for Stable, 2 for Variable\\n   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.\\n   *   0 if the action is executed directly by the user, without any middle-man\\n   * @param onBehalfOf Address of the user who will receive the debt. Should be the address of the borrower itself\\n   * calling the function if he wants to borrow against his own collateral, or the address of the credit delegator\\n   * if he has been given credit delegation allowance\\n   **/\\n  function borrow(\\n    address asset,\\n    uint256 amount,\\n    uint256 interestRateMode,\\n    uint16 referralCode,\\n    address onBehalfOf\\n  ) external;\\n\\n  /**\\n   * @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned\\n   * - E.g. User repays 100 USDC, burning 100 variable/stable debt tokens of the `onBehalfOf` address\\n   * @param asset The address of the borrowed underlying asset previously borrowed\\n   * @param amount The amount to repay\\n   * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`\\n   * @param rateMode The interest rate mode at of the debt the user wants to repay: 1 for Stable, 2 for Variable\\n   * @param onBehalfOf Address of the user who will get his debt reduced/removed. Should be the address of the\\n   * user calling the function if he wants to reduce/remove his own debt, or the address of any other\\n   * other borrower whose debt should be removed\\n   * @return The final amount repaid\\n   **/\\n  function repay(\\n    address asset,\\n    uint256 amount,\\n    uint256 rateMode,\\n    address onBehalfOf\\n  ) external returns (uint256);\\n\\n  /**\\n   * @dev Allows a borrower to swap his debt between stable and variable mode, or viceversa\\n   * @param asset The address of the underlying asset borrowed\\n   * @param rateMode The rate mode that the user wants to swap to\\n   **/\\n  function swapBorrowRateMode(address asset, uint256 rateMode) external;\\n\\n  /**\\n   * @dev Rebalances the stable interest rate of a user to the current stable rate defined on the reserve.\\n   * - Users can be rebalanced if the following conditions are satisfied:\\n   *     1. Usage ratio is above 95%\\n   *     2. the current deposit APY is below REBALANCE_UP_THRESHOLD * maxVariableBorrowRate, which means that too much has been\\n   *        borrowed at a stable rate and depositors are not earning enough\\n   * @param asset The address of the underlying asset borrowed\\n   * @param user The address of the user to be rebalanced\\n   **/\\n  function rebalanceStableBorrowRate(address asset, address user) external;\\n\\n  /**\\n   * @dev Allows depositors to enable/disable a specific deposited asset as collateral\\n   * @param asset The address of the underlying asset deposited\\n   * @param useAsCollateral `true` if the user wants to use the deposit as collateral, `false` otherwise\\n   **/\\n  function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external;\\n\\n  /**\\n   * @dev Function to liquidate a non-healthy position collateral-wise, with Health Factor below 1\\n   * - The caller (liquidator) covers `debtToCover` amount of debt of the user getting liquidated, and receives\\n   *   a proportionally amount of the `collateralAsset` plus a bonus to cover market risk\\n   * @param collateralAsset The address of the underlying asset used as collateral, to receive as result of the liquidation\\n   * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation\\n   * @param user The address of the borrower getting liquidated\\n   * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover\\n   * @param receiveAToken `true` if the liquidators wants to receive the collateral aTokens, `false` if he wants\\n   * to receive the underlying collateral asset directly\\n   **/\\n  function liquidationCall(\\n    address collateralAsset,\\n    address debtAsset,\\n    address user,\\n    uint256 debtToCover,\\n    bool receiveAToken\\n  ) external;\\n\\n  /**\\n   * @dev Allows smartcontracts to access the liquidity of the pool within one transaction,\\n   * as long as the amount taken plus a fee is returned.\\n   * IMPORTANT There are security concerns for developers of flashloan receiver contracts that must be kept into consideration.\\n   * For further details please visit https://developers.aave.com\\n   * @param receiverAddress The address of the contract receiving the funds, implementing the IFlashLoanReceiver interface\\n   * @param assets The addresses of the assets being flash-borrowed\\n   * @param amounts The amounts amounts being flash-borrowed\\n   * @param modes Types of the debt to open if the flash loan is not returned:\\n   *   0 -> Don't open any debt, just revert if funds can't be transferred from the receiver\\n   *   1 -> Open debt at stable rate for the value of the amount flash-borrowed to the `onBehalfOf` address\\n   *   2 -> Open debt at variable rate for the value of the amount flash-borrowed to the `onBehalfOf` address\\n   * @param onBehalfOf The address  that will receive the debt in the case of using on `modes` 1 or 2\\n   * @param params Variadic packed params to pass to the receiver as extra information\\n   * @param referralCode Code used to register the integrator originating the operation, for potential rewards.\\n   *   0 if the action is executed directly by the user, without any middle-man\\n   **/\\n  function flashLoan(\\n    address receiverAddress,\\n    address[] calldata assets,\\n    uint256[] calldata amounts,\\n    uint256[] calldata modes,\\n    address onBehalfOf,\\n    bytes calldata params,\\n    uint16 referralCode\\n  ) external;\\n\\n  /**\\n   * @dev Returns the user account data across all the reserves\\n   * @param user The address of the user\\n   * @return totalCollateralETH the total collateral in ETH of the user\\n   * @return totalDebtETH the total debt in ETH of the user\\n   * @return availableBorrowsETH the borrowing power left of the user\\n   * @return currentLiquidationThreshold the liquidation threshold of the user\\n   * @return ltv the loan to value of the user\\n   * @return healthFactor the current health factor of the user\\n   **/\\n  function getUserAccountData(address user)\\n    external\\n    view\\n    returns (\\n      uint256 totalCollateralETH,\\n      uint256 totalDebtETH,\\n      uint256 availableBorrowsETH,\\n      uint256 currentLiquidationThreshold,\\n      uint256 ltv,\\n      uint256 healthFactor\\n    );\\n\\n  function initReserve(\\n    address reserve,\\n    address aTokenAddress,\\n    address stableDebtAddress,\\n    address variableDebtAddress,\\n    address interestRateStrategyAddress\\n  ) external;\\n\\n  function setReserveInterestRateStrategyAddress(address reserve, address rateStrategyAddress)\\n    external;\\n\\n  function setConfiguration(address reserve, uint256 configuration) external;\\n\\n  /**\\n   * @dev Returns the configuration of the reserve\\n   * @param asset The address of the underlying asset of the reserve\\n   * @return The configuration of the reserve\\n   **/\\n  function getConfiguration(address asset)\\n    external\\n    view\\n    returns (DataTypes.ReserveConfigurationMap memory);\\n\\n  /**\\n   * @dev Returns the configuration of the user across all the reserves\\n   * @param user The user address\\n   * @return The configuration of the user\\n   **/\\n  function getUserConfiguration(address user)\\n    external\\n    view\\n    returns (DataTypes.UserConfigurationMap memory);\\n\\n  /**\\n   * @dev Returns the normalized income normalized income of the reserve\\n   * @param asset The address of the underlying asset of the reserve\\n   * @return The reserve's normalized income\\n   */\\n  function getReserveNormalizedIncome(address asset) external view returns (uint256);\\n\\n  /**\\n   * @dev Returns the normalized variable debt per unit of asset\\n   * @param asset The address of the underlying asset of the reserve\\n   * @return The reserve normalized variable debt\\n   */\\n  function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);\\n\\n  /**\\n   * @dev Returns the state and configuration of the reserve\\n   * @param asset The address of the underlying asset of the reserve\\n   * @return The state of the reserve\\n   **/\\n  function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);\\n\\n  function finalizeTransfer(\\n    address asset,\\n    address from,\\n    address to,\\n    uint256 amount,\\n    uint256 balanceFromAfter,\\n    uint256 balanceToBefore\\n  ) external;\\n\\n  function getReservesList() external view returns (address[] memory);\\n\\n  function getAddressesProvider() external view returns (ILendingPoolAddressesProvider);\\n\\n  function setPause(bool val) external;\\n\\n  function paused() external view returns (bool);\\n}\\n\",\"keccak256\":\"0x7394d2e721bb4b2e25c3bf1fddce39667911de9d9db87176548a99c4aeced76b\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/ILendingPoolAddressesProvider.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\n/**\\n * @title LendingPoolAddressesProvider contract\\n * @dev Main registry of addresses part of or connected to the protocol, including permissioned roles\\n * - Acting also as factory of proxies and admin of those, so with right to change its implementations\\n * - Owned by the Aave Governance\\n * @author Aave\\n **/\\ninterface ILendingPoolAddressesProvider {\\n  event MarketIdSet(string newMarketId);\\n  event LendingPoolUpdated(address indexed newAddress);\\n  event ConfigurationAdminUpdated(address indexed newAddress);\\n  event EmergencyAdminUpdated(address indexed newAddress);\\n  event LendingPoolConfiguratorUpdated(address indexed newAddress);\\n  event LendingPoolCollateralManagerUpdated(address indexed newAddress);\\n  event PriceOracleUpdated(address indexed newAddress);\\n  event LendingRateOracleUpdated(address indexed newAddress);\\n  event ProxyCreated(bytes32 id, address indexed newAddress);\\n  event AddressSet(bytes32 id, address indexed newAddress, bool hasProxy);\\n\\n  function getMarketId() external view returns (string memory);\\n\\n  function setMarketId(string calldata marketId) external;\\n\\n  function setAddress(bytes32 id, address newAddress) external;\\n\\n  function setAddressAsProxy(bytes32 id, address impl) external;\\n\\n  function getAddress(bytes32 id) external view returns (address);\\n\\n  function getLendingPool() external view returns (address);\\n\\n  function setLendingPoolImpl(address pool) external;\\n\\n  function getLendingPoolConfigurator() external view returns (address);\\n\\n  function setLendingPoolConfiguratorImpl(address configurator) external;\\n\\n  function getLendingPoolCollateralManager() external view returns (address);\\n\\n  function setLendingPoolCollateralManager(address manager) external;\\n\\n  function getPoolAdmin() external view returns (address);\\n\\n  function setPoolAdmin(address admin) external;\\n\\n  function getEmergencyAdmin() external view returns (address);\\n\\n  function setEmergencyAdmin(address admin) external;\\n\\n  function getPriceOracle() external view returns (address);\\n\\n  function setPriceOracle(address priceOracle) external;\\n\\n  function getLendingRateOracle() external view returns (address);\\n\\n  function setLendingRateOracle(address lendingRateOracle) external;\\n\\n  function getLiquidationFeeTo() external view returns (address);\\n\\n  function setLiquidationFeeTo(address liquidationFeeTo) external;\\n}\\n\",\"keccak256\":\"0x106ef9420d874acfc948c140b0b4ffff258a8fa664febf805c686fdbff278f62\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/IMiddleFeeDistribution.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"./LockedBalance.sol\\\";\\nimport {IFeeDistribution} from \\\"./IMultiFeeDistribution.sol\\\";\\n\\ninterface IMiddleFeeDistribution is IFeeDistribution {\\n    function forwardReward(address[] memory _rewardTokens) external;\\n    function getMFDstatsAddress () external view returns (address);\\n    function lpLockingRewardRatio () external view returns (uint256);\\n    function getRdntTokenAddress () external view returns (address);\\n    function getLPFeeDistributionAddress () external view returns (address);\\n    function getMultiFeeDistributionAddress () external view returns (address);\\n    function operationExpenseRatio () external view returns (uint256);\\n    function operationExpenses () external view returns (address);\\n    function isRewardToken(address) external view returns (bool);\\n}\\n\",\"keccak256\":\"0xe7cd6c42e2cca557d1f47ec97384758c3a751bc48c660938c0f4e2792d4a834e\",\"license\":\"MIT\"},\"contracts/interfaces/IMultiFeeDistribution.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nimport \\\"./LockedBalance.sol\\\";\\nimport \\\"./IFeeDistribution.sol\\\";\\ninterface IMultiFeeDistribution is IFeeDistribution {\\n    function exit(bool claimRewards) external;\\n    function stake(uint256 amount, address onBehalfOf, uint256 typeIndex) external;\\n    function lockInfo(address user) external view returns (LockedBalance[] memory);\\n    function defaultLockIndex(address _user) external view returns (uint256);\\n    function autoRelockDisabled(address user) external view returns (bool);\\n    function totalBalance(address user) external view returns (uint256);\\n    function zapVestingToLp (address _address) external returns (uint256);\\n    function withdrawExpiredLocksFor(address _address) external returns (uint256);\\n    function claimableRewards(address account) external view returns (IFeeDistribution.RewardData[] memory rewards);\\n    function setDefaultRelockTypeIndex(uint256 _index) external;\\n    function daoTreasury() external view returns (address);\\n    function stakingToken() external view returns (address);\\n    function mint(address user, uint256 amount, bool withPenalty) external;\\n}\\n\\ninterface IMFDPlus is IMultiFeeDistribution {\\n    function getLastClaimTime(address _user) external returns (uint256);\\n    function claimFromConverter(address) external;\\n    function bountyForUser(address _user) external view returns (IFeeDistribution.RewardData[] memory bounties);\\n    function claimBounty(address _user, bool _execute) external returns (uint256 bountyAmt, bool issueBaseBounty);\\n    function claimCompound(address _user, bool _execute) external returns (uint256 bountyAmt);\\n    function setAutocompound(bool _newVal) external;\\n    function getAutocompoundEnabled(address _user) external view returns(bool);\\n}\",\"keccak256\":\"0x7c16c4e91f717ca13a58bde2ff298128b315d6eaa60571b87926c78b328861b0\",\"license\":\"MIT\"},\"contracts/interfaces/IPriceProvider.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\n\\ninterface IPriceProvider {\\n    function getTokenPrice() external view returns (uint256);\\n    function getTokenPriceUsd() external view returns (uint256);\\n    function getLpTokenPrice() external view returns (uint256);\\n    function getLpTokenPriceUsd() external view returns (uint256);\\n    function decimals() external view returns (uint256);\\n    function update() external;\\n    function baseTokenPriceInUsdProxyAggregator() external view returns (address);\\n}\",\"keccak256\":\"0xc6769af9019da36c386c44cf3fd9f07841f1e953debf843356415d825258033a\",\"license\":\"MIT\"},\"contracts/interfaces/LockedBalance.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.7.6;\\npragma abicoder v2;\\n\\nstruct LockedBalance {\\n    uint256 amount;\\n    uint256 unlockTime;\\n    uint256 multiplier;\\n    uint256 duration;\\n}\\n\\nstruct EarnedBalance {\\n    uint256 amount;\\n    uint256 unlockTime;\\n    uint256 penalty;\\n}\",\"keccak256\":\"0x6511a1c116bd568dba24edd6d70b0a927bb249e499cbf29305803ed27e78055a\",\"license\":\"MIT\"},\"contracts/interfaces/uniswap/IUniswapV2Factory.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\ninterface IUniswapV2Factory {\\n    event PairCreated(address indexed token0, address indexed token1, address pair, uint);\\n\\n    function feeTo() external view returns (address);\\n    function feeToSetter() external view returns (address);\\n\\n    function getPair(address tokenA, address tokenB) external view returns (address pair);\\n    function allPairs(uint) external view returns (address pair);\\n    function allPairsLength() external view returns (uint);\\n\\n    function createPair(address tokenA, address tokenB) external returns (address pair);\\n\\n    function setFeeTo(address) external;\\n    function setFeeToSetter(address) external;\\n}\",\"keccak256\":\"0xc42baa548a0c864402198de03c41d91e4e8bf29aa85cce221a78ead6a807db70\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/uniswap/IUniswapV2Pair.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\ninterface IUniswapV2Pair {\\n    event Approval(address indexed owner, address indexed spender, uint value);\\n    event Transfer(address indexed from, address indexed to, uint value);\\n\\n    function name() external pure returns (string memory);\\n    function symbol() external pure returns (string memory);\\n    function decimals() external pure returns (uint8);\\n    function totalSupply() external view returns (uint);\\n    function balanceOf(address owner) external view returns (uint);\\n    function allowance(address owner, address spender) external view returns (uint);\\n\\n    function approve(address spender, uint value) external returns (bool);\\n    function transfer(address to, uint value) external returns (bool);\\n    function transferFrom(address from, address to, uint value) external returns (bool);\\n\\n    function DOMAIN_SEPARATOR() external view returns (bytes32);\\n    function PERMIT_TYPEHASH() external pure returns (bytes32);\\n    function nonces(address owner) external view returns (uint);\\n\\n    function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;\\n\\n    event Mint(address indexed sender, uint amount0, uint amount1);\\n    event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);\\n    event Swap(\\n        address indexed sender,\\n        uint amount0In,\\n        uint amount1In,\\n        uint amount0Out,\\n        uint amount1Out,\\n        address indexed to\\n    );\\n    event Sync(uint112 reserve0, uint112 reserve1);\\n\\n    function MINIMUM_LIQUIDITY() external pure returns (uint);\\n    function factory() external view returns (address);\\n    function token0() external view returns (address);\\n    function token1() external view returns (address);\\n    function getReserves() external view returns (uint256 reserve0, uint256 reserve1, uint256 blockTimestampLast);\\n    function price0CumulativeLast() external view returns (uint);\\n    function price1CumulativeLast() external view returns (uint);\\n    function kLast() external view returns (uint);\\n\\n    function mint(address to) external returns (uint liquidity);\\n    function burn(address to) external returns (uint amount0, uint amount1);\\n    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;\\n    function skim(address to) external;\\n    function sync() external;\\n\\n    function initialize(address, address) external;\\n}\",\"keccak256\":\"0x1e38747f47fb198e49642e5651d7199317e5f4334badc0d81cdfbc550a65e223\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/uniswap/IUniswapV2Router01.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\ninterface IUniswapV2Router01 {\\n    function factory() external pure returns (address);\\n    function WETH() external pure returns (address);\\n\\n    function addLiquidity(\\n        address tokenA,\\n        address tokenB,\\n        uint amountADesired,\\n        uint amountBDesired,\\n        uint amountAMin,\\n        uint amountBMin,\\n        address to,\\n        uint deadline\\n    ) external returns (uint amountA, uint amountB, uint liquidity);\\n    function addLiquidityETH(\\n        address token,\\n        uint amountTokenDesired,\\n        uint amountTokenMin,\\n        uint amountETHMin,\\n        address to,\\n        uint deadline\\n    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);\\n    function removeLiquidity(\\n        address tokenA,\\n        address tokenB,\\n        uint liquidity,\\n        uint amountAMin,\\n        uint amountBMin,\\n        address to,\\n        uint deadline\\n    ) external returns (uint amountA, uint amountB);\\n    function removeLiquidityETH(\\n        address token,\\n        uint liquidity,\\n        uint amountTokenMin,\\n        uint amountETHMin,\\n        address to,\\n        uint deadline\\n    ) external returns (uint amountToken, uint amountETH);\\n    function removeLiquidityWithPermit(\\n        address tokenA,\\n        address tokenB,\\n        uint liquidity,\\n        uint amountAMin,\\n        uint amountBMin,\\n        address to,\\n        uint deadline,\\n        bool approveMax, uint8 v, bytes32 r, bytes32 s\\n    ) external returns (uint amountA, uint amountB);\\n    function removeLiquidityETHWithPermit(\\n        address token,\\n        uint liquidity,\\n        uint amountTokenMin,\\n        uint amountETHMin,\\n        address to,\\n        uint deadline,\\n        bool approveMax, uint8 v, bytes32 r, bytes32 s\\n    ) external returns (uint amountToken, uint amountETH);\\n    function swapExactTokensForTokens(\\n        uint amountIn,\\n        uint amountOutMin,\\n        address[] calldata path,\\n        address to,\\n        uint deadline\\n    ) external returns (uint[] memory amounts);\\n    function swapTokensForExactTokens(\\n        uint amountOut,\\n        uint amountInMax,\\n        address[] calldata path,\\n        address to,\\n        uint deadline\\n    ) external returns (uint[] memory amounts);\\n    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)\\n        external\\n        payable\\n        returns (uint[] memory amounts);\\n    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)\\n        external\\n        returns (uint[] memory amounts);\\n    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)\\n        external\\n        returns (uint[] memory amounts);\\n    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)\\n        external\\n        payable\\n        returns (uint[] memory amounts);\\n\\n    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);\\n    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);\\n    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);\\n    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);\\n    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);\\n}\",\"keccak256\":\"0xcc127636ff55b14e0e68adbd990c41db5e02447e8bfa96cee016d5ca74e25732\",\"license\":\"agpl-3.0\"},\"contracts/interfaces/uniswap/IUniswapV2Router02.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nimport './IUniswapV2Router01.sol';\\n\\ninterface IUniswapV2Router02 is IUniswapV2Router01 {\\n    function removeLiquidityETHSupportingFeeOnTransferTokens(\\n        address token,\\n        uint liquidity,\\n        uint amountTokenMin,\\n        uint amountETHMin,\\n        address to,\\n        uint deadline\\n    ) external returns (uint amountETH);\\n    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(\\n        address token,\\n        uint liquidity,\\n        uint amountTokenMin,\\n        uint amountETHMin,\\n        address to,\\n        uint deadline,\\n        bool approveMax, uint8 v, bytes32 r, bytes32 s\\n    ) external returns (uint amountETH);\\n\\n    function swapExactTokensForTokensSupportingFeeOnTransferTokens(\\n        uint amountIn,\\n        uint amountOutMin,\\n        address[] calldata path,\\n        address to,\\n        uint deadline\\n    ) external;\\n    function swapExactETHForTokensSupportingFeeOnTransferTokens(\\n        uint amountOutMin,\\n        address[] calldata path,\\n        address to,\\n        uint deadline\\n    ) external payable;\\n    function swapExactTokensForETHSupportingFeeOnTransferTokens(\\n        uint amountIn,\\n        uint amountOutMin,\\n        address[] calldata path,\\n        address to,\\n        uint deadline\\n    ) external;\\n}\",\"keccak256\":\"0x91af1b9a04e11f5b1080730cf6692ebb30f4fd28aefd8f5a7d4807353b6b924b\",\"license\":\"agpl-3.0\"},\"contracts/protocol/libraries/types/DataTypes.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.7.6;\\n\\nlibrary DataTypes {\\n  // refer to the whitepaper, section 1.1 basic concepts for a formal description of these properties.\\n  struct ReserveData {\\n    //stores the reserve configuration\\n    ReserveConfigurationMap configuration;\\n    //the liquidity index. Expressed in ray\\n    uint128 liquidityIndex;\\n    //variable borrow index. Expressed in ray\\n    uint128 variableBorrowIndex;\\n    //the current supply rate. Expressed in ray\\n    uint128 currentLiquidityRate;\\n    //the current variable borrow rate. Expressed in ray\\n    uint128 currentVariableBorrowRate;\\n    //the current stable borrow rate. Expressed in ray\\n    uint128 currentStableBorrowRate;\\n    uint40 lastUpdateTimestamp;\\n    //tokens addresses\\n    address aTokenAddress;\\n    address stableDebtTokenAddress;\\n    address variableDebtTokenAddress;\\n    //address of the interest rate strategy\\n    address interestRateStrategyAddress;\\n    //the id of the reserve. Represents the position in the list of the active reserves\\n    uint8 id;\\n  }\\n\\n  struct ReserveConfigurationMap {\\n    //bit 0-15: LTV\\n    //bit 16-31: Liq. threshold\\n    //bit 32-47: Liq. bonus\\n    //bit 48-55: Decimals\\n    //bit 56: Reserve is active\\n    //bit 57: reserve is frozen\\n    //bit 58: borrowing is enabled\\n    //bit 59: stable rate borrowing enabled\\n    //bit 60-63: reserved\\n    //bit 64-79: reserve factor\\n    uint256 data;\\n  }\\n\\n  struct UserConfigurationMap {\\n    uint256 data;\\n  }\\n\\n  enum InterestRateMode {NONE, STABLE, VARIABLE}\\n}\\n\",\"keccak256\":\"0x4542e2cf81b3cbcda615ef4960a53dc09094e975649b40bc70274f6592975648\",\"license\":\"agpl-3.0\"}},\"version\":1}",
+  "bytecode": "0x60806040523480156200001157600080fd5b50604051620019093803806200190983398101604081905262000034916200015b565b60006200004062000157565b600080546001600160a01b0319166001600160a01b0383169081178255604051929350917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908290a3506001600160a01b038316620000bc5760405162461bcd60e51b8152600401620000b390620001ae565b60405180910390fd5b6001600160a01b038216620000e55760405162461bcd60e51b8152600401620000b390620001ae565b6001600160a01b0381166200010e5760405162461bcd60e51b8152600401620000b390620001ae565b600180546001600160a01b039485166001600160a01b0319918216179091556003805493851693821693909317909255600480549190931691161790556101f4600555620001fe565b3390565b60008060006060848603121562000170578283fd5b83516200017d81620001e5565b60208501519093506200019081620001e5565b6040850151909250620001a381620001e5565b809150509250925092565b60208082526013908201527f4e6f7420612076616c6964206164647265737300000000000000000000000000604082015260600190565b6001600160a01b0381168114620001fb57600080fd5b50565b6116fb806200020e6000396000f3fe608060405234801561001057600080fd5b50600436106101335760003560e01c80630afb0409146101385780631fc8bc5d1461014d57806321cc01c91461016b578063436d803914610173578063563014e5146101935780635de20b42146101a65780635fcbd285146101c6578063660186e6146101ce578063673a7e28146101e1578063696c9a7f146101e95780636a678a9c146101fc5780636a7e9f331461020f5780636d9077cb146102175780636f21a1791461022a578063715018a61461023d5780638da5cb5b14610245578063a0cfb9ff1461024d578063a59a997314610260578063b888879e14610268578063d52874da14610270578063dbbbbc6314610278578063e2c75ca01461028b578063e38fdc361461029e578063f2fde38b146102b1578063f4640c93146102c4575b600080fd5b61014b61014636600461136f565b6102d7565b005b61015561039d565b6040516101629190611518565b60405180910390f35b6101556103ac565b6101866101813660046113a7565b6103bb565b60405161016291906115fa565b6101866101a136600461136f565b6103d8565b6101b96101b436600461136f565b610763565b6040516101629190611545565b610155610778565b6101b96101dc36600461136f565b610787565b61014b6107b9565b6101b96101f736600461136f565b610816565b61014b61020a36600461136f565b61084e565b610186610925565b61018661022536600461136f565b61092b565b61018661023836600461136f565b610b64565b61014b610b7f565b610155610c0f565b61018661025b36600461136f565b610c1e565b610155610c30565b610155610c3f565b610186610c4e565b61014b61028636600461136f565b610c54565b61014b6102993660046113df565b610cf7565b6101866102ac36600461136f565b610d7a565b61014b6102bf36600461136f565b610e2e565b61014b6102d236600461143c565b610f14565b6002546001600160a01b0316331461030a5760405162461bcd60e51b8152600401610301906115c7565b60405180910390fd5b6001600160a01b03811661031a57fe5b6103226107b9565b600061032d82610787565b905080801561035357506001600160a01b03821660009081526008602052604090205415155b15610372576001600160a01b0382166000908152600860205260408120555b6001600160a01b03919091166000908152600760205260409020805460ff1916911515919091179055565b6002546001600160a01b031681565b6003546001600160a01b031681565b600a60209081526000928352604080842090915290825290205481565b6000806103e483610d7a565b90506000600360009054906101000a90046001600160a01b03166001600160a01b03166328f407486040518163ffffffff1660e01b815260040160206040518083038186803b15801561043657600080fd5b505afa15801561044a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061046e919061138b565b90506000600360009054906101000a90046001600160a01b03166001600160a01b031663cd57ed6c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156104c057600080fd5b505afa1580156104d4573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104f8919061138b565b90506000826001600160a01b0316636bd3b87c876040518263ffffffff1660e01b81526004016105289190611518565b60006040518083038186803b15801561054057600080fd5b505afa158015610554573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f1916820160405261057c919081019061140a565b90506000826001600160a01b0316636bd3b87c886040518263ffffffff1660e01b81526004016105ac9190611518565b60006040518083038186803b1580156105c457600080fd5b505afa1580156105d8573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610600919081019061140a565b825181519192506000918291905b8115801561061a575080155b1561062457610755565b8161066a5760018103905084818151811061063b57fe5b602002602001015160200151995084818151811061065557fe5b6020026020010151600001518301925061073b565b806106b05760018203915085828151811061068157fe5b602002602001015160200151995085828151811061069b57fe5b6020026020010151600001518401935061073b565b8460018203815181106106bf57fe5b6020026020010151602001518660018403815181106106da57fe5b60200260200101516020015110156106fe5760018103905084818151811061063b57fe5b60018203915085828151811061071057fe5b602002602001015160200151995085828151811061072a57fe5b602002602001015160000151840193505b886107468585610fc3565b1061075057610755565b61060e565b505050505050505050919050565b60076020526000908152604090205460ff1681565b6006546001600160a01b031681565b6000806107938361092b565b905060006107a084610d7a565b905080158015906107b15750808210155b949350505050565b600480546040805163a2e6204560e01b815290516001600160a01b039092169263a2e6204592828201926000929082900301818387803b1580156107fc57600080fd5b505af1158015610810573d6000803e3d6000fd5b50505050565b60008061082283610d7a565b118015610835575061083382610787565b155b8015610848575042610846836103d8565b115b92915050565b610856611117565b6000546001600160a01b039081169116146108a6576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b6006546001600160a01b0316156108cf5760405162461bcd60e51b815260040161030190611550565b600680546001600160a01b0319166001600160a01b0383161790556040517ff9d1c90c609623055381582a51735b38df3243eb09629a9170b15c2ab6bc07399061091a908390611518565b60405180910390a150565b61271081565b600080600360009054906101000a90046001600160a01b03166001600160a01b03166328f407486040518163ffffffff1660e01b815260040160206040518083038186803b15801561097c57600080fd5b505afa158015610990573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109b4919061138b565b90506000600360009054906101000a90046001600160a01b03166001600160a01b031663cd57ed6c6040518163ffffffff1660e01b815260040160206040518083038186803b158015610a0657600080fd5b505afa158015610a1a573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610a3e919061138b565b90506000826001600160a01b0316630483a7f6866040518263ffffffff1660e01b8152600401610a6e9190611518565b60006040518083038186803b158015610a8657600080fd5b505afa158015610a9a573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610ac2919081019061146c565b5050925050506000826001600160a01b0316630483a7f6876040518263ffffffff1660e01b8152600401610af69190611518565b60006040518083038186803b158015610b0e57600080fd5b505afa158015610b22573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610b4a919081019061146c565b505092505050610b5a8282610fc3565b9695505050505050565b6001600160a01b031660009081526008602052604090205490565b610b87611117565b6000546001600160a01b03908116911614610bd7576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b600080546040516001600160a01b03909116906000805160206116a6833981519152908390a3600080546001600160a01b0319169055565b6000546001600160a01b031690565b60086020526000908152604090205481565b6001546001600160a01b031681565b6004546001600160a01b031681565b60055481565b610c5c611117565b6000546001600160a01b03908116911614610cac576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b600280546001600160a01b0319166001600160a01b0383161790556040517f3edc4c109bdc9b34f00f24744f770e8de831fd903d0fc75d4d990d5d81b75b989061091a908390611518565b6002546001600160a01b03163314610d215760405162461bcd60e51b81526004016103019061157e565b6001600160a01b03821660009081526008602052604090819020829055517f1e85ba2a5b06819d522e519e6ebf963f35ad4a709dc2a541ed39ad80f4b3a3be90610d6e908490849061152c565b60405180910390a15050565b600154604051632fe4a15f60e21b815260009182916001600160a01b039091169063bf92857c90610daf908690600401611518565b60c06040518083038186803b158015610dc757600080fd5b505afa158015610ddb573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610dff91906114cf565b50505050509050610e27612710610e216005548461111b90919063ffffffff16565b90611174565b9392505050565b610e36611117565b6000546001600160a01b03908116911614610e86576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b6001600160a01b038116610ecb5760405162461bcd60e51b815260040180806020018281038252602681526020018061163f6026913960400191505060405180910390fd5b600080546040516001600160a01b03808516939216916000805160206116a683398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b610f1c611117565b6000546001600160a01b03908116911614610f6c576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b612710811115610f8e5760405162461bcd60e51b8152600401610301906115a0565b60058190556040517f063aaf80a21dd5cad9d8adcdc5a53acaa3c2de05dc44c7e2f68783a87460d7fe9061091a9083906115fa565b6004805460408051631b4bb46160e21b8152905160009384936001600160a01b031692636d2ed1849281830192602092829003018186803b15801561100757600080fd5b505afa15801561101b573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061103f9190611454565b90506000600460009054906101000a90046001600160a01b03166001600160a01b0316636e9a05c56040518163ffffffff1660e01b815260040160206040518083038186803b15801561109157600080fd5b505afa1580156110a5573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906110c99190611454565b905060006110e3670de0b6b3a7640000610e21878661111b565b905060006110fd670de0b6b3a7640000610e21898661111b565b9050600061110b83836111b3565b98975050505050505050565b3390565b60008261112a57506000610848565b8282028284828161113757fe5b0414610e275760405162461bcd60e51b81526004018080602001828103825260218152602001806116656021913960400191505060405180910390fd5b6000610e2783836040518060400160405280601a815260200179536166654d6174683a206469766973696f6e206279207a65726f60301b81525061120b565b600082820183811015610e27576040805162461bcd60e51b815260206004820152601b60248201527a536166654d6174683a206164646974696f6e206f766572666c6f7760281b604482015290519081900360640190fd5b600081836112975760405162461bcd60e51b81526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561125c578181015183820152602001611244565b50505050905090810190601f1680156112895780820380516001836020036101000a031916815260200191505b509250505060405180910390fd5b5060008385816112a357fe5b0495945050505050565b600082601f8301126112bd578081fd5b815160206001600160401b03808311156112d357fe5b6112e08283850201611603565b838152828101908684016080808702890186018a10156112fe578788fd5b875b878110156113605781838c031215611316578889fd5b60408051838101818110898211171561132b57fe5b825284518152888501518982015284820151918101919091526060808501519082015285529386019391810191600101611300565b50919998505050505050505050565b600060208284031215611380578081fd5b8135610e2781611626565b60006020828403121561139c578081fd5b8151610e2781611626565b600080604083850312156113b9578081fd5b82356113c481611626565b915060208301356113d481611626565b809150509250929050565b600080604083850312156113f1578182fd5b82356113fc81611626565b946020939093013593505050565b60006020828403121561141b578081fd5b81516001600160401b03811115611430578182fd5b6107b1848285016112ad565b60006020828403121561144d578081fd5b5035919050565b600060208284031215611465578081fd5b5051919050565b600080600080600060a08688031215611483578081fd5b855160208701516040880151606089015160808a0151939850919650945092506001600160401b038111156114b6578182fd5b6114c2888289016112ad565b9150509295509295909350565b60008060008060008060c087890312156114e7578081fd5b865195506020870151945060408701519350606087015192506080870151915060a087015190509295509295509295565b6001600160a01b0391909116815260200190565b6001600160a01b03929092168252602082015260400190565b901515815260200190565b6020808252601490820152731314081d1bdad95b88185b1c9958591e481cd95d60621b604082015260600190565b6020808252600890820152674f6e6c792043494360c01b604082015260600190565b6020808252600d908201526c496e76616c696420726174696f60981b604082015260600190565b60208082526019908201527843616e206f6e6c792062652063616c6c65642062792043494360381b604082015260600190565b90815260200190565b6040518181016001600160401b038111828210171561161e57fe5b604052919050565b6001600160a01b038116811461163b57600080fd5b5056fe4f776e61626c653a206e6577206f776e657220697320746865207a65726f2061646472657373536166654d6174683a206d756c7469706c69636174696f6e206f766572666c6f774f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a264697066735822122072d637d054ac5c0105911f2a0d501f3ecd2ee63f31849558c3cc99ea15aa279264736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106101335760003560e01c80630afb0409146101385780631fc8bc5d1461014d57806321cc01c91461016b578063436d803914610173578063563014e5146101935780635de20b42146101a65780635fcbd285146101c6578063660186e6146101ce578063673a7e28146101e1578063696c9a7f146101e95780636a678a9c146101fc5780636a7e9f331461020f5780636d9077cb146102175780636f21a1791461022a578063715018a61461023d5780638da5cb5b14610245578063a0cfb9ff1461024d578063a59a997314610260578063b888879e14610268578063d52874da14610270578063dbbbbc6314610278578063e2c75ca01461028b578063e38fdc361461029e578063f2fde38b146102b1578063f4640c93146102c4575b600080fd5b61014b61014636600461136f565b6102d7565b005b61015561039d565b6040516101629190611518565b60405180910390f35b6101556103ac565b6101866101813660046113a7565b6103bb565b60405161016291906115fa565b6101866101a136600461136f565b6103d8565b6101b96101b436600461136f565b610763565b6040516101629190611545565b610155610778565b6101b96101dc36600461136f565b610787565b61014b6107b9565b6101b96101f736600461136f565b610816565b61014b61020a36600461136f565b61084e565b610186610925565b61018661022536600461136f565b61092b565b61018661023836600461136f565b610b64565b61014b610b7f565b610155610c0f565b61018661025b36600461136f565b610c1e565b610155610c30565b610155610c3f565b610186610c4e565b61014b61028636600461136f565b610c54565b61014b6102993660046113df565b610cf7565b6101866102ac36600461136f565b610d7a565b61014b6102bf36600461136f565b610e2e565b61014b6102d236600461143c565b610f14565b6002546001600160a01b0316331461030a5760405162461bcd60e51b8152600401610301906115c7565b60405180910390fd5b6001600160a01b03811661031a57fe5b6103226107b9565b600061032d82610787565b905080801561035357506001600160a01b03821660009081526008602052604090205415155b15610372576001600160a01b0382166000908152600860205260408120555b6001600160a01b03919091166000908152600760205260409020805460ff1916911515919091179055565b6002546001600160a01b031681565b6003546001600160a01b031681565b600a60209081526000928352604080842090915290825290205481565b6000806103e483610d7a565b90506000600360009054906101000a90046001600160a01b03166001600160a01b03166328f407486040518163ffffffff1660e01b815260040160206040518083038186803b15801561043657600080fd5b505afa15801561044a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061046e919061138b565b90506000600360009054906101000a90046001600160a01b03166001600160a01b031663cd57ed6c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156104c057600080fd5b505afa1580156104d4573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104f8919061138b565b90506000826001600160a01b0316636bd3b87c876040518263ffffffff1660e01b81526004016105289190611518565b60006040518083038186803b15801561054057600080fd5b505afa158015610554573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f1916820160405261057c919081019061140a565b90506000826001600160a01b0316636bd3b87c886040518263ffffffff1660e01b81526004016105ac9190611518565b60006040518083038186803b1580156105c457600080fd5b505afa1580156105d8573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610600919081019061140a565b825181519192506000918291905b8115801561061a575080155b1561062457610755565b8161066a5760018103905084818151811061063b57fe5b602002602001015160200151995084818151811061065557fe5b6020026020010151600001518301925061073b565b806106b05760018203915085828151811061068157fe5b602002602001015160200151995085828151811061069b57fe5b6020026020010151600001518401935061073b565b8460018203815181106106bf57fe5b6020026020010151602001518660018403815181106106da57fe5b60200260200101516020015110156106fe5760018103905084818151811061063b57fe5b60018203915085828151811061071057fe5b602002602001015160200151995085828151811061072a57fe5b602002602001015160000151840193505b886107468585610fc3565b1061075057610755565b61060e565b505050505050505050919050565b60076020526000908152604090205460ff1681565b6006546001600160a01b031681565b6000806107938361092b565b905060006107a084610d7a565b905080158015906107b15750808210155b949350505050565b600480546040805163a2e6204560e01b815290516001600160a01b039092169263a2e6204592828201926000929082900301818387803b1580156107fc57600080fd5b505af1158015610810573d6000803e3d6000fd5b50505050565b60008061082283610d7a565b118015610835575061083382610787565b155b8015610848575042610846836103d8565b115b92915050565b610856611117565b6000546001600160a01b039081169116146108a6576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b6006546001600160a01b0316156108cf5760405162461bcd60e51b815260040161030190611550565b600680546001600160a01b0319166001600160a01b0383161790556040517ff9d1c90c609623055381582a51735b38df3243eb09629a9170b15c2ab6bc07399061091a908390611518565b60405180910390a150565b61271081565b600080600360009054906101000a90046001600160a01b03166001600160a01b03166328f407486040518163ffffffff1660e01b815260040160206040518083038186803b15801561097c57600080fd5b505afa158015610990573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906109b4919061138b565b90506000600360009054906101000a90046001600160a01b03166001600160a01b031663cd57ed6c6040518163ffffffff1660e01b815260040160206040518083038186803b158015610a0657600080fd5b505afa158015610a1a573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610a3e919061138b565b90506000826001600160a01b0316630483a7f6866040518263ffffffff1660e01b8152600401610a6e9190611518565b60006040518083038186803b158015610a8657600080fd5b505afa158015610a9a573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610ac2919081019061146c565b5050925050506000826001600160a01b0316630483a7f6876040518263ffffffff1660e01b8152600401610af69190611518565b60006040518083038186803b158015610b0e57600080fd5b505afa158015610b22573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052610b4a919081019061146c565b505092505050610b5a8282610fc3565b9695505050505050565b6001600160a01b031660009081526008602052604090205490565b610b87611117565b6000546001600160a01b03908116911614610bd7576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b600080546040516001600160a01b03909116906000805160206116a6833981519152908390a3600080546001600160a01b0319169055565b6000546001600160a01b031690565b60086020526000908152604090205481565b6001546001600160a01b031681565b6004546001600160a01b031681565b60055481565b610c5c611117565b6000546001600160a01b03908116911614610cac576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b600280546001600160a01b0319166001600160a01b0383161790556040517f3edc4c109bdc9b34f00f24744f770e8de831fd903d0fc75d4d990d5d81b75b989061091a908390611518565b6002546001600160a01b03163314610d215760405162461bcd60e51b81526004016103019061157e565b6001600160a01b03821660009081526008602052604090819020829055517f1e85ba2a5b06819d522e519e6ebf963f35ad4a709dc2a541ed39ad80f4b3a3be90610d6e908490849061152c565b60405180910390a15050565b600154604051632fe4a15f60e21b815260009182916001600160a01b039091169063bf92857c90610daf908690600401611518565b60c06040518083038186803b158015610dc757600080fd5b505afa158015610ddb573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610dff91906114cf565b50505050509050610e27612710610e216005548461111b90919063ffffffff16565b90611174565b9392505050565b610e36611117565b6000546001600160a01b03908116911614610e86576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b6001600160a01b038116610ecb5760405162461bcd60e51b815260040180806020018281038252602681526020018061163f6026913960400191505060405180910390fd5b600080546040516001600160a01b03808516939216916000805160206116a683398151915291a3600080546001600160a01b0319166001600160a01b0392909216919091179055565b610f1c611117565b6000546001600160a01b03908116911614610f6c576040805162461bcd60e51b81526020600482018190526024820152600080516020611686833981519152604482015290519081900360640190fd5b612710811115610f8e5760405162461bcd60e51b8152600401610301906115a0565b60058190556040517f063aaf80a21dd5cad9d8adcdc5a53acaa3c2de05dc44c7e2f68783a87460d7fe9061091a9083906115fa565b6004805460408051631b4bb46160e21b8152905160009384936001600160a01b031692636d2ed1849281830192602092829003018186803b15801561100757600080fd5b505afa15801561101b573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061103f9190611454565b90506000600460009054906101000a90046001600160a01b03166001600160a01b0316636e9a05c56040518163ffffffff1660e01b815260040160206040518083038186803b15801561109157600080fd5b505afa1580156110a5573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906110c99190611454565b905060006110e3670de0b6b3a7640000610e21878661111b565b905060006110fd670de0b6b3a7640000610e21898661111b565b9050600061110b83836111b3565b98975050505050505050565b3390565b60008261112a57506000610848565b8282028284828161113757fe5b0414610e275760405162461bcd60e51b81526004018080602001828103825260218152602001806116656021913960400191505060405180910390fd5b6000610e2783836040518060400160405280601a815260200179536166654d6174683a206469766973696f6e206279207a65726f60301b81525061120b565b600082820183811015610e27576040805162461bcd60e51b815260206004820152601b60248201527a536166654d6174683a206164646974696f6e206f766572666c6f7760281b604482015290519081900360640190fd5b600081836112975760405162461bcd60e51b81526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561125c578181015183820152602001611244565b50505050905090810190601f1680156112895780820380516001836020036101000a031916815260200191505b509250505060405180910390fd5b5060008385816112a357fe5b0495945050505050565b600082601f8301126112bd578081fd5b815160206001600160401b03808311156112d357fe5b6112e08283850201611603565b838152828101908684016080808702890186018a10156112fe578788fd5b875b878110156113605781838c031215611316578889fd5b60408051838101818110898211171561132b57fe5b825284518152888501518982015284820151918101919091526060808501519082015285529386019391810191600101611300565b50919998505050505050505050565b600060208284031215611380578081fd5b8135610e2781611626565b60006020828403121561139c578081fd5b8151610e2781611626565b600080604083850312156113b9578081fd5b82356113c481611626565b915060208301356113d481611626565b809150509250929050565b600080604083850312156113f1578182fd5b82356113fc81611626565b946020939093013593505050565b60006020828403121561141b578081fd5b81516001600160401b03811115611430578182fd5b6107b1848285016112ad565b60006020828403121561144d578081fd5b5035919050565b600060208284031215611465578081fd5b5051919050565b600080600080600060a08688031215611483578081fd5b855160208701516040880151606089015160808a0151939850919650945092506001600160401b038111156114b6578182fd5b6114c2888289016112ad565b9150509295509295909350565b60008060008060008060c087890312156114e7578081fd5b865195506020870151945060408701519350606087015192506080870151915060a087015190509295509295509295565b6001600160a01b0391909116815260200190565b6001600160a01b03929092168252602082015260400190565b901515815260200190565b6020808252601490820152731314081d1bdad95b88185b1c9958591e481cd95d60621b604082015260600190565b6020808252600890820152674f6e6c792043494360c01b604082015260600190565b6020808252600d908201526c496e76616c696420726174696f60981b604082015260600190565b60208082526019908201527843616e206f6e6c792062652063616c6c65642062792043494360381b604082015260600190565b90815260200190565b6040518181016001600160401b038111828210171561161e57fe5b604052919050565b6001600160a01b038116811461163b57600080fd5b5056fe4f776e61626c653a206e6577206f776e657220697320746865207a65726f2061646472657373536166654d6174683a206d756c7469706c69636174696f6e206f766572666c6f774f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e65728be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0a264697066735822122072d637d054ac5c0105911f2a0d501f3ecd2ee63f31849558c3cc99ea15aa279264736f6c63430007060033",
+  "devdoc": {
+    "author": "Radiant Labs",
+    "details": "All function calls are currently implemented without side effects",
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "params": {
+          "_lendingPool": "Address of lending pool.",
+          "_middleFeeDistribution": "MiddleFeeDistribution address.",
+          "_priceProvider": "PriceProvider address."
+        }
+      },
+      "getDqTime(address)": {
+        "params": {
+          "_user": "'s address"
+        }
+      },
+      "isEligibleForRewards(address)": {
+        "params": {
+          "_user": "'s address"
+        }
+      },
+      "isMarketDisqualified(address)": {
+        "params": {
+          "_user": "'s address"
+        }
+      },
+      "lastEligibleTime(address)": {
+        "details": "If user is still eligible, it will return future time  CAUTION: this function only works perfect when the array  is ordered by lock time. This is assured when _stake happens.",
+        "params": {
+          "user": "'s address"
+        }
+      },
+      "lockedUsdValue(address)": {
+        "params": {
+          "user": "'s address"
+        }
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "refresh(address)": {
+        "params": {
+          "user": "'s address"
+        }
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "requiredUsdValue(address)": {
+        "params": {
+          "user": "'s address"
+        },
+        "returns": {
+          "required": "USD value."
+        }
+      },
+      "setChefIncentivesController(address)": {
+        "params": {
+          "_chef": "address."
+        }
+      },
+      "setDqTime(address,uint256)": {
+        "details": "Only callable by CIC",
+        "params": {
+          "_time": "for DQ",
+          "_user": "'s address"
+        }
+      },
+      "setRequiredDepositRatio(uint256)": {
+        "params": {
+          "_requiredDepositRatio": "Ratio in bips."
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "title": "Eligible Deposit Provider",
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "AddToken(address)": {
+        "notice": "Emitted when a new token is added"
+      },
+      "ChefIncentivesControllerUpdated(address)": {
+        "notice": "Emitted when CIC is set"
+      },
+      "DqTimeUpdated(address,uint256)": {
+        "notice": "Emitted when DQ time is set"
+      },
+      "LPTokenUpdated(address)": {
+        "notice": "Emitted when LP token is set"
+      },
+      "RequiredDepositRatioUpdated(uint256)": {
+        "notice": "Emitted when required TVL ratio is updated"
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "RATIO_DIVISOR()": {
+        "notice": "RATIO BASE equal to 100%"
+      },
+      "chef()": {
+        "notice": "Address of CIC"
+      },
+      "constructor": {
+        "notice": "Constructor"
+      },
+      "disqualifiedTime(address)": {
+        "notice": "Disqualified time of the user"
+      },
+      "getDqTime(address)": {
+        "notice": "Returns DQ time of the user"
+      },
+      "isEligibleForRewards(address)": {
+        "notice": "Returns if the user is eligible to receive rewards"
+      },
+      "isMarketDisqualified(address)": {
+        "notice": "Is user DQed due to lock expire or price update"
+      },
+      "lastEligibleStatus(address)": {
+        "notice": "Last eligible status of the user"
+      },
+      "lastEligibleTime(address)": {
+        "notice": "Returns last eligible time of the user"
+      },
+      "lendingPool()": {
+        "notice": "Address of Lending Pool"
+      },
+      "lockedUsdValue(address)": {
+        "notice": "Returns locked RDNT and LP token value in eth"
+      },
+      "lpToken()": {
+        "notice": "RDNT-ETH LP token"
+      },
+      "middleFeeDistribution()": {
+        "notice": "Address of Middle fee distribution"
+      },
+      "priceProvider()": {
+        "notice": "RDNT + LP price provider"
+      },
+      "refresh(address)": {
+        "notice": "Refresh token amount for eligibility"
+      },
+      "requiredDepositRatio()": {
+        "notice": "Required ratio of TVL to get reward; in bips"
+      },
+      "requiredUsdValue(address)": {
+        "notice": "Returns USD value required to be locked"
+      },
+      "setChefIncentivesController(address)": {
+        "notice": "Set CIC"
+      },
+      "setDqTime(address,uint256)": {
+        "notice": "Sets DQ time of the user"
+      },
+      "setLPToken(address)": {
+        "notice": "Set LP token"
+      },
+      "setRequiredDepositRatio(uint256)": {
+        "notice": "Sets required tvl ratio. Can only be called by the owner."
+      },
+      "updatePrice()": {
+        "notice": "Update token price"
+      },
+      "userDeposits(address,address)": {
+        "notice": "User's deposits per rToken; rToken => user => amount"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 5437,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 9742,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "lendingPool",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_contract(ILendingPool)11754"
+      },
+      {
+        "astId": 9745,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "chef",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_contract(IChefIncentivesController)11062"
+      },
+      {
+        "astId": 9748,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "middleFeeDistribution",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_contract(IMiddleFeeDistribution)12596"
+      },
+      {
+        "astId": 9751,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "priceProvider",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_contract(IPriceProvider)12919"
+      },
+      {
+        "astId": 9754,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "requiredDepositRatio",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 9757,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "lpToken",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_address"
+      },
+      {
+        "astId": 9762,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "lastEligibleStatus",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 9767,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "disqualifiedTime",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 9771,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "eligibleDeposits",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 9778,
+        "contract": "contracts/eligibility/EligibilityDataProvider.sol:EligibilityDataProvider",
+        "label": "userDeposits",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_contract(IChefIncentivesController)11062": {
+        "encoding": "inplace",
+        "label": "contract IChefIncentivesController",
+        "numberOfBytes": "20"
+      },
+      "t_contract(ILendingPool)11754": {
+        "encoding": "inplace",
+        "label": "contract ILendingPool",
+        "numberOfBytes": "20"
+      },
+      "t_contract(IMiddleFeeDistribution)12596": {
+        "encoding": "inplace",
+        "label": "contract IMiddleFeeDistribution",
+        "numberOfBytes": "20"
+      },
+      "t_contract(IPriceProvider)12919": {
+        "encoding": "inplace",
+        "label": "contract IPriceProvider",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(address => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_uint256)"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

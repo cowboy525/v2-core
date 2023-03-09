@@ -115,7 +115,7 @@ describe("Non-Elig CIC", () => {
   });
 
   describe("addPool requires", () => {
-    xit("should be callable by only pool configurator", async () => {
+    it("should be callable by only pool configurator", async () => {
       const chefFactory = await ethers.getContractFactory(
         "ChefIncentivesController"
       );
@@ -380,7 +380,7 @@ describe("Non-Elig CIC", () => {
   });
 
   describe("ChefIncentivesController Rewards Schedule and Manual Setting RPS.", () => {
-    xit("setEmissionSchedule before start", async () => {
+    it("setEmissionSchedule before start", async () => {
       const chefFactory = await ethers.getContractFactory(
         "ChefIncentivesController"
       );

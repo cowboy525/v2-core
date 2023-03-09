@@ -1,24 +1,18 @@
 import 'dotenv/config';
 import { HDAccountsUserConfig, HttpNetworkUserConfig, NetworksUserConfig } from 'hardhat/types';
 export function node_url(networkName: string): string {
-	console.log(`get node URL `);
-	console.log(`network: ${networkName}`);
 
 	if (networkName) {
 		const uri = process.env['ETH_NODE_URI_' + networkName.toUpperCase()];
 		if (uri && uri !== '') {
-			console.log(`using .env uri`);
 			return uri;
 		}
 	}
 
 	if (networkName === 'localhost') {
-		console.log(`network is localhost, return node 8545`);
 		// do not use ETH_NODE_URI
 		return 'http://localhost:8545';
 	}
-
-	console.log(`conitnue uri logic`);
 
 	let uri = process.env.ETH_NODE_URI;
 	if (uri) {

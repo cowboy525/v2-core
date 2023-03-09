@@ -52,6 +52,18 @@ contract RadiantOFT is OFTV2, Pausable {
 		}
 	}
 
+	function burn(uint256 _amount) public {
+		_burn(_msgSender(), _amount);
+	}
+
+	function pause() public onlyOwner {
+		_pause();
+	}
+
+	function unpause() public onlyOwner {
+		_unpause();
+	}
+
 	/**
 	 * @notice Returns LZ fee + Bridge fee
 	 * @dev overrides default OFT estimate fee function to add native fee
@@ -120,7 +132,7 @@ contract RadiantOFT is OFTV2, Pausable {
 		uint16 _dstChainId,
 		bytes32 _toAddress,
 		uint _amount
-	) internal virtual override whenNotPaused returns (uint) {
+	) internal override whenNotPaused returns (uint) {
 		return super._debitFrom(_from, _dstChainId, _toAddress, _amount);
 	}
 
@@ -155,17 +167,5 @@ contract RadiantOFT is OFTV2, Pausable {
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
-	}
-
-	function pause() public onlyOwner {
-		_pause();
-	}
-
-	function unpause() public onlyOwner {
-		_unpause();
-	}
-
-	function burn(uint256 _amount) public {
-		_burn(_msgSender(), _amount);
 	}
 }

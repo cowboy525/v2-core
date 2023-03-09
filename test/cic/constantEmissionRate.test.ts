@@ -41,21 +41,20 @@ describe("Ensure Emissions consistant", () => {
     await cic.setEligibilityEnabled(false);
   });
 
-  // TODO: investigate
-  xit("user1 emission rate unchanged after user2 deposits", async () => {
-    await depositAndBorrowAll(user1, [".01", "1"], deployData);
-    await zapIntoEligibility(user1, deployData);
+  it("user1 emission rate unchanged after user2 deposits", async () => {
+		await depositAndBorrowAll(user2, [".000000001", ".0000000000001"], deployData);
+		await zapIntoEligibility(user2, deployData);
 
-    const startTimestamp = await getLatestBlockTimestamp();
+		const startTimestamp = await getLatestBlockTimestamp();
 
-    expect(
-      await eligibilityProvider.isEligibleForRewards(user1.address)
+		expect(
+      await eligibilityProvider.isEligibleForRewards(user2.address)
     ).to.be.equal(true);
 
     const SKIP_DURATION = 120;
     await advanceTimeAndBlock(SKIP_DURATION);
 
-    const pendingRewards1 = await getTotalPendingRewards(user1.address, cic);
+    const pendingRewards1 = await getTotalPendingRewards(user2.address, cic);
     const expectedRewards1 = deployConfig.CIC_RPS.mul(SKIP_DURATION);
 
     expect(
@@ -65,13 +64,13 @@ describe("Ensure Emissions consistant", () => {
       3
     );
 
-    await depositAndBorrowAll(user2, ["150", "10000000"], deployData);
+    await depositAndBorrowAll(user1, ["150", "10000000"], deployData);
 
     await advanceTimeAndBlock(SKIP_DURATION);
     const currentTimestamp = await getLatestBlockTimestamp();
     const DURATION = currentTimestamp - startTimestamp;
 
-    const pendingRewards2 = await getTotalPendingRewards(user1.address, cic);
+    const pendingRewards2 = await getTotalPendingRewards(user2.address, cic);
 
     const emissionRate2 = pendingRewards2.div(DURATION);
     expect(emissionRate2).to.be.not.equal(deployConfig.CIC_RPS);

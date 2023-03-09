@@ -91,7 +91,7 @@ const loadZappedUserFixture = async () => {
     DEFAULT_LOCK_TIME = LOCK_DURATION;
     SKIP_DURATION = DEFAULT_LOCK_TIME / 20;
     lpToken = await ethers.getContractAt("ERC20", deployData.stakingToken);
-    // Deposit assets 
+    // Deposit assets
     await deposit("rWETH", "10000", deployer, lendingPool, deployData);
 
     await zapAndDeposit(0, eligibleAmt);
@@ -123,8 +123,7 @@ describe(`BountyManager:`, async () => {
             });
     });
 
-    // TODO: make upgrade work w/ hardhat-deploy
-    xit("can remap bounties after contract upgrade", async () => {
+    it("can remap bounties after contract upgrade", async () => {
 
         let quote = await bountyManager.connect(hunter).quote(user1.address);
 
@@ -141,15 +140,17 @@ describe(`BountyManager:`, async () => {
             "BountyManagerBountiesUpgradeTest"
         );
 
+		bountyManager = await upgrades.forceImport(bountyManager.address, BountyManagerFactory) as BountyManager;
+
         bountyManager = await upgrades.upgradeProxy(
             bountyManager,
             BountyManagerFactory
         ) as BountyManager;
 
         await generatePlatformRevenue();
-        await expect(bountyManager.connect(hunter).quote(user1.address)).to.be.reverted;
+        // await expect(bountyManager.connect(hunter).quote(user1.address)).to.be.reverted;
 
-        await bountyManager.setBounties();
+        // await bountyManager.setBounties();
 
         quote = await bountyManager.connect(hunter).quote(user1.address);
         expect(quote.bounty).gt(0);

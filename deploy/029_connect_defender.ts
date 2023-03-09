@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // TODO: handle this better w/ test. this should not run during local/test
   if (!network.live) return;
 
-  const client = new AdminClient({ apiKey: process.env.API_KEY, apiSecret: process.env.API_SECRET });
+  const client = new AdminClient({ apiKey: process.env.DEFENDER_API_KEY, apiSecret: process.env.DEFENDER_API_SECRET });
   const { get } = deployments;
 
   const rdnt = await deployments.getExtendedArtifact('RadiantOFT');
@@ -20,10 +20,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     "421613": "arbitrum-goerli"
   }
   const chain = networks[chainId];
-  console.log(`network: ${network}`);
+  console.log(`network: ${chain}`);
 
   const contract = {
-    network: network,
+    network: chain,
     address: (await get("RadiantOFT")).address,
     name: "RadiantOFT",
     abi: JSON.stringify(rdnt.abi),

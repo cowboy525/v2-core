@@ -42,6 +42,9 @@ contract EligibilityDataProvider is Ownable {
 	/// @notice Required ratio of TVL to get reward; in bips
 	uint256 public requiredDepositRatio;
 
+	/// @notice Ratio of the required price to still allow without disqualification; in bips
+	uint256 public priceToleranceRatio;
+
 	/// @notice RDNT-ETH LP token
 	address public lpToken;
 
@@ -70,6 +73,9 @@ contract EligibilityDataProvider is Ownable {
 	/// @notice Emitted when required TVL ratio is updated
 	event RequiredDepositRatioUpdated(uint256 requiredDepositRatio);
 
+	/// @notice Emitted when price tolerance ratio is updated
+	event PriceToleranceRatioUpdated(uint256 priceToleranceRatio);
+
 	/// @notice Emitted when DQ time is set
 	event DqTimeUpdated(address _user, uint256 _time);
 
@@ -95,6 +101,7 @@ contract EligibilityDataProvider is Ownable {
 		middleFeeDistribution = _middleFeeDistribution;
 		priceProvider = _priceProvider;
 		requiredDepositRatio = 500;
+		priceToleranceRatio = 9000;
 	}
 
 	/********************** Setters ***********************/
@@ -127,6 +134,17 @@ contract EligibilityDataProvider is Ownable {
 		requiredDepositRatio = _requiredDepositRatio;
 
 		emit RequiredDepositRatioUpdated(_requiredDepositRatio);
+	}
+
+	/**
+	 * @notice Sets price tolerance ratio. Can only be called by the owner.
+	 * @param _priceToleranceRatio Ratio in bips.
+	 */
+	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
+		require(_priceToleranceRatio >= 8000 && _priceToleranceRatio <= RATIO_DIVISOR, "Invalid ratio");
+		priceToleranceRatio = _priceToleranceRatio;
+
+		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
 	}
 
 	/**
@@ -184,7 +202,7 @@ contract EligibilityDataProvider is Ownable {
 	 */
 	function isEligibleForRewards(address _user) public view returns (bool isEligible) {
 		uint256 lockedValue = lockedUsdValue(_user);
-		uint256 requiredValue = requiredUsdValue(_user);
+		uint256 requiredValue = requiredUsdValue(_user).mul(priceToleranceRatio).div(RATIO_DIVISOR);
 		return requiredValue != 0 && lockedValue >= requiredValue;
 	}
 

@@ -2,10 +2,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre, { ethers, upgrades } from "hardhat";
 import { BalancerPoolHelper, RadiantOFT } from "../../typechain-types";
 import { DeployConfig } from "../../scripts/deploy/types";
-import { expect } from "chai";
 import { WETH } from "../../typechain-types/contracts/misc/WETH.sol";
 import { getConfigForChain } from "../../scripts/deploy/helpers/getConfig";
 import { MockToken } from "../../typechain-types/mocks";
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+chai.use(solidity);
+const { expect } = chai;
 
 async function deployContract(contractName: string, opts: any, ...args: any) {
   const factory = await ethers.getContractFactory(contractName, opts);
@@ -55,11 +58,9 @@ xdescribe("Balancer Pool Helper", function () {
         deployConfig.TOKEN_NAME,
         deployConfig.SYMBOL,
         deployConfig.LZ_ENDPOINT,
-        deployConfig.SUPPLY_MAX,
-        deployConfig.SUPPLY_MAX_MINT,
-        deployConfig.FEE_BRIDGING,
+        dao.address,
         deployConfig.TREASURY,
-        dao.address
+        deployConfig.SUPPLY_MAX,
       )
     );
 
@@ -123,7 +124,6 @@ xdescribe("Balancer Pool Helper", function () {
     }
     await wstETHToken.transfer(poolHelper.address, deployConfig.LP_INIT_ETH);
 
-    await radiantToken.mint();
     await radiantToken
       .connect(dao)
       .transfer(poolHelper.address, deployConfig.LP_INIT_RDNT);

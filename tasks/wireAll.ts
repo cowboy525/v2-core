@@ -51,9 +51,6 @@ module.exports = async function (taskArgs, hre) {
 
             transactions.push(...(await setUseCustomAdapterParams(hre, localNetwork, localContractName, WIRE_UP_CONFIG[localNetwork].useCustomAdapterParams)))
             // transactions.push(...(await lockToSendAndRecvVersion(hre, localNetwork, localContractName, { sendVersion: WIRE_UP_CONFIG[localNetwork].sendVersion, receiveVersion: WIRE_UP_CONFIG[localNetwork].receiveVersion, lockDown })))
-            if (WIRE_UP_CONFIG[localNetwork].setDefault) {
-                transactions.push(...(await setDefaultFeeBp(hre, localNetwork, localContractName, WIRE_UP_CONFIG[localNetwork].defaultFeeBp)))
-            }
             await Promise.all(remoteNetworks.map(async (remoteNetwork) => {
                 if (localNetwork === remoteNetwork) return
                 let remoteContractName;
@@ -70,9 +67,6 @@ module.exports = async function (taskArgs, hre) {
                 // transactions.push(...(await setOracle(hre, localNetwork, localContractName, CHAIN_ID[remoteNetwork], WIRE_UP_CONFIG[localNetwork].oracleAddress)))
                 transactions.push(...(await setTrustedRemote(hre, localNetwork, localContractName, remoteNetwork, remoteContractName, taskArgs.e)))
                 transactions.push(...(await setMinDstGas(hre, localNetwork, localContractName, WIRE_UP_CONFIG[localNetwork]["remoteNetworkConfigs"][remoteNetwork].minDstGasConfig, CHAIN_ID[remoteNetwork])))
-                if (!WIRE_UP_CONFIG[localNetwork].setDefault) {
-                    // transactions.push(...(await setFeeBp(hre, localNetwork, localContractName, WIRE_UP_CONFIG[localNetwork]["remoteNetworkConfigs"][remoteNetwork].feeBpConfig, CHAIN_ID[remoteNetwork])))
-                }
             }))
             return {
                 network: localNetwork,
