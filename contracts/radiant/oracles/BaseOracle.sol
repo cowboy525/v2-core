@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.4;
 
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IBaseOracle.sol";
-
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+
+import "../../interfaces/IChainlinkAggregator.sol";
+import "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
@@ -33,7 +33,6 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 */
 	function __BaseOracle_init(address _token, address _ethChainlinkFeed) internal onlyInitializing {
 		__Ownable_init();
-
 		token = _token;
 		ethChainlinkFeed = _ethChainlinkFeed;
 	}

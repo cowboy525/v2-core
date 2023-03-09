@@ -64,11 +64,15 @@ const config: HardhatUserConfig = {
       421613: '0x71810d252db23AFd9d6A9be925Da148c2F83D926'
     }
   },
-  networks: addForkConfiguration({
+  networks: {
     hardhat: {
       initialBaseFeePerGas: 0, // to fix : https://github.com/sc-forks/solidity-coverage/issues/652, see https://github.com/sc-forks/solidity-coverage/issues/652#issuecomment-896330136
       loggingEnabled: false,
       allowUnlimitedContractSize: true,
+      forking: {
+        url: "https://arb1.arbitrum.io/rpc",
+        // blockNumber: 68130000
+      },
       tags: ["core"]
     },
     localhost: {
@@ -113,7 +117,7 @@ const config: HardhatUserConfig = {
       // accounts: accounts('goerli'),
       accounts: [process.env.PRIVATE_KEY_GOERLI],
     },
-  }),
+  },
   paths: {
     sources: 'contracts',
   },

@@ -35,7 +35,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	uint32 public lookbackSecs;
 
 	/// @notice Can flip the order of the pricing
-	bool public priceInToken0 = false;
+	bool public priceInToken0;
 
 	/**
 	 * @notice Initializer
@@ -57,6 +57,8 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		decimals1 = token1.decimals();
 
 		lookbackSecs = _lookbackSecs;
+
+		priceInToken0 = false;
 
 		__BaseOracle_init(_rdnt, _ethChainlinkFeed);
 	}
