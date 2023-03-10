@@ -54,7 +54,7 @@ describe("LockZap: 2-token zap", function () {
     let lockInfo = await lpFeeDistribution.lockedBalances(dao.address);
     expect(lockInfo.lockData.length).to.be.equal(0);
 
-    const rdntZapAmt = ethers.utils.parseEther("100");
+    const rdntZapAmt = ethers.utils.parseEther("100000");
     const wethAmt = await lockZap.quoteFromToken(rdntZapAmt);
 
     await rdntToken.connect(dao).approve(
@@ -68,7 +68,6 @@ describe("LockZap: 2-token zap", function () {
       rdntZapAmt,
       0,
     )
-    // zapDualTokens(true, wethAmt, rdntZapAmt);
 
     lockInfo = await lpFeeDistribution.lockedBalances(dao.address);
     expect(lockInfo.lockData.length).to.be.equal(1);
@@ -78,7 +77,7 @@ describe("LockZap: 2-token zap", function () {
     let lockInfo = await lpFeeDistribution.lockedBalances(dao.address);
     expect(lockInfo.lockData.length).to.be.equal(0);
 
-    const rdntZapAmt = ethers.utils.parseEther("100");
+    const rdntZapAmt = ethers.utils.parseEther("1000000");
     const ethAmt = await lockZap.quoteFromToken(rdntZapAmt);
 
     await rdntToken.connect(dao).approve(

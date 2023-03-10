@@ -51,15 +51,17 @@ let runs: {
 
 for (let i = 0; i < relockOptions.length; i++) {
     for (let j = 0; j < borrowOptions.length; j++) {
-        for (let k = 0; k < defaultLockTimeOptions.length; k++) {
-            for (let m = 0; m < depositOptions.length; m++) {
-                const relock = relockOptions[i];
-                const borrow = borrowOptions[i];
-                const defaultLockTime = defaultLockTimeOptions[k];
-                const depositAmt = depositOptions[m];
-                runs.push({ relock, borrow, depositAmt, defaultLockTime });
-            }
+        // for (let k = 0; k < defaultLockTimeOptions.length; k++) {
+        for (let m = 0; m < depositOptions.length; m++) {
+            const relock = relockOptions[i];
+            const borrow = borrowOptions[i];
+            // const defaultLockTime = defaultLockTimeOptions[k];
+            const defaultLockTime = 0;
+            const depositAmt = depositOptions[m];
+
+            runs.push({ relock, borrow, depositAmt, defaultLockTime });
         }
+        // }
     }
 }
 
@@ -136,15 +138,29 @@ const loadZappedUserFixture = async (run: any) => {
     await zapAndDeposit(run.relock, run.borrow, 0, run.depositAmt);
 }
 
+const makeHunterEligible = async () => {
+    const minDLPBalance = await bountyManager.minDLPBalance();
+    await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
+    await lpFeeDistribution.stake(minDLPBalance, hunter.address, 0);
+    await deposit("rUSDC", "10", hunter, lendingPool, deployData);
+}
+
+const canBountyHunt = async (_user: string) => {
+    const minDLPBalance = await bountyManager.minDLPBalance();
+    const { locked } = await lpFeeDistribution.lockedBalances(_user);
+    const isEmissionsEligible = await eligibilityProvider.isEligibleForRewards(_user);
+    return locked >= minDLPBalance && isEmissionsEligible;
+}
+
 // DEV: limit to 1 case
-runs = [
-    {
-        borrow: true,
-        depositAmt: eligibleAmt,
-        relock: false,
-        defaultLockTime: 0
-    }
-]
+// runs = [
+//     {
+//         borrow: true,
+//         depositAmt: eligibleAmt,
+//         relock: false,
+//         defaultLockTime: 0
+//     }
+// ]
 runs.forEach(function (run) {
 
     const {
@@ -176,67 +192,51 @@ runs.forEach(function (run) {
                     await loadZappedUserFixture(run);
                 });
 
-                it('bounty quote', async () => {
+                it('no bounty when locked', async () => {
                     await generatePlatformRevenue();
-                    await advanceTimeAndBlock(DEFAULT_LOCK_TIME * 2);
-
-                    await lpFeeDistribution.connect(user1).setAutocompound(false);
-
-                    const quote = await bountyManager.connect(hunter).quote(user1.address);
-
-                    const bb = await bountyManager.getBaseBounty();
-                    if (relock) {
-                        expect(quote.bounty).equals(bb);
-                    } else {
-                        expect(quote.bounty).gt(0);
-                        expect(quote.bounty).not.equals(bb);
-                    }
+                    const { unlockable } = await lpFeeDistribution.lockedBalances(user1.address);
+                    let quote = await bountyManager.quote(user1.address);
+                    expect(unlockable).equals(quote.bounty).equals(0);
                 });
 
-                it('bounty quote + claim', async () => {
-                    // Hunter gets bounty in MFD
-                    // Inelig plat rev is removed from Lpfd
-                    // No earnings in case empty
+                it('base bounty when unlockable', async () => {
+                    await generatePlatformRevenue();
+                    await advanceTimeAndBlock(DEFAULT_LOCK_TIME + 1);
 
                     const quote = await bountyManager.connect(hunter).quote(user1.address);
-                    const bounties = await lpFeeDistribution.bountyForUser(user1.address);
-                    const rTokenAmounts0 = [];
-                    for (let i = 0; i < bounties.length; i += 1) {
-                        const rToken = await ethers.getContractAt("ERC20", bounties[i].token);
-                        const balance = await rToken.balanceOf(lpFeeDistribution.address);
-                        rTokenAmounts0.push(balance);
+
+                    const baseBounty = await bountyManager.getBaseBounty();
+
+                    expect(quote.bounty).equals(baseBounty);
+                });
+
+                it('withdraws expired locks and relocks', async () => {
+                    await generatePlatformRevenue();
+                    await advanceTimeAndBlock(DEFAULT_LOCK_TIME + 1);
+
+                    let { unlockable } = await lpFeeDistribution.lockedBalances(user1.address);
+                    expect(unlockable).gt(0);
+
+                    await makeHunterEligible();
+
+                    const actionType = 1;
+                    await bountyManager.connect(hunter).claim(user1.address, actionType);
+                    const lpTokenBalance = await lpToken.balanceOf(user1.address);
+
+                    // await chefIncentivesController.check(user1.address);
+
+                    if (relock) {
+                        expect(lpTokenBalance).equals(0);
+                    } else {
+                        expect(unlockable).equals(lpTokenBalance);
                     }
 
-                    const earned0 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-
-                    const minDLPBalance = await bountyManager.minDLPBalance();
-                    await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
-                    await lpFeeDistribution.stake(minDLPBalance, hunter.address, 0);
-
-                    let vdWETHAddress = await leverager.getVDebtToken(weth.address);
-                    vdWETH = <VariableDebtToken>(
-                        await ethers.getContractAt("VariableDebtToken", vdWETHAddress)
-                    );
-                    await vdWETH
-                        .connect(hunter)
-                        .approveDelegation(leverager.address, ethers.constants.MaxUint256);
-
-                    await wethGateway
-                        .connect(hunter)
-                        .depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
-                            value: ethers.utils.parseEther("1"),
-                        });
-
-                    await bountyManager.connect(hunter).claim(user1.address, quote.bounty, 1);
-                    const earned1 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-                    expect(earned1.sub(earned0)).to.be.equal(quote.bounty);
-
-                    for (let i = 0; i < bounties.length; i += 1) {
-                        const rToken = await ethers.getContractAt("ERC20", bounties[i].token);
-                        const balance1 = await rToken.balanceOf(lpFeeDistribution.address);
-                        if (rTokenAmounts0[0].gt(0)) {
-                            expect(bounties[i].amount.toNumber()).to.be.approximately(rTokenAmounts0[i].sub(balance1).toNumber(), 1000);
-                        }
+                    // const originalUnlockable = unlockable;
+                    const locked = (await lpFeeDistribution.lockedBalances(user1.address)).locked;
+                    if (relock) {
+                        expect(unlockable).equals(locked); // lock relocked
+                    } else {
+                        expect(locked).equals(0); // locks withdrawn
                     }
                 });
 
@@ -257,54 +257,6 @@ runs.forEach(function (run) {
             describe("New Lock DQ emissions:", async () => {
                 before(async () => {
                     await zapAndDeposit(run.relock, run.borrow, 0, run.depositAmt);
-                });
-
-                it('bounty quote + claim', async () => {
-                    // Hunter gets bounty in MFD
-                    // Inelig plat rev is removed from Lpfd
-                    await generatePlatformRevenue();
-                    await advanceTimeAndBlock(DEFAULT_LOCK_TIME * 2);
-
-                    const quote = await bountyManager.connect(hunter).quote(user1.address);
-                    const bounties = await lpFeeDistribution.bountyForUser(user1.address);
-                    const rTokenAmounts0 = [];
-                    for (let i = 0; i < bounties.length; i += 1) {
-                        const rToken = await ethers.getContractAt("ERC20", bounties[i].token);
-                        const balance = await rToken.balanceOf(lpFeeDistribution.address);
-                        rTokenAmounts0.push(balance);
-                    }
-
-                    const earned0 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-
-                    const minDLPBalance = await bountyManager.minDLPBalance();
-                    await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
-                    await lpFeeDistribution.stake(minDLPBalance, hunter.address, 0);
-
-                    let vdWETHAddress = await leverager.getVDebtToken(weth.address);
-                    vdWETH = <VariableDebtToken>(
-                        await ethers.getContractAt("VariableDebtToken", vdWETHAddress)
-                    );
-                    await vdWETH
-                        .connect(hunter)
-                        .approveDelegation(leverager.address, ethers.constants.MaxUint256);
-
-                    await wethGateway
-                        .connect(hunter)
-                        .depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
-                            value: ethers.utils.parseEther("1"),
-                        });
-
-                    await bountyManager.connect(hunter).claim(user1.address, quote.bounty, 1);
-                    const earned1 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-                    expect(earned1.sub(earned0)).to.be.equal(quote.bounty);
-
-                    for (let i = 0; i < bounties.length; i += 1) {
-                        const rToken = await ethers.getContractAt("ERC20", bounties[i].token);
-                        const balance1 = await rToken.balanceOf(lpFeeDistribution.address);
-                        if (rTokenAmounts0[0].gt(0)) {
-                            expect(bounties[i].amount.toNumber()).to.be.approximately(rTokenAmounts0[i].sub(balance1).toNumber(), 1000);
-                        }
-                    }
                 });
 
                 it('doesnt earn emish', async () => {

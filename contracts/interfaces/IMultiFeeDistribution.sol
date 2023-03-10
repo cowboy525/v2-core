@@ -5,17 +5,20 @@ pragma abicoder v2;
 
 import "./LockedBalance.sol";
 import "./IFeeDistribution.sol";
+import "./IMintableToken.sol";
 
 interface IMultiFeeDistribution is IFeeDistribution {
 	function exit(bool claimRewards) external;
 
-	function stake(
-		uint256 amount,
-		address onBehalfOf,
-		uint256 typeIndex
-	) external;
+	function stake(uint256 amount, address onBehalfOf, uint256 typeIndex) external;
+
+	function rdntToken() external view returns (IMintableToken);
+
+	function PriceProvider() external view returns (address);
 
 	function lockInfo(address user) external view returns (LockedBalance[] memory);
+
+	function autocompoundEnabled(address user) external view returns (bool);
 
 	function defaultLockIndex(address _user) external view returns (uint256);
 
@@ -35,21 +38,15 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function stakingToken() external view returns (address);
 
-	function mint(
-		address user,
-		uint256 amount,
-		bool withPenalty
-	) external;
+	function claimFromConverter(address) external;
+
+	function mint(address user, uint256 amount, bool withPenalty) external;
 }
 
 interface IMFDPlus is IMultiFeeDistribution {
 	function getLastClaimTime(address _user) external returns (uint256);
 
-	function claimFromConverter(address) external;
-
-	function bountyForUser(address _user) external view returns (IFeeDistribution.RewardData[] memory bounties);
-
-	function claimBounty(address _user, bool _execute) external returns (uint256 bountyAmt, bool issueBaseBounty);
+	function claimBounty(address _user, bool _execute) external returns (bool issueBaseBounty);
 
 	function claimCompound(address _user, bool _execute) external returns (uint256 bountyAmt);
 

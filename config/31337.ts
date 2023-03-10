@@ -30,7 +30,7 @@ const chainConfig = {
   "SUPPLY_TEAM_MINT": ethers.utils.parseUnits("1000000", 18),
   "SUPPLY_TEAM_VEST": ethers.utils.parseUnits("1000000", 18),
   "SUPPLY_ECO_MINT": ethers.utils.parseUnits("10000000", 18),
-  "SUPPLY_CIC_RESERVE": ethers.utils.parseUnits("2000000", 18),
+  "SUPPLY_CIC_RESERVE": ethers.utils.parseUnits("20000000", 18),
   "SUPPLY_MIGRATION_MINT": ethers.utils.parseUnits("10000000", 18),
   "SUPPLY_DQ_RESERVE": ethers.utils.parseUnits("100000", 18),
 

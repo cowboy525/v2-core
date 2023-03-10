@@ -3,9 +3,9 @@
 pragma solidity 0.8.4;
 pragma abicoder v2;
 
-import "../radiant/staking/MFDPlus.sol";
+import "../radiant/staking/MultiFeeDistribution.sol";
 
-contract MockNewLPFeeDistribution is MFDPlus {
+contract MockNewLPFeeDistribution is MultiFeeDistribution {
 	function mockNewFunction() external pure returns (bool) {
 		return true;
 	}

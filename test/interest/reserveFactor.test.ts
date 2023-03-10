@@ -87,7 +87,7 @@ describe("Reserve Factor", () => {
 
     const LPToken = <MockToken>await ethers.getContractAt("MockToken", deployData.stakingToken);
     await LPToken.approve(lpFeeDistribution.address, ethers.constants.MaxUint256);
-    await lpFeeDistribution.stake("100000", deployer.address, 0);
+    await lpFeeDistribution.stake(ethers.utils.parseEther("10"), deployer.address, 0);
     // skip initial delay
     await advanceTimeAndBlock(4000);
 

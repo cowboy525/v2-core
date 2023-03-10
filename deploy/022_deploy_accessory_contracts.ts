@@ -20,6 +20,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const aaveOracle = await deployments.get(`AaveOracle`);
   const lpFeeDistribution = await deployments.get(`LPMFD`);
   const multiFeeDistribution = await deployments.get(`MFD`);
+  const autocompounder = await deployments.get("AutoCompounder");
   const lendingPool = await read("LendingPoolAddressesProvider", "getLendingPool");
 
   const parseReserveTokens = async () => {
@@ -96,6 +97,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
           chefIncentivesController.address,
           priceProvider.address,
           edp.address,
+          autocompounder.address,
           config.DQ_HUNTER_SHARE,
           config.DQ_TARGET_BASE_BOUNTY_USD,
           config.DQ_MAX_BASE_BOUNTY,
@@ -105,26 +107,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
   });
 
-  let mfdHelper = await deploy("MFDHelper", {
-    from: deployer,
-    log: true,
-    proxy: {
-      proxyContract: 'OpenZeppelinTransparentProxy',
-      execute: {
-        methodName: 'initialize',
-        args: [
-          baseAsset.address,
-          radiantToken.address,
-          lendingPoolAddressesProvider.address,
-        ]
-      },
-    }
-  });
-
   if (bountyManager.newlyDeployed) {
 
-    await execute("MFD", { from: deployer }, "addBountyContract", bountyManager.address);
+    await execute("MFD", { from: deployer }, "setBountyManager", bountyManager.address);
+    await execute("LPMFD", { from: deployer }, "setBountyManager", bountyManager.address);
     await execute("ChefIncentivesController", { from: deployer }, "setBountyManager", bountyManager.address);
+    await execute("AutoCompounder", { from: deployer }, "setBountyManager", bountyManager.address);
+
     await execute("RadiantOFT", { from: dao }, "transfer", bountyManager.address, config.SUPPLY_DQ_RESERVE);
 
     await execute("ChefIncentivesController", { from: deployer }, "setEligibilityExempt", multiFeeDistribution.address);
@@ -132,28 +121,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await execute("ChefIncentivesController", { from: deployer }, "setEligibilityExempt", middleFeeDistribution.address);
     await execute("ChefIncentivesController", { from: deployer }, "setEligibilityExempt", bountyManager.address);
 
-    await execute("LPMFD", { from: deployer, log: true }, "setCompoundOptions",
-      baseAsset.address,
-      router.address,
-      bountyManager.address,
-      mfdHelper.address,
-      true,
-      true,
-      config.AC_THRESHOLD,
-      config.AC_FEE,
-      config.AC_SLIPPAGE_LIMIT,
-    );
-
     let { tickers, allTokens } = await parseReserveTokens();
     let aTokens = tickers.map((ticker) => ticker.deposit);
     let underlying = tickers.map((ticker) => ticker.addr);
 
-    await execute("MFDHelper", { from: deployer }, "addRewardBaseTokens", aTokens);
+    await execute("AutoCompounder", { from: deployer }, "addRewardBaseTokens", aTokens);
 
     for (let i = 0; i < underlying.length; i++) {
       const u = underlying[i];
-      await execute("MFDHelper", { from: deployer }, "setRoutes", u, [u, baseAsset.address]);
+      await execute("AutoCompounder", { from: deployer }, "setRoutes", u, [u, baseAsset.address]);
     }
+
     const assets = config.STARGATE_CONFIG.ASSETS;
     const poolIds = config.STARGATE_CONFIG.POOL_IDS;
     await execute("StargateBorrow", { from: deployer }, "setPoolIDs", assets, poolIds);

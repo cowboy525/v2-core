@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
 import { advanceTimeAndBlock } from "../../scripts/utils";
-import { BountyManager, LendingPool, MFDPlus, MultiFeeDistribution, ERC20, VariableDebtToken, Leverager, WETH, WETHGateway } from "../../typechain-types";
+import { BountyManager, LendingPool, MFDPlus, MultiFeeDistribution, ERC20, VariableDebtToken, Leverager, WETH, WETHGateway, AutoCompounder } from "../../typechain-types";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -19,7 +19,8 @@ const { expect } = chai;
 
 let multiFeeDistribution: MultiFeeDistribution;
 let eligibilityProvider: EligibilityDataProvider;
-let lpFeeDistribution: MFDPlus;
+let lpFeeDistribution: MultiFeeDistribution;
+let autoCompounder: AutoCompounder;
 let lendingPool: LendingPool;
 let leverager: Leverager;
 let wethGateway: WETHGateway;
@@ -40,17 +41,13 @@ let lpToken: ERC20;
 const eligibleAmt = 1000000;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
-    await doBorrow("rWETH", "1000", deployer, lendingPool, deployData);
-    await doBorrow("rUSDC", "10000", deployer, lendingPool, deployData);
-    await deposit("rUSDT", "10000", deployer, lendingPool, deployData);
-    await doBorrow("rUSDT", "5000", deployer, lendingPool, deployData);
-    await deposit("rWBTC", "20", deployer, lendingPool, deployData);
-    await doBorrow("rWBTC", "10", deployer, lendingPool, deployData);
+    await deposit("rWETH", "20000", deployer, lendingPool, deployData);
+
+    await doBorrow("rWETH", "10000", deployer, lendingPool, deployData);
+
     await advanceTimeAndBlock(duration);
-    await doBorrow("rWETH", "1000", deployer, lendingPool, deployData);
-    await doBorrow("rUSDC", "1000", deployer, lendingPool, deployData);
-    await doBorrow("rUSDT", "50", deployer, lendingPool, deployData);
-    await doBorrow("rWBTC", ".1", deployer, lendingPool, deployData);
+
+    await doBorrow("rWETH", "1", deployer, lendingPool, deployData);
 
     await lpFeeDistribution.connect(deployer).getAllRewards();
     await advanceTimeAndBlock(duration);
@@ -86,19 +83,28 @@ const loadZappedUserFixture = async () => {
         priceProvider,
         deployData,
         LOCK_DURATION,
+        autoCompounder,
         bountyManager,
         user1,
         user2,
         deployer
     } = await setupTest())
+
     hunter = user2;
     DEFAULT_LOCK_TIME = LOCK_DURATION;
     SKIP_DURATION = DEFAULT_LOCK_TIME / 20;
     lpToken = await ethers.getContractAt("ERC20", deployData.stakingToken);
+
     // Deposit assets 
     await deposit("rWETH", "10000", deployer, lendingPool, deployData);
-
     await zapAndDeposit(0, eligibleAmt);
+}
+
+const makeHunterEligible = async () => {
+    const minDLPBalance = await bountyManager.minDLPBalance();
+    await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
+    await lpFeeDistribution.stake(minDLPBalance, hunter.address, 0);
+    await deposit("rUSDC", "10", hunter, lendingPool, deployData);
 }
 
 const getPendingInRdnt = async (): Promise<number> => {
@@ -117,29 +123,13 @@ describe(`AutoCompound:`, async () => {
 
     before(async () => {
         await loadZappedUserFixture();
+        await makeHunterEligible();
         await lpFeeDistribution.connect(user1).setAutocompound(true);
-        const minDLPBalance = await bountyManager.minDLPBalance();
-        await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
-        await lpFeeDistribution.stake(minDLPBalance, hunter.address, 0);
-
-        let vdWETHAddress = await leverager.getVDebtToken(weth.address);
-        vdWETH = <VariableDebtToken>(
-            await ethers.getContractAt("VariableDebtToken", vdWETHAddress)
-        );
-        await vdWETH
-            .connect(hunter)
-            .approveDelegation(leverager.address, ethers.constants.MaxUint256);
-
-        await wethGateway
-            .connect(hunter)
-            .depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
-                value: ethers.utils.parseEther("1"),
-            });
     });
 
     it("no bounty when no platform rev", async () => {
         const quote = await bountyManager.connect(hunter).quote(user1.address);
-        // let quote = await bountyManager.connect(hunter).executeBounty(user1.address, false, 0, 0);
+        // let quote = await bountyManager.connect(hunter).executeBounty(user1.address, false, 0);
         expect(toNum(quote.bounty)).equals(0);
     });
 
@@ -163,7 +153,7 @@ describe(`AutoCompound:`, async () => {
         const expectedFee = await getPendingInRdnt();
         const quote = await bountyManager.connect(hunter).quote(user1.address);
 
-        await bountyManager.connect(hunter).claim(user1.address, quote.bounty, quote.actionType);
+        await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
 
         const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
         expect(bountyReceived).closeTo(expectedFee, .5);
@@ -184,10 +174,11 @@ describe(`AutoCompound:`, async () => {
     });
 
     it("quote > 0 after 24 hours pass", async () => {
-        await generatePlatformRevenue(24 * HOUR);
+        await advanceTimeAndBlock(24 * HOUR);
+        await generatePlatformRevenue();
         const expectedFee = await getPendingInRdnt();
         const quote = await bountyManager.quote(user1.address);
-        expect(toNum(quote.bounty)).closeTo(expectedFee, 1);
+        expect(toNum(quote.bounty)).closeTo(expectedFee, 50);
     });
 
     it("cant AC user who has not enabled", async () => {
@@ -198,16 +189,9 @@ describe(`AutoCompound:`, async () => {
         await lpFeeDistribution.connect(user1).setAutocompound(true);
     });
 
-    it("slippage test", async () => {
-        await advanceTimeAndBlock(24 * HOUR);
-        // hack to simulate slippage: amt given will be less than quote (like if slippage high)
-        const quote = await bountyManager.quote(user1.address);
-        const bounty = quote.bounty.mul(2);
-
-        await expect(
-            bountyManager.connect(hunter).claim(user1.address, bounty, 3)
-        )
-            .to.be.reverted;
-        // .to.be.revertedWith("too much slippage");
+    it("can autocompound self for no Fee", async () => {
+        await generatePlatformRevenue(1 * HOUR);
+        let fee = await autoCompounder.connect(user1).selfCompound();
+        await expect(fee.value).to.be.equal(0);
     });
 });

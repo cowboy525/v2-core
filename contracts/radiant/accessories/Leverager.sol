@@ -213,6 +213,7 @@ contract Leverager is Ownable {
 		uint256 borrowRatio,
 		uint256 loopCount
 	) external payable {
+		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {

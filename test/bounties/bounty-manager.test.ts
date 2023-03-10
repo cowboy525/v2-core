@@ -123,7 +123,8 @@ describe(`BountyManager:`, async () => {
             });
     });
 
-    it("can remap bounties after contract upgrade", async () => {
+    // TODO: this .sol file currently commented out, temp disable test
+    xit("can remap bounties after contract upgrade", async () => {
 
         let quote = await bountyManager.connect(hunter).quote(user1.address);
 
@@ -133,14 +134,14 @@ describe(`BountyManager:`, async () => {
 
         quote = await bountyManager.connect(hunter).quote(user1.address);
 
-        await bountyManager.connect(hunter).claim(user1.address, quote.bounty, quote.actionType);
+        await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
         const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
 
         const BountyManagerFactory = await ethers.getContractFactory(
             "BountyManagerBountiesUpgradeTest"
         );
 
-		bountyManager = await upgrades.forceImport(bountyManager.address, BountyManagerFactory) as BountyManager;
+        bountyManager = await upgrades.forceImport(bountyManager.address, BountyManagerFactory) as BountyManager;
 
         bountyManager = await upgrades.upgradeProxy(
             bountyManager,

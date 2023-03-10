@@ -69,9 +69,11 @@ const config: HardhatUserConfig = {
       initialBaseFeePerGas: 0, // to fix : https://github.com/sc-forks/solidity-coverage/issues/652, see https://github.com/sc-forks/solidity-coverage/issues/652#issuecomment-896330136
       loggingEnabled: false,
       allowUnlimitedContractSize: true,
+      gasPrice: 0,
+      blockGasLimit: 30000000000000,
       forking: {
-        url: "https://arb1.arbitrum.io/rpc",
-        // blockNumber: 68130000
+        url: "https://rpc.radiant.capital/70ff72eec58b50f824282a0c28f3434d585c9410/",
+        blockNumber: 68350821
       },
       tags: ["core"]
     },
@@ -134,7 +136,7 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 0,
-    // bail: true
+    bail: true
   },
   external: process.env.HARDHAT_FORK
     ? {

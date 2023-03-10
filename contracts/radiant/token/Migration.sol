@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: BUSL-1.1
-
 pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -21,17 +20,8 @@ contract Migration is Ownable, Pausable {
 	/// @notice V2 of RDNT
 	ERC20 public tokenV2;
 
-	/// @notice Exchange rate in bips; if V1:V2 is 10:1 then, 10 * 1e4
-	uint256 public exchangeRate;
-
-	/// @notice Any user exchanging tokens will fix the exchange rate
-	bool public isExchangeRateFixed;
-
-	/// @notice emitted when exchange rate is updated
-	event ExchangeRateUpdated(uint256 exchangeRate);
-
 	/// @notice emitted when migrate v1 token into v2
-	event Migrate(address indexed user, uint256 amountV1, uint256 amountV2);
+	event Migrate(address indexed user, uint256 amount);
 
 	/**
 	 * @notice constructor
@@ -41,59 +31,34 @@ contract Migration is Ownable, Pausable {
 	constructor(ERC20 _tokenV1, ERC20 _tokenV2) Ownable() {
 		tokenV1 = _tokenV1;
 		tokenV2 = _tokenV2;
-
-		exchangeRate = 1e4;
-
 		_pause();
 	}
 
 	/**
-	 * @notice Sets exchange rate
-	 * @param _exchangeRate from V1 to V2
-	 */
-	function setExchangeRate(uint256 _exchangeRate) external onlyOwner {
-		require(!isExchangeRateFixed, "Users already exchanged tokens");
-		exchangeRate = _exchangeRate;
-		emit ExchangeRateUpdated(_exchangeRate);
-	}
-
-	/**
 	 * @notice Withdraw ERC20 token
-	 * @param token address for withdraw
-	 * @param amount to withdraw
-	 * @param to target address
+	 * @param _token address for withdraw
+	 * @param _amount to withdraw
 	 */
-	function withdrawToken(
-		ERC20 token,
-		uint256 amount,
-		address to
-	) external onlyOwner {
-		token.safeTransfer(to, amount);
+	function withdrawToken(ERC20 _token, uint256 _amount) external onlyOwner {
+		_token.safeTransfer(owner(), _amount);
 	}
 
 	/**
 	 * @notice Pause or Unpause migration
-	 * @param pause or unpause, true for pause
+	 * @param _doPause or unpause, true for pause
 	 */
-	function pauseMigration(bool pause) external onlyOwner {
-		pause ? _pause() : _unpause();
+	function pauseMigration(bool _doPause) external onlyOwner {
+		_doPause ? _pause() : _unpause();
 	}
 
 	/**
 	 * @notice Migrate from V1 to V2
-	 * @param amount of V1 token
+	 * @param _amount of V1 token
 	 */
-	function exchange(uint256 amount) external whenNotPaused {
-		if (!isExchangeRateFixed) {
-			isExchangeRateFixed = true;
-		}
-		uint256 v1Decimals = tokenV1.decimals();
-		uint256 v2Decimals = tokenV2.decimals();
+	function exchange(uint256 _amount) external whenNotPaused {
+		tokenV1.safeTransferFrom(_msgSender(), address(this), _amount);
+		tokenV2.safeTransfer(_msgSender(), _amount);
 
-		uint256 outAmount = amount.mul(1e4).div(exchangeRate).mul(10**v2Decimals).div(10**v1Decimals);
-		tokenV1.safeTransferFrom(_msgSender(), address(this), amount);
-		tokenV2.safeTransfer(_msgSender(), outAmount);
-
-		emit Migrate(_msgSender(), amount, outAmount);
+		emit Migrate(_msgSender(), _amount);
 	}
 }

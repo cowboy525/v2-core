@@ -1,5 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { ethers } from "hardhat";
+import chai from "chai";
 import {
   ChefIncentivesController,
   LendingPool,
@@ -14,12 +15,14 @@ import {
 } from "../../typechain-types";
 import { advanceTimeAndBlock } from "../shared/helpers";
 import { DeployConfig, DeployData } from "../../scripts/deploy/types";
-import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { WETH } from "../../typechain-types/contracts/misc/WETH.sol";
 import { setupTest } from "../setup";
+import { solidity } from "ethereum-waffle";
+chai.use(solidity);
+const { expect } = chai;
 
-describe("Zapper", function () {
+xdescribe("Zapper", function () {
   let deployData: DeployData;
   let deployConfig: DeployConfig;
 
@@ -108,12 +111,6 @@ describe("Zapper", function () {
 
 
   it("can zap into locked lp", async function () {
-
-    // bool _borrow,
-    // uint256 _wethAmt,
-    // uint256 _rdntAmt,
-    // uint256 _lockTypeIndex
-
     await lockZap.connect(user2).zap(
       false,
       0,

@@ -250,7 +250,7 @@ describe("MFD Relocking", () => {
         value: ethers.utils.parseEther("1"),
       });
 
-    await bountyManager.connect(user3).claim(user2.address, bountyAmount.bounty, 0)
+    await bountyManager.connect(user3).claim(user2.address, 0)
 
     await advanceTimeAndBlock(parseInt(lockDuration.toString()));
 

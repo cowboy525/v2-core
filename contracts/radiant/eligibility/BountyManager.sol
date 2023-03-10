@@ -19,6 +19,7 @@ import "../../interfaces/IChefIncentivesController.sol";
 import "../../interfaces/IMultiFeeDistribution.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
+import "../../interfaces/IAutoCompounder.sol";
 
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
@@ -31,6 +32,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	address chef;
 	address public priceProvider;
 	address public eligibilityDataProvider;
+	address autocompounder;
 	uint256 public HUNTER_SHARE;
 	uint256 public baseBountyUsdTarget; // decimals 18
 	uint256 public maxBaseBounty;
@@ -82,6 +84,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		address _chef,
 		address _priceProvider,
 		address _eligibilityDataProvider,
+		address _autocompounder,
 		uint256 _hunterShare,
 		uint256 _baseBountyUsdTarget,
 		uint256 _maxBaseBounty,
@@ -94,6 +97,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		require(_chef != address(0));
 		require(_priceProvider != address(0));
 		require(_eligibilityDataProvider != address(0));
+		require(_autocompounder != address(0));
 		require(_hunterShare <= 10000);
 		require(_baseBountyUsdTarget != 0);
 		require(_maxBaseBounty != 0);
@@ -105,6 +109,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		chef = _chef;
 		priceProvider = _priceProvider;
 		eligibilityDataProvider = _eligibilityDataProvider;
+		autocompounder = _autocompounder;
 
 		HUNTER_SHARE = _hunterShare;
 		baseBountyUsdTarget = _baseBountyUsdTarget;
@@ -117,7 +122,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bountyCount = 3;
 
 		slippageLimit = 10;
-		minDLPBalance = uint256(5).mul(10**18);
+		minDLPBalance = uint256(5).mul(10 ** 18);
 
 		__Ownable_init();
 		__Pausable_init();
@@ -133,7 +138,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function quote(address _user) public view whenNotPaused returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
-			abi.encodeWithSignature("executeBounty(address,bool,uint256,uint256)", _user, false, 0, 0)
+			abi.encodeWithSignature("executeBounty(address,bool,uint256)", _user, false, 0)
 		);
 		require(success, "quote fail");
 
@@ -143,7 +148,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Execute a bounty.
 	 * @param _user address
-	 * @param _expectedBounty result from quote above, used for slippage handling
 	 * can be a fixed amt (Base Bounty) or dynamic amt based on rewards removed from target user during execution (ineligible revenue, autocompound fee)
 	 * @param _actionType which of the 3 bounty types (above) to run.
 	 * @return bounty in RDNT to be paid to Hunter (via vesting)
@@ -151,17 +155,15 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function claim(
 		address _user,
-		uint256 _expectedBounty,
 		uint256 _actionType
 	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
-		return executeBounty(_user, true, _expectedBounty, _actionType);
+		return executeBounty(_user, true, _actionType);
 	}
 
 	/**
 	 * @notice Execute the most appropriate bounty on a user, check returned amount for slippage, calc amount going to Hunter, send to vesting.
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
-	 * @param _expectedBounty result from quote above, used for slippage handling
 	 * can be a fixed amt (Base Bounty) or dynamic amt based on rewards removed from target user during execution (ineligible revenue, autocompound fee)
 	 * @param _actionType which of the 3 bounty types (above) to run.
 	 * @return bounty in RDNT to be paid to Hunter (via vesting)
@@ -170,18 +172,10 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function executeBounty(
 		address _user,
 		bool _execute,
-		uint256 _expectedBounty,
 		uint256 _actionType
 	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
-		require(!_execute || (_execute && _expectedBounty != 0), "quote required");
-
 		if (msg.sender != address(this)) {
-			(, , uint256 lockedLP, , ) = IMFDPlus(lpMfd).lockedBalances(msg.sender);
-			require(lockedLP >= minDLPBalance, "No enough DLP balance to be able to bounty");
-			require(
-				IEligibilityDataProvider(eligibilityDataProvider).isEligibleForRewards(msg.sender),
-				"Bounty executer must be eligible for rewards."
-			);
+			require(_canBountyHunt(msg.sender), "inelig for bounties");
 		}
 
 		uint256 totalBounty;
@@ -199,15 +193,18 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			}
 		}
 
-		uint256 minAmountOut = _expectedBounty.sub(_expectedBounty.mul(slippageLimit).div(100));
-		require(bounty >= minAmountOut, "too much slippage");
-
 		if (_execute && bounty != 0) {
 			if (!issueBaseBounty) {
 				IERC20(rdnt).safeTransferFrom(incentivizer, address(this), totalBounty);
 			}
 			_sendBounty(msg.sender, bounty);
 		}
+	}
+
+	function _canBountyHunt(address _user) internal returns (bool) {
+		(, , uint256 lockedLP, , ) = IMFDPlus(lpMfd).lockedBalances(_user);
+		bool isEmissionsEligible = IEligibilityDataProvider(eligibilityDataProvider).isEligibleForRewards(_user);
+		return lockedLP >= minDLPBalance && isEmissionsEligible;
 	}
 
 	/**
@@ -225,15 +222,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		address _user,
 		bool _execute,
 		uint256 _actionTypeIndex
-	)
-		internal
-		returns (
-			address incentivizer,
-			uint256 totalBounty,
-			bool issueBaseBounty,
-			uint256 actionType
-		)
-	{
+	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty, uint256 actionType) {
 		if (_actionTypeIndex != 0) {
 			// execute bounty w/ given params
 			(incentivizer, totalBounty, issueBaseBounty) = bounties[_actionTypeIndex](_user, _execute);
@@ -255,18 +244,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFD
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * @return issueBaseBounty true when user has autorelock,
 	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
-	function getLpMfdBounty(address _user, bool _execute)
-		internal
-		returns (
-			address incentivizer,
-			uint256 totalBounty,
-			bool issueBaseBounty
-		)
-	{
-		(totalBounty, issueBaseBounty) = IMFDPlus(lpMfd).claimBounty(_user, _execute);
+	function getLpMfdBounty(
+		address _user,
+		bool _execute
+	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
+		issueBaseBounty = IMFDPlus(lpMfd).claimBounty(_user, _execute);
 		incentivizer = lpMfd;
 	}
 
@@ -276,18 +260,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case CIC
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * @return issueBaseBounty true when user has autorelock or when disqualified because their lock value dropped below 5% threshold
 	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
-	function getChefBounty(address _user, bool _execute)
-		internal
-		returns (
-			address incentivizer,
-			uint256 totalBounty,
-			bool issueBaseBounty
-		)
-	{
-		(totalBounty, issueBaseBounty) = IChefIncentivesController(chef).claimBounty(_user, _execute);
+	function getChefBounty(
+		address _user,
+		bool _execute
+	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
+		issueBaseBounty = IChefIncentivesController(chef).claimBounty(_user, _execute);
 		incentivizer = chef;
 	}
 
@@ -297,19 +276,14 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFDPlus
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
-	 * @return issueBaseBounty always false since bounty paid from compound fee
 	 */
-	function getAutoCompoundBounty(address _user, bool _execute)
-		internal
-		returns (
-			address incentivizer,
-			uint256 totalBounty,
-			bool issueBaseBounty
-		)
-	{
-		(totalBounty) = IMFDPlus(lpMfd).claimCompound(_user, _execute);
+	function getAutoCompoundBounty(
+		address _user,
+		bool _execute
+	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
+		(totalBounty) = IAutoCompound(autocompounder).claimCompound(_user, _execute);
 		issueBaseBounty = false;
-		incentivizer = lpMfd;
+		incentivizer = autocompounder;
 	}
 
 	/**
@@ -325,6 +299,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 		uint256 bountyReserve = IERC20(rdnt).balanceOf(address(this));
 		if (_amount > bountyReserve) {
+			IERC20(rdnt).safeTransfer(address(mfd), bountyReserve);
+			IMFDPlus(mfd).mint(_to, bountyReserve, true);
 			emit BountyReserveEmpty(bountyReserve);
 			_pause();
 		} else {
@@ -393,20 +369,5 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	function changeWL(bool status) external onlyOwner {
 		whitelistActive = status;
-	}
-
-	function onRelockUpdate(
-		address _user,
-		bool oldStatus,
-		bool newStatus
-	) external {
-		if (msg.sender != address(lpMfd) || oldStatus || !newStatus) {
-			return;
-		}
-		(uint256 bounty, ) = quote(_user);
-		if (bounty == 0) {
-			return;
-		}
-		this.executeBounty(_user, true, bounty, 0);
 	}
 }

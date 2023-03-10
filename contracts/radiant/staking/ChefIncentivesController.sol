@@ -6,15 +6,14 @@ import "../../interfaces/IEligibilityDataProvider.sol";
 import "../../interfaces/IOnwardIncentivesController.sol";
 import "../../interfaces/IAToken.sol";
 import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/IBounty.sol";
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 // based on the Sushi MasterChef
 // https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
@@ -57,7 +56,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	event ChefReserveEmpty(uint256 _balance);
 
-	event Disqualified(address indexed user, uint256 rewardsRemoved);
+	event Disqualified(address indexed user);
 
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
@@ -229,14 +228,17 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-	function setEmissionSchedule(uint256[] calldata _startTimeOffsets, uint256[] calldata _rewardsPerSecond)
-		external
-		onlyOwner
-	{
+	function setEmissionSchedule(
+		uint256[] calldata _startTimeOffsets,
+		uint256[] calldata _rewardsPerSecond
+	) external onlyOwner {
 		uint256 length = _startTimeOffsets.length;
 		require(length > 0 && length == _rewardsPerSecond.length, "empty or mismatch params");
 
 		for (uint256 i = 0; i < length; i++) {
+			if (i > 0) {
+				require(_startTimeOffsets[i - 1] < _startTimeOffsets[i], "should be ascending");
+			}
 			require(_startTimeOffsets[i] <= type(uint128).max, "startTimeOffsets > max uint128");
 			require(_rewardsPerSecond[i] <= type(uint128).max, "rewardsPerSecond > max uint128");
 
@@ -377,11 +379,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @notice `after` Hook for deposit and borrow update.
 	 * @dev important! eligible status can be updated here
 	 */
-	function handleActionAfter(
-		address _user,
-		uint256 _balance,
-		uint256 _totalSupply
-	) external {
+	function handleActionAfter(address _user, uint256 _balance, uint256 _totalSupply) external {
 		require(validRTokens[msg.sender] || msg.sender == address(_getLpMfd()), "!rToken || lpmfd");
 
 		if (
@@ -449,11 +447,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function beforeLockUpdate(address _user) external {
 		require(msg.sender == address(_getLpMfd()) || msg.sender == address(_getMfd()));
 		if (ELIGIBILITY_ENABLED) {
-			uint256 userBounty = bountyForUser(_user);
-			bool isRelock = !_getLpMfd().autoRelockDisabled(_user);
-			if (userBounty != 0 && !isRelock) {
-				checkAndProcessEligibility(_user);
-			}
+			checkAndProcessEligibility(_user);
 		}
 	}
 
@@ -463,20 +457,18 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function afterLockUpdate(address _user) external {
 		require(msg.sender == address(_getLpMfd()) || msg.sender == address(_getMfd()), "!lpMFD || !MFD");
-
 		if (ELIGIBILITY_ENABLED) {
 			eligibleDataProvider.updatePrice();
 			if (eligibleDataProvider.isEligibleForRewards(_user)) {
 				for (uint256 i = 0; i < registeredTokens.length; i++) {
 					uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
-					if (newBal != 0) {
+					uint256 registeredBal = userInfo[registeredTokens[i]][_user].amount;
+					if (newBal != 0 && newBal != registeredBal) {
 						_handleActionAfterForToken(
 							registeredTokens[i],
 							_user,
 							newBal,
-							poolInfo[registeredTokens[i]].totalSupply.add(newBal).sub(
-								userInfo[registeredTokens[i]][_user].amount
-							)
+							poolInfo[registeredTokens[i]].totalSupply.add(newBal).sub(registeredBal)
 						);
 					}
 				}
@@ -486,55 +478,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	/********************** Eligibility + Disqualification ***********************/
-
-	function earnedSince(address _user, uint256 lastEligibleTime) public view returns (uint256 earnedAmount) {
-		if (!ELIGIBILITY_ENABLED || eligibleDataProvider.isEligibleForRewards(_user)) {
-			return 0;
-		}
-
-		uint256 ineligibleDuration;
-		if (lastEligibleTime < block.timestamp) {
-			ineligibleDuration = block.timestamp.sub(lastEligibleTime);
-		}
-
-		uint256[] memory claimable = pendingRewards(_user, registeredTokens);
-		for (uint256 i = 0; i < claimable.length; i++) {
-			UserInfo storage user = userInfo[registeredTokens[i]][_user];
-			uint256 referenceTime;
-
-			if (user.lastClaimTime > user.enterTime) {
-				referenceTime = user.lastClaimTime;
-			} else {
-				referenceTime = user.enterTime;
-			}
-
-			uint256 referenceDuration = block.timestamp - referenceTime;
-			if (referenceDuration > 0) {
-				uint256 rps = claimable[i].div(referenceDuration);
-				uint256 ineligAmt = ineligibleDuration.mul(rps);
-				if (ineligAmt > claimable[i]) {
-					ineligAmt = claimable[i];
-				}
-				earnedAmount = earnedAmount.add(ineligAmt);
-			}
-		}
-	}
-
-	function bountyForUser(address _user) public view returns (uint256 bounty) {
-		bounty = earnedSince(_user, eligibleDataProvider.lastEligibleTime(_user));
-	}
-
-	function harvestIneligible(address _target, uint256 _bounty) internal returns (uint256) {
-		require(ELIGIBILITY_ENABLED, "!EE");
-		claimToBase(_target, registeredTokens);
-		if (_bounty < userBaseClaimable[_target]) {
-			userBaseClaimable[_target] = userBaseClaimable[_target].sub(_bounty);
-		} else {
-			_bounty = userBaseClaimable[_target];
-			userBaseClaimable[_target] = 0;
-		}
-		return _bounty;
-	}
 
 	function hasEligibleDeposits(address _user) internal view returns (bool hasDeposits) {
 		for (uint256 i = 0; i < registeredTokens.length; i++) {
@@ -546,48 +489,18 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-	function checkAndProcessEligibility(address _user, bool _execute)
-		internal
-		returns (uint256 bountyAmt, bool issueBaseBounty)
-	{
-		// for expire DQ
-		bool hasRelock = !_getLpMfd().autoRelockDisabled(_user);
-		bool isMarketDq = eligibleDataProvider.isMarketDisqualified(_user);
+	function checkAndProcessEligibility(address _user, bool _execute) internal returns (bool issueBaseBounty) {
 		bool isEligible = eligibleDataProvider.isEligibleForRewards(_user);
-		uint256 lastEligibleTime = eligibleDataProvider.lastEligibleTime(_user);
-		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
 		bool hasEligDeposits = hasEligibleDeposits(_user);
+		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
 		bool alreadyDqd = lastDqTime != 0;
 
-		// market dq:
-		//    stop all types immediately, BB
-		// timedq:
-		//    if !relock, remove inelig
-		//    if relock, no-op
-		if (!isEligible && !alreadyDqd) {
-			// inelig earned emissions
-			if (isMarketDq && hasEligDeposits) {
-				// all user types DQ when market, will DQ below if _execute
-				issueBaseBounty = true;
-			} else {
-				// expired dq
-				if (lastEligibleTime != 0 && lastEligibleTime < block.timestamp) {
-					if (!hasRelock) {
-						bountyAmt = bountyForUser(_user);
-					}
-				}
-			}
+		if (!isEligible && hasEligDeposits && !alreadyDqd) {
+			issueBaseBounty = true;
 		}
-		if (_execute) {
-			if (bountyAmt != 0 || issueBaseBounty) {
-				require(!isEligible, "user still eligible");
-				stopEmissionsFor(_user);
-			}
-
-			if (bountyAmt != 0) {
-				uint256 rewardsRemoved = harvestIneligible(_user, bountyAmt);
-				emit Disqualified(_user, rewardsRemoved);
-			}
+		if (_execute && issueBaseBounty) {
+			stopEmissionsFor(_user);
+			emit Disqualified(_user);
 			eligibleDataProvider.refresh(_user);
 		}
 	}
@@ -596,13 +509,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		checkAndProcessEligibility(_user, true);
 	}
 
-	function claimBounty(address _user, bool _execute) public returns (uint256 bountyAmt, bool issueBaseBounty) {
+	function claimBounty(address _user, bool _execute) public returns (bool issueBaseBounty) {
 		require(msg.sender == address(bountyManager), "bounty only");
-		(bountyAmt, issueBaseBounty) = checkAndProcessEligibility(_user, _execute);
-		if (_execute) {
-			address rdntAddr = rewardMinter.getRdntTokenAddress();
-			IERC20(rdntAddr).safeApprove(address(bountyManager), bountyAmt);
-		}
+		issueBaseBounty = checkAndProcessEligibility(_user, _execute);
 	}
 
 	function stopEmissionsFor(address _user) internal {

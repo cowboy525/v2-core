@@ -17,7 +17,6 @@ describe("Migration V1 -> V2", function () {
     let tokenV2: CustomERC20;
 
     const amount = ethers.utils.parseUnits("10000000", 18);
-    const exchangeRate = BigNumber.from("100000");
 
     before(async function () {
         [owner, user1] = await ethers.getSigners();
@@ -36,11 +35,6 @@ describe("Migration V1 -> V2", function () {
         await migration.pauseMigration(false);
     });
 
-    it("setExchangeRate", async function () {
-        await expect(migration.connect(user1).setExchangeRate(1)).to.be.revertedWith("Ownable: caller is not the owner");
-        await migration.setExchangeRate(exchangeRate);
-    });
-
     it("Prepare reserve", async () => {
         await tokenV1.mint(user1.address, amount);
         await tokenV2.mint(migration.address, amount);
@@ -48,7 +42,7 @@ describe("Migration V1 -> V2", function () {
 
     it("Migrate tokens", async () => {
         const v1Amount = ethers.utils.parseUnits("10000", 18);
-        const expectedV2Amount = v1Amount.mul("10000").div(exchangeRate);
+        const expectedV2Amount = v1Amount;
         await tokenV1.connect(user1).approve(migration.address, ethers.constants.MaxUint256);
 
         const v2Before = await tokenV2.balanceOf(user1.address);
@@ -60,16 +54,12 @@ describe("Migration V1 -> V2", function () {
         expect(v1After.sub(v1Before)).to.be.equal(v1Amount);
     });
 
-    it("exchange rate is fixed by users exchanging tokens", async function () {
-        await expect(migration.setExchangeRate(1)).to.be.revertedWith("Users already exchanged tokens");
-    });
-
     it("withdrawTokens", async function () {
         const all = await tokenV1.balanceOf(migration.address);
-        await expect(migration.connect(user1).withdrawToken(tokenV1.address, all, user1.address)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(migration.connect(user1).withdrawToken(tokenV1.address, all)).to.be.revertedWith("Ownable: caller is not the owner");
 
         const balance0 = await tokenV1.balanceOf(owner.address);
-        await migration.withdrawToken(tokenV1.address, all, owner.address);
+        await migration.withdrawToken(tokenV1.address, all);
         const balance1 = await tokenV1.balanceOf(owner.address);
         expect(all).to.be.equal(balance1.sub(balance0));
     });

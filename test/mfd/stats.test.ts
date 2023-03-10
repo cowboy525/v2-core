@@ -429,8 +429,8 @@ describe("Check MFD Stats via Deposit/Borrow Cycles", () => {
       bountyManagerAddr,
       migrationAddr
     );
-    await lpToken.approve(lpFeeDistribution.address, 100000)
-    await lpFeeDistribution.stake(10000, deployer.address, 0);
+    await lpToken.approve(lpFeeDistribution.address, ethers.utils.parseEther("10"))
+    await lpFeeDistribution.stake(ethers.utils.parseEther("10"), deployer.address, 0);
     const circulatingSupplyAfter = await mfdStats.getCirculatingSupply(
       chefIncentivesController.address,
       bountyManagerAddr,

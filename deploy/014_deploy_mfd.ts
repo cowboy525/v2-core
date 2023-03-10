@@ -6,12 +6,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre;
   const { deploy, execute } = deployments;
   const { deployer, treasury, dao } = await getNamedAccounts();
-  const { config } = getConfigForChain(await hre.getChainId());
+  const { config, baseAssetWrapped } = getConfigForChain(await hre.getChainId());
 
   let radiantToken = await deployments.get("RadiantOFT");
+  let baseAsset = await deployments.get(baseAssetWrapped);
   let priceProvider = await deployments.get(`PriceProvider`);
   let lockZap = await deployments.get(`LockZap`);
   let mfdStats = await deployments.get(`MFDstats`);
+  let lendingPoolAddressesProviderDep = await deployments.get(`LendingPoolAddressesProvider`);
 
   const lockerList = await deploy("MFDLockerList", {
     contract: "LockerList",
@@ -28,7 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const mfd = await deploy("MFD", {
     from: deployer,
     log: true,
-    contract: "MFDPlus",
+    contract: "MultiFeeDistribution",
     proxy: {
       proxyContract: 'OpenZeppelinTransparentProxy',
       execute: {
@@ -51,7 +53,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const lpMfd = await deploy("LPMFD", {
     from: deployer,
     log: true,
-    contract: "MFDPlus",
+    contract: "MultiFeeDistribution",
     proxy: {
       proxyContract: 'OpenZeppelinTransparentProxy',
       execute: {
@@ -87,6 +89,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       },
     }
   });
+
+
   if (mfd.newlyDeployed) {
     await execute("MFDLockerList", { from: deployer, log: true }, "transferOwnership", mfd.address);
     await execute("LPLockerList", { from: deployer, log: true }, "transferOwnership", lpMfd.address);
@@ -98,6 +102,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await execute("LPMFD", { from: deployer, log: true }, "setLockTypeInfo", config.LOCK_INFO.LOCK_PERIOD, config.LOCK_INFO.MULTIPLIER);
     await execute("MFD", { from: deployer, log: true }, "setLockTypeInfo", config.LOCK_INFO.LOCK_PERIOD, config.LOCK_INFO.MULTIPLIER);
   }
+
+  let uniRouter = await deployments.get(`UniswapV2Router02`);
+  let lockzap = await deployments.get(`LockZap`);
+  const AutoCompounder = await deploy("AutoCompounder" , {
+    from: deployer,
+    log: true,
+    args: [
+      uniRouter.address,
+      lpMfd.address,
+      baseAsset.address,
+      lendingPoolAddressesProviderDep.address,
+      lockzap.address
+    ]
+  });
+
+  await execute("LPMFD", {from: deployer, log: true}, "addRewardConverter", AutoCompounder.address);
 };
 export default func;
 func.tags = ['core'];

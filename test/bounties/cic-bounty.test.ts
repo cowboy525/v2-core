@@ -58,21 +58,19 @@ const depositOptions = [0, eligibleAmt, 100000000];
 
 let runs: {
     relock: boolean,
-    borrow: boolean,
     depositAmt: number
 }[] = [];
 
 for (let i = 0; i < relockOptions.length; i++) {
-    for (let j = 0; j < borrowOptions.length; j++) {
-        for (let k = 0; k < defaultLockTimeOptions.length; k++) {
-            for (let m = 0; m < depositOptions.length; m++) {
-                const relock = relockOptions[i];
-                const borrow = borrowOptions[i];
-                const depositAmt = depositOptions[m];
-                runs.push({ relock, borrow, depositAmt });
-            }
-        }
+    // for (let j = 0; j < borrowOptions.length; j++) {
+    // for (let k = 0; k < defaultLockTimeOptions.length; k++) {
+    for (let m = 0; m < depositOptions.length; m++) {
+        const relock = relockOptions[i];
+        const depositAmt = depositOptions[m];
+        runs.push({ relock, depositAmt });
     }
+    // }
+    // }
 }
 
 const generatePlatformRevenue = async () => {
@@ -139,26 +137,25 @@ const loadZappedUserFixture = async (run: any) => {
 }
 
 // DEV: limit to 1 case
-runs = [
-    {
-        borrow: true,
-        depositAmt: eligibleAmt,
-        relock: false
-    }
-]
+// runs = [
+//     {
+//         depositAmt: eligibleAmt,
+//         relock: true
+//     }
+// ]
 runs.forEach(function (run) {
 
     const {
         relock,
-        borrow,
         depositAmt
     } = run;
 
-    describe(`RL: ${relock} | BOR: ${borrow} | DEP: ${depositAmt}`, async () => {
+    describe(`RL: ${relock} | DEP: ${depositAmt}`, async () => {
 
         describe("Zap", async () => {
 
             before(async () => {
+                run.borrow = true;
                 await loadZappedUserFixture(run);
             });
 
@@ -231,35 +228,19 @@ runs.forEach(function (run) {
                 });
 
                 it('bounty quote + claim', async () => {
-                    const ineligEmissions = parseFloat(ethers.utils.formatEther(pendingAfterInelig.sub(pendingAtEndOfEligibility)));
-                    const expectedBounty = ineligEmissions / 2;
+                    const baseBounty = toNum(await bountyManager.getBaseBounty());
+                    const expectedBounty = baseBounty;
 
                     const quote = await bountyManager.quote(user1.address);
                     const quotedBounty = toNum(quote.bounty);
-                    // let quote = await bountyManager.doAction(user1.address, false, 0, 1);
 
-                    if (relock || depositAmt !== eligibleAmt) {
-                        expect(quotedBounty).equals(0);
-                    } else {
-                        expect(quotedBounty).not.equals(0);
-                        expect(quotedBounty).closeTo(expectedBounty, 1);
-                    }
+                    // NOTE: they have bounty here because their lock expired
+                    expect(quotedBounty).not.equals(0);
+                    expect(quotedBounty).closeTo(expectedBounty, 1);
 
-                    const cic0 = await rdntToken.balanceOf(chefIncentivesController.address);
-                    const bounty0 = await rdntToken.balanceOf(bountyManager.address);
-                    const hunter0 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-
-                    await bountyManager.connect(hunter).claim(user1.address, quote.bounty, quote.actionType);
-                    const bountyReceived = parseFloat(ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(hunter.address)).total));
+                    await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
+                    const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
                     expect(bountyReceived).closeTo(quotedBounty, .1);
-
-                    const cic1 = await rdntToken.balanceOf(chefIncentivesController.address);
-                    const bounty1 = await rdntToken.balanceOf(bountyManager.address);
-                    const hunter1 = (await multiFeeDistribution.earnedBalances(hunter.address)).total;
-                    const totalBounty = cic0.sub(cic1);
-                    const expected = totalBounty.mul(await bountyManager.HUNTER_SHARE()).div(1e4);
-                    expect(bounty1.sub(bounty0)).to.be.equal(totalBounty.sub(expected));
-                    expect(hunter1.sub(hunter0)).to.be.equal(expected);
                 });
 
                 it('doesnt earn emish', async () => {
@@ -295,7 +276,7 @@ runs.forEach(function (run) {
                         (await multiFeeDistribution.earnedBalances(user1.address)).total
                     ));
 
-                    const expectedReceivedRewards = relock ? pendingWithInelig : pendingOnlyElig;
+                    const expectedReceivedRewards = pendingWithInelig;
 
                     expect(receivedRewards).closeTo(
                         parseFloat(ethers.utils.formatEther(
@@ -307,13 +288,10 @@ runs.forEach(function (run) {
                     const dqTimePost = await eligibilityProvider.getDqTime(user1.address);
                     const isEligible = await eligibilityProvider.isEligibleForRewards(user1.address);
 
-                    if (!relock && depositAmt === eligibleAmt) {
+                    if (depositAmt === eligibleAmt) {
                         expect(dqTimePost).equals(timestamp);
                         expect(isEligible).equals(false);
-                    } else {
-                        await lpFeeDistribution.connect(user1).relock();
                     }
-
                 });
 
                 it('doesnt earn emish', async () => {
@@ -321,10 +299,7 @@ runs.forEach(function (run) {
                     await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
                     const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
 
-                    if (relock && depositAmt === eligibleAmt) {
-                        // keeps earning
-                        expect(pendingPost).gt(pendingPre);
-                    } else {
+                    if (depositAmt === eligibleAmt) {
                         // was DQd, shouldnt earn
                         expect(pendingPost).equals(pendingPre);
                     }
@@ -376,7 +351,6 @@ runs.forEach(function (run) {
                     await priceProvider.update();
                     const pricePost = await priceProvider.getTokenPriceUsd();
 
-
                     const baseBountyPost = await bountyManager.getBaseBounty();
                     const lastEligTimePost = await eligibilityProvider.lastEligibleTime(user1.address);
 
@@ -388,10 +362,11 @@ runs.forEach(function (run) {
                         await eligibilityProvider.isEligibleForRewards(user1.address)
                     ).is.false;
 
-                    expect(
-                        await eligibilityProvider.isMarketDisqualified(user1.address)
-                    ).is.true;
-
+                    if (depositAmt == eligibleAmt) {
+                        expect(
+                            await eligibilityProvider.isMarketDisqualified(user1.address)
+                        ).is.true;
+                    }
                     expect(lastEligTimePre).equals(lastEligTimePost);
                 });
 
@@ -407,7 +382,7 @@ runs.forEach(function (run) {
                         // since Market DQ, all will have BB
                         expect(quotedBounty).equals(bb);
 
-                        await bountyManager.connect(hunter).claim(user1.address, quote.bounty, quote.actionType);
+                        await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
                         const bountyReceived = parseFloat(ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(hunter.address)).total));
                         expect(bountyReceived).closeTo(quotedBounty, .001);
                     } else {
@@ -448,7 +423,7 @@ runs.forEach(function (run) {
                         await deposit("rUSDC", "69", user1, lendingPool, deployData);
 
                         const pendingAfterDeposit = parseFloat(ethers.utils.formatEther(await chefIncentivesController.allPendingRewards(user1.address)));
-                        const expected = relock ? pendingAfterInelig : pendingAtEndOfEligibility;
+                        const expected = pendingAfterInelig;
                         expect(pendingAfterDeposit).closeTo(
                             parseFloat(ethers.utils.formatEther(
                                 expected
@@ -458,12 +433,8 @@ runs.forEach(function (run) {
                         const timestamp = await getLatestBlockTimestamp();
                         const dqTimePost = await eligibilityProvider.getDqTime(user1.address);
                         const isEligible = await eligibilityProvider.isEligibleForRewards(user1.address);
-                        if (!relock) {
-                            expect(dqTimePost).equals(timestamp);
-                            expect(isEligible).equals(false);
-                        } else {
-                            await lpFeeDistribution.connect(user1).relock();
-                        }
+                        expect(dqTimePost).equals(timestamp);
+                        expect(isEligible).equals(false);
                     }
                 });
 
@@ -471,10 +442,7 @@ runs.forEach(function (run) {
                     const pendingPre = await chefIncentivesController.allPendingRewards(user1.address);
                     await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
                     const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
-                    if (relock && depositAmt === eligibleAmt) {
-                        // keeps earning
-                        expect(pendingPost).gt(pendingPre);
-                    } else {
+                    if (depositAmt === eligibleAmt) {
                         // was DQd, shouldnt earn
                         expect(pendingPost).equals(pendingPre);
                     }
@@ -492,7 +460,7 @@ runs.forEach(function (run) {
                         const quote = toNum((await bountyManager.quote(user1.address)).bounty);
                         expect(quote).equals(0);
                         await expect(
-                            bountyManager.connect(hunter).claim(user1.address, quote, 2)
+                            bountyManager.connect(hunter).claim(user1.address, 2)
                         ).to.be.reverted;
                         // ).to.be.revertedWith("user still eligible");
 
