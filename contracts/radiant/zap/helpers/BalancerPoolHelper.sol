@@ -1,11 +1,9 @@
-// SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "./DustRefunder.sol";
-
 import "../../../dependencies/math/BNum.sol";
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -21,45 +19,48 @@ import "../../../interfaces/balancer/IWeightedPoolFactory.sol";
 
 /// @title Balance Pool Helper Contract
 /// @author Radiant
-contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, BNum, DustRefunder {
+contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgradeable, BNum, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
 	address public inTokenAddr;
 	address public outTokenAddr;
 	address public wethAddr;
-	address public wstETHAddr;
-	address public wstEthLpAddr;
 	address public override lpTokenAddr;
 	address public vaultAddr;
 	bytes32 public poolId;
+	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
 
 	function initialize(
 		address _inTokenAddr,
 		address _outTokenAddr,
 		address _wethAddr,
-		address _wstETHAddr,
 		address _vault,
-		IWeightedPoolFactory _poolFactory,
-		address _wstEthLpAddr
+		IWeightedPoolFactory _poolFactory
 	) external initializer {
 		__Ownable_init();
-
 		inTokenAddr = _inTokenAddr;
 		outTokenAddr = _outTokenAddr;
 		wethAddr = _wethAddr;
-		wstETHAddr = _wstETHAddr;
-
 		vaultAddr = _vault;
 		poolFactory = _poolFactory;
-		wstEthLpAddr = _wstEthLpAddr;
 	}
 
-	function initializePool() public override {
+	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
 		require(lpTokenAddr == address(0), "Already initialized");
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
+
+		IERC20[] memory tokens = new IERC20[](2);
+		tokens[0] = IERC20(token0);
+		tokens[1] = IERC20(token1);
+
+		address[] memory rateProviders = new address[](2);
+		rateProviders[0] = 0x0000000000000000000000000000000000000000;
+		rateProviders[1] = 0x0000000000000000000000000000000000000000;
+
+		uint256 swapFeePercentage = 1000000000000000;
 
 		uint256[] memory weights = new uint256[](2);
 
@@ -71,17 +72,12 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 			weights[1] = 800000000000000000;
 		}
 
-		IERC20[] memory tokens = new IERC20[](2);
-		tokens[0] = IERC20(token0);
-		tokens[1] = IERC20(token1);
-
-		uint256 swapFeePercentage = 1000000000000000;
-
 		lpTokenAddr = poolFactory.create(
-			"wstETH-NOOVA",
-			"wstETH-NOVA",
+			_tokenName,
+			_tokenSymbol,
 			tokens,
 			weights,
+			rateProviders,
 			swapFeePercentage,
 			address(this)
 		);
@@ -95,23 +91,22 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 
 		outToken.safeApprove(vaultAddr, type(uint256).max);
 		inToken.safeApprove(vaultAddr, type(uint256).max);
-		lp.safeApprove(vaultAddr, type(uint256).max);
 		weth.approve(vaultAddr, type(uint256).max);
 
 		IAsset[] memory assets = new IAsset[](2);
 		assets[0] = IAsset(token0);
 		assets[1] = IAsset(token1);
 
-		uint256 ethAmt = inToken.balanceOf(address(this));
-		uint256 rdntAmt = outToken.balanceOf(address(this));
+		uint256 inTokenAmt = inToken.balanceOf(address(this));
+		uint256 outTokenAmt = outToken.balanceOf(address(this));
 
 		uint256[] memory maxAmountsIn = new uint256[](2);
 		if (token0 == inTokenAddr) {
-			maxAmountsIn[0] = ethAmt;
-			maxAmountsIn[1] = rdntAmt;
+			maxAmountsIn[0] = inTokenAmt;
+			maxAmountsIn[1] = outTokenAmt;
 		} else {
-			maxAmountsIn[0] = rdntAmt;
-			maxAmountsIn[1] = ethAmt;
+			maxAmountsIn[0] = outTokenAmt;
+			maxAmountsIn[1] = inTokenAmt;
 		}
 
 		IVault.JoinPoolRequest memory InRequest = IVault.JoinPoolRequest(
@@ -167,30 +162,41 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 
 	function getLpPrice(uint256 rdntPriceInEth) public view override returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
+		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
 		(uint256 rdntBalance, uint256 wethBalance, ) = getReserves();
+		uint256[] memory weights = pool.getNormalizedWeights();
+
+		uint256 rdntWeight;
+		uint256 wethWeight;
+
+		if (token0 == outTokenAddr) {
+			rdntWeight = weights[0];
+			wethWeight = weights[1];
+		} else {
+			rdntWeight = weights[1];
+			wethWeight = weights[0];
+		}
+
 		// RDNT in eth, 8 decis
 		uint256 pxA = rdntPriceInEth;
 		// ETH in eth, 8 decis
 		uint256 pxB = 100000000;
 
-		uint256[] memory weights = pool.getNormalizedWeights();
-
 		(uint256 fairResA, uint256 fairResB) = computeFairReserves(
 			rdntBalance,
 			wethBalance,
-			weights[0],
-			weights[1],
+			rdntWeight,
+			wethWeight,
 			pxA,
 			pxB
 		);
 		// use fairReserveA and fairReserveB to compute LP token price
 		// LP price = (fairResA * pxA + fairResB * pxB) / totalLPSupply
-		return fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
+		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
-	function _getPrice() internal view returns (uint256 priceInEth) {
+	function getPrice() public view returns (uint256 priceInEth) {
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
-
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
@@ -199,16 +205,7 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
-	function getReserves()
-		public
-		view
-		override
-		returns (
-			uint256 rdnt,
-			uint256 weth,
-			uint256 lpTokenSupply
-		)
-	{
+	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
@@ -220,8 +217,6 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 	}
 
 	function joinPool(uint256 _wethAmt, uint256 _rdntAmt) internal returns (uint256 liquidity) {
-		uint256 amountWsETH = swap(_wethAmt, wethAddr, wstETHAddr, wstEthLpAddr);
-
 		(address token0, address token1) = sortTokens(outTokenAddr, inTokenAddr);
 		IAsset[] memory assets = new IAsset[](2);
 		assets[0] = IAsset(token0);
@@ -229,11 +224,11 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 
 		uint256[] memory maxAmountsIn = new uint256[](2);
 		if (token0 == inTokenAddr) {
-			maxAmountsIn[0] = amountWsETH;
+			maxAmountsIn[0] = _wethAmt;
 			maxAmountsIn[1] = _rdntAmt;
 		} else {
 			maxAmountsIn[0] = _rdntAmt;
-			maxAmountsIn[1] = amountWsETH;
+			maxAmountsIn[1] = _wethAmt;
 		}
 
 		bytes memory userDataEncoded = abi.encode(IWeightedPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, 0);
@@ -245,6 +240,7 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 	}
 
 	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
+		require(msg.sender == lockZap, "!lockZap");
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
 		liquidity = joinPool(amount, 0);
 		IERC20 lp = IERC20(lpTokenAddr);
@@ -253,6 +249,7 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
+		require(msg.sender == lockZap, "!lockZap");
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 
@@ -270,7 +267,7 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 	}
 
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
-		uint256 rdntPriceInEth = _getPrice();
+		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth.mul(1e10);
 		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
 		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
@@ -311,5 +308,9 @@ contract BalancerPoolHelper is IPoolHelper, Initializable, OwnableUpgradeable, B
 			limit,
 			(block.timestamp + 3 minutes)
 		);
+	}
+
+	function setLockZap(address _lockZap) external onlyOwner {
+		lockZap = _lockZap;
 	}
 }
