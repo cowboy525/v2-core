@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -276,15 +276,7 @@ contract LendingPoolCollateralManager is ILendingPoolCollateralManager, Versione
 		address debtAsset,
 		uint256 debtToCover,
 		uint256 userCollateralBalance
-	)
-		internal
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	) internal view returns (uint256, uint256, uint256) {
 		uint256 collateralAmount = 0;
 		uint256 debtAmountNeeded = 0;
 		IPriceOracleGetter oracle = IPriceOracleGetter(_addressesProvider.getPriceOracle());
@@ -302,25 +294,25 @@ contract LendingPoolCollateralManager is ILendingPoolCollateralManager, Versione
 		vars.maxAmountCollateralToLiquidate = vars
 			.debtAssetPrice
 			.mul(debtToCover)
-			.mul(10**vars.collateralDecimals)
+			.mul(10 ** vars.collateralDecimals)
 			.percentMul(vars.liquidationBonus)
-			.div(vars.collateralPrice.mul(10**vars.debtAssetDecimals));
+			.div(vars.collateralPrice.mul(10 ** vars.debtAssetDecimals));
 
 		if (vars.maxAmountCollateralToLiquidate > userCollateralBalance) {
 			collateralAmount = userCollateralBalance;
 			debtAmountNeeded = vars
 				.collateralPrice
 				.mul(collateralAmount)
-				.mul(10**vars.debtAssetDecimals)
-				.div(vars.debtAssetPrice.mul(10**vars.collateralDecimals))
+				.mul(10 ** vars.debtAssetDecimals)
+				.div(vars.debtAssetPrice.mul(10 ** vars.collateralDecimals))
 				.percentDiv(vars.liquidationBonus);
 		} else {
 			collateralAmount = vars.maxAmountCollateralToLiquidate;
 			debtAmountNeeded = debtToCover;
 		}
 		uint256 bonusCollateral = collateralAmount.sub(
-			vars.debtAssetPrice.mul(debtAmountNeeded).mul(10**vars.collateralDecimals).div(
-				vars.collateralPrice.mul(10**vars.debtAssetDecimals)
+			vars.debtAssetPrice.mul(debtAmountNeeded).mul(10 ** vars.collateralDecimals).div(
+				vars.collateralPrice.mul(10 ** vars.debtAssetDecimals)
 			)
 		);
 		return (collateralAmount, bonusCollateral.div(2), debtAmountNeeded);

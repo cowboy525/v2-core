@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "./BConst.sol";
 
@@ -99,11 +99,7 @@ contract BNum is BConst {
 		return bmul(wholePow, partialResult);
 	}
 
-	function bpowApprox(
-		uint base,
-		uint exp,
-		uint precision
-	) internal pure returns (uint) {
+	function bpowApprox(uint base, uint exp, uint precision) internal pure returns (uint) {
 		// term 0:
 		uint a = exp;
 		(uint x, bool xneg) = bsubSign(base, BONE);

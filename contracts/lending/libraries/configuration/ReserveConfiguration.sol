@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import {Errors} from "../helpers/Errors.sol";
 import {DataTypes} from "../types/DataTypes.sol";
@@ -186,11 +186,9 @@ library ReserveConfiguration {
 	 * @param self The reserve configuration
 	 * @return The stable rate borrowing state
 	 **/
-	function getStableRateBorrowingEnabled(DataTypes.ReserveConfigurationMap storage self)
-		internal
-		view
-		returns (bool)
-	{
+	function getStableRateBorrowingEnabled(
+		DataTypes.ReserveConfigurationMap storage self
+	) internal view returns (bool) {
 		return (self.data & ~STABLE_BORROWING_MASK) != 0;
 	}
 
@@ -219,16 +217,7 @@ library ReserveConfiguration {
 	 * @param self The reserve configuration
 	 * @return The state flags representing active, frozen, borrowing enabled, stableRateBorrowing enabled
 	 **/
-	function getFlags(DataTypes.ReserveConfigurationMap storage self)
-		internal
-		view
-		returns (
-			bool,
-			bool,
-			bool,
-			bool
-		)
-	{
+	function getFlags(DataTypes.ReserveConfigurationMap storage self) internal view returns (bool, bool, bool, bool) {
 		uint256 dataLocal = self.data;
 
 		return (
@@ -244,17 +233,9 @@ library ReserveConfiguration {
 	 * @param self The reserve configuration
 	 * @return The state params representing ltv, liquidation threshold, liquidation bonus, the reserve decimals
 	 **/
-	function getParams(DataTypes.ReserveConfigurationMap storage self)
-		internal
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	function getParams(
+		DataTypes.ReserveConfigurationMap storage self
+	) internal view returns (uint256, uint256, uint256, uint256, uint256) {
 		uint256 dataLocal = self.data;
 
 		return (
@@ -271,17 +252,9 @@ library ReserveConfiguration {
 	 * @param self The reserve configuration
 	 * @return The state params representing ltv, liquidation threshold, liquidation bonus, the reserve decimals
 	 **/
-	function getParamsMemory(DataTypes.ReserveConfigurationMap memory self)
-		internal
-		pure
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	function getParamsMemory(
+		DataTypes.ReserveConfigurationMap memory self
+	) internal pure returns (uint256, uint256, uint256, uint256, uint256) {
 		return (
 			self.data & ~LTV_MASK,
 			(self.data & ~LIQUIDATION_THRESHOLD_MASK) >> LIQUIDATION_THRESHOLD_START_BIT_POSITION,
@@ -296,16 +269,9 @@ library ReserveConfiguration {
 	 * @param self The reserve configuration
 	 * @return The state flags representing active, frozen, borrowing enabled, stableRateBorrowing enabled
 	 **/
-	function getFlagsMemory(DataTypes.ReserveConfigurationMap memory self)
-		internal
-		pure
-		returns (
-			bool,
-			bool,
-			bool,
-			bool
-		)
-	{
+	function getFlagsMemory(
+		DataTypes.ReserveConfigurationMap memory self
+	) internal pure returns (bool, bool, bool, bool) {
 		return (
 			(self.data & ~ACTIVE_MASK) != 0,
 			(self.data & ~FROZEN_MASK) != 0,

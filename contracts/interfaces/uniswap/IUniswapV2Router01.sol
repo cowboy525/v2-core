@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 interface IUniswapV2Router01 {
 	function factory() external pure returns (address);
@@ -15,13 +15,7 @@ interface IUniswapV2Router01 {
 		uint amountBMin,
 		address to,
 		uint deadline
-	)
-		external
-		returns (
-			uint amountA,
-			uint amountB,
-			uint liquidity
-		);
+	) external returns (uint amountA, uint amountB, uint liquidity);
 
 	function addLiquidityETH(
 		address token,
@@ -30,14 +24,7 @@ interface IUniswapV2Router01 {
 		uint amountETHMin,
 		address to,
 		uint deadline
-	)
-		external
-		payable
-		returns (
-			uint amountToken,
-			uint amountETH,
-			uint liquidity
-		);
+	) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 
 	function removeLiquidity(
 		address tokenA,
@@ -131,23 +118,11 @@ interface IUniswapV2Router01 {
 		uint deadline
 	) external payable returns (uint[] memory amounts);
 
-	function quote(
-		uint amountA,
-		uint reserveA,
-		uint reserveB
-	) external pure returns (uint amountB);
+	function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
 
-	function getAmountOut(
-		uint amountIn,
-		uint reserveIn,
-		uint reserveOut
-	) external pure returns (uint amountOut);
+	function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
 
-	function getAmountIn(
-		uint amountOut,
-		uint reserveIn,
-		uint reserveOut
-	) external pure returns (uint amountIn);
+	function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
 
 	function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
 

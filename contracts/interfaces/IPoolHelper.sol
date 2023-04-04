@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IPoolHelper {
 	function lpTokenAddr() external view returns (address);
-
-	function initializePool() external;
 
 	function zapWETH(uint256 amount) external returns (uint256);
 
@@ -18,14 +16,17 @@ interface IPoolHelper {
 
 	function getLpPrice(uint rdntPriceInEth) external view returns (uint256 priceInEth);
 
-	function getReserves()
-		external
-		view
-		returns (
-			uint256 rdnt,
-			uint256 weth,
-			uint256 lpTokenSupply
-		);
+	function getReserves() external view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply);
+
+	function getPrice() external view returns (uint256 priceInEth);
+}
+
+interface IBalancerPoolHelper is IPoolHelper {
+	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) external;
+}
+
+interface IUniswapPoolHelper is IPoolHelper {
+	function initializePool() external;
 }
 
 interface ITestPoolHelper is IPoolHelper {

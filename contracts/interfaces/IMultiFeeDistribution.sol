@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "./LockedBalance.sol";
@@ -14,7 +14,7 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function rdntToken() external view returns (IMintableToken);
 
-	function PriceProvider() external view returns (address);
+	function getPriceProvider() external view returns (address);
 
 	function lockInfo(address user) external view returns (LockedBalance[] memory);
 

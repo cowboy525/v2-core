@@ -21,10 +21,10 @@ import {
   LendingPool,
   MockToken,
   MultiFeeDistribution,
-} from "../../typechain-types";
+} from "../../typechain";
 import { BigNumberish } from "ethers";
 import assert from "assert";
-import { MockOnwardIncentivesController } from "../../typechain-types/contracts/test/MockOnwardIncentivesController";
+import { MockOnwardIncentivesController } from "../../typechain/contracts/test/MockOnwardIncentivesController";
 import { setupTest } from "../setup";
 
 chai.use(solidity);
@@ -49,7 +49,6 @@ describe("Non-Elig CIC", () => {
   let chefIncentivesController: ChefIncentivesController;
   let lendingPool: LendingPool;
   let multiFeeDistribution: MultiFeeDistribution;
-  let lpFeeDistribution: MultiFeeDistribution;
 
   let usdcAddress = "";
   let rUSDCAddress = "";
@@ -88,7 +87,6 @@ describe("Non-Elig CIC", () => {
     rUSDCAddress = deployData.allTokens.rUSDC;
 
     chefIncentivesController = fixture.chefIncentivesController;
-    lpFeeDistribution = fixture.lpFeeDistribution;
     multiFeeDistribution = fixture.multiFeeDistribution;
     lendingPool = fixture.lendingPool;
 
@@ -108,7 +106,7 @@ describe("Non-Elig CIC", () => {
       ethers.constants.MaxUint256
     );
 
-    period = (await lpFeeDistribution.DEFAULT_LOCK_DURATION())
+    period = (await multiFeeDistribution.defaultLockDuration())
       .div(10)
       .toNumber();
 
@@ -138,14 +136,6 @@ describe("Non-Elig CIC", () => {
       await expect(chef.addPool(deployData.allTokens["rUSDC"], 10)).to.be
         .reverted;
       expect(await chef.poolLength()).to.be.gte(1);
-    });
-  });
-
-  describe("saveUserRewards", () => {
-    it("zero address", async () => {
-      await expect(
-        chefIncentivesController.saveUserRewards([ethers.constants.AddressZero])
-      ).to.be.not.reverted;
     });
   });
 
@@ -335,9 +325,9 @@ describe("Non-Elig CIC", () => {
       // mine 100 seconds
       await advanceTimeAndBlock(period);
 
-      const balanceBefore = await multiFeeDistribution.totalBalance(
+      const balanceBefore = (await multiFeeDistribution.earnedBalances(
         user1.address
-      );
+      )).total;
 
       const claimableRewards = await chefIncentivesController.pendingRewards(
         user1.address,
@@ -361,9 +351,9 @@ describe("Non-Elig CIC", () => {
       ).to.be.reverted;
       await chefIncentivesController.connect(user1).claimAll(user1.address);
 
-      const balanceAfter = await multiFeeDistribution.totalBalance(
+      const balanceAfter = (await multiFeeDistribution.earnedBalances(
         user1.address
-      );
+      )).total;
 
       expect(balanceAfter.sub(balanceBefore)).to.be.gt(claimableRewards[0]);
     });
@@ -443,13 +433,13 @@ describe("Non-Elig CIC", () => {
 
       await advanceTimeAndBlock(100);
 
-      await chefIncentivesController.claimToBase(user1.address, [rUSDCAddress]);
+      await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
       assert.equal(
         (await chefIncentivesController.emissionScheduleIndex()).toString(),
         "1",
         `get rps from schedule`
       );
-      await chefIncentivesController.claimToBase(user1.address, [rUSDCAddress]);
+      await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
       assert.equal(
         (await chefIncentivesController.rewardsPerSecond()).toString(),
         cicRewardsPerSecond[0].toString(),
@@ -462,7 +452,7 @@ describe("Non-Elig CIC", () => {
         .connect(deployer)
         .setRewardsPerSecond(100, false);
 
-      await chefIncentivesController.saveUserRewards([user1.address]);
+      await chefIncentivesController.claimAll(user1.address);
       assert.equal(
         (await chefIncentivesController.emissionScheduleIndex()).toString(),
         "2",
@@ -476,7 +466,7 @@ describe("Non-Elig CIC", () => {
 
       await advanceTimeAndBlock(500);
 
-      await chefIncentivesController.claimToBase(user1.address, [rUSDCAddress]);
+      await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
       assert.equal(
         (await chefIncentivesController.emissionScheduleIndex()).toString(),
         "3",

@@ -5,7 +5,7 @@ import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { DeployData } from "../../scripts/deploy/types";
-import { ChefIncentivesController } from "../../typechain-types";
+import { ChefIncentivesController } from "../../typechain";
 import { setupTest } from "../setup";
 
 chai.use(solidity);
@@ -38,7 +38,6 @@ describe("Upgradeable Contracts", () => {
 		await upgrades.forceImport(deployData.chefIncentivesController, ChefIncentivesController);
 		await upgrades.forceImport(deployData.middleFeeDistribution, MiddleFeeDistribution);
 		await upgrades.forceImport(deployData.multiFeeDistribution, MultiFeeDistribution);
-		await upgrades.forceImport(deployData.lpFeeDistribution, MultiFeeDistribution);
 		await upgrades.forceImport(deployData.priceProvider, PriceProvider);
 
 	});
@@ -97,20 +96,7 @@ describe("Upgradeable Contracts", () => {
     assert.equal(mockNewFunction, true, `Upgrade MultiFeeDistribution`);
   });
 
-  it("Upgradeable LPFD works.", async () => {
-    const MockNewLPFeeDistribution = await ethers.getContractFactory(
-      "MockNewLPFeeDistribution"
-    );
-    const mockNewLPFeeDistribution = await upgrades.upgradeProxy(
-      deployData.lpFeeDistribution,
-      MockNewLPFeeDistribution
-    );
-    const mockNewFunction = await mockNewLPFeeDistribution.mockNewFunction();
-
-    assert.equal(mockNewFunction, true, `Upgrade MultiFeeDistribution`);
-  });
-
-  it("Upgradeable PriceProvider works.", async () => {
+	it("Upgradeable PriceProvider works.", async () => {
     const MockNewPriceProvider = await ethers.getContractFactory(
       "MockNewPriceProvider"
     );

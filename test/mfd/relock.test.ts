@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import assert from "assert";
 import { advanceTimeAndBlock } from "../../scripts/utils";
-import { BountyManager, LockerList, MFDPlus, ERC20, Leverager, WETH, VariableDebtToken, WETHGateway, LendingPool } from "../../typechain-types";
+import { BountyManager, LockerList, ERC20, Leverager, WETH, VariableDebtToken, WETHGateway, LendingPool, MultiFeeDistribution } from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -16,7 +16,7 @@ const { expect } = chai;
 describe("MFD Relocking", () => {
   let user2: SignerWithAddress;
   let user3: SignerWithAddress;
-  let lpFeeDistribution: MFDPlus;
+  let multiFeeDistribution: MultiFeeDistribution;
   let bountyManager: BountyManager;
   let leverager: Leverager;
   let wethGateway: WETHGateway;
@@ -30,7 +30,7 @@ describe("MFD Relocking", () => {
 
   before(async () => {
     ({
-      lpFeeDistribution,
+      multiFeeDistribution,
       leverager,
       weth,
       wethGateway,
@@ -41,18 +41,18 @@ describe("MFD Relocking", () => {
       user3,
     } = await setupTest());
 
-    lockerlist = <LockerList>await ethers.getContractAt("LockerList", await lpFeeDistribution.userlist());
+    lockerlist = <LockerList>await ethers.getContractAt("LockerList", await multiFeeDistribution.userlist());
     lpToken = await ethers.getContractAt("ERC20", deployData.stakingToken);
   });
 
   it("Withdraw Expired Locks; disabling auto relock at first is saved", async () => {
     await zapIntoEligibility(user2, deployData);
-    await lpFeeDistribution.connect(user2).setRelock(false);
+    await multiFeeDistribution.connect(user2).setRelock(false);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -61,28 +61,28 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
     await advanceTimeAndBlock(parseInt(lockDuration.toString()));
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution
+    await multiFeeDistribution
       .connect(user2)
       .withdrawExpiredLocksFor(user2.address);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     expect(lockedBal).to.be.eq(0, "Didn't withdraw properly");
   });
 
   it("Relock happens automatically at Withdraw ", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -91,31 +91,31 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
     await advanceTimeAndBlock(parseInt(lockDuration.toString()));
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
-    const relockable = (await lpFeeDistribution.lockedBalances(user2.address))
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
+    const relockable = (await multiFeeDistribution.lockedBalances(user2.address))
       .unlockable;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution.connect(user2).setRelock(true);
-    await lpFeeDistribution
+    await multiFeeDistribution.connect(user2).setRelock(true);
+    await multiFeeDistribution
       .connect(user2)
       .withdrawExpiredLocksFor(user2.address);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");
   });
 
   it("Force Relock happens at Withdraw ", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -124,29 +124,29 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
-    await advanceTimeAndBlock(parseInt(lockDuration.toString()));
+    await advanceTimeAndBlock(parseInt(lockDuration.toString()) * 12);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution.connect(user2).setRelock(true);
-    await lpFeeDistribution
+    await multiFeeDistribution.connect(user2).setRelock(true);
+    await multiFeeDistribution
       .connect(user2)
       .withdrawExpiredLocksForWithOptions(user2.address, 0, true);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     expect(lockedBal).to.be.eq(0, "Didn't relock properly");
   });
 
   it("Auto Relock doesn't happen when disabled ", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -155,29 +155,29 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
-    await advanceTimeAndBlock(parseInt(lockDuration.toString()));
+    await advanceTimeAndBlock(parseInt(lockDuration.toString()) * 12);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution.connect(user2).setRelock(false);
-    await lpFeeDistribution
+    await multiFeeDistribution.connect(user2).setRelock(false);
+    await multiFeeDistribution
       .connect(user2)
       .withdrawExpiredLocksFor(user2.address);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     expect(lockedBal).to.be.eq(0, "Didn't relock properly");
   });
 
   it("Relock Expired Locks", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -186,28 +186,28 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
     await advanceTimeAndBlock(parseInt(lockDuration.toString()));
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution.connect(user2).setRelock(true);
-    await lpFeeDistribution
+    await multiFeeDistribution.connect(user2).setRelock(true);
+    await multiFeeDistribution
       .connect(user3)
       .withdrawExpiredLocksFor(user2.address);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 
-    let u3LockedBal = (await lpFeeDistribution.lockedBalances(user3.address))
+    let u3LockedBal = (await multiFeeDistribution.lockedBalances(user3.address))
       .locked;
     expect(u3LockedBal).to.be.eq(0, "user3 get nothing");
 
-    await lpFeeDistribution
+    await multiFeeDistribution
       .connect(user3)
       .withdrawExpiredLocksFor(user3.address);
-    u3LockedBal = (await lpFeeDistribution.lockedBalances(user3.address))
+    u3LockedBal = (await multiFeeDistribution.lockedBalances(user3.address))
       .locked;
     expect(u3LockedBal).to.be.eq(0, "user3 get nothing");
   });
@@ -215,10 +215,10 @@ describe("MFD Relocking", () => {
   it("Auto Relock happens at claimed bounty ", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    let lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
-    const totalLockedLPValue = await lpFeeDistribution.lockedSupply();
+    const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
     assert.equal(
       lockedBal.toString(),
@@ -227,14 +227,14 @@ describe("MFD Relocking", () => {
     );
     assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
     await advanceTimeAndBlock(parseInt(lockDuration.toString()) * 2);
 
     const bountyAmount = await bountyManager.quote(user2.address);
     // console.log("Bounty:", bountyAmount.toString());
     const minDLPBalance = await bountyManager.minDLPBalance();
-    await lpToken.approve(lpFeeDistribution.address, minDLPBalance)
-    await lpFeeDistribution.stake(minDLPBalance, user3.address, 0);
+    await lpToken.approve(multiFeeDistribution.address, minDLPBalance)
+    await multiFeeDistribution.stake(minDLPBalance, user3.address, 0);
 
     let vdWETHAddress = await leverager.getVDebtToken(weth.address);
     vdWETH = <VariableDebtToken>(
@@ -250,21 +250,21 @@ describe("MFD Relocking", () => {
         value: ethers.utils.parseEther("1"),
       });
 
-    await bountyManager.connect(user3).claim(user2.address, 0)
+    await bountyManager.connect(user3).claim(user2.address, 0);
 
-    await advanceTimeAndBlock(parseInt(lockDuration.toString()));
+    await advanceTimeAndBlock(parseInt(lockDuration.toString()) * 12);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
-    const relockable = (await lpFeeDistribution.lockedBalances(user2.address))
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
+    const relockable = (await multiFeeDistribution.lockedBalances(user2.address))
       .unlockable;
     assert.equal(lockedBal.toString(), "0", `Locking expired`);
 
-    await lpFeeDistribution.connect(user2).setRelock(true);
-    await lpFeeDistribution
+    await multiFeeDistribution.connect(user2).setRelock(true);
+    await multiFeeDistribution
       .connect(user2)
       .withdrawExpiredLocksFor(user2.address);
 
-    lockedBal = (await lpFeeDistribution.lockedBalances(user2.address)).locked;
+    lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
     expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");
   });
 });

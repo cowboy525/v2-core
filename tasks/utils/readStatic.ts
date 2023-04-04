@@ -1,60 +1,70 @@
-import * as fs from 'fs'
-import * as path from 'path'
+import * as fs from 'fs';
+import * as path from 'path';
+
+const networkMapping = {
+	'arbitrum-goerli': 'arbitrum_goerli',
+	arbitrum: 'arbitrum',
+	'bsc-testnet': 'bsc_testnet',
+	bsc: 'bsc',
+};
 
 export function getDeploymentAddresses(networkName: string) {
-    const PROJECT_ROOT = path.resolve(__dirname, "../..")
-    const DEPLOYMENT_PATH = path.resolve(PROJECT_ROOT, "deployments")
+	const PROJECT_ROOT = path.resolve(__dirname, '../..');
+	const DEPLOYMENT_PATH = path.resolve(PROJECT_ROOT, 'deployments');
 
-    let folderName = networkName
-    if (networkName === "hardhat") {
-        folderName = "localhost"
-    }
+	let folderName = networkMapping[networkName];
+	if (networkName === 'hardhat') {
+		folderName = 'localhost';
+	}
+	console.log(networkName);
+	console.log(folderName);
 
-    const networkFolderName = fs.readdirSync(DEPLOYMENT_PATH).filter((f) => f === folderName)[0]
-    if (networkFolderName === undefined) {
-        throw new Error(`missing deployment files for ${folderName}`)
-    }
+	const networkFolderName = fs.readdirSync(DEPLOYMENT_PATH).filter((f) => f === folderName)[0];
+	if (networkFolderName === undefined) {
+		throw new Error(`missing deployment files for ${folderName}`);
+	}
 
-    let rtnAddresses: { [name: string]: string } = {}
-    const networkFolderPath = path.resolve(DEPLOYMENT_PATH, folderName)
-    const files = fs.readdirSync(networkFolderPath).filter((f) => f.includes(".json"))
-    files.forEach((file) => {
-        const filepath = path.resolve(networkFolderPath, file)
-        const data = JSON.parse(fs.readFileSync(filepath, "utf8"))
-        const contractName = file.split(".")[0]
-        rtnAddresses[contractName] = data.address
-    })
+	let rtnAddresses: {[name: string]: string} = {};
+	const networkFolderPath = path.resolve(DEPLOYMENT_PATH, folderName);
+	const files = fs.readdirSync(networkFolderPath).filter((f) => f.includes('.json'));
+	files.forEach((file) => {
+		const filepath = path.resolve(networkFolderPath, file);
+		const data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+		const contractName = file.split('.')[0];
+		rtnAddresses[contractName] = data.address;
+	});
 
-    return rtnAddresses
+	return rtnAddresses;
 }
 
 export function getRpc(network) {
-    try {
-        return require("../../hardhat.config").default.networks[network].url
-    } catch (e) {
-        throw `getRpc failed to get RPC URL for >> ${network} << -- do you REALLY have this network configured properly in hardhat.config.ts??`
-    }
+	let hhNetwork = networkMapping[network];
+	try {
+		return require('../../hardhat.config').default.networks[hhNetwork].url;
+	} catch (e) {
+		throw `getRpc failed to get RPC URL for >> ${network} << -- do you REALLY have this network configured properly in hardhat.config.ts??`;
+	}
 }
 
 export function getLayerzeroCoreDeployments(networkName: string) {
-    const PROJECT_ROOT = path.resolve(__dirname, "../..")
-    const DEPLOYMENT_PATH = path.resolve(PROJECT_ROOT, `node_modules/@layerzerolabs/layerzero-core/deployments`)
+	const PROJECT_ROOT = path.resolve(__dirname, '../..');
+	const DEPLOYMENT_PATH = path.resolve(PROJECT_ROOT, `node_modules/@layerzerolabs/layerzero-core/deployments`);
 
-    const folderName = networkName
-    const networkFolderName = fs.readdirSync(DEPLOYMENT_PATH).filter((f) => f === folderName)[0]
-    if (networkFolderName === undefined) {
-        throw new Error("missing deployment files for endpoint " + folderName)
-    }
+	const folderName = networkName;
+	const networkFolderName = fs.readdirSync(DEPLOYMENT_PATH).filter((f) => f === folderName)[0];
+	if (networkFolderName === undefined) {
+		throw new Error('missing deployment files for endpoint ' + folderName);
+	}
 
-    let rtnAddresses: { [name: string]: string } = {}
-    const networkFolderPath = path.resolve(DEPLOYMENT_PATH, folderName)
-    const files = fs.readdirSync(networkFolderPath).filter((f) => f.includes(".json"))
-    files.forEach((file) => {
-        const filepath = path.resolve(networkFolderPath, file)
-        const data = JSON.parse(fs.readFileSync(filepath, "utf8"))
-        const contractName = file.split(".")[0]
-        rtnAddresses[contractName] = data.address
-    })
+	let rtnAddresses: {[name: string]: string} = {};
+	const networkFolderPath = path.resolve(DEPLOYMENT_PATH, folderName);
+	const files = fs.readdirSync(networkFolderPath).filter((f) => f.includes('.json'));
+	files.forEach((file) => {
+		const filepath = path.resolve(networkFolderPath, file);
+		const data = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+		const contractName = file.split('.')[0];
+		rtnAddresses[contractName] = data.address;
+	});
 
-    return rtnAddresses
+	return rtnAddresses;
 }

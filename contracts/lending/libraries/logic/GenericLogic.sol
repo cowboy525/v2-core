@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -87,7 +87,9 @@ library GenericLogic {
 			return true;
 		}
 
-		vars.amountToDecreaseInETH = IPriceOracleGetter(oracle).getAssetPrice(asset).mul(amount).div(10**vars.decimals);
+		vars.amountToDecreaseInETH = IPriceOracleGetter(oracle).getAssetPrice(asset).mul(amount).div(
+			10 ** vars.decimals
+		);
 
 		vars.collateralBalanceAfterDecrease = vars.totalCollateralInETH.sub(vars.amountToDecreaseInETH);
 
@@ -150,17 +152,7 @@ library GenericLogic {
 		mapping(uint256 => address) storage reserves,
 		uint256 reservesCount,
 		address oracle
-	)
-		internal
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	) internal view returns (uint256, uint256, uint256, uint256, uint256) {
 		CalculateUserAccountDataVars memory vars;
 
 		if (userConfig.isEmpty()) {
@@ -176,7 +168,7 @@ library GenericLogic {
 
 			(vars.ltv, vars.liquidationThreshold, , vars.decimals, ) = currentReserve.configuration.getParams();
 
-			vars.tokenUnit = 10**vars.decimals;
+			vars.tokenUnit = 10 ** vars.decimals;
 			vars.reserveUnitPrice = IPriceOracleGetter(oracle).getAssetPrice(vars.currentReserveAddress);
 
 			if (vars.liquidationThreshold != 0 && userConfig.isUsingAsCollateral(vars.i)) {

@@ -1,7 +1,6 @@
 import 'dotenv/config';
-import { HDAccountsUserConfig, HttpNetworkUserConfig, NetworksUserConfig } from 'hardhat/types';
+import {HDAccountsUserConfig, HttpNetworkUserConfig, NetworksUserConfig} from 'hardhat/types';
 export function node_url(networkName: string): string {
-
 	if (networkName) {
 		const uri = process.env['ETH_NODE_URI_' + networkName.toUpperCase()];
 		if (uri && uri !== '') {
@@ -43,8 +42,8 @@ export function getMnemonic(networkName?: string): string {
 	return mnemonic;
 }
 
-export function accounts(networkName?: string): { mnemonic: string } {
-	return { mnemonic: getMnemonic(networkName) };
+export function accounts(networkName?: string): {mnemonic: string} {
+	return {mnemonic: getMnemonic(networkName)};
 }
 
 export function addForkConfiguration(networks: NetworksUserConfig): NetworksUserConfig {
@@ -78,20 +77,20 @@ export function addForkConfiguration(networks: NetworksUserConfig): NetworksUser
 				accounts: hardhatAccounts,
 				forking: forkURL
 					? {
-						url: forkURL,
-						blockNumber: process.env.HARDHAT_FORK_NUMBER
-							? parseInt(process.env.HARDHAT_FORK_NUMBER)
-							: undefined,
-					}
+							url: forkURL,
+							blockNumber: process.env.HARDHAT_FORK_NUMBER
+								? parseInt(process.env.HARDHAT_FORK_NUMBER)
+								: undefined,
+					  }
 					: undefined,
 				mining: process.env.MINING_INTERVAL
 					? {
-						auto: false,
-						interval: process.env.MINING_INTERVAL.split(',').map((v) => parseInt(v)) as [
-							number,
-							number
-						],
-					}
+							auto: false,
+							interval: process.env.MINING_INTERVAL.split(',').map((v) => parseInt(v)) as [
+								number,
+								number
+							],
+					  }
 					: undefined,
 			},
 		},

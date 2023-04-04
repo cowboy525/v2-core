@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import assert from "assert";
 import { advanceTimeAndBlock } from "../../scripts/utils";
-import { MultiFeeDistribution } from "../../typechain-types";
+import { MultiFeeDistribution } from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -14,7 +14,7 @@ const { expect } = chai;
 describe("MFD Durations", () => {
   let user2: SignerWithAddress;
   let user3: SignerWithAddress;
-  let lpFeeDistribution: MultiFeeDistribution;
+  let multiFeeDistribution: MultiFeeDistribution;
 
   let deployData: DeployData;
   let deployConfig: DeployConfig;
@@ -28,16 +28,16 @@ describe("MFD Durations", () => {
     user2 = fixture.user2;
     user3 = fixture.user3;
 
-    lpFeeDistribution = fixture.lpFeeDistribution;
+    multiFeeDistribution = fixture.multiFeeDistribution;
   });
 
   it("returns lock durations", async () => {
-    const lockDurations = await lpFeeDistribution.getLockDurations();
+    const lockDurations = await multiFeeDistribution.getLockDurations();
     expect(lockDurations.length).equals(deployConfig.LOCK_INFO.LOCK_PERIOD.length);
   });
 
   it("returns lock multipliers", async () => {
-    const lockMultis = await lpFeeDistribution.getLockMultipliers();
+    const lockMultis = await multiFeeDistribution.getLockMultipliers();
     expect(lockMultis.length).equals(deployConfig.LOCK_INFO.MULTIPLIER.length);
   });
 });

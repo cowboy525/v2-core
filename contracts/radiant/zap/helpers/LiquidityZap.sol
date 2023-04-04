@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.12;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 //
@@ -53,27 +53,25 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 
 	address public _token;
 	address public _tokenWETHPair;
-	IWETH public _WETH;
+	IWETH public weth;
 	bool private initialized;
+	address public poolHelper;
 
 	function initialize() external initializer {
 		__Ownable_init();
 	}
 
-	function initLiquidityZap(
-		address token,
-		address WETH,
-		address tokenWethPair
-	) external {
+	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
 		require(!initialized, "already initialized");
 		_token = token;
-		_WETH = IWETH(WETH);
+		weth = IWETH(_weth);
 		_tokenWETHPair = tokenWethPair;
 		initialized = true;
+		poolHelper = _helper;
 	}
 
 	fallback() external payable {
-		if (msg.sender != address(_WETH)) {
+		if (msg.sender != address(weth)) {
 			addLiquidityETHOnly(payable(msg.sender));
 		}
 	}
@@ -84,16 +82,17 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256 liquidity) {
-		require(to != address(0), "LiquidityZAP: Invalid address");
+		require(msg.sender == poolHelper, "!poolhelper");
+		require(to != address(0), "Invalid address");
 		uint256 buyAmount = _amount.div(2);
-		require(buyAmount > 0, "LiquidityZAP: Insufficient ETH amount");
+		require(buyAmount > 0, "Insufficient ETH amount");
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
 		uint256 outTokens = UniswapV2Library.getAmountOut(buyAmount, reserveWeth, reserveTokens);
 
-		_WETH.transfer(_tokenWETHPair, buyAmount);
+		weth.transfer(_tokenWETHPair, buyAmount);
 
-		(address token0, address token1) = UniswapV2Library.sortTokens(address(_WETH), _token);
+		(address token0, address token1) = UniswapV2Library.sortTokens(address(weth), _token);
 		IUniswapV2Pair(_tokenWETHPair).swap(
 			_token == token0 ? outTokens : 0,
 			_token == token1 ? outTokens : 0,
@@ -108,14 +107,14 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		require(to != address(0), "LiquidityZAP: Invalid address");
 		uint256 buyAmount = msg.value.div(2);
 		require(buyAmount > 0, "LiquidityZAP: Insufficient ETH amount");
-		_WETH.deposit{value: msg.value}();
+		weth.deposit{value: msg.value}();
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
 		uint256 outTokens = UniswapV2Library.getAmountOut(buyAmount, reserveWeth, reserveTokens);
 
-		_WETH.transfer(_tokenWETHPair, buyAmount);
+		weth.transfer(_tokenWETHPair, buyAmount);
 
-		(address token0, address token1) = UniswapV2Library.sortTokens(address(_WETH), _token);
+		(address token0, address token1) = UniswapV2Library.sortTokens(address(weth), _token);
 		IUniswapV2Pair(_tokenWETHPair).swap(
 			_token == token0 ? outTokens : 0,
 			_token == token1 ? outTokens : 0,
@@ -137,13 +136,9 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	// use with quote
-	function standardAdd(
-		uint256 tokenAmount,
-		uint256 _wethAmt,
-		address payable to
-	) public returns (uint256 liquidity) {
+	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256 liquidity) {
 		IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
-		_WETH.transferFrom(msg.sender, address(this), _wethAmt);
+		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);
 	}
 
@@ -162,7 +157,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 			optimalTokenAmount = tokenAmount;
 		} else optimalWETHAmount = wethAmount;
 
-		assert(_WETH.transfer(_tokenWETHPair, optimalWETHAmount));
+		assert(weth.transfer(_tokenWETHPair, optimalWETHAmount));
 		IERC20(_token).safeTransfer(_tokenWETHPair, optimalTokenAmount);
 
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
@@ -170,7 +165,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		//refund dust
 		if (tokenAmount > optimalTokenAmount) IERC20(_token).safeTransfer(to, tokenAmount.sub(optimalTokenAmount));
 		if (wethAmount > optimalWETHAmount) {
-			_WETH.transfer(to, wethAmount.sub(optimalWETHAmount));
+			weth.transfer(to, wethAmount.sub(optimalWETHAmount));
 		}
 	}
 
@@ -179,7 +174,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		uint256 outTokens = UniswapV2Library.getAmountOut(ethAmt.div(2), reserveWeth, reserveTokens);
 		uint256 _totalSupply = IUniswapV2Pair(_tokenWETHPair).totalSupply();
 
-		(address token0, ) = UniswapV2Library.sortTokens(address(_WETH), _token);
+		(address token0, ) = UniswapV2Library.sortTokens(address(weth), _token);
 		(uint256 amount0, uint256 amount1) = token0 == _token ? (outTokens, ethAmt.div(2)) : (ethAmt.div(2), outTokens);
 		(uint256 _reserve0, uint256 _reserve1) = token0 == _token
 			? (reserveTokens, reserveWeth)
@@ -188,7 +183,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	function getPairReserves() internal view returns (uint256 wethReserves, uint256 tokenReserves) {
-		(address token0, ) = UniswapV2Library.sortTokens(address(_WETH), _token);
+		(address token0, ) = UniswapV2Library.sortTokens(address(weth), _token);
 		(uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(_tokenWETHPair).getReserves();
 		(wethReserves, tokenReserves) = token0 == _token ? (reserve1, reserve0) : (reserve0, reserve1);
 	}

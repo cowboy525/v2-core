@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "./interfaces/ILayerZeroReceiver.sol";
@@ -132,7 +132,7 @@ contract LZEndpointMock is ILayerZeroEndpoint {
 		bytes calldata _srcAddress,
 		address _dstAddress,
 		uint64 _nonce,
-		uint, /*_gasLimit*/
+		uint /*_gasLimit*/,
 		bytes calldata _payload
 	) external override {
 		StoredPayload storage sp = storedPayload[_srcChainId][_srcAddress];
@@ -221,38 +221,30 @@ contract LZEndpointMock is ILayerZeroEndpoint {
 	}
 
 	function setConfig(
-		uint16, /*_version*/
-		uint16, /*_chainId*/
-		uint, /*_configType*/
+		uint16 /*_version*/,
+		uint16 /*_chainId*/,
+		uint /*_configType*/,
 		bytes memory /*_config*/
 	) external override {}
 
 	function getConfig(
-		uint16, /*_version*/
-		uint16, /*_chainId*/
-		address, /*_ua*/
+		uint16 /*_version*/,
+		uint16 /*_chainId*/,
+		address /*_ua*/,
 		uint /*_configType*/
 	) external pure override returns (bytes memory) {
 		return "";
 	}
 
-	function setSendVersion(
-		uint16 /*version*/
-	) external override {}
+	function setSendVersion(uint16 /*version*/) external override {}
 
-	function setReceiveVersion(
-		uint16 /*version*/
-	) external override {}
+	function setReceiveVersion(uint16 /*version*/) external override {}
 
-	function getSendVersion(
-		address /*_userApplication*/
-	) external pure override returns (uint16) {
+	function getSendVersion(address /*_userApplication*/) external pure override returns (uint16) {
 		return 1;
 	}
 
-	function getReceiveVersion(
-		address /*_userApplication*/
-	) external pure override returns (uint16) {
+	function getReceiveVersion(address /*_userApplication*/) external pure override returns (uint16) {
 		return 1;
 	}
 
@@ -293,11 +285,7 @@ contract LZEndpointMock is ILayerZeroEndpoint {
 		_clearMsgQue(_srcChainId, _srcAddress);
 	}
 
-	function retryPayload(
-		uint16 _srcChainId,
-		bytes calldata _srcAddress,
-		bytes calldata _payload
-	) external override {
+	function retryPayload(uint16 _srcChainId, bytes calldata _srcAddress, bytes calldata _payload) external override {
 		StoredPayload storage sp = storedPayload[_srcChainId][_srcAddress];
 		require(sp.payloadHash != bytes32(0), "LayerZero: no stored payload");
 		require(

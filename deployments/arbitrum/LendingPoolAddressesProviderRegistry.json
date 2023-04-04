@@ -1,0 +1,284 @@
+{
+  "address": "0x9D36DCe6c66E3c206526f5D7B3308fFF16c1aa5E",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "AddressesProviderRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAddress",
+          "type": "address"
+        }
+      ],
+      "name": "AddressesProviderUnregistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addressesProvider",
+          "type": "address"
+        }
+      ],
+      "name": "getAddressesProviderIdByAddress",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAddressesProvidersList",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "provider",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "registerAddressesProvider",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "provider",
+          "type": "address"
+        }
+      ],
+      "name": "unregisterAddressesProvider",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x17d4a897eba6bacfb10aabd83b5554d7bb87a0ec6a9e4079076baff9fdde3956",
+  "receipt": {
+    "to": null,
+    "from": "0x7759124915160E94C77EcE5B96E8a7fCec44Aa19",
+    "contractAddress": "0x9D36DCe6c66E3c206526f5D7B3308fFF16c1aa5E",
+    "transactionIndex": 1,
+    "gasUsed": "3166368",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000000000000000000000000000000400000000000000000000000000000000000000000000000004000000000080000000000001000000000000000000000000000800000000020000000000000000000800000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000004000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x70d56f4c3006c2a65a4ef3580ed4aa3a2b847945f00f0d24a0d1cdb2f81c2a38",
+    "transactionHash": "0x17d4a897eba6bacfb10aabd83b5554d7bb87a0ec6a9e4079076baff9fdde3956",
+    "logs": [
+      {
+        "transactionIndex": 1,
+        "blockNumber": 71246179,
+        "transactionHash": "0x17d4a897eba6bacfb10aabd83b5554d7bb87a0ec6a9e4079076baff9fdde3956",
+        "address": "0x9D36DCe6c66E3c206526f5D7B3308fFF16c1aa5E",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000007759124915160e94c77ece5b96e8a7fcec44aa19"
+        ],
+        "data": "0x",
+        "logIndex": 0,
+        "blockHash": "0x70d56f4c3006c2a65a4ef3580ed4aa3a2b847945f00f0d24a0d1cdb2f81c2a38"
+      }
+    ],
+    "blockNumber": 71246179,
+    "cumulativeGasUsed": "3166368",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "0b487138caad06ac61aeb3560e21e2d5",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.12+commit.f00d7308\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"AddressesProviderRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"AddressesProviderUnregistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addressesProvider\",\"type\":\"address\"}],\"name\":\"getAddressesProviderIdByAddress\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAddressesProvidersList\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"provider\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"registerAddressesProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"provider\",\"type\":\"address\"}],\"name\":\"unregisterAddressesProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"Aave*\",\"details\":\"Main registry of LendingPoolAddressesProvider of multiple Aave protocol's markets - Used for indexing purposes of Aave protocol's markets - The id assigned to a LendingPoolAddressesProvider refers to the market it is connected with,   for example with `0` for the Aave main market and `1` for the next created\",\"kind\":\"dev\",\"methods\":{\"getAddressesProviderIdByAddress(address)\":{\"details\":\"Returns the id on a registered LendingPoolAddressesProvider\",\"returns\":{\"_0\":\"The id or 0 if the LendingPoolAddressesProvider is not registered\"}},\"getAddressesProvidersList()\":{\"details\":\"Returns the list of registered addresses provider\",\"returns\":{\"_0\":\"The list of addresses provider, potentially containing address(0) elements*\"}},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"registerAddressesProvider(address,uint256)\":{\"details\":\"Registers an addresses provider\",\"params\":{\"id\":\"The id for the new LendingPoolAddressesProvider, referring to the market it belongs to*\",\"provider\":\"The address of the new LendingPoolAddressesProvider\"}},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"},\"unregisterAddressesProvider(address)\":{\"details\":\"Removes a LendingPoolAddressesProvider from the list of registered addresses provider\",\"params\":{\"provider\":\"The LendingPoolAddressesProvider address*\"}}},\"title\":\"LendingPoolAddressesProviderRegistry contract\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/lending/configuration/LendingPoolAddressesProviderRegistry.sol\":\"LendingPoolAddressesProviderRegistry\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1000},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.7.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\n     */\\n    constructor() {\\n        _transferOwnership(_msgSender());\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        require(owner() == _msgSender(), \\\"Ownable: caller is not the owner\\\");\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby removing any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        require(newOwner != address(0), \\\"Ownable: new owner is the zero address\\\");\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xa94b34880e3c1b0b931662cb1c09e5dfa6662f31cba80e07c5ee71cd135c9673\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (utils/Context.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n}\\n\",\"keccak256\":\"0xe2e337e6dde9ef6b680e07338c493ebea1b5fd09b43424112868e9cc1706bca7\",\"license\":\"MIT\"},\"contracts/interfaces/ILendingPoolAddressesProviderRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.8.12;\\n\\n/**\\n * @title LendingPoolAddressesProviderRegistry contract\\n * @dev Main registry of LendingPoolAddressesProvider of multiple Aave protocol's markets\\n * - Used for indexing purposes of Aave protocol's markets\\n * - The id assigned to a LendingPoolAddressesProvider refers to the market it is connected with,\\n *   for example with `0` for the Aave main market and `1` for the next created\\n * @author Aave\\n **/\\ninterface ILendingPoolAddressesProviderRegistry {\\n\\tevent AddressesProviderRegistered(address indexed newAddress);\\n\\tevent AddressesProviderUnregistered(address indexed newAddress);\\n\\n\\tfunction getAddressesProvidersList() external view returns (address[] memory);\\n\\n\\tfunction getAddressesProviderIdByAddress(address addressesProvider) external view returns (uint256);\\n\\n\\tfunction registerAddressesProvider(address provider, uint256 id) external;\\n\\n\\tfunction unregisterAddressesProvider(address provider) external;\\n}\\n\",\"keccak256\":\"0x743022050e6e79ae189adb27e38f9289d77ef9c1eb2c4e1071e35765cddfe5fc\",\"license\":\"agpl-3.0\"},\"contracts/lending/configuration/LendingPoolAddressesProviderRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.8.12;\\n\\nimport \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\nimport {ILendingPoolAddressesProviderRegistry} from \\\"../../interfaces/ILendingPoolAddressesProviderRegistry.sol\\\";\\nimport {Errors} from \\\"../libraries/helpers/Errors.sol\\\";\\n\\n/**\\n * @title LendingPoolAddressesProviderRegistry contract\\n * @dev Main registry of LendingPoolAddressesProvider of multiple Aave protocol's markets\\n * - Used for indexing purposes of Aave protocol's markets\\n * - The id assigned to a LendingPoolAddressesProvider refers to the market it is connected with,\\n *   for example with `0` for the Aave main market and `1` for the next created\\n * @author Aave\\n **/\\ncontract LendingPoolAddressesProviderRegistry is Ownable, ILendingPoolAddressesProviderRegistry {\\n\\tmapping(address => uint256) private _addressesProviders;\\n\\taddress[] private _addressesProvidersList;\\n\\n\\t/**\\n\\t * @dev Returns the list of registered addresses provider\\n\\t * @return The list of addresses provider, potentially containing address(0) elements\\n\\t **/\\n\\tfunction getAddressesProvidersList() external view override returns (address[] memory) {\\n\\t\\taddress[] memory addressesProvidersList = _addressesProvidersList;\\n\\n\\t\\tuint256 maxLength = addressesProvidersList.length;\\n\\n\\t\\taddress[] memory activeProviders = new address[](maxLength);\\n\\n\\t\\tfor (uint256 i = 0; i < maxLength; i++) {\\n\\t\\t\\tif (_addressesProviders[addressesProvidersList[i]] > 0) {\\n\\t\\t\\t\\tactiveProviders[i] = addressesProvidersList[i];\\n\\t\\t\\t}\\n\\t\\t}\\n\\n\\t\\treturn activeProviders;\\n\\t}\\n\\n\\t/**\\n\\t * @dev Registers an addresses provider\\n\\t * @param provider The address of the new LendingPoolAddressesProvider\\n\\t * @param id The id for the new LendingPoolAddressesProvider, referring to the market it belongs to\\n\\t **/\\n\\tfunction registerAddressesProvider(address provider, uint256 id) external override onlyOwner {\\n\\t\\trequire(id != 0, Errors.LPAPR_INVALID_ADDRESSES_PROVIDER_ID);\\n\\n\\t\\t_addressesProviders[provider] = id;\\n\\t\\t_addToAddressesProvidersList(provider);\\n\\t\\temit AddressesProviderRegistered(provider);\\n\\t}\\n\\n\\t/**\\n\\t * @dev Removes a LendingPoolAddressesProvider from the list of registered addresses provider\\n\\t * @param provider The LendingPoolAddressesProvider address\\n\\t **/\\n\\tfunction unregisterAddressesProvider(address provider) external override onlyOwner {\\n\\t\\trequire(_addressesProviders[provider] > 0, Errors.LPAPR_PROVIDER_NOT_REGISTERED);\\n\\t\\t_addressesProviders[provider] = 0;\\n\\t\\temit AddressesProviderUnregistered(provider);\\n\\t}\\n\\n\\t/**\\n\\t * @dev Returns the id on a registered LendingPoolAddressesProvider\\n\\t * @return The id or 0 if the LendingPoolAddressesProvider is not registered\\n\\t */\\n\\tfunction getAddressesProviderIdByAddress(address addressesProvider) external view override returns (uint256) {\\n\\t\\treturn _addressesProviders[addressesProvider];\\n\\t}\\n\\n\\tfunction _addToAddressesProvidersList(address provider) internal {\\n\\t\\tuint256 providersCount = _addressesProvidersList.length;\\n\\n\\t\\tfor (uint256 i = 0; i < providersCount; i++) {\\n\\t\\t\\tif (_addressesProvidersList[i] == provider) {\\n\\t\\t\\t\\treturn;\\n\\t\\t\\t}\\n\\t\\t}\\n\\n\\t\\t_addressesProvidersList.push(provider);\\n\\t}\\n}\\n\",\"keccak256\":\"0x0f010c21b76f55090cb0f67ae2b2ecf254038490a18e19e2ccdce15dafbd1372\",\"license\":\"agpl-3.0\"},\"contracts/lending/libraries/helpers/Errors.sol\":{\"content\":\"// SPDX-License-Identifier: agpl-3.0\\npragma solidity 0.8.12;\\n\\n/**\\n * @title Errors library\\n * @author Aave\\n * @notice Defines the error messages emitted by the different contracts of the Aave protocol\\n * @dev Error messages prefix glossary:\\n *  - VL = ValidationLogic\\n *  - MATH = Math libraries\\n *  - CT = Common errors between tokens (AToken, VariableDebtToken and StableDebtToken)\\n *  - AT = AToken\\n *  - SDT = StableDebtToken\\n *  - VDT = VariableDebtToken\\n *  - LP = LendingPool\\n *  - LPAPR = LendingPoolAddressesProviderRegistry\\n *  - LPC = LendingPoolConfiguration\\n *  - RL = ReserveLogic\\n *  - LPCM = LendingPoolCollateralManager\\n *  - P = Pausable\\n */\\nlibrary Errors {\\n\\t//common errors\\n\\tstring public constant CALLER_NOT_POOL_ADMIN = \\\"33\\\"; // 'The caller must be the pool admin'\\n\\tstring public constant BORROW_ALLOWANCE_NOT_ENOUGH = \\\"59\\\"; // User borrows on behalf, but allowance are too small\\n\\n\\t//contract specific errors\\n\\tstring public constant VL_INVALID_AMOUNT = \\\"1\\\"; // 'Amount must be greater than 0'\\n\\tstring public constant VL_NO_ACTIVE_RESERVE = \\\"2\\\"; // 'Action requires an active reserve'\\n\\tstring public constant VL_RESERVE_FROZEN = \\\"3\\\"; // 'Action cannot be performed because the reserve is frozen'\\n\\tstring public constant VL_CURRENT_AVAILABLE_LIQUIDITY_NOT_ENOUGH = \\\"4\\\"; // 'The current liquidity is not enough'\\n\\tstring public constant VL_NOT_ENOUGH_AVAILABLE_USER_BALANCE = \\\"5\\\"; // 'User cannot withdraw more than the available balance'\\n\\tstring public constant VL_TRANSFER_NOT_ALLOWED = \\\"6\\\"; // 'Transfer cannot be allowed.'\\n\\tstring public constant VL_BORROWING_NOT_ENABLED = \\\"7\\\"; // 'Borrowing is not enabled'\\n\\tstring public constant VL_INVALID_INTEREST_RATE_MODE_SELECTED = \\\"8\\\"; // 'Invalid interest rate mode selected'\\n\\tstring public constant VL_COLLATERAL_BALANCE_IS_0 = \\\"9\\\"; // 'The collateral balance is 0'\\n\\tstring public constant VL_HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD = \\\"10\\\"; // 'Health factor is lesser than the liquidation threshold'\\n\\tstring public constant VL_COLLATERAL_CANNOT_COVER_NEW_BORROW = \\\"11\\\"; // 'There is not enough collateral to cover a new borrow'\\n\\tstring public constant VL_STABLE_BORROWING_NOT_ENABLED = \\\"12\\\"; // stable borrowing not enabled\\n\\tstring public constant VL_COLLATERAL_SAME_AS_BORROWING_CURRENCY = \\\"13\\\"; // collateral is (mostly) the same currency that is being borrowed\\n\\tstring public constant VL_AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE = \\\"14\\\"; // 'The requested amount is greater than the max loan size in stable rate mode\\n\\tstring public constant VL_NO_DEBT_OF_SELECTED_TYPE = \\\"15\\\"; // 'for repayment of stable debt, the user needs to have stable debt, otherwise, he needs to have variable debt'\\n\\tstring public constant VL_NO_EXPLICIT_AMOUNT_TO_REPAY_ON_BEHALF = \\\"16\\\"; // 'To repay on behalf of an user an explicit amount to repay is needed'\\n\\tstring public constant VL_NO_STABLE_RATE_LOAN_IN_RESERVE = \\\"17\\\"; // 'User does not have a stable rate loan in progress on this reserve'\\n\\tstring public constant VL_NO_VARIABLE_RATE_LOAN_IN_RESERVE = \\\"18\\\"; // 'User does not have a variable rate loan in progress on this reserve'\\n\\tstring public constant VL_UNDERLYING_BALANCE_NOT_GREATER_THAN_0 = \\\"19\\\"; // 'The underlying balance needs to be greater than 0'\\n\\tstring public constant VL_DEPOSIT_ALREADY_IN_USE = \\\"20\\\"; // 'User deposit is already being used as collateral'\\n\\tstring public constant LP_NOT_ENOUGH_STABLE_BORROW_BALANCE = \\\"21\\\"; // 'User does not have any stable rate loan for this reserve'\\n\\tstring public constant LP_INTEREST_RATE_REBALANCE_CONDITIONS_NOT_MET = \\\"22\\\"; // 'Interest rate rebalance conditions were not met'\\n\\tstring public constant LP_LIQUIDATION_CALL_FAILED = \\\"23\\\"; // 'Liquidation call failed'\\n\\tstring public constant LP_NOT_ENOUGH_LIQUIDITY_TO_BORROW = \\\"24\\\"; // 'There is not enough liquidity available to borrow'\\n\\tstring public constant LP_REQUESTED_AMOUNT_TOO_SMALL = \\\"25\\\"; // 'The requested amount is too small for a FlashLoan.'\\n\\tstring public constant LP_INCONSISTENT_PROTOCOL_ACTUAL_BALANCE = \\\"26\\\"; // 'The actual balance of the protocol is inconsistent'\\n\\tstring public constant LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR = \\\"27\\\"; // 'The caller of the function is not the lending pool configurator'\\n\\tstring public constant LP_INCONSISTENT_FLASHLOAN_PARAMS = \\\"28\\\";\\n\\tstring public constant CT_CALLER_MUST_BE_LENDING_POOL = \\\"29\\\"; // 'The caller of this function must be a lending pool'\\n\\tstring public constant CT_CANNOT_GIVE_ALLOWANCE_TO_HIMSELF = \\\"30\\\"; // 'User cannot give allowance to himself'\\n\\tstring public constant CT_TRANSFER_AMOUNT_NOT_GT_0 = \\\"31\\\"; // 'Transferred amount needs to be greater than zero'\\n\\tstring public constant RL_RESERVE_ALREADY_INITIALIZED = \\\"32\\\"; // 'Reserve has already been initialized'\\n\\tstring public constant LPC_RESERVE_LIQUIDITY_NOT_0 = \\\"34\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_ATOKEN_POOL_ADDRESS = \\\"35\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_STABLE_DEBT_TOKEN_POOL_ADDRESS = \\\"36\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_VARIABLE_DEBT_TOKEN_POOL_ADDRESS = \\\"37\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_STABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = \\\"38\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_VARIABLE_DEBT_TOKEN_UNDERLYING_ADDRESS = \\\"39\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_ADDRESSES_PROVIDER_ID = \\\"40\\\"; // 'The liquidity of the reserve needs to be 0'\\n\\tstring public constant LPC_INVALID_CONFIGURATION = \\\"75\\\"; // 'Invalid risk parameters for the reserve'\\n\\tstring public constant LPC_CALLER_NOT_EMERGENCY_ADMIN = \\\"76\\\"; // 'The caller must be the emergency admin'\\n\\tstring public constant LPAPR_PROVIDER_NOT_REGISTERED = \\\"41\\\"; // 'Provider is not registered'\\n\\tstring public constant LPCM_HEALTH_FACTOR_NOT_BELOW_THRESHOLD = \\\"42\\\"; // 'Health factor is not below the threshold'\\n\\tstring public constant LPCM_COLLATERAL_CANNOT_BE_LIQUIDATED = \\\"43\\\"; // 'The collateral chosen cannot be liquidated'\\n\\tstring public constant LPCM_SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = \\\"44\\\"; // 'User did not borrow the specified currency'\\n\\tstring public constant LPCM_NOT_ENOUGH_LIQUIDITY_TO_LIQUIDATE = \\\"45\\\"; // \\\"There isn't enough liquidity available to liquidate\\\"\\n\\tstring public constant LPCM_NO_ERRORS = \\\"46\\\"; // 'No errors'\\n\\tstring public constant LP_INVALID_FLASHLOAN_MODE = \\\"47\\\"; //Invalid flashloan mode selected\\n\\tstring public constant MATH_MULTIPLICATION_OVERFLOW = \\\"48\\\";\\n\\tstring public constant MATH_ADDITION_OVERFLOW = \\\"49\\\";\\n\\tstring public constant MATH_DIVISION_BY_ZERO = \\\"50\\\";\\n\\tstring public constant RL_LIQUIDITY_INDEX_OVERFLOW = \\\"51\\\"; //  Liquidity index overflows uint128\\n\\tstring public constant RL_VARIABLE_BORROW_INDEX_OVERFLOW = \\\"52\\\"; //  Variable borrow index overflows uint128\\n\\tstring public constant RL_LIQUIDITY_RATE_OVERFLOW = \\\"53\\\"; //  Liquidity rate overflows uint128\\n\\tstring public constant RL_VARIABLE_BORROW_RATE_OVERFLOW = \\\"54\\\"; //  Variable borrow rate overflows uint128\\n\\tstring public constant RL_STABLE_BORROW_RATE_OVERFLOW = \\\"55\\\"; //  Stable borrow rate overflows uint128\\n\\tstring public constant CT_INVALID_MINT_AMOUNT = \\\"56\\\"; //invalid amount to mint\\n\\tstring public constant LP_FAILED_REPAY_WITH_COLLATERAL = \\\"57\\\";\\n\\tstring public constant CT_INVALID_BURN_AMOUNT = \\\"58\\\"; //invalid amount to burn\\n\\tstring public constant LP_FAILED_COLLATERAL_SWAP = \\\"60\\\";\\n\\tstring public constant LP_INVALID_EQUAL_ASSETS_TO_SWAP = \\\"61\\\";\\n\\tstring public constant LP_REENTRANCY_NOT_ALLOWED = \\\"62\\\";\\n\\tstring public constant LP_CALLER_MUST_BE_AN_ATOKEN = \\\"63\\\";\\n\\tstring public constant LP_IS_PAUSED = \\\"64\\\"; // 'Pool is paused'\\n\\tstring public constant LP_NO_MORE_RESERVES_ALLOWED = \\\"65\\\";\\n\\tstring public constant LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN = \\\"66\\\";\\n\\tstring public constant RC_INVALID_LTV = \\\"67\\\";\\n\\tstring public constant RC_INVALID_LIQ_THRESHOLD = \\\"68\\\";\\n\\tstring public constant RC_INVALID_LIQ_BONUS = \\\"69\\\";\\n\\tstring public constant RC_INVALID_DECIMALS = \\\"70\\\";\\n\\tstring public constant RC_INVALID_RESERVE_FACTOR = \\\"71\\\";\\n\\tstring public constant LPAPR_INVALID_ADDRESSES_PROVIDER_ID = \\\"72\\\";\\n\\tstring public constant VL_INCONSISTENT_FLASHLOAN_PARAMS = \\\"73\\\";\\n\\tstring public constant LP_INCONSISTENT_PARAMS_LENGTH = \\\"74\\\";\\n\\tstring public constant UL_INVALID_INDEX = \\\"77\\\";\\n\\tstring public constant LP_NOT_CONTRACT = \\\"78\\\";\\n\\tstring public constant SDT_STABLE_DEBT_OVERFLOW = \\\"79\\\";\\n\\tstring public constant SDT_BURN_EXCEEDS_BALANCE = \\\"80\\\";\\n\\n\\tenum CollateralManagerErrors {\\n\\t\\tNO_ERROR,\\n\\t\\tNO_COLLATERAL_AVAILABLE,\\n\\t\\tCOLLATERAL_CANNOT_BE_LIQUIDATED,\\n\\t\\tCURRRENCY_NOT_BORROWED,\\n\\t\\tHEALTH_FACTOR_ABOVE_THRESHOLD,\\n\\t\\tNOT_ENOUGH_LIQUIDITY,\\n\\t\\tNO_ACTIVE_RESERVE,\\n\\t\\tHEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD,\\n\\t\\tINVALID_EQUAL_ASSETS_TO_SWAP,\\n\\t\\tFROZEN_RESERVE\\n\\t}\\n}\\n\",\"keccak256\":\"0xd8247701ad40f24d3bbba25e050a8b4e10f9fcecce670a92e6f6d1ca0a4fdb04\",\"license\":\"agpl-3.0\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5061001a3361001f565b61006f565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6107d48061007e6000396000f3fe608060405234801561001057600080fd5b506004361061007d5760003560e01c80638da5cb5b1161005b5780638da5cb5b146100bd578063d0267be7146100d8578063d258191e1461010f578063f2fde38b1461012257600080fd5b80630de2670714610082578063365ccbbf14610097578063715018a6146100b5575b600080fd5b61009561009036600461065b565b610135565b005b61009f610208565b6040516100ac919061067d565b60405180910390f35b61009561036f565b6000546040516001600160a01b0390911681526020016100ac565b6101016100e636600461065b565b6001600160a01b031660009081526001602052604090205490565b6040519081526020016100ac565b61009561011d3660046106ca565b610383565b61009561013036600461065b565b61043a565b61013d6104ca565b600060016000836001600160a01b03166001600160a01b0316815260200190815260200160002054116040518060400160405280600281526020017f3431000000000000000000000000000000000000000000000000000000000000815250906101c35760405162461bcd60e51b81526004016101ba91906106f4565b60405180910390fd5b506001600160a01b038116600081815260016020526040808220829055517f851e5971c053e6b76e3a1e0b8ffa81430df738007fad86e195c409a757faccd29190a250565b60606000600280548060200260200160405190810160405280929190818152602001828054801561026257602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311610244575b5050505050905060008151905060008167ffffffffffffffff81111561028a5761028a610749565b6040519080825280602002602001820160405280156102b3578160200160208202803683370190505b50905060005b82811015610367576000600160008684815181106102d9576102d961075f565b60200260200101516001600160a01b03166001600160a01b031681526020019081526020016000205411156103555783818151811061031a5761031a61075f565b60200260200101518282815181106103345761033461075f565b60200260200101906001600160a01b031690816001600160a01b0316815250505b8061035f81610775565b9150506102b9565b509392505050565b6103776104ca565b6103816000610524565b565b61038b6104ca565b60408051808201909152600281527f37320000000000000000000000000000000000000000000000000000000000006020820152816103dd5760405162461bcd60e51b81526004016101ba91906106f4565b506001600160a01b038216600090815260016020526040902081905561040282610581565b6040516001600160a01b038316907f2db38786c10176b033a1608361716b0ca992e3af55dc05b6dc710969790beeda90600090a25050565b6104426104ca565b6001600160a01b0381166104be5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201527f646472657373000000000000000000000000000000000000000000000000000060648201526084016101ba565b6104c781610524565b50565b6000546001600160a01b031633146103815760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064016101ba565b600080546001600160a01b0383811673ffffffffffffffffffffffffffffffffffffffff19831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60025460005b818110156105de57826001600160a01b0316600282815481106105ac576105ac61075f565b6000918252602090912001546001600160a01b031614156105cc57505050565b806105d681610775565b915050610587565b5050600280546001810182556000919091527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace01805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b80356001600160a01b038116811461065657600080fd5b919050565b60006020828403121561066d57600080fd5b6106768261063f565b9392505050565b6020808252825182820181905260009190848201906040850190845b818110156106be5783516001600160a01b031683529284019291840191600101610699565b50909695505050505050565b600080604083850312156106dd57600080fd5b6106e68361063f565b946020939093013593505050565b600060208083528351808285015260005b8181101561072157858101830151858201604001528201610705565b81811115610733576000604083870101525b50601f01601f1916929092016040019392505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fd5b600060001982141561079757634e487b7160e01b600052601160045260246000fd5b506001019056fea2646970667358221220a9fba2053e40288b2783519a20d3f5c0f59861b45f61533039ad9f786132c5d064736f6c634300080c0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061007d5760003560e01c80638da5cb5b1161005b5780638da5cb5b146100bd578063d0267be7146100d8578063d258191e1461010f578063f2fde38b1461012257600080fd5b80630de2670714610082578063365ccbbf14610097578063715018a6146100b5575b600080fd5b61009561009036600461065b565b610135565b005b61009f610208565b6040516100ac919061067d565b60405180910390f35b61009561036f565b6000546040516001600160a01b0390911681526020016100ac565b6101016100e636600461065b565b6001600160a01b031660009081526001602052604090205490565b6040519081526020016100ac565b61009561011d3660046106ca565b610383565b61009561013036600461065b565b61043a565b61013d6104ca565b600060016000836001600160a01b03166001600160a01b0316815260200190815260200160002054116040518060400160405280600281526020017f3431000000000000000000000000000000000000000000000000000000000000815250906101c35760405162461bcd60e51b81526004016101ba91906106f4565b60405180910390fd5b506001600160a01b038116600081815260016020526040808220829055517f851e5971c053e6b76e3a1e0b8ffa81430df738007fad86e195c409a757faccd29190a250565b60606000600280548060200260200160405190810160405280929190818152602001828054801561026257602002820191906000526020600020905b81546001600160a01b03168152600190910190602001808311610244575b5050505050905060008151905060008167ffffffffffffffff81111561028a5761028a610749565b6040519080825280602002602001820160405280156102b3578160200160208202803683370190505b50905060005b82811015610367576000600160008684815181106102d9576102d961075f565b60200260200101516001600160a01b03166001600160a01b031681526020019081526020016000205411156103555783818151811061031a5761031a61075f565b60200260200101518282815181106103345761033461075f565b60200260200101906001600160a01b031690816001600160a01b0316815250505b8061035f81610775565b9150506102b9565b509392505050565b6103776104ca565b6103816000610524565b565b61038b6104ca565b60408051808201909152600281527f37320000000000000000000000000000000000000000000000000000000000006020820152816103dd5760405162461bcd60e51b81526004016101ba91906106f4565b506001600160a01b038216600090815260016020526040902081905561040282610581565b6040516001600160a01b038316907f2db38786c10176b033a1608361716b0ca992e3af55dc05b6dc710969790beeda90600090a25050565b6104426104ca565b6001600160a01b0381166104be5760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201527f646472657373000000000000000000000000000000000000000000000000000060648201526084016101ba565b6104c781610524565b50565b6000546001600160a01b031633146103815760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064016101ba565b600080546001600160a01b0383811673ffffffffffffffffffffffffffffffffffffffff19831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60025460005b818110156105de57826001600160a01b0316600282815481106105ac576105ac61075f565b6000918252602090912001546001600160a01b031614156105cc57505050565b806105d681610775565b915050610587565b5050600280546001810182556000919091527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace01805473ffffffffffffffffffffffffffffffffffffffff19166001600160a01b0392909216919091179055565b80356001600160a01b038116811461065657600080fd5b919050565b60006020828403121561066d57600080fd5b6106768261063f565b9392505050565b6020808252825182820181905260009190848201906040850190845b818110156106be5783516001600160a01b031683529284019291840191600101610699565b50909695505050505050565b600080604083850312156106dd57600080fd5b6106e68361063f565b946020939093013593505050565b600060208083528351808285015260005b8181101561072157858101830151858201604001528201610705565b81811115610733576000604083870101525b50601f01601f1916929092016040019392505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fd5b600060001982141561079757634e487b7160e01b600052601160045260246000fd5b506001019056fea2646970667358221220a9fba2053e40288b2783519a20d3f5c0f59861b45f61533039ad9f786132c5d064736f6c634300080c0033",
+  "devdoc": {
+    "author": "Aave*",
+    "details": "Main registry of LendingPoolAddressesProvider of multiple Aave protocol's markets - Used for indexing purposes of Aave protocol's markets - The id assigned to a LendingPoolAddressesProvider refers to the market it is connected with,   for example with `0` for the Aave main market and `1` for the next created",
+    "kind": "dev",
+    "methods": {
+      "getAddressesProviderIdByAddress(address)": {
+        "details": "Returns the id on a registered LendingPoolAddressesProvider",
+        "returns": {
+          "_0": "The id or 0 if the LendingPoolAddressesProvider is not registered"
+        }
+      },
+      "getAddressesProvidersList()": {
+        "details": "Returns the list of registered addresses provider",
+        "returns": {
+          "_0": "The list of addresses provider, potentially containing address(0) elements*"
+        }
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "registerAddressesProvider(address,uint256)": {
+        "details": "Registers an addresses provider",
+        "params": {
+          "id": "The id for the new LendingPoolAddressesProvider, referring to the market it belongs to*",
+          "provider": "The address of the new LendingPoolAddressesProvider"
+        }
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      },
+      "unregisterAddressesProvider(address)": {
+        "details": "Removes a LendingPoolAddressesProvider from the list of registered addresses provider",
+        "params": {
+          "provider": "The LendingPoolAddressesProvider address*"
+        }
+      }
+    },
+    "title": "LendingPoolAddressesProviderRegistry contract",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 3669,
+        "contract": "contracts/lending/configuration/LendingPoolAddressesProviderRegistry.sol:LendingPoolAddressesProviderRegistry",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 29745,
+        "contract": "contracts/lending/configuration/LendingPoolAddressesProviderRegistry.sol:LendingPoolAddressesProviderRegistry",
+        "label": "_addressesProviders",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 29748,
+        "contract": "contracts/lending/configuration/LendingPoolAddressesProviderRegistry.sol:LendingPoolAddressesProviderRegistry",
+        "label": "_addressesProvidersList",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_address)dyn_storage"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

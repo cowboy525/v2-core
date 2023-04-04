@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -159,11 +159,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	 *   different wallet
 	 * @return The final amount withdrawn
 	 **/
-	function withdraw(
-		address asset,
-		uint256 amount,
-		address to
-	) external override whenNotPaused returns (uint256) {
+	function withdraw(address asset, uint256 amount, address to) external override whenNotPaused returns (uint256) {
 		DataTypes.ReserveData storage reserve = _reserves[asset];
 
 		address aToken = reserve.aTokenAddress;
@@ -589,7 +585,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	 * @return ltv the loan to value of the user
 	 * @return healthFactor the current health factor of the user
 	 **/
-	function getUserAccountData(address user)
+	function getUserAccountData(
+		address user
+	)
 		external
 		view
 		override
@@ -772,11 +770,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	 * @param asset The address of the underlying asset of the reserve
 	 * @param rateStrategyAddress The address of the interest rate strategy contract
 	 **/
-	function setReserveInterestRateStrategyAddress(address asset, address rateStrategyAddress)
-		external
-		override
-		onlyLendingPoolConfigurator
-	{
+	function setReserveInterestRateStrategyAddress(
+		address asset,
+		address rateStrategyAddress
+	) external override onlyLendingPoolConfigurator {
 		_reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
 	}
 
@@ -822,7 +819,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		address oracle = _addressesProvider.getPriceOracle();
 
 		uint256 amountInETH = IPriceOracleGetter(oracle).getAssetPrice(vars.asset).mul(vars.amount).div(
-			10**reserve.configuration.getDecimals()
+			10 ** reserve.configuration.getDecimals()
 		);
 
 		ValidationLogic.validateBorrow(

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 interface IBountyManager {
 	function quote(address _param) external returns (uint256 bounty);

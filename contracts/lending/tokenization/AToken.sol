@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,7 +12,6 @@ import {VersionedInitializable} from "../libraries/aave-upgradeability/Versioned
 import {IncentivizedERC20} from "./IncentivizedERC20.sol";
 import {IAaveIncentivesController} from "../../interfaces/IAaveIncentivesController.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {IMFDstats} from "../../interfaces/IMFDstats.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 
 /**
@@ -40,8 +39,6 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 
 	address internal _treasury;
 	IAaveIncentivesController internal _incentivesController;
-
-	event MfdStatsSuccess(string state);
 
 	modifier onlyLendingPool() {
 		require(_msgSender() == address(_pool), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
@@ -136,11 +133,7 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 	 * @param index The new liquidity index of the reserve
 	 * @return `true` if the the previous balance of the user was 0
 	 */
-	function mint(
-		address user,
-		uint256 amount,
-		uint256 index
-	) external override onlyLendingPool returns (bool) {
+	function mint(address user, uint256 amount, uint256 index) external override onlyLendingPool returns (bool) {
 		uint256 previousBalance = super.balanceOf(user);
 
 		uint256 amountScaled = amount.rayDiv(index);
@@ -172,16 +165,6 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 		// wont cause potentially valid transactions to fail.
 		_mint(treasury, amount.rayDiv(index));
 
-		try IMiddleFeeDistribution(treasury).getMFDstatsAddress() returns (address mfdStats) {
-			try IMFDstats(mfdStats).addTransfer(IMFDstats.AddTransferParam(_underlyingAsset, amount, treasury)) {
-				emit MfdStatsSuccess("Success!");
-			} catch {
-				emit MfdStatsSuccess("Add Transfer Failed!");
-			}
-		} catch {
-			emit MfdStatsSuccess("Get MFDstats Address Failed!");
-		}
-
 		emit Transfer(address(0), treasury, amount);
 		emit Mint(treasury, amount, index);
 	}
@@ -193,11 +176,7 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 	 * @param to The recipient
 	 * @param value The amount of tokens getting transferred
 	 **/
-	function transferOnLiquidation(
-		address from,
-		address to,
-		uint256 value
-	) external override onlyLendingPool {
+	function transferOnLiquidation(address from, address to, uint256 value) external override onlyLendingPool {
 		// Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
 		// so no need to emit a specific event here
 		_transfer(from, to, value, false);
@@ -356,12 +335,7 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 	 * @param amount The amount getting transferred
 	 * @param validate `true` if the transfer needs to be validated
 	 **/
-	function _transfer(
-		address from,
-		address to,
-		uint256 amount,
-		bool validate
-	) internal {
+	function _transfer(address from, address to, uint256 amount, bool validate) internal {
 		address underlyingAsset = _underlyingAsset;
 		ILendingPool pool = _pool;
 
@@ -385,11 +359,7 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 	 * @param to The destination address
 	 * @param amount The amount getting transferred
 	 **/
-	function _transfer(
-		address from,
-		address to,
-		uint256 amount
-	) internal override {
+	function _transfer(address from, address to, uint256 amount) internal override {
 		_transfer(from, to, amount, true);
 	}
 }

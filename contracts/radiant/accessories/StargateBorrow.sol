@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../interfaces/IStargateRouter.sol";
 import "../../interfaces/IRouterETH.sol";
 import "../../interfaces/ILendingPool.sol";
@@ -54,7 +53,7 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 /// @title Borrow gate via stargate
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
-contract StargateBorrow is Ownable {
+contract StargateBorrow is OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -62,7 +61,7 @@ contract StargateBorrow is Ownable {
 	uint256 public constant FEE_PERCENT_DIVISOR = 10000;
 
 	// ETH pool Id
-	uint256 private constant PoolIdETH = 13;
+	uint256 private constant POOL_ID_ETH = 13;
 
 	// ETH address
 	address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -76,8 +75,8 @@ contract StargateBorrow is Ownable {
 	/// @notice Lending Pool address
 	ILendingPool public lendingPool;
 
-	// WETH address
-	IWETH internal immutable WETH;
+	// Weth address
+	IWETH internal weth;
 
 	/// @notice asset => poolId; at the moment, pool IDs for USDC and USDT are the same accross all chains
 	mapping(address => uint256) public poolIdPerChain;
@@ -86,7 +85,7 @@ contract StargateBorrow is Ownable {
 	address public daoTreasury;
 
 	/// @notice Cross chain borrow fee ratio
-	uint256 public xChainBorrowFeePercent = 100;
+	uint256 public xChainBorrowFeePercent;
 
 	/// @notice Emitted when DAO address is updated
 	event DAOTreasuryUpdated(address indexed _daoTreasury);
@@ -106,16 +105,15 @@ contract StargateBorrow is Ownable {
 	 * @param _treasury Treasury address
 	 * @param _xChainBorrowFeePercent Cross chain borrow fee ratio
 	 */
-	constructor(
+	function initialize(
 		IStargateRouter _router,
 		IRouterETH _routerETH,
 		ILendingPool _lendingPool,
 		IWETH _weth,
 		address _treasury,
 		uint256 _xChainBorrowFeePercent
-	) {
+	) public initializer {
 		require(address(_router) != (address(0)), "Not a valid address");
-		require(address(_routerETH) != (address(0)), "Not a valid address");
 		require(address(_lendingPool) != (address(0)), "Not a valid address");
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
@@ -126,7 +124,8 @@ contract StargateBorrow is Ownable {
 		lendingPool = _lendingPool;
 		daoTreasury = _treasury;
 		xChainBorrowFeePercent = _xChainBorrowFeePercent;
-		WETH = _weth;
+		weth = _weth;
+		__Ownable_init();
 	}
 
 	receive() external payable {}
@@ -136,6 +135,7 @@ contract StargateBorrow is Ownable {
 	 * @param _daoTreasury DAO Treasury address.
 	 */
 	function setDAOTreasury(address _daoTreasury) external onlyOwner {
+		require(_daoTreasury != address(0), "daoTreasury is 0 address");
 		daoTreasury = _daoTreasury;
 		emit DAOTreasuryUpdated(_daoTreasury);
 	}
@@ -193,13 +193,8 @@ contract StargateBorrow is Ownable {
 	 * @param interestRateMode stable or variable borrow mode
 	 * @param dstChainId Destination chain id
 	 **/
-	function borrow(
-		address asset,
-		uint256 amount,
-		uint256 interestRateMode,
-		uint16 dstChainId
-	) external payable {
-		if (address(asset) == ETH_ADDRESS) {
+	function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 dstChainId) external payable {
+		if (address(asset) == ETH_ADDRESS && address(routerETH) != address(0)) {
 			borrowETH(amount, interestRateMode, dstChainId);
 		} else {
 			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
@@ -228,13 +223,9 @@ contract StargateBorrow is Ownable {
 	 * @param interestRateMode stable or variable borrow mode
 	 * @param dstChainId Destination chain id
 	 **/
-	function borrowETH(
-		uint256 amount,
-		uint256 interestRateMode,
-		uint16 dstChainId
-	) internal {
-		lendingPool.borrow(address(WETH), amount, interestRateMode, 0, msg.sender);
-		WETH.withdraw(amount);
+	function borrowETH(uint256 amount, uint256 interestRateMode, uint16 dstChainId) internal {
+		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
+		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 		_safeTransferETH(daoTreasury, feeAmount);
 		amount = amount.sub(feeAmount);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 interface ILiquidityZap {
 	function _WETH() external view returns (address);
@@ -21,7 +21,8 @@ interface ILiquidityZap {
 	function initLiquidityZap(
 		address token,
 		address WETH,
-		address tokenWethPair
+		address tokenWethPair,
+		address helper
 	) external;
 
 	function quote(uint256 wethAmount) external view returns (uint256 optimalTokenAmount);

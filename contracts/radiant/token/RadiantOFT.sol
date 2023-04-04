@@ -1,32 +1,35 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "../../interfaces/IPriceProvider.sol";
 
 contract RadiantOFT is OFTV2, Pausable {
 	using SafeMath for uint256;
 
+	/// @notice bridge fee reciever
 	address private treasury;
-	address private dao;
+
+	/// @notice Fee ratio for bridging, in bips
+	uint256 public feeRatio;
 
 	/// @notice Divisor for fee ratio, 100%
 	uint256 public constant FEE_DIVISOR = 10000;
-
-	/// @notice Fee ratio for bridging
-	uint256 public feeRatio;
 
 	/// @notice PriceProvider, for RDNT price in native fee calc
 	IPriceProvider public priceProvider;
 
 	/// @notice Emitted when fee ratio is updated
-	event FeeUpdated(uint256 _fee);
+	event FeeUpdated(uint256 fee);
 
 	/// @notice Emitted when PriceProvider is updated
-	event PriceProviderUpdated(IPriceProvider indexed _priceProvider);
+	event PriceProviderUpdated(IPriceProvider indexed priceProvider);
+
+	/// @notice Emitted when Treasury is updated
+	event TreasuryUpdated(address indexed treasury);
 
 	/**
 	 * @notice Create RadiantOFT
@@ -45,10 +48,14 @@ contract RadiantOFT is OFTV2, Pausable {
 		address _treasury,
 		uint256 _mintAmt
 	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
-		dao = _dao;
+		require(_endpoint != address(0), "invalid LZ Endpoint");
+		require(_dao != address(0), "invalid DAO");
+		require(_treasury != address(0), "invalid treasury");
+
 		treasury = _treasury;
+
 		if (_mintAmt != 0) {
-			_mint(dao, _mintAmt);
+			_mint(_dao, _mintAmt);
 		}
 	}
 
@@ -103,9 +110,9 @@ contract RadiantOFT is OFTV2, Pausable {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override whenNotPaused returns (uint amount) {
+	) internal override returns (uint amount) {
 		uint256 fee = getBridgeFee(_amount);
-		require(msg.value >= fee, "ETH sent is not enough for the fee payment");
+		require(msg.value >= fee, "ETH sent is not enough for fee");
 		payable(treasury).transfer(fee);
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
@@ -138,15 +145,15 @@ contract RadiantOFT is OFTV2, Pausable {
 
 	/**
 	 * @notice Bridge fee amount
-	 * @param rdntAmount amount for bridge
+	 * @param _rdntAmount amount for bridge
 	 */
-	function getBridgeFee(uint256 rdntAmount) public view returns (uint256) {
+	function getBridgeFee(uint256 _rdntAmount) public view returns (uint256) {
 		if (address(priceProvider) == address(0)) {
 			return 0;
 		}
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
-		uint256 rdntInEth = rdntAmount.mul(priceInEth).div(10**priceDecimals).mul(10**18).div(10**decimals());
+		uint256 rdntInEth = _rdntAmount.mul(priceInEth).div(10 ** priceDecimals).mul(10 ** 18).div(10 ** decimals());
 		return rdntInEth.mul(feeRatio).div(FEE_DIVISOR);
 	}
 
@@ -165,7 +172,18 @@ contract RadiantOFT is OFTV2, Pausable {
 	 * @param _priceProvider address
 	 */
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
+		require(address(_priceProvider) != address(0), "invalid PriceProvider");
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
+	}
+
+	/**
+	 * @notice Set Treasury
+	 * @param _treasury address
+	 */
+	function setTreasury(address _treasury) external onlyOwner {
+		require(_treasury != address(0), "invalid Treasury address");
+		treasury = _treasury;
+		emit TreasuryUpdated(_treasury);
 	}
 }

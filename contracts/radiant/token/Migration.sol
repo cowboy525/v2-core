@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -34,6 +34,14 @@ contract Migration is Ownable, Pausable {
 		_pause();
 	}
 
+	function pause() public onlyOwner {
+		_pause();
+	}
+
+	function unpause() public onlyOwner {
+		_unpause();
+	}
+
 	/**
 	 * @notice Withdraw ERC20 token
 	 * @param _token address for withdraw
@@ -41,14 +49,6 @@ contract Migration is Ownable, Pausable {
 	 */
 	function withdrawToken(ERC20 _token, uint256 _amount) external onlyOwner {
 		_token.safeTransfer(owner(), _amount);
-	}
-
-	/**
-	 * @notice Pause or Unpause migration
-	 * @param _doPause or unpause, true for pause
-	 */
-	function pauseMigration(bool _doPause) external onlyOwner {
-		_doPause ? _pause() : _unpause();
 	}
 
 	/**

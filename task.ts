@@ -282,7 +282,6 @@ task("cleanLocks", "Clean expired locks").setAction(async (taskArgs, hre) => {
   );
 
   const mfdAddress = await middleFeeDistribution.multiFeeDistribution();
-  const lpfdAddress = await middleFeeDistribution.lpFeeDistribution();
 
   const MFD = await hre.ethers.getContractAt(
     "MultiFeeDistribution",
@@ -311,32 +310,6 @@ task("cleanLocks", "Clean expired locks").setAction(async (taskArgs, hre) => {
       }
     }
   }
-
-  const LPFD = await hre.ethers.getContractAt(
-    "MultiFeeDistribution",
-    lpfdAddress
-  );
-
-  console.log("LPFeeDistribution...");
-  const LPFDlockerlist = await hre.ethers.getContractAt(
-    "LockerList",
-    await LPFD.userlist()
-  );
-  length = await LPFDlockerlist.lockersCount();
-  for (let i = 0; i * limit < length.toNumber(); i += 1) {
-    const lockers = await LPFDlockerlist.getUsers(i, limit);
-    for (const locker of lockers) {
-      if (locker == hre.ethers.constants.AddressZero) {
-        continue;
-      }
-      const lockedBalances = await LPFD.lockedBalances(locker);
-      if (lockedBalances.unlockable.gt(0)) {
-        const receipt = await LPFD.withdrawExpiredLocksFor(locker);
-        await receipt.wait();
-        console.log("Withdrawn expire locks for:", locker);
-      }
-    }
-  }
 });
 
 task("savePendingRewards", "Save pending rewards").setAction(
@@ -356,10 +329,6 @@ task("savePendingRewards", "Save pending rewards").setAction(
       "MultiFeeDistribution",
       config.multiFeeDistribution
     );
-    const LPFD = await hre.ethers.getContractAt(
-      "MultiFeeDistribution",
-      config.lpFeeDistribution
-    );
 
     let lockers: string[] = [];
     const limit = 50;
@@ -372,16 +341,6 @@ task("savePendingRewards", "Save pending rewards").setAction(
     let length = await MFDlockerlist.lockersCount();
     for (let i = 0; i * limit < length.toNumber(); i += 1) {
       const newLockers = await MFDlockerlist.getUsers(i, limit);
-      lockers.push(...newLockers);
-    }
-
-    const LPFDlockerlist = await hre.ethers.getContractAt(
-      "LockerList",
-      await LPFD.userlist()
-    );
-    length = await LPFDlockerlist.lockersCount();
-    for (let i = 0; i * limit < length.toNumber(); i += 1) {
-      const newLockers = await LPFDlockerlist.getUsers(i, limit);
       lockers.push(...newLockers);
     }
 
@@ -410,22 +369,22 @@ task("withdrawLP", "Withdraw LP from MFD")
       fs.readFileSync(`./export/${chainId}-frontend.json`).toString()
     );
 
-    const LPFD = await hre.ethers.getContractAt(
+    const MFD = await hre.ethers.getContractAt(
       "MultiFeeDistribution",
-      config.lpFeeDistribution
+      config.multiFeeDistribution
     );
 
     let lockers: string[] = [];
     const limit = 50;
     console.log("Reading Lockers...");
 
-    const LPFDlockerlist = await hre.ethers.getContractAt(
+    const MFDlockerlist = await hre.ethers.getContractAt(
       "LockerList",
-      await LPFD.userlist()
+      await MFD.userlist()
     );
-    const length = await LPFDlockerlist.lockersCount();
+    const length = await MFDlockerlist.lockersCount();
     for (let i = 0; i * limit < length.toNumber(); i += 1) {
-      const newLockers = await LPFDlockerlist.getUsers(i, limit);
+      const newLockers = await MFDlockerlist.getUsers(i, limit);
       lockers.push(...newLockers);
     }
 
@@ -437,7 +396,7 @@ task("withdrawLP", "Withdraw LP from MFD")
 
     let withdrawable = hre.ethers.BigNumber.from(0);
     for (const locker of lockers) {
-      const locks = await LPFD.lockInfo(locker);
+      const locks = await MFD.lockInfo(locker);
       for (const lock of locks) {
         if (lock.unlockTime.gt(taskArgs.timestamp)) {
           withdrawable = withdrawable.add(lock.amount);
@@ -446,8 +405,8 @@ task("withdrawLP", "Withdraw LP from MFD")
     }
 
     if (withdrawable.gt(0)) {
-      const receipt = await LPFD.recoverERC20(
-        await LPFD.stakingToken(),
+      const receipt = await MFD.recoverERC20(
+        await MFD.stakingToken(),
         withdrawable
       );
       await receipt.wait();

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -36,16 +36,9 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 		marketReferenceCurrencyPriceInUsdProxyAggregator = _marketReferenceCurrencyPriceInUsdProxyAggregator;
 	}
 
-	function getInterestRateStrategySlopes(DefaultReserveInterestRateStrategy interestRateStrategy)
-		internal
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	function getInterestRateStrategySlopes(
+		DefaultReserveInterestRateStrategy interestRateStrategy
+	) internal view returns (uint256, uint256, uint256, uint256) {
 		return (
 			interestRateStrategy.variableRateSlope1(),
 			interestRateStrategy.variableRateSlope2(),
@@ -59,12 +52,9 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 		return lendingPool.getReservesList();
 	}
 
-	function getReservesData(ILendingPoolAddressesProvider provider)
-		public
-		view
-		override
-		returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory)
-	{
+	function getReservesData(
+		ILendingPoolAddressesProvider provider
+	) public view override returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory) {
 		IAaveOracle oracle = IAaveOracle(provider.getPriceOracle());
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		address[] memory reserves = lendingPool.getReservesList();
@@ -144,9 +134,7 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 				baseCurrencyInfo.marketReferenceCurrencyUnit = baseCurrencyUnit;
 				baseCurrencyInfo.marketReferenceCurrencyPriceInUsd = int256(baseCurrencyUnit);
 			}
-		} catch (
-			bytes memory /*lowLevelData*/
-		) {
+		} catch (bytes memory /*lowLevelData*/) {
 			baseCurrencyInfo.marketReferenceCurrencyUnit = ETH_CURRENCY_UNIT;
 			baseCurrencyInfo.marketReferenceCurrencyPriceInUsd = marketReferenceCurrencyPriceInUsdProxyAggregator
 				.latestAnswer();
@@ -155,12 +143,10 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 		return (reservesData, baseCurrencyInfo);
 	}
 
-	function getUserReservesData(ILendingPoolAddressesProvider provider, address user)
-		external
-		view
-		override
-		returns (UserReserveData[] memory, uint8)
-	{
+	function getUserReservesData(
+		ILendingPoolAddressesProvider provider,
+		address user
+	) external view override returns (UserReserveData[] memory, uint8) {
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		address[] memory reserves = lendingPool.getReservesList();
 		DataTypes.UserConfigurationMap memory userConfig = lendingPool.getUserConfiguration(user);

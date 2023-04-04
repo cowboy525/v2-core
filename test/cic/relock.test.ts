@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { advanceTimeAndBlock } from "../../scripts/utils";
-import { MultiFeeDistribution } from "../../typechain-types";
+import { MultiFeeDistribution } from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -9,7 +9,7 @@ import {
   depositAndBorrowAll,
   zapIntoEligibility,
 } from "../shared/helpers";
-import { PriceProvider } from "../../typechain-types/contracts/price";
+import { PriceProvider } from "../../typechain/contracts/price";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { setupTest } from "../setup";
 
@@ -20,7 +20,7 @@ describe("Default Relock", () => {
   let user3: SignerWithAddress;
 
   let mfd: MultiFeeDistribution;
-  let lpFeeDistribution: MultiFeeDistribution;
+  let multiFeeDistribution: MultiFeeDistribution;
   let priceProvider: PriceProvider;
 
   let LOCK_DURATION = 0;
@@ -37,11 +37,11 @@ describe("Default Relock", () => {
     user3 = fixture.user3;
 
     mfd = fixture.multiFeeDistribution;
-    lpFeeDistribution = fixture.lpFeeDistribution;
+    multiFeeDistribution = fixture.multiFeeDistribution;
     priceProvider = fixture.priceProvider;
 
-    REWARDS_DURATION = (await mfd.REWARDS_DURATION()).toNumber();
-    LOCK_DURATION = (await mfd.DEFAULT_LOCK_DURATION()).toNumber();
+    REWARDS_DURATION = (await mfd.rewardsDuration()).toNumber();
+    LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
 
     // await chef.setDisableEligibilty(true);
     // await chef.setRewardsPerSecond("1000000000000000000", true);
@@ -62,7 +62,7 @@ describe("Default Relock", () => {
     await depositAndBorrowAll(bigDepositor, ["1000", "10000000"], deployData);
 
     // needs at least 1 claim to forward to MFD from MiddleFee
-    await lpFeeDistribution.connect(locker).getAllRewards();
+    await multiFeeDistribution.connect(locker).getAllRewards();
     await advanceTimeAndBlock(LOCK_DURATION / 4);
 
     await advanceTimeAndBlock(LOCK_DURATION / 4);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -38,20 +38,12 @@ contract WETHGateway is IWETHGateway, Ownable {
 	 * @param onBehalfOf address of the user who will receive the aTokens representing the deposit
 	 * @param referralCode integrators are assigned a referral code and can potentially receive rewards.
 	 **/
-	function depositETH(
-		address lendingPool,
-		address onBehalfOf,
-		uint16 referralCode
-	) external payable override {
+	function depositETH(address lendingPool, address onBehalfOf, uint16 referralCode) external payable override {
 		WETH.deposit{value: msg.value}();
 		ILendingPool(lendingPool).deposit(address(WETH), msg.value, onBehalfOf, referralCode);
 	}
 
-	function depositETHWithAutoDLP(
-		address lendingPool,
-		address onBehalfOf,
-		uint16 referralCode
-	) external payable {
+	function depositETHWithAutoDLP(address lendingPool, address onBehalfOf, uint16 referralCode) external payable {
 		WETH.deposit{value: msg.value}();
 		ILendingPool(lendingPool).depositWithAutoDLP(address(WETH), msg.value, onBehalfOf, referralCode);
 	}
@@ -62,11 +54,7 @@ contract WETHGateway is IWETHGateway, Ownable {
 	 * @param amount amount of aWETH to withdraw and receive native ETH
 	 * @param to address of the user who will receive native ETH
 	 */
-	function withdrawETH(
-		address lendingPool,
-		uint256 amount,
-		address to
-	) external override {
+	function withdrawETH(address lendingPool, uint256 amount, address to) external override {
 		IAToken aWETH = IAToken(ILendingPool(lendingPool).getReserveData(address(WETH)).aTokenAddress);
 		uint256 userBalance = aWETH.balanceOf(msg.sender);
 		uint256 amountToWithdraw = amount;
@@ -149,11 +137,7 @@ contract WETHGateway is IWETHGateway, Ownable {
 	 * @param to recipient of the transfer
 	 * @param amount amount to send
 	 */
-	function emergencyTokenTransfer(
-		address token,
-		address to,
-		uint256 amount
-	) external onlyOwner {
+	function emergencyTokenTransfer(address token, address to, uint256 amount) external onlyOwner {
 		IERC20(token).transfer(to, amount);
 	}
 

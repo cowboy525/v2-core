@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import {ILendingPoolAddressesProvider} from "./ILendingPoolAddressesProvider.sol";
@@ -80,13 +80,12 @@ interface IUiPoolDataProviderV3 {
 
 	function getReservesList(ILendingPoolAddressesProvider provider) external view returns (address[] memory);
 
-	function getReservesData(ILendingPoolAddressesProvider provider)
-		external
-		view
-		returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory);
+	function getReservesData(
+		ILendingPoolAddressesProvider provider
+	) external view returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory);
 
-	function getUserReservesData(ILendingPoolAddressesProvider provider, address user)
-		external
-		view
-		returns (UserReserveData[] memory, uint8);
+	function getUserReservesData(
+		ILendingPoolAddressesProvider provider,
+		address user
+	) external view returns (UserReserveData[] memory, uint8);
 }

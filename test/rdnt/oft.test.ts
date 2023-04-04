@@ -1,220 +1,268 @@
-import { EtherscanProvider } from "@ethersproject/providers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
-import { BigNumber } from "ethers";
-import { ethers } from "hardhat";
-import { LZEndpointMock, MockPriceProvider, RadiantOFT } from "../../typechain-types"
-import { advanceTimeAndBlock } from "../shared/helpers";
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import chai from 'chai';
+import {solidity} from 'ethereum-waffle';
+import {BigNumber} from 'ethers';
+import {ethers} from 'hardhat';
+import {getConfigForChain} from '../../config';
+import {DeployConfig} from '../../scripts/deploy/types';
+import {LZEndpointMock, MockPriceProvider, RadiantOFT} from '../../typechain';
+import {StaticPriceProvider} from '../../typechain/contracts/test/StaticPriceProvider';
+import {advanceTimeAndBlock} from '../shared/helpers';
 chai.use(solidity);
-const { expect } = chai;
+const {expect} = chai;
 
-// TODO: match new mint + bridge interface
-xdescribe("Radiant OFT: ", function () {
-    const chainIdSrc = 1
-    const chainIdDst = 2
-    const name = "Radiant OFT"
-    const symbol = "OFT"
-    const srcSupply = ethers.utils.parseUnits("1000000", 18)
-    const dstSupply = ethers.utils.parseUnits("500000", 18)
-    const adapterParam = ethers.utils.solidityPack(["uint16", "uint256"], [1, 225000])
-    const sendQty = ethers.utils.parseUnits("1", 18) // amount to be sent across
+describe('Radiant OFT: ', function () {
+	const {deployments, getNamedAccounts} = hre;
+	const {deploy, execute, read} = deployments;
 
-    let owner: SignerWithAddress;
-    let warlock: SignerWithAddress;
-    let dao: SignerWithAddress;
-    let trez: SignerWithAddress;
-    let lzEndpointSrcMock: LZEndpointMock;
-    let lzEndpointDstMock: LZEndpointMock;
-    let OFTSrc: RadiantOFT;
-    let OFTDst: RadiantOFT;
-    let priceProvider: MockPriceProvider;
+	const chainIdSrc = 1;
+	const chainIdDst = 2;
 
-    before(async function () {
-        owner = (await ethers.getSigners())[0]
-        dao = (await ethers.getSigners())[1]
-        trez = (await ethers.getSigners())[1]
-        warlock = (await ethers.getSigners())[1]
-    })
+	const dstSupply = ethers.utils.parseUnits('500000', 18);
+	const sendQty = ethers.utils.parseUnits('1', 18); // amount to be sent across
+	const adapterParams: string = "0x";
 
-    beforeEach(async function () {
-        const LZEndpointMockFactory = await ethers.getContractFactory("LZEndpointMock")
-        const RadiantOftFactroy = await ethers.getContractFactory("RadiantOFT");
+	let config: DeployConfig;
+	let srcSupply: BigNumber;
 
-        lzEndpointSrcMock = await LZEndpointMockFactory.deploy(chainIdSrc)
-        lzEndpointDstMock = await LZEndpointMockFactory.deploy(chainIdDst)
+	let deployer: SignerWithAddress;
+	let dao: string;
+	let treasury: string;
+	let admin: SignerWithAddress;
+	let OFTSrc: RadiantOFT;
+	let OFTDst: RadiantOFT;
+	let priceProvider: MockPriceProvider;
 
-        // create two oft instances
-        OFTSrc = await RadiantOftFactroy.deploy(name, symbol, lzEndpointSrcMock.address, dao.address, trez.address, srcSupply);
-        OFTDst = await RadiantOftFactroy.deploy(name, symbol, lzEndpointSrcMock.address, dao.address, trez.address, srcSupply);
+	before(async function () {
+		({deployer, treasury, dao, admin} = await getNamedAccounts());
+		config = getConfigForChain(await hre.getChainId()).config;
+	});
 
-        // internal bookkeeping for endpoints (not part of a real deploy, just for this test)
-        await lzEndpointSrcMock.setDestLzEndpoint(OFTDst.address, lzEndpointDstMock.address)
-        await lzEndpointDstMock.setDestLzEndpoint(OFTSrc.address, lzEndpointSrcMock.address)
+	beforeEach(async function () {
+		// await deployments.fixture(["TokenTag"]);
+		await deployments.fixture(['oft', 'ownership']);
 
-        // set each contracts source address so it can send to each other
-        await OFTSrc.setTrustedRemote(chainIdDst, OFTDst.address) // for A, set B
-        await OFTDst.setTrustedRemote(chainIdSrc, OFTSrc.address) // for B, set A
+		OFTSrc = <RadiantOFT>await ethers.getContract('RadiantOFT');
+		await deploy('LZEndpointDstMock', {
+			contract: 'LZEndpointMock',
+			from: deployer,
+			log: true,
+			waitConfirmations: 1,
+			skipIfAlreadyDeployed: false,
+			args: [chainIdDst],
+		});
+		await deploy('StaticPriceProvider', {
+			contract: 'StaticPriceProvider',
+			from: deployer,
+			log: true,
+			waitConfirmations: 1,
+			skipIfAlreadyDeployed: false,
+			args: [],
+		});
 
-        //set destination min gas
-        // await OFTSrc.setMinDstGasLookup(chainIdDst, await OFTSrc.FUNCTION_TYPE_SEND(), 225000)
-        // await OFTDst.setMinDstGasLookup(chainIdSrc, await OFTDst.FUNCTION_TYPE_SEND(), 225000)
+		const lzEndpointSrcMock = await ethers.getContract('LZEndpointSrcMock');
+		const lzEndpointDstMock = await ethers.getContract('LZEndpointDstMock');
 
-        // await OFTSrc.setUseCustomAdapterParams(true)
-        // await OFTDst.setUseCustomAdapterParams(true)
+		await deploy('RadiantOFTDst', {
+			contract: 'RadiantOFT',
+			from: deployer,
+			log: true,
+			waitConfirmations: 1,
+			skipIfAlreadyDeployed: false,
+			args: [config.TOKEN_NAME, config.SYMBOL, lzEndpointDstMock.address, dao, treasury, dstSupply],
+		});
+		OFTDst = <RadiantOFT>await ethers.getContract('RadiantOFTDst');
+		await execute('RadiantOFTDst', {from: deployer, log: true}, 'transferOwnership', admin);
 
-        const mockPriceProviderFactory = await ethers.getContractFactory("MockPriceProvider");
-        priceProvider = await mockPriceProviderFactory.deploy();
-        await priceProvider.deployed();
-    })
+		// // internal bookkeeping for endpoints (not part of a real deploy, just for this test)
+		await execute(
+			'LZEndpointSrcMock',
+			{from: deployer},
+			'setDestLzEndpoint',
+			OFTDst.address,
+			lzEndpointDstMock.address
+		);
+		await execute(
+			'LZEndpointDstMock',
+			{from: deployer},
+			'setDestLzEndpoint',
+			OFTSrc.address,
+			lzEndpointSrcMock.address
+		);
+		if (admin.address != await OFTSrc.owner()) {
+			await execute(
+				'RadiantOFT',
+				{
+					from: deployer,
+					log: true,
+				},
+				'transferOwnership',
+				admin
+			);
+		}
+		await execute('RadiantOFT', {from: admin}, 'setTrustedRemote', chainIdDst, OFTDst.address);
+		await execute('RadiantOFTDst', {from: admin}, 'setTrustedRemote', chainIdSrc, OFTSrc.address);
 
-    it("sendFrom()", async function () {
-        // ensure they're both starting with correct amounts
-        expect(await OFTSrc.balanceOf(dao.address)).to.be.equal(srcSupply)
-        expect(await OFTDst.balanceOf(dao.address)).to.be.equal("0")
+		priceProvider = <StaticPriceProvider>await ethers.getContract('StaticPriceProvider');
 
-        // can transfer accross chain
-        await OFTSrc.sendFrom(
-            owner.address,
-            chainIdDst,
-            ethers.utils.solidityPack(["address"], [owner.address]),
-            sendQty,
-            owner.address,
-            ethers.constants.AddressZero,
-            "0x"
-        )
+		srcSupply = await OFTSrc.balanceOf(dao);
+	});
 
-        await expect(
-            OFTSrc.estimateSendFee(
-                chainIdDst,
-                owner.address,
-                sendQty,
-                true,
-                "0x"
-            )
-        ).to.be.not.reverted;
+	it('minted', async function () {
+		// ensure they're both starting with correct amounts
+		let daoSrcBal = await read('RadiantOFT', {from: dao}, 'balanceOf', dao);
+		let daoDstBal = await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao);
+		expect(daoSrcBal).to.be.equal(srcSupply);
+		expect(daoDstBal).to.be.equal(dstSupply);
+	});
 
-        // verify tokens burned on source chain and minted on destination chain
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply.sub(sendQty))
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal(sendQty)
-    })
+	xit('admin perms', async function () {
+		await expect(execute('RadiantOFT', {from: dao}, 'setFee', 1000)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
 
-    it("bridge()", async function () {
-        await OFTSrc.setFee(1000);
-        await OFTSrc.setPriceProvider(priceProvider.address);
-        await advanceTimeAndBlock(3601);
-        await priceProvider.update();
+		let expectedFee = 1234;
+		await execute('RadiantOFT', {from: admin}, 'setFee', expectedFee);
+		let actualFee = await read('RadiantOFT', 'feeRatio');
+		expect(actualFee).equals(expectedFee);
+	});
 
-        // ensure they're both starting with correct amounts
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply)
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal("0")
+	it('sendFrom()', async function () {
+		// ensure they're both starting with correct amounts
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
 
-        const priceInEth = await priceProvider.getTokenPrice();
-        const priceDecimals = await priceProvider.decimals();
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
 
-        const fee = await OFTSrc.getBridgeFee(sendQty);
-        const expectedFee = sendQty.mul(priceInEth).div(BigNumber.from(10).pow(priceDecimals)).mul(1000).div(10_000)
-        expect(fee).to.be.equal(expectedFee);
+		// let fees = await read(
+		// 	'RadiantOFT',
+		// 	{from: dao},
+		// 	'estimateSendFee',
+		// 	chainIdDst,
+		// 	toAddressBytes32,
+		// 	sendQty,
+		// 	false,
+		// 	adapterParams
+		// );
+		let fees = await OFTSrc.estimateSendFee(chainIdDst, toAddressBytes32, sendQty, false, adapterParams);
 
-        const beforeTreasuryBalance = await warlock.getBalance();
-        // can transfer accross chain
-        await OFTSrc.bridge(
-            sendQty,
-            chainIdDst,
-            { value: fee }
-        )
-        const afterTreasuryBalance = await warlock.getBalance();
+		await execute(
+			'RadiantOFT',
+			{from: dao, value: fees[0]},
+			'sendFrom',
+			dao,
+			chainIdDst,
+			toAddressBytes32,
+			sendQty,
+			{
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			}
+		);
 
-        expect(afterTreasuryBalance.sub(beforeTreasuryBalance)).to.be.equal(fee)
+		// verify tokens burned on source chain and minted on destination chain
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty));
+	});
 
-        // verify tokens burned on source chain and minted on destination chain
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply.sub(sendQty))
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal(sendQty)
-    })
+	it('full Bridge flow', async function () {
+		let feeVal = 1000;
+		await execute('RadiantOFT', {from: admin}, 'setFee', feeVal);
+		await execute('RadiantOFT', {from: admin}, 'setPriceProvider', priceProvider.address);
+		// await advanceTimeAndBlock(3601);
+		// await priceProvider.update();
 
-    it("bridge fails if exceeds max supply", async function () {
-        // ensure they're both starting with correct amounts
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply)
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal("0")
+		// ensure they're both starting with correct amounts
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
 
-        const sendAmount = dstSupply.add(1);
+		const priceInEth = await priceProvider.getTokenPrice();
+		const priceDecimals = await priceProvider.decimals();
 
-        // can transfer accross chain
-        await OFTSrc.bridge(
-            sendAmount,
-            chainIdDst
-        )
+		const fee = await read('RadiantOFT', {from: dao}, 'getBridgeFee', sendQty);
+		const expectedFee = sendQty.mul(priceInEth).div(BigNumber.from(10).pow(priceDecimals)).mul(feeVal).div(10_000);
 
-        // verify tokens burned on source chain and minted on destination chain
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply.sub(sendAmount))
+		expect(fee).to.be.equal(expectedFee);
 
-        // still zero, cuz dst chain txn failed
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal("0")
-    })
+		const beforeTreasuryBalance = await hre.ethers.provider.getBalance(treasury);
 
-    it("pauseBridge()", async function () {
-        // pause the transfers
-        await OFTDst.pause()
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
 
-        // transfer to the paused chain are not paused. Only outbound
-        await OFTSrc.sendFrom(
-            owner.address,
-            chainIdDst,
-            ethers.utils.solidityPack(["address"], [owner.address]),
-            sendQty,
-            owner.address,
-            ethers.constants.AddressZero,
-            "0x"
-        )
+		// can transfer accross chain
+		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
+			refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+			zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+			adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+		});
 
-        // verify tokens burned on source chain and minted on destination chain
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply.sub(sendQty))
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal(sendQty)
+		const afterTreasuryBalance = await hre.ethers.provider.getBalance(treasury);
+		expect(afterTreasuryBalance.sub(beforeTreasuryBalance)).to.be.equal(fee);
 
-        // cannot transfer back across chain due to pause
-        await expect(
-            OFTDst.sendFrom(
-                owner.address,
-                chainIdSrc,
-                ethers.utils.solidityPack(["address"], [owner.address]),
-                sendQty,
-                owner.address,
-                ethers.constants.AddressZero,
-                "0x"
-            )
-        ).to.be.revertedWith("Pausable: paused")
+		// verify tokens burned on source chain and minted on destination chain
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty));
+	});
 
-        await expect(
-            OFTDst.bridge(
-                sendQty,
-                chainIdSrc
-            )
-        ).to.be.revertedWith("Pausable: paused")
+	it('pauseBridge()', async function () {
+		// pause the transfers
+		await execute('RadiantOFTDst', {from: admin}, 'pause');
 
-        // verify tokens were not modified
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply.sub(sendQty))
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal(sendQty)
+		// transfer to the paused chain are not paused. Only outbound
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+		const fee = await read('RadiantOFT', {from: dao}, 'getBridgeFee', sendQty);
+		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
+			refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+			zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+			adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+		});
 
-        // unpause the transfers
-        await OFTDst.pauseBridge(false)
+		// verify tokens burned on source chain and minted on destination chain
+		let postTransferExpectedBalanceSrc = srcSupply.sub(sendQty);
+		let postTransferExpectedBalanceDst = dstSupply.add(sendQty);
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(postTransferExpectedBalanceSrc);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(postTransferExpectedBalanceDst);
 
-        // transfer succeeds
-        await OFTDst.sendFrom(
-            owner.address,
-            chainIdSrc,
-            ethers.utils.solidityPack(["address"], [owner.address]),
-            sendQty,
-            owner.address,
-            ethers.constants.AddressZero,
-            "0x"
-        )
+		// cannot transfer back across chain due to pause
+		await expect(
+			execute('RadiantOFTDst', {from: dao, value: fee}, 'sendFrom', dao, chainIdSrc, toAddressBytes32, sendQty, {
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			})
+		).to.be.revertedWith('Pausable: paused');
 
-        // verify tokens were sent back
-        expect(await OFTSrc.balanceOf(owner.address)).to.be.equal(srcSupply)
-        expect(await OFTDst.balanceOf(owner.address)).to.be.equal(0)
-    })
+		// verify tokens were not modified
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(postTransferExpectedBalanceSrc);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(postTransferExpectedBalanceDst);
 
-    it("pauseBridge() - reverts if not owner", async function () {
-        await expect(OFTDst.connect(warlock).pause()).to.be.revertedWith("Ownable: caller is not the owner")
-    })
+		// unpause the transfers
+		await execute('RadiantOFTDst', {from: admin}, 'unpause');
+
+		// transfer succeeds
+		await execute(
+			'RadiantOFTDst',
+			{from: dao, value: fee},
+			'sendFrom',
+			dao,
+			chainIdSrc,
+			toAddressBytes32,
+			sendQty,
+			{
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			}
+		);
+
+		// verify tokens were sent back
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
+	});
+
+	it('pauseBridge() - reverts if not owner', async function () {
+		await expect(execute('RadiantOFT', {from: dao}, 'pause')).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+	});
 });

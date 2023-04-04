@@ -1,254 +1,208 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import hre, { ethers, upgrades } from "hardhat";
-import { BalancerPoolHelper, RadiantOFT } from "../../typechain-types";
-import { DeployConfig } from "../../scripts/deploy/types";
-import { WETH } from "../../typechain-types/contracts/misc/WETH.sol";
-import { getConfigForChain } from "../../scripts/deploy/helpers/getConfig";
-import { MockToken } from "../../typechain-types/mocks";
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import hre, {ethers, upgrades} from 'hardhat';
+import {BalancerPoolHelper, RadiantOFT, WETH} from '../../typechain';
+import {DeployConfig} from '../../scripts/deploy/types';
+import {getConfigForChain} from '../../scripts/deploy/helpers/getConfig';
+import chai from 'chai';
+import {solidity} from 'ethereum-waffle';
+import {BigNumber} from 'ethers';
 chai.use(solidity);
-const { expect } = chai;
+const {expect} = chai;
 
 async function deployContract(contractName: string, opts: any, ...args: any) {
-  const factory = await ethers.getContractFactory(contractName, opts);
-  const contract = await factory.deploy(...args);
-  await contract.deployed();
-  return contract;
+	const factory = await ethers.getContractFactory(contractName, opts);
+	const contract = await factory.deploy(...args);
+	await contract.deployed();
+	return contract;
 }
 
-xdescribe("Balancer Pool Helper", function () {
-  let preTestSnapshotID: any;
-  let deployConfig: DeployConfig;
+xdescribe('Balancer Pool Helper', function () {
+	let preTestSnapshotID: any;
+	let deployConfig: DeployConfig;
 
-  let deployer: SignerWithAddress;
-  let dao: SignerWithAddress;
+	let deployer: SignerWithAddress;
+	let dao: SignerWithAddress;
 
-  let poolHelper: BalancerPoolHelper;
-  let wstETHPoolHelper: BalancerPoolHelper;
-  let wethContract: WETH;
-  let radiantToken: RadiantOFT;
-  let wstWETHPoolAddress: string;
-  let wstkETH: MockToken;
-  let wstETHToken: MockToken;
+	let poolHelper: BalancerPoolHelper;
+	let wethContract: WETH;
+	let radiantToken: RadiantOFT;
 
-  const pool1EthAmt = 5000;
-  const pool1OtherAmt = pool1EthAmt * 4;
+	const pool1EthAmt = 5000;
+	const pool1OtherAmt = pool1EthAmt * 4;
 
-  const ethAmt = ethers.utils.parseUnits(pool1EthAmt.toString(), 18);
-  const wstkETHAmt = ethers.utils.parseUnits(pool1OtherAmt.toString(), 18);
+	const ethAmt = ethers.utils.parseUnits('1', 18);
+	const rdntAmt = ethers.utils.parseUnits('40', 18);
+	const eightyPercent = ethers.BigNumber.from('800000000000000000');
+	const twentyPercent = ethers.BigNumber.from('200000000000000000');
+	const tokenWeights = [eightyPercent, twentyPercent];
 
-  beforeEach(async function () {
-    preTestSnapshotID = await hre.network.provider.send("evm_snapshot");
+	beforeEach(async function () {
+		preTestSnapshotID = await hre.network.provider.send('evm_snapshot');
 
-    const { chainId } = await ethers.provider.getNetwork();
-    deployConfig = getConfigForChain(chainId);
+		const {chainId} = await ethers.provider.getNetwork();
+		deployConfig = getConfigForChain(chainId);
 
-    [deployer, dao] = await ethers.getSigners();
+		[deployer, dao] = await ethers.getSigners();
 
-    wethContract = <WETH>await deployContract("WETH", {});
-    wstkETH = <MockToken>(
-      await deployContract("MockToken", {}, "wstkETH", "wstkETH", 18)
-    );
+		wethContract = <WETH>await deployContract('WETH', {});
 
-    radiantToken = <RadiantOFT>(
-      await deployContract(
-        "RadiantOFT",
-        {},
-        deployConfig.TOKEN_NAME,
-        deployConfig.SYMBOL,
-        deployConfig.LZ_ENDPOINT,
-        dao.address,
-        deployConfig.TREASURY,
-        deployConfig.SUPPLY_MAX,
-      )
-    );
+		radiantToken = <RadiantOFT>(
+			await deployContract(
+				'RadiantOFT',
+				{},
+				deployConfig.TOKEN_NAME,
+				deployConfig.SYMBOL,
+				deployConfig.LZ_ENDPOINT,
+				dao.address,
+				deployConfig.TREASURY,
+				deployConfig.MINT_AMT
+			)
+		);
 
-    const poolHelperFactory = await ethers.getContractFactory(
-      "BalancerPoolHelper"
-    );
-    wstETHPoolHelper = <BalancerPoolHelper>(
-      await upgrades.deployProxy(
-        poolHelperFactory,
-        [
-          wethContract.address,
-          wstkETH.address,
-          wethContract.address,
-          "0x0000000000000000000000000000000000000000",
-          deployConfig.BAL_VAULT,
-          deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-          "0x0000000000000000000000000000000000000000",
-        ],
-        { initializer: "initialize" }
-      )
-    );
-    await wstETHPoolHelper.deployed();
+		const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
+		poolHelper = <BalancerPoolHelper>(
+			await upgrades.deployProxy(
+				poolHelperFactory,
+				[
+					wethContract.address,
+					radiantToken.address,
+					wethContract.address,
+					deployConfig.BAL_VAULT,
+					deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+				],
+				{initializer: 'initialize'}
+			)
+		);
+		await poolHelper.deployed();
+		await wethContract.deposit({
+			value: ethAmt,
+		});
 
-    await wstkETH.mint(deployer.address, wstkETHAmt);
-    await wethContract.deposit({
-      value: ethAmt,
-    });
+		await wethContract.transfer(poolHelper.address, ethAmt);
 
-    await wstkETH.transfer(wstETHPoolHelper.address, wstkETHAmt);
-    await wethContract.transfer(wstETHPoolHelper.address, ethAmt);
+		await radiantToken.connect(dao).transfer(poolHelper.address, rdntAmt);
+		await radiantToken.connect(dao).transfer(deployer.address, deployConfig.LP_INIT_RDNT);
 
-    await wstETHPoolHelper.initializePool();
+		await poolHelper.initializePool('RDNT-WETH', 'RDNTLP');
+		await poolHelper.setLockZap(deployer.address);
 
-    wstWETHPoolAddress = await wstETHPoolHelper.lpTokenAddr();
+		await wethContract.approve(poolHelper.address, ethers.constants.MaxUint256);
+		await radiantToken.approve(poolHelper.address, ethers.constants.MaxUint256);
+	});
 
-    poolHelper = <BalancerPoolHelper>(
-      await upgrades.deployProxy(
-        poolHelperFactory,
-        [
-          wstkETH.address,
-          radiantToken.address,
-          wethContract.address,
-          wstkETH.address,
-          deployConfig.BAL_VAULT,
-          deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-          wstWETHPoolAddress,
-        ],
-        { initializer: "initialize" }
-      )
-    );
-    await poolHelper.deployed();
+	describe('initializePool', async () => {
+		it('initializePool with different order', async () => {
+			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
+			const newPoolHelper = <BalancerPoolHelper>(
+				await upgrades.deployProxy(
+					poolHelperFactory,
+					[
+						wethContract.address,
+						radiantToken.address,
+						wethContract.address,
+						deployConfig.BAL_VAULT,
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+					],
+					{initializer: 'initialize'}
+				)
+			);
+			await newPoolHelper.deployed();
 
-    wstETHToken = await ethers.getContractAt(
-      "MockToken",
-      wstkETH.address || "0x0"
-    );
+			await wethContract.deposit({
+				value: deployConfig.LP_INIT_ETH,
+			});
+			await wethContract.transfer(newPoolHelper.address, deployConfig.LP_INIT_ETH);
+			await radiantToken.connect(dao).transfer(newPoolHelper.address, deployConfig.LP_INIT_RDNT);
 
-    const wstETHBalance = await wstETHToken.balanceOf(deployer.address);
-    if (wstETHBalance.isZero()) {
-      await wstETHToken.mint(deployer.address, deployConfig.LP_INIT_ETH);
-    }
-    await wstETHToken.transfer(poolHelper.address, deployConfig.LP_INIT_ETH);
+			await newPoolHelper.initializePool('RDNT-WETH', 'RDNTLP');
+			await newPoolHelper.setLockZap(deployer.address);
 
-    await radiantToken
-      .connect(dao)
-      .transfer(poolHelper.address, deployConfig.LP_INIT_RDNT);
-    await radiantToken
-      .connect(dao)
-      .transfer(deployer.address, deployConfig.LP_INIT_RDNT);
+			const amount = ethers.utils.parseUnits('1', 18);
+			await wethContract.deposit({
+				value: amount.mul(10),
+			});
+			await wethContract.approve(newPoolHelper.address, ethers.constants.MaxUint256);
+			await radiantToken.connect(dao).transfer(newPoolHelper.address, ethers.utils.parseUnits('100000', 18));
+			await newPoolHelper.zapWETH(amount);
+		});
 
-    await poolHelper.initializePool();
+		it('sortTokens: IDENTICAL_ADDRESSES', async () => {
+			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
+			poolHelper = <BalancerPoolHelper>(
+				await upgrades.deployProxy(
+					poolHelperFactory,
+					[
+						radiantToken.address,
+						radiantToken.address,
+						wethContract.address,
+						deployConfig.BAL_VAULT,
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+					],
+					{initializer: 'initialize'}
+				)
+			);
+			await poolHelper.deployed();
+			await expect(poolHelper.initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith(
+				'BalancerZap: IDENTICAL_ADDRESSES'
+			);
+		});
 
-    await wethContract.approve(poolHelper.address, ethers.constants.MaxUint256);
-    await radiantToken.approve(poolHelper.address, ethers.constants.MaxUint256);
-    await wstETHToken.approve(poolHelper.address, ethers.constants.MaxUint256);
-  });
-
-  describe("initializePool", async () => {
-    it("initializePool with different order", async () => {
-      const poolHelperFactory = await ethers.getContractFactory(
-        "BalancerPoolHelper"
-      );
-      const newPoolHelper = <BalancerPoolHelper>(
-        await upgrades.deployProxy(
-          poolHelperFactory,
-          [
-            radiantToken.address,
-            wstkETH.address,
-            wethContract.address,
-            wstkETH.address,
-            deployConfig.BAL_VAULT,
-            deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-            wstWETHPoolAddress,
-          ],
-          { initializer: "initialize" }
-        )
-      );
-      await newPoolHelper.deployed();
-
-      await wstETHToken.mint(deployer.address, deployConfig.LP_INIT_ETH);
-      await wstETHToken.transfer(
-        newPoolHelper.address,
-        deployConfig.LP_INIT_ETH
-      );
-      await radiantToken
-        .connect(dao)
-        .transfer(newPoolHelper.address, deployConfig.LP_INIT_RDNT);
-
-      await newPoolHelper.initializePool();
-
-      const amount = ethers.utils.parseUnits("1", 18);
-      await wethContract.deposit({
-        value: amount.mul(10),
-      });
-      await wethContract.approve(
-        newPoolHelper.address,
-        ethers.constants.MaxUint256
-      );
-      await radiantToken
-        .connect(dao)
-        .transfer(newPoolHelper.address, ethers.utils.parseUnits("100000", 18));
-      await newPoolHelper.zapWETH(amount);
-    });
-
-    it("sortTokens: IDENTICAL_ADDRESSES", async () => {
-      const poolHelperFactory = await ethers.getContractFactory(
-        "BalancerPoolHelper"
-      );
-      poolHelper = <BalancerPoolHelper>(
-        await upgrades.deployProxy(
-          poolHelperFactory,
-          [
-            radiantToken.address,
-            radiantToken.address,
-            wethContract.address,
-            wstkETH.address,
-            deployConfig.BAL_VAULT,
-            deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-            wstWETHPoolAddress,
-          ],
-          { initializer: "initialize" }
-        )
-      );
-      await poolHelper.deployed();
-      await expect(poolHelper.initializePool()).to.be.revertedWith(
-        "BalancerZap: IDENTICAL_ADDRESSES"
-      );
-    });
-
-    it("sortTokens: ZERO_ADDRESS", async () => {
-      const poolHelperFactory = await ethers.getContractFactory(
-        "BalancerPoolHelper"
-      );
-      poolHelper = <BalancerPoolHelper>(
-        await upgrades.deployProxy(
-          poolHelperFactory,
-          [
-            ethers.constants.AddressZero,
-            radiantToken.address,
-            wethContract.address,
-            wstkETH.address,
-            deployConfig.BAL_VAULT,
-            deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-            wstWETHPoolAddress,
-          ],
-          { initializer: "initialize" }
-        )
-      );
-      await poolHelper.deployed();
-      await expect(poolHelper.initializePool()).to.be.revertedWith(
+		it('sortTokens: ZERO_ADDRESS', async () => {
+			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
+			await expect(
+				(poolHelper = <BalancerPoolHelper>(
+					upgrades.deployProxy(
+						poolHelperFactory,
+						[
+							ethers.constants.AddressZero,
+							radiantToken.address,
+							wethContract.address,
+							deployConfig.BAL_VAULT,
+							deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+						],
+						{initializer: 'initialize'}
+					)
+				))
+			).to.be.revertedWith('inTokenAddr is 0 address');
+			/*await poolHelper.deployed();
+      await expect(poolHelper.initializePool("RDNT-WETH", "RDNTLP")).to.be.revertedWith(
         "BalancerZap: ZERO_ADDRESS"
-      );
-    });
-  });
+      );*/
+		});
+	});
 
-  it("Other functions work", async () => {
-    expect(await poolHelper.quoteFromToken("100000000000000")).to.be.gt(0);
+	it('check LP Price', async () => {
+		const lpAddr = await poolHelper.lpTokenAddr();
+		const lpToken = await ethers.getContractAt('ERC20', lpAddr);
+		const lpSupply = await lpToken.totalSupply();
+		console.log('supply', lpSupply.toString());
+		console.log('eth amount', ethAmt.toString());
+		console.log('rdnt amount', rdntAmt.toString());
 
-    const amount = ethers.utils.parseUnits("1", 18);
+		const rdntPriceInEth = BigNumber.from('10000000');
+		const ethPriceInEth = BigNumber.from('100000000');
 
-    await wethContract.deposit({
-      value: amount.mul(10),
-    });
-    await poolHelper.zapWETH(amount);
-    await poolHelper.zapTokens(amount, amount);
-  });
+		const lpPrice = await poolHelper.getLpPrice(rdntPriceInEth);
+		console.log('lp price', lpPrice.toString());
 
-  afterEach(async () => {
-    await hre.network.provider.send("evm_revert", [preTestSnapshotID]);
-  });
+		const expectedPrice = rdntPriceInEth.mul(rdntAmt).add(ethPriceInEth.mul(ethAmt)).div(lpSupply);
+		console.log('expected price', expectedPrice.toString());
+		expect(lpPrice).to.be.equal(expectedPrice);
+	});
+
+	it('Other functions work', async () => {
+		expect(await poolHelper.quoteFromToken('100000000000000')).to.be.gt(0);
+
+		const amount = ethers.utils.parseUnits('1', 18);
+
+		await wethContract.deposit({
+			value: amount.mul(10),
+		});
+		await poolHelper.zapWETH(amount);
+		await poolHelper.zapTokens(amount, amount);
+	});
+
+	afterEach(async () => {
+		await hre.network.provider.send('evm_revert', [preTestSnapshotID]);
+	});
 });

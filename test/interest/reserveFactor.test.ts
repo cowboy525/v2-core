@@ -12,7 +12,7 @@ import {
   MockERC20,
   MockToken,
   RadiantOFT,
-} from "../../typechain-types";
+} from "../../typechain";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
@@ -33,7 +33,6 @@ describe("Reserve Factor", () => {
   let lendingPool: LendingPool;
   let multiFeeDistribution: MultiFeeDistribution;
   let middleFeeDistribution: MiddleFeeDistribution;
-  let lpFeeDistribution: MultiFeeDistribution;
   let radiantToken: RadiantOFT;
   let aTokensAndRatesHelper: ATokensAndRatesHelper;
   let lendingPoolAddressesProvider: LendingPoolAddressesProvider;
@@ -42,7 +41,6 @@ describe("Reserve Factor", () => {
   const usdcPerAccount = ethers.utils.parseUnits("100000000", 6);
   const borrowAmt = ethers.utils.parseUnits("10000000", 6);
 
-  const lpRewardRatio = 5000;
   const skipDuration = 10000;
 
   let reward0: BigNumber;
@@ -80,14 +78,11 @@ describe("Reserve Factor", () => {
     lendingPool = fixture.lendingPool;
     multiFeeDistribution = fixture.multiFeeDistribution;
     radiantToken = fixture.rdntToken;
-    lpFeeDistribution = fixture.lpFeeDistribution;
     middleFeeDistribution = fixture.middleFeeDistribution;
 
-    await middleFeeDistribution.setLpLockingRewardRatio(lpRewardRatio);
-
     const LPToken = <MockToken>await ethers.getContractAt("MockToken", deployData.stakingToken);
-    await LPToken.approve(lpFeeDistribution.address, ethers.constants.MaxUint256);
-    await lpFeeDistribution.stake(ethers.utils.parseEther("10"), deployer.address, 0);
+    await LPToken.approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
+    await multiFeeDistribution.stake(ethers.utils.parseEther("10"), deployer.address, 0);
     // skip initial delay
     await advanceTimeAndBlock(4000);
 

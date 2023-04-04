@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.12;
+pragma abicoder v2;
+
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "../../interfaces/IBaseOracle.sol";
 import "../../interfaces/IPoolHelper.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
@@ -28,34 +29,31 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	/// @notice Base oracle contract
 	IBaseOracle public oracle;
 
+	bool private usePool;
+
 	/**
 	 * @notice Initializer
 	 * @param _baseTokenPriceInUsdProxyAggregator Chainlink aggregator for USD price of base token
 	 * @param _poolHelper Pool helper contract - Uniswap/Balancer
-	 * @param _oracle Base oracle contract
 	 */
 	function initialize(
 		IChainlinkAggregator _baseTokenPriceInUsdProxyAggregator,
-		IPoolHelper _poolHelper,
-		IBaseOracle _oracle
+		IPoolHelper _poolHelper
 	) public initializer {
 		require(address(_baseTokenPriceInUsdProxyAggregator) != (address(0)), "Not a valid address");
 		require(address(_poolHelper) != (address(0)), "Not a valid address");
-		require(address(_oracle) != (address(0)), "Not a valid address");
 		__Ownable_init();
 
 		poolHelper = _poolHelper;
 		baseTokenPriceInUsdProxyAggregator = _baseTokenPriceInUsdProxyAggregator;
-		oracle = _oracle;
-
-		update();
+		usePool = true;
 	}
 
 	/**
 	 * @notice Update oracles.
 	 */
 	function update() public {
-		if (oracle.canUpdate()) {
+		if (address(oracle) != address(0) && oracle.canUpdate()) {
 			oracle.update();
 		}
 	}
@@ -63,15 +61,27 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	/**
 	 * @notice Returns the latest price in eth.
 	 */
-	function getTokenPrice() public view returns (uint256) {
-		return oracle.latestAnswerInEth();
+	function getTokenPrice() public view returns (uint256 priceInEth) {
+		if (usePool) {
+			// use sparingly, TWAP/CL otherwise
+			priceInEth = poolHelper.getPrice();
+		} else {
+			priceInEth = oracle.latestAnswerInEth();
+		}
 	}
 
 	/**
 	 * @notice Returns the latest price in USD.
 	 */
-	function getTokenPriceUsd() public view returns (uint256) {
-		return oracle.latestAnswer();
+	function getTokenPriceUsd() public view returns (uint256 price) {
+		if (usePool) {
+			// use sparingly, TWAP/CL otherwise
+			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
+			uint256 priceInEth = poolHelper.getPrice();
+			price = priceInEth.mul(ethPrice).div(10 ** 8);
+		} else {
+			price = oracle.latestAnswer();
+		}
 	}
 
 	/**
@@ -91,7 +101,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
 		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
-		price = lpPriceInEth.mul(ethPrice).div(10**8);
+		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
 	}
 
 	/**
@@ -99,6 +109,25 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function getLpTokenAddress() public view returns (address) {
 		return poolHelper.lpTokenAddr();
+	}
+
+	function setOracle(address _newOracle) external onlyOwner {
+		require(_newOracle != address(0));
+		oracle = IBaseOracle(_newOracle);
+	}
+
+	function setPoolHelper(address _poolHelper) external onlyOwner {
+		poolHelper = IPoolHelper(_poolHelper);
+		require(getLpTokenPrice() != 0, "invalid oracle");
+	}
+
+	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
+		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
+		require(getLpTokenPriceUsd() != 0, "invalid oracle");
+	}
+
+	function setUsePool(bool _usePool) external onlyOwner {
+		usePool = _usePool;
 	}
 
 	/**

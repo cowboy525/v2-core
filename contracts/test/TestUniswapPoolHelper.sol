@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -9,12 +9,7 @@ import "../radiant/zap/helpers/UniswapPoolHelper.sol";
 contract TestUniswapPoolHelper is UniswapPoolHelper {
 	using SafeERC20 for IERC20;
 
-	function swap(
-		uint256 _amount,
-		address,
-		address,
-		address
-	) public returns (uint256 amountOut) {
+	function swap(uint256 _amount, address, address, address) public returns (uint256 amountOut) {
 		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
 		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
 

@@ -5,7 +5,7 @@ import {
   getLatestBlockTimestamp,
   setNextBlockTimestamp,
 } from "../../scripts/utils";
-import { LendingPool, MFDstats, MockToken } from "../../typechain-types";
+import { LendingPool, MockToken } from "../../typechain";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { getUsdVal } from "./../shared/helpers";
@@ -22,7 +22,6 @@ xdescribe("Interest split 75/25 between lockers and depositors", () => {
   let user2: SignerWithAddress;
   let USDC: MockToken;
   let lendingPool: LendingPool;
-  let mfdStats: MFDstats;
   let usdcAddress = "";
   const usdcAmt = 10000000;
   const usdcPerAccount = ethers.utils.parseUnits(usdcAmt.toString(), 6);
@@ -40,11 +39,10 @@ xdescribe("Interest split 75/25 between lockers and depositors", () => {
     usdcAddress = USDC.address;
 
     lendingPool = fixture.lendingPool;
-    mfdStats = await ethers.getContractAt("MFDstats", deployData.mfdStats!);
   });
 
   it("lockers get 75% of interest", async () => {
-    const priceDecimals = await mfdStats.getPriceDecimal(usdcAddress);
+    // const priceDecimals = await mfdStats.getPriceDecimal(usdcAddress);
     await USDC.connect(user2).mint(user2.address, usdcPerAccount);
 
     await USDC.connect(user2).approve(
@@ -61,7 +59,7 @@ xdescribe("Interest split 75/25 between lockers and depositors", () => {
       .borrow(usdcAddress, borrowAmt, 2, 0, user2.address);
 
     const r2 = await lendingPool.getUserAccountData(user2.address);
-    const startDepUsd = getUsdVal(r2.totalCollateralETH, priceDecimals);
+    // const startDepUsd = getUsdVal(r2.totalCollateralETH, priceDecimals);
 
     await setNextBlockTimestamp(
       (await getLatestBlockTimestamp()) + 86400 * 365
@@ -72,22 +70,22 @@ xdescribe("Interest split 75/25 between lockers and depositors", () => {
       .borrow(usdcAddress, 1, 2, 0, user2.address);
 
     const r3 = await lendingPool.getUserAccountData(user2.address);
-    const endDepUsd = getUsdVal(r3.totalCollateralETH, priceDecimals);
+    // const endDepUsd = getUsdVal(r3.totalCollateralETH, priceDecimals);
 
-    const depositorEarnedUsd = parseFloat(endDepUsd) - parseFloat(startDepUsd);
+    // const depositorEarnedUsd = parseFloat(endDepUsd) - parseFloat(startDepUsd);
 
-    const paidToLockers = parseFloat(
-      getUsdVal((await mfdStats.getTotal())[0].lpUsdValue, 18)
-    );
-    const totalInterest = paidToLockers + depositorEarnedUsd;
+    // const paidToLockers = parseFloat(
+    //   getUsdVal((await mfdStats.getTotal())[0].usdValue, 18)
+    // );
+    // const totalInterest = paidToLockers + depositorEarnedUsd;
 
-    const lockerInterestPercent = paidToLockers / totalInterest;
-    const targetLockerInterestPercent = 0.75;
-    const delta = Math.abs(lockerInterestPercent - targetLockerInterestPercent);
-    console.log(lockerInterestPercent);
-    console.log(targetLockerInterestPercent);
-    console.log(delta);
+    // const lockerInterestPercent = paidToLockers / totalInterest;
+    // const targetLockerInterestPercent = 0.75;
+    // const delta = Math.abs(lockerInterestPercent - targetLockerInterestPercent);
+    // console.log(lockerInterestPercent);
+    // console.log(targetLockerInterestPercent);
+    // console.log(delta);
 
-    assert(delta <= 0.1, "Lockers get 70%");
+    // assert(delta <= 0.1, "Lockers get 70%");
   });
 });

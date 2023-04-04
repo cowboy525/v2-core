@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import {IInitializableDebtToken} from "./IInitializableDebtToken.sol";
 import {IAaveIncentivesController} from "./IAaveIncentivesController.sol";
@@ -62,12 +62,7 @@ interface IStableDebtToken is IInitializableDebtToken {
 	 * @param amount The amount of debt tokens to mint
 	 * @param rate The rate of the debt being minted
 	 **/
-	function mint(
-		address user,
-		address onBehalfOf,
-		uint256 amount,
-		uint256 rate
-	) external returns (bool);
+	function mint(address user, address onBehalfOf, uint256 amount, uint256 rate) external returns (bool);
 
 	/**
 	 * @dev Burns debt of `user`
@@ -99,15 +94,7 @@ interface IStableDebtToken is IInitializableDebtToken {
 	/**
 	 * @dev Returns the principal, the total supply and the average stable rate
 	 **/
-	function getSupplyData()
-		external
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint40
-		);
+	function getSupplyData() external view returns (uint256, uint256, uint256, uint40);
 
 	/**
 	 * @dev Returns the timestamp of the last update of the total supply

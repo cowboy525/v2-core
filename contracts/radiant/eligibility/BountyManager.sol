@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
-
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import "../../interfaces/IAToken.sol";
+import "../../interfaces/IMultiFeeDistribution.sol";
 import "../../interfaces/ILendingPoolAddressesProvider.sol";
 import "../../interfaces/ILendingPool.sol";
 import "../../interfaces/ILockZap.sol";
@@ -19,7 +19,7 @@ import "../../interfaces/IChefIncentivesController.sol";
 import "../../interfaces/IMultiFeeDistribution.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
-import "../../interfaces/IAutoCompounder.sol";
+import "../../interfaces/ICompounder.sol";
 
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
@@ -27,21 +27,20 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	address public rdnt;
 	address public weth;
-	address mfd;
-	address lpMfd;
-	address chef;
+	address public mfd;
+	address public chef;
 	address public priceProvider;
 	address public eligibilityDataProvider;
-	address autocompounder;
-	uint256 public HUNTER_SHARE;
+	address public compounder;
+	uint256 public hunterShare;
 	uint256 public baseBountyUsdTarget; // decimals 18
 	uint256 public maxBaseBounty;
 	uint256 public bountyBooster;
 	uint256 public bountyCount;
-	uint256 public minDLPBalance;
-	uint256 slippageLimit;
+	uint256 public minStakeAmount;
+	uint256 public slippageLimit;
 
-	// Array of available Bounty functions to run. See getLpMfdBounty, getChefBounty, etc.
+	// Array of available Bounty functions to run. See getMfdBounty, getChefBounty, etc.
 	mapping(uint256 => function(address, bool) returns (address, uint256, bool)) private bounties;
 
 	mapping(address => bool) public whitelist;
@@ -49,7 +48,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	modifier isWhitelisted() {
 		if (whitelistActive) {
-			require(whitelist[msg.sender], "!whiteliested");
+			require(whitelist[msg.sender] || msg.sender == address(this), "!whiteliested");
 		}
 		_;
 	}
@@ -62,12 +61,12 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	event BountyBoosterUpdated(uint256 _newVal);
 	event SlippageLimitUpdated(uint256 _newVal);
 	event BountyReserveEmpty(uint256 _bal);
+	event WhitelistActiveChanged(bool isActive);
 
 	/**
 	 * @notice Initialize
 	 * @param _rdnt RDNT address
 	 * @param _weth WETH address
-	 * @param _lpMfd LP MFD, to query bounties on expired locks + autocompounds
 	 * @param _mfd MFD, to send bounties as vesting RDNT to Hunter (user calling bounty)
 	 * @param _chef CIC, to query bounties for ineligible emissions
 	 * @param _priceProvider PriceProvider service, to get RDNT price for bounty quotes
@@ -79,50 +78,44 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function initialize(
 		address _rdnt,
 		address _weth,
-		address _lpMfd,
 		address _mfd,
 		address _chef,
 		address _priceProvider,
 		address _eligibilityDataProvider,
-		address _autocompounder,
+		address _compounder,
 		uint256 _hunterShare,
 		uint256 _baseBountyUsdTarget,
 		uint256 _maxBaseBounty,
 		uint256 _bountyBooster
 	) external initializer {
-		require(_rdnt != address(0));
-		require(_weth != address(0));
-		require(_lpMfd != address(0));
-		require(_mfd != address(0));
-		require(_chef != address(0));
-		require(_priceProvider != address(0));
-		require(_eligibilityDataProvider != address(0));
-		require(_autocompounder != address(0));
-		require(_hunterShare <= 10000);
-		require(_baseBountyUsdTarget != 0);
-		require(_maxBaseBounty != 0);
+		require(_rdnt != address(0), "Not a valid address");
+		require(_weth != address(0), "Not a valid address");
+		require(_mfd != address(0), "Not a valid address");
+		require(_chef != address(0), "Not a valid address");
+		require(_priceProvider != address(0), "Not a valid address");
+		require(_eligibilityDataProvider != address(0), "Not a valid address");
+		require(_compounder != address(0), "Not a valid address");
+		require(_hunterShare <= 10000, "Not a valid number");
+		require(_baseBountyUsdTarget != 0, "Not a valid number");
+		require(_maxBaseBounty != 0, "Not a valid number");
 
 		rdnt = _rdnt;
 		weth = _weth;
-		lpMfd = _lpMfd;
 		mfd = _mfd;
 		chef = _chef;
 		priceProvider = _priceProvider;
 		eligibilityDataProvider = _eligibilityDataProvider;
-		autocompounder = _autocompounder;
+		compounder = _compounder;
 
-		HUNTER_SHARE = _hunterShare;
+		hunterShare = _hunterShare;
 		baseBountyUsdTarget = _baseBountyUsdTarget;
 		bountyBooster = _bountyBooster;
 		maxBaseBounty = _maxBaseBounty;
 
-		bounties[1] = getLpMfdBounty;
+		bounties[1] = getMfdBounty;
 		bounties[2] = getChefBounty;
 		bounties[3] = getAutoCompoundBounty;
 		bountyCount = 3;
-
-		slippageLimit = 10;
-		minDLPBalance = uint256(5).mul(10 ** 18);
 
 		__Ownable_init();
 		__Pausable_init();
@@ -174,7 +167,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool _execute,
 		uint256 _actionType
 	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
-		if (msg.sender != address(this)) {
+		if (_execute && msg.sender != address(this)) {
 			require(_canBountyHunt(msg.sender), "inelig for bounties");
 		}
 
@@ -189,7 +182,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			bounty = bb;
 		} else {
 			if (totalBounty != 0) {
-				bounty = totalBounty.mul(HUNTER_SHARE).div(10000);
+				bounty = totalBounty.mul(hunterShare).div(10000);
 			}
 		}
 
@@ -201,10 +194,10 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		}
 	}
 
-	function _canBountyHunt(address _user) internal returns (bool) {
-		(, , uint256 lockedLP, , ) = IMFDPlus(lpMfd).lockedBalances(_user);
+	function _canBountyHunt(address _user) internal view returns (bool) {
+		(, , uint256 lockedLP, , ) = IMFDPlus(mfd).lockedBalances(_user);
 		bool isEmissionsEligible = IEligibilityDataProvider(eligibilityDataProvider).isEligibleForRewards(_user);
-		return lockedLP >= minDLPBalance && isEmissionsEligible;
+		return lockedLP >= minDLPBalance() && isEmissionsEligible;
 	}
 
 	/**
@@ -246,12 +239,12 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
 	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
-	function getLpMfdBounty(
+	function getMfdBounty(
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
-		issueBaseBounty = IMFDPlus(lpMfd).claimBounty(_user, _execute);
-		incentivizer = lpMfd;
+		issueBaseBounty = IMFDPlus(mfd).claimBounty(_user, _execute);
+		incentivizer = mfd;
 	}
 
 	/**
@@ -281,9 +274,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
-		(totalBounty) = IAutoCompound(autocompounder).claimCompound(_user, _execute);
+		(totalBounty) = ICompounder(compounder).claimCompound(_user, _execute);
 		issueBaseBounty = false;
-		incentivizer = autocompounder;
+		incentivizer = compounder;
 	}
 
 	/**
@@ -303,6 +296,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			IMFDPlus(mfd).mint(_to, bountyReserve, true);
 			emit BountyReserveEmpty(bountyReserve);
 			_pause();
+			return bountyReserve;
 		} else {
 			IERC20(rdnt).safeTransfer(address(mfd), _amount);
 			IMFDPlus(mfd).mint(_to, _amount, true);
@@ -323,8 +317,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		}
 	}
 
-	function setMinDLPBalance(uint256 _minDLPBalance) external onlyOwner {
-		minDLPBalance = _minDLPBalance;
+	function minDLPBalance() public view returns (uint256 min) {
+		uint256 lpTokenPrice = IPriceProvider(priceProvider).getLpTokenPriceUsd();
+		min = minStakeAmount.mul(1e8).div(lpTokenPrice);
+	}
+
+	function setMinStakeAmount(uint256 _minStakeAmount) external onlyOwner {
+		minStakeAmount = _minStakeAmount;
 	}
 
 	function setBaseBountyUsdTarget(uint256 _newVal) external onlyOwner {
@@ -334,7 +333,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	function setHunterShare(uint256 _newVal) external onlyOwner {
 		require(_newVal <= 10000, "override");
-		HUNTER_SHARE = _newVal;
+		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
 
@@ -349,12 +348,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	function setSlippageLimit(uint256 _newVal) external onlyOwner {
+		require(_newVal <= 10000, "Invalid slippage limit");
 		slippageLimit = _newVal;
 		emit SlippageLimitUpdated(_newVal);
 	}
 
 	function setBounties() external onlyOwner {
-		bounties[1] = getLpMfdBounty;
+		bounties[1] = getMfdBounty;
 		bounties[2] = getChefBounty;
 		bounties[3] = getAutoCompoundBounty;
 	}
@@ -369,5 +369,14 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	function changeWL(bool status) external onlyOwner {
 		whitelistActive = status;
+		emit WhitelistActiveChanged(status);
+	}
+
+	function pause() public onlyOwner {
+		_pause();
+	}
+
+	function unpause() public onlyOwner {
+		_unpause();
 	}
 }

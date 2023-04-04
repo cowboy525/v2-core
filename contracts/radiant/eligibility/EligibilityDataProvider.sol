@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
+
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../../interfaces/ILendingPool.sol";
 import "../../interfaces/IMultiFeeDistribution.sol";
@@ -13,13 +16,10 @@ import "../../interfaces/uniswap/IUniswapV2Factory.sol";
 import "../../interfaces/uniswap/IUniswapV2Pair.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
 /// @dev All function calls are currently implemented without side effects
-contract EligibilityDataProvider is Ownable {
+contract EligibilityDataProvider is OwnableUpgradeable {
 	using SafeMath for uint256;
 
 	/********************** Common Info ***********************/
@@ -88,11 +88,11 @@ contract EligibilityDataProvider is Ownable {
 	 * @param _middleFeeDistribution MiddleFeeDistribution address.
 	 * @param _priceProvider PriceProvider address.
 	 */
-	constructor(
+	function initialize(
 		ILendingPool _lendingPool,
 		IMiddleFeeDistribution _middleFeeDistribution,
 		IPriceProvider _priceProvider
-	) Ownable() {
+	) public initializer {
 		require(address(_lendingPool) != address(0), "Not a valid address");
 		require(address(_middleFeeDistribution) != (address(0)), "Not a valid address");
 		require(address(_priceProvider) != (address(0)), "Not a valid address");
@@ -102,6 +102,7 @@ contract EligibilityDataProvider is Ownable {
 		priceProvider = _priceProvider;
 		requiredDepositRatio = 500;
 		priceToleranceRatio = 9000;
+		__Ownable_init();
 	}
 
 	/********************** Setters ***********************/
@@ -111,6 +112,7 @@ contract EligibilityDataProvider is Ownable {
 	 * @param _chef address.
 	 */
 	function setChefIncentivesController(IChefIncentivesController _chef) external onlyOwner {
+		require(address(_chef) != address(0), "chef is 0 address");
 		chef = _chef;
 		emit ChefIncentivesControllerUpdated(_chef);
 	}
@@ -167,15 +169,11 @@ contract EligibilityDataProvider is Ownable {
 	 * @param user's address
 	 */
 	function lockedUsdValue(address user) public view returns (uint256) {
-		IMultiFeeDistribution lpFeeDistribution = IMultiFeeDistribution(
-			middleFeeDistribution.getLPFeeDistributionAddress()
-		);
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
 			middleFeeDistribution.getMultiFeeDistributionAddress()
 		);
-		(, , uint256 lockedLP, , ) = lpFeeDistribution.lockedBalances(user);
-		(, , uint256 lockedRdnt, , ) = multiFeeDistribution.lockedBalances(user);
-		return _lockedUsdValue(lockedLP, lockedRdnt);
+		(, , uint256 lockedLP, , ) = multiFeeDistribution.lockedBalances(user);
+		return _lockedUsdValue(lockedLP);
 	}
 
 	/**
@@ -224,57 +222,25 @@ contract EligibilityDataProvider is Ownable {
 	function lastEligibleTime(address user) public view returns (uint256 lastEligibleTimestamp) {
 		uint256 requiredValue = requiredUsdValue(user);
 
-		IMultiFeeDistribution lpFeeDistribution = IMultiFeeDistribution(
-			middleFeeDistribution.getLPFeeDistributionAddress()
-		);
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
 			middleFeeDistribution.getMultiFeeDistributionAddress()
 		);
-		LockedBalance[] memory lpLockData = lpFeeDistribution.lockInfo(user);
-		LockedBalance[] memory rndtLockData = multiFeeDistribution.lockInfo(user);
+		LockedBalance[] memory lpLockData = multiFeeDistribution.lockInfo(user);
 
 		uint256 lockedLP;
-		uint256 lockedRdnt;
 		uint256 i = lpLockData.length;
-		uint256 j = rndtLockData.length;
-		while (true) {
-			if (i == 0 && j == 0) {
-				// return 0;
-				break;
-			}
-			if (i == 0) {
-				j = j - 1;
-				lastEligibleTimestamp = rndtLockData[j].unlockTime;
-				lockedRdnt = lockedRdnt + rndtLockData[j].amount;
-			} else if (j == 0) {
-				i = i - 1;
-				lastEligibleTimestamp = lpLockData[i].unlockTime;
-				lockedLP = lockedLP + lpLockData[i].amount;
-			} else if (lpLockData[i - 1].unlockTime < rndtLockData[j - 1].unlockTime) {
-				j = j - 1;
-				lastEligibleTimestamp = rndtLockData[j].unlockTime;
-				lockedRdnt = lockedRdnt + rndtLockData[j].amount;
-			} else {
-				i = i - 1;
-				lastEligibleTimestamp = lpLockData[i].unlockTime;
-				lockedLP = lockedLP + lpLockData[i].amount;
-			}
+		while (i > 0) {
+			i = i - 1;
+			lastEligibleTimestamp = lpLockData[i].unlockTime;
+			lockedLP = lockedLP + lpLockData[i].amount;
 
-			if (_lockedUsdValue(lockedLP, lockedRdnt) >= requiredValue) {
+			if (_lockedUsdValue(lockedLP) >= requiredValue) {
 				break;
 			}
 		}
 	}
 
 	/********************** Operate functions ***********************/
-
-	/**
-	 * @notice Update token price
-	 */
-	function updatePrice() public {
-		priceProvider.update();
-	}
-
 	/**
 	 * @notice Refresh token amount for eligibility
 	 * @param user's address
@@ -283,8 +249,6 @@ contract EligibilityDataProvider is Ownable {
 		require(msg.sender == address(chef), "Can only be called by CIC");
 		assert(user != address(0));
 
-		updatePrice();
-
 		bool currentEligble = isEligibleForRewards(user);
 		if (currentEligble && disqualifiedTime[user] != 0) {
 			disqualifiedTime[user] = 0;
@@ -292,21 +256,21 @@ contract EligibilityDataProvider is Ownable {
 		lastEligibleStatus[user] = currentEligble;
 	}
 
+	/**
+	 * @notice Update token price
+	 */
+	function updatePrice() public {
+		priceProvider.update();
+	}
+
 	/********************** Internal functions ***********************/
 
 	/**
 	 * @notice Returns locked RDNT and LP token value in eth
 	 * @param lockedLP is locked lp amount
-	 * @param lockedRdnt is locked RDNT amount
 	 */
-	function _lockedUsdValue(uint256 lockedLP, uint256 lockedRdnt) internal view returns (uint256) {
-		uint256 rdntPrice = priceProvider.getTokenPriceUsd();
+	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {
 		uint256 lpPrice = priceProvider.getLpTokenPriceUsd();
-
-		uint256 userRdntValueUsd = lockedRdnt.mul(rdntPrice).div(10**18);
-		uint256 userLpValueUsd = lockedLP.mul(lpPrice).div(10**18);
-
-		uint256 usdLockedVal = userRdntValueUsd.add(userLpValueUsd);
-		return usdLockedVal;
+		return lockedLP.mul(lpPrice).div(10 ** 18);
 	}
 }

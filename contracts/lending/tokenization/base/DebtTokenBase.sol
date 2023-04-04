@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import {ILendingPool} from "../../../interfaces/ILendingPool.sol";
 import {ICreditDelegationToken} from "../../../interfaces/ICreditDelegationToken.sol";
@@ -75,11 +75,7 @@ abstract contract DebtTokenBase is
 		revert("APPROVAL_NOT_SUPPORTED");
 	}
 
-	function transferFrom(
-		address sender,
-		address recipient,
-		uint256 amount
-	) public virtual override returns (bool) {
+	function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
 		sender;
 		recipient;
 		amount;
@@ -98,11 +94,7 @@ abstract contract DebtTokenBase is
 		revert("ALLOWANCE_NOT_SUPPORTED");
 	}
 
-	function _decreaseBorrowAllowance(
-		address delegator,
-		address delegatee,
-		uint256 amount
-	) internal {
+	function _decreaseBorrowAllowance(address delegator, address delegatee, uint256 amount) internal {
 		uint256 newAllowance = _borrowAllowances[delegator][delegatee].sub(amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
 
 		_borrowAllowances[delegator][delegatee] = newAllowance;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "./BaseAdminUpgradeabilityProxy.sol";
 import "./InitializableUpgradeabilityProxy.sol";
@@ -19,11 +19,7 @@ contract InitializableAdminUpgradeabilityProxy is BaseAdminUpgradeabilityProxy, 
 	 * https://solidity.readthedocs.io/en/v0.4.24/abi-spec.html#function-selector-and-argument-encoding.
 	 * This parameter is optional, if no data is given the initialization call to proxied contract will be skipped.
 	 */
-	function initialize(
-		address logic,
-		address admin,
-		bytes memory data
-	) public payable {
+	function initialize(address logic, address admin, bytes memory data) public payable {
 		require(_implementation() == address(0));
 		InitializableUpgradeabilityProxy.initialize(logic, data);
 		assert(ADMIN_SLOT == bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1));

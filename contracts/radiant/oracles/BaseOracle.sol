@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/IBaseOracle.sol";
 
@@ -21,7 +21,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	address public ethChainlinkFeed;
 
 	/// @notice Enable/Disable fallback
-	bool public FALLBACK_ENABLED;
+	bool public fallbackEnabled;
 
 	/// @notice Oracle to be used as a fallback
 	IBaseOracle public fallbackOracle;
@@ -42,7 +42,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @param _fallback Oracle address for fallback.
 	 */
 	function setFallback(address _fallback) public onlyOwner {
-		require(_fallback != address(0));
+		require(_fallback != address(0), "invalid address");
 		fallbackOracle = IBaseOracle(_fallback);
 	}
 
@@ -52,7 +52,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 */
 	function enableFallback(bool _enabled) public onlyOwner {
 		require(address(fallbackOracle) != (address(0)), "no fallback set");
-		FALLBACK_ENABLED = _enabled;
+		fallbackEnabled = _enabled;
 	}
 
 	/**
@@ -61,13 +61,13 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @return price of token in decimal 8
 	 */
 	function latestAnswer() public view returns (uint256 price) {
-		// returns decimals 18
+		// returns decimals 8
 		uint256 priceInEth = latestAnswerInEth();
 
 		// returns decimals 8
 		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
 
-		price = priceInEth.mul(ethPrice).div(10**8);
+		price = priceInEth.mul(ethPrice).div(10 ** 8);
 	}
 
 	/**
@@ -76,12 +76,12 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @return price of token in decimal 8.
 	 */
 	function latestAnswerInEth() public view returns (uint256 price) {
-		if (!FALLBACK_ENABLED) {
+		if (!fallbackEnabled) {
 			price = consult();
 		} else {
 			price = fallbackOracle.consult();
 		}
-		price = price.div(10**10);
+		price = price.div(10 ** 10);
 	}
 
 	/**

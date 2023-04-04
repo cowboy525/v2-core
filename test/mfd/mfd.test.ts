@@ -4,7 +4,7 @@ import {
   advanceTimeAndBlock,
   getLatestBlockTimestamp,
 } from "../../scripts/utils";
-import { CustomERC20, LockerList, MultiFeeDistribution } from "../../typechain-types";
+import { CustomERC20, LockerList, MultiFeeDistribution } from "../../typechain";
 import HardhatDeployConfig from "../../config/31337";
 import { setupTest } from "../setup";
 import chai from "chai";
@@ -57,7 +57,7 @@ describe("MultiFeeDistribution", () => {
     const PriceProvider = await ethers.getContractFactory("PriceProvider");
     const priceProvider = await upgrades.deployProxy(
       PriceProvider,
-      [config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address, uniV2TwapOracle.address],
+      [config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
       { initializer: "initialize" }
     );
     await priceProvider.deployed();
@@ -226,7 +226,7 @@ describe("MultiFeeDistribution", () => {
     const users = await lockerlist.getUsers(0, 1);
     expect(users[0]).to.be.equal(user1.address);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 
     const balance0 = await radiant.balanceOf(user1.address);
@@ -292,7 +292,7 @@ describe("MultiFeeDistribution", () => {
     await radiant.mint(mfd.address, rewardAmount);
     await mfd.mint(mfd.address, rewardAmount, false);
 
-    const REWARDS_DURATION = await mfd.REWARDS_DURATION();
+    const REWARDS_DURATION = await mfd.rewardsDuration();
     await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
     const rewards1 = await mfd.claimableRewards(user1.address);
     const rewards2 = await mfd.claimableRewards(user2.address);
@@ -308,7 +308,7 @@ describe("MultiFeeDistribution", () => {
     const users = await lockerlist.getUsers(0, 1);
     expect(users[0]).to.be.equal(user1.address);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
     await mfd.connect(user1).relock();
 
@@ -333,7 +333,7 @@ describe("MultiFeeDistribution", () => {
 
     const lockedBal1 = (await mfd.lockedBalances(user2.address)).locked;
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
     await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
 
@@ -345,7 +345,7 @@ describe("MultiFeeDistribution", () => {
   it("withdrawing works for various lock lengths", async () => {
     await mfd.connect(user1).setRelock(false);
 
-    const LOCK_DURATION = (await mfd.DEFAULT_LOCK_DURATION()).div(3);
+    const LOCK_DURATION = (await mfd.defaultLockDuration()).div(3);
     const depositAmount = ethers.utils.parseUnits("100", 18);
     await radiant.mint(mfd.address, depositAmount.mul(10));
 
@@ -408,7 +408,7 @@ describe("MultiFeeDistribution", () => {
   it("lock 50 times", async () => {
     await mfd.connect(user1).setRelock(false);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     const depositAmount = ethers.utils.parseUnits("100", 18);
     await radiant.mint(mfd.address, depositAmount.mul(10));
 
@@ -492,7 +492,7 @@ describe("MultiFeeDistribution", () => {
 
   it("withdraw; empty earnings", async () => {
     const depositAmount = ethers.utils.parseUnits("100", 18);
-    const LOCK_DURATION = (await mfd.DEFAULT_LOCK_DURATION()).toNumber();
+    const LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
 
     await mfd.connect(user1).stake(depositAmount, user1.address, 0);
     await radiant.mint(mfd.address, depositAmount.mul(4));
@@ -521,7 +521,7 @@ describe("MultiFeeDistribution", () => {
     await radiant.mint(mfd.address, depositAmount);
     await mfd.mint(user1.address, depositAmount, false);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 
     const balance10 = await radiant.balanceOf(user1.address);
@@ -538,7 +538,7 @@ describe("MultiFeeDistribution", () => {
     await radiant.mint(mfd.address, depositAmount);
     await mfd.mint(user1.address, depositAmount, true);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
     await expect(
       mfd.connect(user1).withdraw(depositAmount.mul(2))
@@ -554,7 +554,7 @@ describe("MultiFeeDistribution", () => {
 
     await expect(mfd.connect(user1).withdraw(depositAmount)).to.be.reverted;
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
     await mfd.connect(user1).withdraw(depositAmount);
   });
@@ -583,7 +583,7 @@ describe("MultiFeeDistribution", () => {
     await radiant.mint(mfd.address, depositAmount);
     await mfd.mint(user1.address, depositAmount, true);
 
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
     await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 
     const balance10 = await radiant.balanceOf(user1.address);
@@ -603,7 +603,7 @@ describe("MultiFeeDistribution", () => {
     await radiant.mint(mfd.address, rewardAmount);
     await mfd.mint(mfd.address, rewardAmount, false);
 
-    const REWARDS_DURATION = await mfd.REWARDS_DURATION();
+    const REWARDS_DURATION = await mfd.rewardsDuration();
     await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
     const rewards1 = await mfd.claimableRewards(user1.address);
     const rewards2 = await mfd.claimableRewards(user2.address);
@@ -812,7 +812,7 @@ describe("MultiFeeDistribution", () => {
 
   it("Individual early exit; zero amount", async () => {
     const depositAmount = ethers.utils.parseUnits("100", 18);
-    const LOCK_DURATION = (await mfd.DEFAULT_LOCK_DURATION()).toNumber();
+    const LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
     await mfd.connect(user1).stake(depositAmount, user1.address, 0);
     await radiant.mint(mfd.address, depositAmount);
     await mfd.mint(user1.address, depositAmount.div(5), true);
@@ -823,7 +823,7 @@ describe("MultiFeeDistribution", () => {
 
   it("cleanExpiredLocksAndEarnings; it should work fine", async () => {
     const depositAmount = ethers.utils.parseUnits("100", 18);
-    const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
+    const LOCK_DURATION = await mfd.defaultLockDuration();
 
     await radiant.mint(mfd.address, depositAmount);
 
@@ -888,7 +888,7 @@ describe("MultiFeeDistribution", () => {
     await mockErc20.mint(mfd.address, depositAmount);
     await mfd.connect(user1).getReward([mockErc20.address]);
 
-    const LOOPBACK = (await mfd.REWARDS_LOOKBACK()).toNumber();
+    const LOOPBACK = (await mfd.rewardsLookback()).toNumber();
     await advanceTimeAndBlock(LOOPBACK * 2);
 
     await mockErc20.mint(mfd.address, depositAmount);
@@ -920,13 +920,13 @@ describe("MultiFeeDistribution", () => {
     const PriceProvider = await ethers.getContractFactory("PriceProvider");
     const priceProvider = await upgrades.deployProxy(
       PriceProvider,
-      [config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address, uniV2TwapOracle.address],
+      [config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
       { initializer: "initialize" }
     );
     await priceProvider.deployed();
 
     const mfdFactory = await ethers.getContractFactory("MultiFeeDistribution");
-    const lpfd = await upgrades.deployProxy(
+    const mfd = await upgrades.deployProxy(
       mfdFactory,
       [
         radiant.address,
@@ -956,9 +956,9 @@ describe("MultiFeeDistribution", () => {
     const mockMiddle = await mockMiddleFactory.deploy();
     await mockMiddle.deployed();
 
-    await lpfd.setMinters([deployer.address]);
-    await lpfd.setAddresses(mockChef.address, mockMiddle.address, deployer.address);
+    await mfd.setMinters([deployer.address]);
+    await mfd.setAddresses(mockChef.address, mockMiddle.address, deployer.address);
 
-    expect(await lpfd.totalBalance(user1.address)).to.be.equal(0);
+    expect(await mfd.totalBalance(user1.address)).to.be.equal(0);
   });
 });

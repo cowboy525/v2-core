@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import {Context} from "../../dependencies/openzeppelin/contracts/Context.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -29,11 +29,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 	ILendingPool internal _pool;
 	address internal _underlyingAsset;
 
-	constructor(
-		string memory name_,
-		string memory symbol_,
-		uint8 decimals_
-	) {
+	constructor(string memory name_, string memory symbol_, uint8 decimals_) {
 		_name = name_;
 		_symbol = symbol_;
 		_decimals = decimals_;
@@ -119,11 +115,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 	 * @param amount The amount of tokens being transferred
 	 * @return `true` if the transfer succeeds, `false` otherwise
 	 **/
-	function transferFrom(
-		address sender,
-		address recipient,
-		uint256 amount
-	) public virtual override returns (bool) {
+	function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
 		_transfer(sender, recipient, amount);
 		_approve(
 			sender,
@@ -160,11 +152,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 		return true;
 	}
 
-	function _transfer(
-		address sender,
-		address recipient,
-		uint256 amount
-	) internal virtual {
+	function _transfer(address sender, address recipient, uint256 amount) internal virtual {
 		require(sender != address(0), "ERC20: transfer from the zero address");
 		require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -230,11 +218,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 		}
 	}
 
-	function _approve(
-		address owner,
-		address spender,
-		uint256 amount
-	) internal virtual {
+	function _approve(address owner, address spender, uint256 amount) internal virtual {
 		require(owner != address(0), "ERC20: approve from the zero address");
 		require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -254,11 +238,7 @@ abstract contract IncentivizedERC20 is Context, IERC20, IERC20Metadata {
 		_decimals = newDecimals;
 	}
 
-	function _beforeTokenTransfer(
-		address from,
-		address to,
-		uint256 amount
-	) internal virtual {}
+	function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual {}
 
 	function getAssetPrice() external view returns (uint256) {
 		ILendingPoolAddressesProvider provider = _pool.getAddressesProvider();

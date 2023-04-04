@@ -12,17 +12,17 @@ import {
   UniswapPoolHelper,
   VariableDebtToken,
   TestnetLockZap,
-} from "../../typechain-types";
+	WETH
+} from "../../typechain";
 import { advanceTimeAndBlock } from "../shared/helpers";
-import { DeployConfig, DeployData } from "../../scripts/deploy/types";
+import { DeployConfig, DeployData, LP_PROVIDER } from "../../scripts/deploy/types";
 import { BigNumber } from "ethers";
-import { WETH } from "../../typechain-types/contracts/misc/WETH.sol";
 import { setupTest } from "../setup";
 import { solidity } from "ethereum-waffle";
 chai.use(solidity);
 const { expect } = chai;
 
-xdescribe("Zapper", function () {
+describe("Zapper", function () {
   let deployData: DeployData;
   let deployConfig: DeployConfig;
 
@@ -32,7 +32,6 @@ xdescribe("Zapper", function () {
   let user4: SignerWithAddress;
 
   let lockZap: TestnetLockZap;
-  let lpMfd: MultiFeeDistribution;
   let mfd: MultiFeeDistribution;
 
   const usdcPerAccount = ethers.utils.parseUnits("1000000000", 6);
@@ -56,6 +55,7 @@ xdescribe("Zapper", function () {
   let poolHelper: UniswapPoolHelper;
 
   beforeEach(async function () {
+		const { deploy } = deployments;
     const fixture = await setupTest();
 
     deployData = fixture.deployData;
@@ -67,7 +67,6 @@ xdescribe("Zapper", function () {
     user4 = fixture.user4;
 
     lockZap = <TestnetLockZap>fixture.lockZap;
-    lpMfd = fixture.lpFeeDistribution;
     lendingPool = fixture.lendingPool;
     chefIncentivesController = fixture.chefIncentivesController;
     mfd = fixture.multiFeeDistribution;
@@ -88,18 +87,22 @@ xdescribe("Zapper", function () {
     poolHelper = <UniswapPoolHelper>(
       await ethers.getContractAt("UniswapPoolHelper", poolHelperAddress)
     );
-    liquidityZapAddress = await poolHelper.getLiquidityZap();
-    liquidityZap = await ethers.getContractAt(
-      "LiquidityZap",
-      liquidityZapAddress
-    );
+		if (deployConfig.LP_PROVIDER == LP_PROVIDER.UNISWAP) {
+			liquidityZapAddress = await poolHelper.getLiquidityZap();
+			liquidityZap = await ethers.getContractAt(
+				"LiquidityZap",
+				liquidityZapAddress
+			);
+		}
   });
 
   it("setLiquidityZap", async function () {
-    await expect(
-      poolHelper.connect(user2).setLiquidityZap(liquidityZapAddress)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-    await poolHelper.setLiquidityZap(liquidityZapAddress);
+		if (deployConfig.LP_PROVIDER == LP_PROVIDER.UNISWAP) {
+			await expect(
+				poolHelper.connect(user2).setLiquidityZap(liquidityZapAddress)
+			).to.be.revertedWith("Ownable: caller is not the owner");
+			await poolHelper.setLiquidityZap(liquidityZapAddress);
+		}
   });
 
   it("setPoolHelper", async function () {
@@ -126,7 +129,7 @@ xdescribe("Zapper", function () {
     );
 
     expect(await LP.balanceOf(user2.address)).to.equal(BigNumber.from(0));
-    expect((await lpMfd.lockedBalances(user2.address)).locked).to.be.gt(
+    expect((await mfd.lockedBalances(user2.address)).locked).to.be.gt(
       BigNumber.from(0)
     );
   });
@@ -142,7 +145,7 @@ xdescribe("Zapper", function () {
       }
     );
 
-    const lockedLpBalStart = (await lpMfd.lockedBalances(user2.address)).locked;
+    const lockedLpBalStart = (await mfd.lockedBalances(user2.address)).locked;
 
     expect(lockedLpBalStart).to.be.gt(BigNumber.from(0));
 
@@ -159,7 +162,7 @@ xdescribe("Zapper", function () {
       await eligibilityProvider.isEligibleForRewards(user2.address)
     ).to.be.equal(true);
 
-    await advanceTimeAndBlock(100);
+    await advanceTimeAndBlock(100000);
 
     await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
 
@@ -181,7 +184,7 @@ xdescribe("Zapper", function () {
 
     totalVesting = (await mfd.earnedBalances(user2.address)).total;
 
-    const lockedLpBalEnd = (await lpMfd.lockedBalances(user2.address)).locked;
+    const lockedLpBalEnd = (await mfd.lockedBalances(user2.address)).locked;
     expect(lockedLpBalEnd).to.be.gt(lockedLpBalStart);
     expect(totalVesting).to.be.equal(0);
   });
@@ -196,7 +199,7 @@ xdescribe("Zapper", function () {
       ethers.constants.MaxUint256
     );
 
-    const lockedLpBal1 = (await lpMfd.lockedBalances(user3.address)).locked;
+    const lockedLpBal1 = (await mfd.lockedBalances(user3.address)).locked;
     expect(lockedLpBal1).to.equal(BigNumber.from(0));
 
     await lockZap
@@ -208,7 +211,7 @@ xdescribe("Zapper", function () {
         0
       );
 
-    const lockedLpBal2 = (await lpMfd.lockedBalances(user3.address)).locked;
+    const lockedLpBal2 = (await mfd.lockedBalances(user3.address)).locked;
     expect(lockedLpBal2).to.not.equal(BigNumber.from(0));
 
     await WETH.connect(user3).approve(
@@ -240,7 +243,7 @@ xdescribe("Zapper", function () {
         0,
         0
       );
-    const lockedLpBal3 = (await lpMfd.lockedBalances(user3.address)).locked;
+    const lockedLpBal3 = (await mfd.lockedBalances(user3.address)).locked;
 
     expect(lockedLpBal3).to.be.gt(lockedLpBal2);
     expect(
@@ -260,7 +263,7 @@ xdescribe("Zapper", function () {
       }
     );
 
-    const lockedLpBal1 = (await lpMfd.lockedBalances(user4.address)).locked;
+    const lockedLpBal1 = (await mfd.lockedBalances(user4.address)).locked;
 
     await WETH.connect(user4).deposit({
       value: wethPerAccount,
@@ -298,7 +301,7 @@ xdescribe("Zapper", function () {
       await eligibilityProvider.isEligibleForRewards(user4.address)
     ).to.be.equal(true);
 
-    await advanceTimeAndBlock(100);
+    await advanceTimeAndBlock(100000);
 
     await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
@@ -320,7 +323,7 @@ xdescribe("Zapper", function () {
 
     totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
-    const lockedLpBal2 = (await lpMfd.lockedBalances(user4.address)).locked;
+    const lockedLpBal2 = (await mfd.lockedBalances(user4.address)).locked;
     expect(lockedLpBal2).to.be.gt(lockedLpBal1);
     expect(totalVesting).to.be.equal(0);
     expect(
@@ -374,13 +377,13 @@ xdescribe("Zapper", function () {
       }
     );
 
-    const lockedLpBal1 = (await lpMfd.lockedBalances(user4.address)).locked;
+    const lockedLpBal1 = (await mfd.lockedBalances(user4.address)).locked;
 
     expect(
       await eligibilityProvider.isEligibleForRewards(user4.address)
     ).to.be.equal(true);
 
-    await advanceTimeAndBlock(10000);
+    await advanceTimeAndBlock(100000);
 
     await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
@@ -390,7 +393,7 @@ xdescribe("Zapper", function () {
 
     totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
-    const lockedLpBal2 = (await lpMfd.lockedBalances(user4.address)).locked;
+    const lockedLpBal2 = (await mfd.lockedBalances(user4.address)).locked;
     expect(lockedLpBal2).to.be.gt(lockedLpBal1);
     expect(totalVesting).to.be.equal(0);
     expect(
@@ -409,48 +412,56 @@ xdescribe("Zapper", function () {
   });
 
   describe("LiquidityZap", async () => {
-    it("initLiquidityZap again fails", async () => {
-      await expect(
-        liquidityZap.initLiquidityZap(
-          ethers.constants.AddressZero,
-          ethers.constants.AddressZero,
-          ethers.constants.AddressZero
-        )
-      ).to.be.reverted;
-    });
+		it("initLiquidityZap again fails", async () => {
+			if (liquidityZap) {
+				await expect(
+					liquidityZap.initLiquidityZap(
+						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
+						ethers.constants.AddressZero
+					)
+				).to.be.reverted;
+			}
+		});
 
-    it("fallback", async () => {
-      await expect(
-        deployer.sendTransaction({
-          to: liquidityZap.address,
-          value: ethers.utils.parseEther("1"),
-        })
-      ).to.be.not.reverted;
-    });
+		it("fallback", async () => {
+			if (liquidityZap) {
+				await expect(
+					deployer.sendTransaction({
+						to: liquidityZap.address,
+						value: ethers.utils.parseEther("1"),
+					})
+				).to.be.not.reverted;
+			}
+		});
 
-    it("zapEth validation", async () => {
-      await expect(liquidityZap.zapETH(user2.address)).to.be.revertedWith(
-        "LiquidityZAP: ETH amount must be greater than 0"
-      );
-    });
+		it("zapEth validation", async () => {
+			if (liquidityZap) {
+				await expect(liquidityZap.zapETH(user2.address)).to.be.revertedWith(
+					"LiquidityZAP: ETH amount must be greater than 0"
+				);
+			}
+		});
 
-    it("zapEth validation", async () => {
-      await expect(
-        liquidityZap.addLiquidityETHOnly(ethers.constants.AddressZero, {
-          value: ethers.utils.parseEther("1"),
-        })
-      ).to.be.revertedWith("LiquidityZAP: Invalid address");
+		it("zapEth validation", async () => {
+			if (liquidityZap) {
+				await expect(
+					liquidityZap.addLiquidityETHOnly(ethers.constants.AddressZero, {
+						value: ethers.utils.parseEther("1"),
+					})
+				).to.be.revertedWith("LiquidityZAP: Invalid address");
 
-      await expect(
-        liquidityZap.addLiquidityETHOnly(user2.address)
-      ).to.be.revertedWith("LiquidityZAP: Insufficient ETH amount");
+				await expect(
+					liquidityZap.addLiquidityETHOnly(user2.address)
+				).to.be.revertedWith("LiquidityZAP: Insufficient ETH amount");
 
-      expect(await liquidityZap.quote(ethers.utils.parseEther("1"))).to.be.gt(
-        0
-      );
-      expect(
-        await liquidityZap.getLPTokenPerEthUnit(ethers.utils.parseEther("1"))
-      ).to.be.gt(0);
-    });
-  });
+				expect(await liquidityZap.quote(ethers.utils.parseEther("1"))).to.be.gt(
+					0
+				);
+				expect(
+					await liquidityZap.getLPTokenPerEthUnit(ethers.utils.parseEther("1"))
+				).to.be.gt(0);
+			}
+		});
+	});
 });

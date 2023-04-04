@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 /**
  * @title IReserveInterestRateStrategyInterface interface
@@ -18,14 +18,7 @@ interface IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	)
-		external
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256
-		);
+	) external view returns (uint256, uint256, uint256);
 
 	function calculateInterestRates(
 		address reserve,
@@ -36,12 +29,5 @@ interface IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	)
-		external
-		view
-		returns (
-			uint256 liquidityRate,
-			uint256 stableBorrowRate,
-			uint256 variableBorrowRate
-		);
+	) external view returns (uint256 liquidityRate, uint256 stableBorrowRate, uint256 variableBorrowRate);
 }

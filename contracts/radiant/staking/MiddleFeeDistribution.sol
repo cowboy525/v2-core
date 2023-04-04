@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
-
-import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IMintableToken.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -12,6 +8,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+
+import "../../interfaces/IMiddleFeeDistribution.sol";
+import "../../interfaces/IMultiFeeDistribution.sol";
+import "../../interfaces/IMintableToken.sol";
+import "../../interfaces/IAaveOracle.sol";
+import "../../interfaces/IAToken.sol";
+import "../../interfaces/IChainlinkAggregator.sol";
 
 /// @title Fee distributor inside
 /// @author Radiant
@@ -23,19 +26,15 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/// @notice RDNT token
 	IMintableToken public rdntToken;
 
-	/// @notice Fee distributor contract for lp locking
-	IMultiFeeDistribution public lpFeeDistribution;
-
 	/// @notice Fee distributor contract for earnings and RDNT lockings
 	IMultiFeeDistribution public multiFeeDistribution;
-
-	/// @notice Reward ratio for lp locking in bips
-	uint256 public override lpLockingRewardRatio;
 
 	/// @notice Reward ratio for operation expenses
 	uint256 public override operationExpenseRatio;
 
 	uint256 public constant RATIO_DIVISOR = 10000;
+
+	uint8 public constant DECIMALS = 18;
 
 	mapping(address => bool) public override isRewardToken;
 
@@ -45,8 +44,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/// @notice Admin address
 	address public admin;
 
-	// MFDStats address
-	address internal _mfdStats;
+	// AAVE Oracle address
+	address internal _aaveOracle;
 
 	/********************** Events ***********************/
 
@@ -59,14 +58,10 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/// @notice Emitted when OpEx info is updated
 	event SetOperationExpenses(address opEx, uint256 ratio);
 
-	/// @notice Emitted when LP locking reward ratio is set
-	event LpLockingRewardRatioUpdated(uint256 _lpLockingRewardRatio);
-
-	/// @notice Emitted when lp fee distribution is set
-	event LPFeeDistributionUpdated(IMultiFeeDistribution _lpFeeDistribution);
-
 	/// @notice Emitted when operation expenses is set
 	event OperationExpensesUpdated(address _operationExpenses, uint256 _operationExpenseRatio);
+
+	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 
 	/**
 	 * @dev Throws if called by any account other than the admin or owner.
@@ -78,31 +73,69 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	function initialize(
 		address _rdntToken,
-		address mfdStats,
-		IMultiFeeDistribution _lpFeeDistribution,
+		address aaveOracle,
 		IMultiFeeDistribution _multiFeeDistribution
 	) public initializer {
+		require(_rdntToken != address(0), "rdntToken is 0 address");
+		require(aaveOracle != address(0), "aaveOracle is 0 address");
 		__Ownable_init();
 
 		rdntToken = IMintableToken(_rdntToken);
-		_mfdStats = mfdStats;
-		lpFeeDistribution = _lpFeeDistribution;
+		_aaveOracle = aaveOracle;
 		multiFeeDistribution = _multiFeeDistribution;
 
-		lpLockingRewardRatio = 10000;
 		admin = msg.sender;
 	}
 
-	function getMFDstatsAddress() external view override returns (address) {
-		return _mfdStats;
+	/**
+	 * @notice Set operation expenses account
+	 */
+	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
+		require(_operationExpenseRatio <= RATIO_DIVISOR, "Invalid ratio");
+		require(_operationExpenses != address(0), "operationExpenses is 0 address");
+		operationExpenses = _operationExpenses;
+		operationExpenseRatio = _operationExpenseRatio;
+		emit OperationExpensesUpdated(_operationExpenses, _operationExpenseRatio);
+	}
+
+	function setAdmin(address _configurator) external onlyOwner {
+		require(_configurator != address(0), "configurator is 0 address");
+		admin = _configurator;
+	}
+
+	/**
+	 * @notice Add a new reward token to be distributed to stakers
+	 */
+	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+		multiFeeDistribution.addReward(_rewardsToken);
+		isRewardToken[_rewardsToken] = true;
+	}
+
+	/**
+	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 */
+	function forwardReward(address[] memory _rewardTokens) external override {
+		require(msg.sender == address(multiFeeDistribution),"!mfd");
+
+		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
+			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
+
+			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
+				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
+				if (opExAmount != 0) {
+					IERC20(_rewardTokens[i]).safeTransfer(operationExpenses, opExAmount);
+				}
+				total = total.sub(opExAmount);
+			}
+			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
+			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
+
+			emitNewTransferAdded(_rewardTokens[i], total);
+		}
 	}
 
 	function getRdntTokenAddress() external view override returns (address) {
 		return address(rdntToken);
-	}
-
-	function getLPFeeDistributionAddress() external view override returns (address) {
-		return address(lpFeeDistribution);
 	}
 
 	function getMultiFeeDistributionAddress() external view override returns (address) {
@@ -113,7 +146,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Returns lock information of a user.
 	 * @dev It currently returns just MFD infos.
 	 */
-	function lockedBalances(address user)
+	function lockedBalances(
+		address user
+	)
 		external
 		view
 		override
@@ -128,70 +163,17 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		return multiFeeDistribution.lockedBalances(user);
 	}
 
-	/**
-	 * @notice Set reward ratio for lp token locking
-	 */
-	function setLpLockingRewardRatio(uint256 _lpLockingRewardRatio) external onlyAdminOrOwner {
-		require(_lpLockingRewardRatio <= RATIO_DIVISOR, "Invalid ratio");
-		lpLockingRewardRatio = _lpLockingRewardRatio;
-		emit LpLockingRewardRatioUpdated(_lpLockingRewardRatio);
-	}
-
-	/**
-	 * @notice Set lp fee distribution contract
-	 */
-	function setLPFeeDistribution(IMultiFeeDistribution _lpFeeDistribution) external onlyAdminOrOwner {
-		lpFeeDistribution = _lpFeeDistribution;
-		emit LPFeeDistributionUpdated(_lpFeeDistribution);
-	}
-
-	/**
-	 * @notice Set operation expenses account
-	 */
-	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio)
-		external
-		onlyAdminOrOwner
-	{
-		require(_operationExpenseRatio <= RATIO_DIVISOR, "Invalid ratio");
-		operationExpenses = _operationExpenses;
-		operationExpenseRatio = _operationExpenseRatio;
-		emit OperationExpensesUpdated(_operationExpenses, _operationExpenseRatio);
-	}
-
-	/**
-	 * @notice Add a new reward token to be distributed to stakers
-	 */
-	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
-		multiFeeDistribution.addReward(_rewardsToken);
-		lpFeeDistribution.addReward(_rewardsToken);
-		isRewardToken[_rewardsToken] = true;
-	}
-
-	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
-	 */
-	function forwardReward(address[] memory _rewardTokens) external override {
-		require(msg.sender == address(lpFeeDistribution) || msg.sender == address(multiFeeDistribution));
-
-		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
-			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
-
-			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
-				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
-				if (opExAmount != 0) {
-					IERC20(_rewardTokens[i]).safeTransfer(operationExpenses, opExAmount);
-				}
-				total = total.sub(opExAmount);
-			}
-			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
-			uint256 lpReward = total.mul(lpLockingRewardRatio).div(RATIO_DIVISOR);
-			if (lpReward != 0) {
-				IERC20(_rewardTokens[i]).safeTransfer(address(lpFeeDistribution), lpReward);
-			}
-			uint256 rdntReward = IERC20(_rewardTokens[i]).balanceOf(address(this));
-			if (rdntReward != 0) {
-				IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), rdntReward);
-			}
+	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
+		if (asset != address(rdntToken)) {
+			address underlying = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
+			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(underlying);
+			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlying);
+			uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
+			uint8 assetDecimals = IERC20Metadata(asset).decimals();
+			uint256 lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+				10 ** assetDecimals
+			);
+			emit NewTransferAdded(asset, lpUsdValue);
 		}
 	}
 

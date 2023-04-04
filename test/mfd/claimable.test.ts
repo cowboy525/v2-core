@@ -8,7 +8,7 @@ import {
   MockERC20,
   MockToken,
   LockerList,
-} from "../../typechain-types";
+} from "../../typechain";
 import _ from "lodash";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -30,7 +30,7 @@ describe("Ensure lockers can claim Platform Revenue", () => {
   let USDC: MockToken;
   let rUSDC: MockERC20;
   let lendingPool: LendingPool;
-  let lpFeeDistribution: MultiFeeDistribution;
+  let multiFeeDistribution: MultiFeeDistribution;
   let lockerlist: LockerList;
 
   let REWARDS_DURATION = 0; // oneDay * 7;
@@ -56,16 +56,16 @@ describe("Ensure lockers can claim Platform Revenue", () => {
     );
 
     lendingPool = fixture.lendingPool;
-    lpFeeDistribution = fixture.lpFeeDistribution;
-    lockerlist = <LockerList>await ethers.getContractAt("LockerList", await lpFeeDistribution.userlist());
+    multiFeeDistribution = fixture.multiFeeDistribution;
+    lockerlist = <LockerList>await ethers.getContractAt("LockerList", await multiFeeDistribution.userlist());
 
-    REWARDS_DURATION = (await lpFeeDistribution.REWARDS_DURATION()).toNumber();
+    REWARDS_DURATION = (await multiFeeDistribution.rewardsDuration()).toNumber();
   });
 
   it("Lock LP", async () => {
     await zapIntoEligibility(user2, deployData);
 
-    const lockedBal = (await lpFeeDistribution.lockedBalances(user2.address))
+    const lockedBal = (await multiFeeDistribution.lockedBalances(user2.address))
       .locked;
     const lockerCount = await lockerlist.lockersCount();
 
@@ -98,14 +98,14 @@ describe("Ensure lockers can claim Platform Revenue", () => {
       .borrow(usdcAddress, smallBorrowAmt, 2, 0, user2.address);
 
     const claimableTokens = (
-      await lpFeeDistribution.claimableRewards(user2.address)
+      await multiFeeDistribution.claimableRewards(user2.address)
     ).map(({ token }) => token);
 
-    await lpFeeDistribution.connect(user2).getReward(claimableTokens);
+    await multiFeeDistribution.connect(user2).getReward(claimableTokens);
 
     await advanceTimeAndBlock(REWARDS_DURATION);
 
-    const rewards = (await lpFeeDistribution.claimableRewards(user2.address))
+    const rewards = (await multiFeeDistribution.claimableRewards(user2.address))
       .filter((item) => item.token === rUSDC.address)
       .map(({ amount }) => amount);
     const claimable = getUsdVal(rewards[0], 6);
@@ -113,7 +113,7 @@ describe("Ensure lockers can claim Platform Revenue", () => {
     assert(parseFloat(claimable) > 0);
 
     // @TODO: check their balance increased
-    const claimTxn = await lpFeeDistribution
+    const claimTxn = await multiFeeDistribution
       .connect(user2)
       .getReward(claimableTokens);
     assert(claimTxn.hash.length !== 0);

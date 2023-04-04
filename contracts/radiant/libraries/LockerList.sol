@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "./AddressPagination.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./AddressPagination.sol";
 
 /// @title Locker List Contract
 /// @author Radiant

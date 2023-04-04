@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -61,7 +61,9 @@ contract AaveProtocolDataProvider {
 		return aTokens;
 	}
 
-	function getReserveConfigurationData(address asset)
+	function getReserveConfigurationData(
+		address asset
+	)
 		external
 		view
 		returns (
@@ -87,7 +89,9 @@ contract AaveProtocolDataProvider {
 		usageAsCollateralEnabled = liquidationThreshold > 0;
 	}
 
-	function getReserveData(address asset)
+	function getReserveData(
+		address asset
+	)
 		external
 		view
 		returns (
@@ -119,7 +123,10 @@ contract AaveProtocolDataProvider {
 		);
 	}
 
-	function getUserReserveData(address asset, address user)
+	function getUserReserveData(
+		address asset,
+		address user
+	)
 		external
 		view
 		returns (
@@ -150,15 +157,9 @@ contract AaveProtocolDataProvider {
 		usageAsCollateralEnabled = userConfig.isUsingAsCollateral(reserve.id);
 	}
 
-	function getReserveTokensAddresses(address asset)
-		external
-		view
-		returns (
-			address aTokenAddress,
-			address stableDebtTokenAddress,
-			address variableDebtTokenAddress
-		)
-	{
+	function getReserveTokensAddresses(
+		address asset
+	) external view returns (address aTokenAddress, address stableDebtTokenAddress, address variableDebtTokenAddress) {
 		DataTypes.ReserveData memory reserve = ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
 
 		return (reserve.aTokenAddress, reserve.stableDebtTokenAddress, reserve.variableDebtTokenAddress);

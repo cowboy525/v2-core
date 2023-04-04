@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
@@ -121,11 +121,7 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
 	 * @param amount The amount getting burned
 	 * @param index The variable debt index of the reserve
 	 **/
-	function burn(
-		address user,
-		uint256 amount,
-		uint256 index
-	) external override onlyLendingPool {
+	function burn(address user, uint256 amount, uint256 index) external override onlyLendingPool {
 		uint256 amountScaled = amount.rayDiv(index);
 		require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 

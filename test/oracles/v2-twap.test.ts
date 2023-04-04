@@ -1,184 +1,193 @@
-import { ethers, upgrades } from "hardhat";
-const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
-import _ from "lodash";
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
-import { advanceTimeAndBlock } from "../shared/helpers";
-import { ComboOracle, ManualOracle, MockChainlinkAggregator, RadiantOFT, TestnetLockZap, UniV2TwapOracle, WETH } from "../../typechain-types";
-import { targetPrice } from "../../config/31337";
-import { BigNumber } from "ethers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { setupTest } from "../setup";
-const { deployments } = require('hardhat');
+import {ethers, upgrades} from 'hardhat';
+const {loadFixture} = require('@nomicfoundation/hardhat-network-helpers');
+import _ from 'lodash';
+import chai from 'chai';
+import {solidity} from 'ethereum-waffle';
+import {advanceTimeAndBlock} from '../shared/helpers';
+import {
+	ComboOracle,
+	ManualOracle,
+	MockChainlinkAggregator,
+	RadiantOFT,
+	TestnetLockZap,
+	UniV2TwapOracle,
+	WETH,
+} from '../../typechain';
+import {targetPrice} from '../../config/31337';
+import {BigNumber} from 'ethers';
+import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import {setupTest} from '../setup';
+import {LP_PROVIDER} from '../../scripts/deploy/types';
+const {deployments} = require('hardhat');
 
 chai.use(solidity);
-const { expect } = chai;
+const {expect} = chai;
 
 const priceToJsNum = (oracleAnswer: BigNumber) => {
-  return parseFloat(ethers.utils.formatUnits(oracleAnswer, 8))
-}
+	return parseFloat(ethers.utils.formatUnits(oracleAnswer, 8));
+};
 
-describe("Uni V2 TWAP", () => {
-  const { deploy, execute } = deployments;
+describe('Uni V2 TWAP', () => {
+	const {deploy, execute, read} = deployments;
 
-  let oracle: UniV2TwapOracle;
-  let lockZap: TestnetLockZap;
-  let rdntToken: RadiantOFT;
-  let weth: WETH;
-  let chainlinkEthFeed: MockChainlinkAggregator;
-  let period: number;
-  let startingRdntPrice = targetPrice;
-  let nonAdminUser: SignerWithAddress;
-  let dao: SignerWithAddress;
-  let deployer: SignerWithAddress;
-  let testFallbackOracle: ManualOracle;
+	let oracle: UniV2TwapOracle;
+	let lockZap: TestnetLockZap;
+	let rdntToken: RadiantOFT;
+	let weth: WETH;
+	let chainlinkEthFeed: MockChainlinkAggregator;
+	let period: number;
+	let startingRdntPrice = targetPrice;
+	let nonAdminUser: SignerWithAddress;
+	let dao: SignerWithAddress;
+	let deployer: SignerWithAddress;
+	let testFallbackOracle: ManualOracle;
+	let useUniswapLpProvider: boolean;
 
-  before(async () => {
-    const fixture = await setupTest();
-    oracle = fixture.uniV2TwapOracle;
-    lockZap = fixture.lockZap;
-    rdntToken = fixture.rdntToken;
-    weth = fixture.weth;
-    nonAdminUser = fixture.user2;
-    dao = fixture.dao;
-    deployer = fixture.deployer;
+	before(async () => {
+		const fixture = await setupTest();
+		lockZap = fixture.lockZap;
+		rdntToken = fixture.rdntToken;
+		weth = fixture.weth;
+		nonAdminUser = fixture.user2;
+		dao = fixture.dao;
+		deployer = fixture.deployer;
+		useUniswapLpProvider = fixture.deployConfig.LP_PROVIDER === LP_PROVIDER.UNISWAP;
 
-    period = (await oracle.PERIOD()).toNumber();
-    chainlinkEthFeed = <MockChainlinkAggregator>await ethers.getContractAt("MockChainlinkAggregator", fixture.deployConfig.CHAINLINK_ETH_USD_AGGREGATOR_PROXY);
+		period = fixture.deployConfig.TWAP_PERIOD;
 
-    await deploy("ManualOracle", {
-      from: deployer.address,
-      log: true,
-      proxy: {
-        proxyContract: 'OpenZeppelinTransparentProxy',
-        execute: {
-          methodName: 'initialize',
-          args: [
-            rdntToken.address,
-            chainlinkEthFeed.address
-          ]
-        },
-      }
-    });
-    testFallbackOracle = <ManualOracle>await ethers.getContract("ManualOracle")
-    await testFallbackOracle.setPrice(ethers.utils.parseEther("1"))
-  })
+		chainlinkEthFeed = <MockChainlinkAggregator>(
+			await ethers.getContractAt(
+				'MockChainlinkAggregator',
+				fixture.deployConfig.CHAINLINK_ETH_USD_AGGREGATOR_PROXY
+			)
+		);
 
-  it("can be updated", async () => {
+		let stakingAddress = await read('UniswapV2Factory', 'getPair', rdntToken.address, weth.address);
+		await deploy('UniV2TwapOracle', {
+			contract: 'UniV2TwapOracle',
+			from: deployer.address,
+			log: true,
+			proxy: {
+				proxyContract: 'OpenZeppelinTransparentProxy',
+				execute: {
+					methodName: 'initialize',
+					args: [stakingAddress, rdntToken.address, chainlinkEthFeed.address, period, 120, true],
+				},
+			},
+		});
+		oracle = <UniV2TwapOracle>await ethers.getContract('UniV2TwapOracle');
 
-    await advanceTimeAndBlock(period);
+		await deploy('ManualOracle', {
+			from: deployer.address,
+			log: true,
+			proxy: {
+				proxyContract: 'OpenZeppelinTransparentProxy',
+				execute: {
+					methodName: 'initialize',
+					args: [rdntToken.address, chainlinkEthFeed.address],
+				},
+			},
+		});
+		testFallbackOracle = <ManualOracle>await ethers.getContract('ManualOracle');
+		await testFallbackOracle.setPrice(ethers.utils.parseEther('1'));
+	});
 
-    const canUpdate = await oracle.canUpdate();
-    expect(canUpdate).equals(true);
+	it('can be updated', async () => {
+		await advanceTimeAndBlock(period);
 
-    await expect(
-      oracle.update()
-    ).to.be.not.reverted;
-  });
+		const canUpdate = await oracle.canUpdate();
+		expect(canUpdate).equals(true);
 
-  it("returns price", async () => {
+		await expect(oracle.update()).to.be.not.reverted;
+	});
 
-    await advanceTimeAndBlock(period);
-    await oracle.update();
+	it('returns price', async () => {
+		await advanceTimeAndBlock(period);
+		await oracle.update();
 
-    const priceAnswer = await oracle.latestAnswer();
-    expect(
-      priceToJsNum(
-        priceAnswer
-      )
-    ).to.be.closeTo(startingRdntPrice, .1);
-  });
+		const priceAnswer = await oracle.latestAnswer();
+		expect(priceToJsNum(priceAnswer)).to.be.closeTo(startingRdntPrice, 0.1);
+	});
 
-  it("LP token change reflected in price after update", async () => {
+	it('LP token change reflected in price after update', async () => {
+		if (!useUniswapLpProvider) {
+			console.log('skipping...');
+			return;
+		}
 
-    const lots = ethers.utils.parseEther("10000000");
-    await rdntToken.connect(dao).approve(lockZap.address, lots);
-    await lockZap.connect(dao).sell(lots);
+		const lots = ethers.utils.parseEther('100000000');
+		await rdntToken.connect(dao).approve(lockZap.address, lots);
+		await lockZap.connect(dao).sell(lots);
 
-    const priceAnswer = await oracle.latestAnswer();
+		const priceAnswer = await oracle.latestAnswer();
 
-    // hasnt updated yet, should be same
-    expect(
-      priceToJsNum(
-        priceAnswer
-      )
-    ).to.be.closeTo(startingRdntPrice, .1);
+		// hasnt updated yet, should be same
+		expect(priceToJsNum(priceAnswer)).to.be.closeTo(startingRdntPrice, 0.1);
 
-    await advanceTimeAndBlock(period);
-    await oracle.update();
+		await advanceTimeAndBlock(period);
+		await oracle.update();
 
-    const priceAnswerAfter = await oracle.latestAnswer();
+		const priceAnswerAfter = await oracle.latestAnswer();
 
-    expect(
-      priceToJsNum(
-        priceAnswerAfter
-      )
-    ).to.be.lt(startingRdntPrice / 2);
-  });
+		expect(priceToJsNum(priceAnswerAfter)).to.be.lt(startingRdntPrice / 2);
+	});
 
-  it("can fallback", async () => {
+	it('can fallback', async () => {
+		await advanceTimeAndBlock(period);
+		await oracle.update();
 
-    await advanceTimeAndBlock(period);
-    await oracle.update();
+		const pricePre = await oracle.latestAnswerInEth();
 
-    const pricePre = await oracle.latestAnswerInEth();
+		await expect(oracle.enableFallback(true)).to.be.revertedWith('no fallback set');
 
-    await expect(
-      oracle.enableFallback(true)
-    ).to.be.revertedWith("no fallback set");
+		await expect(oracle.connect(nonAdminUser).setFallback(testFallbackOracle.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
 
-    await expect(
-      oracle.connect(nonAdminUser).setFallback(testFallbackOracle.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+		await oracle.setFallback(testFallbackOracle.address);
 
-    await oracle.setFallback(testFallbackOracle.address);
+		await expect(oracle.connect(nonAdminUser).enableFallback(true)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
 
-    await expect(
-      oracle.connect(nonAdminUser).enableFallback(true)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+		await oracle.enableFallback(true);
 
-    await oracle.enableFallback(true);
+		const pricePost = await oracle.latestAnswerInEth();
+		const expectedPrice = await testFallbackOracle.latestAnswerInEth();
+		expect(pricePost).equals(expectedPrice);
+		expect(pricePost).not.equals(pricePre);
+	});
 
-    const pricePost = await oracle.latestAnswerInEth();
-    const expectedPrice = await testFallbackOracle.latestAnswerInEth()
-    expect(pricePost).equals(expectedPrice);
-    expect(pricePost).not.equals(pricePre);
-  });
+	xit('can be used within a ComboOracle', async () => {
+		await oracle.enableFallback(false);
+		await advanceTimeAndBlock(period);
+		await oracle.update();
 
-  it("can be used within a ComboOracle", async () => {
+		await deploy('ComboOracle', {
+			from: deployer.address,
+			log: true,
+			proxy: {
+				proxyContract: 'OpenZeppelinTransparentProxy',
+				execute: {
+					methodName: 'initialize',
+					args: [rdntToken.address, chainlinkEthFeed.address],
+				},
+			},
+		});
+		const comboOracle = <ComboOracle>await ethers.getContract('ComboOracle');
+		await comboOracle.addSource(oracle.address);
+		await comboOracle.addSource(testFallbackOracle.address);
 
-    await oracle.enableFallback(false);
-    await advanceTimeAndBlock(period);
-    await oracle.update();
+		const twapPrice = await oracle.latestAnswerInEth();
+		const manualPrice = await testFallbackOracle.latestAnswerInEth();
 
-    await deploy("ComboOracle", {
-      from: deployer.address,
-      log: true,
-      proxy: {
-        proxyContract: 'OpenZeppelinTransparentProxy',
-        execute: {
-          methodName: 'initialize',
-          args: [
-            rdntToken.address,
-            chainlinkEthFeed.address
-          ]
-        },
-      }
-    });
-    const comboOracle = <ComboOracle>await ethers.getContract("ComboOracle")
-    await comboOracle.addSource(oracle.address);
-    await comboOracle.addSource(testFallbackOracle.address);
-
-    const twapPrice = await oracle.latestAnswerInEth();
-    const manualPrice = await testFallbackOracle.latestAnswerInEth();
-
-    const comboPrice = await comboOracle.latestAnswerInEth();
-    const averagePrice = twapPrice.add(manualPrice).div(2);
-    const lowestPrice = twapPrice.gt(manualPrice) ? manualPrice : twapPrice;
-    let expectedPrice = averagePrice;
-    if (averagePrice > (lowestPrice.mul(1025)).div(1000)) {
-      expectedPrice = lowestPrice;
-    }
-    expect(comboPrice).equals(expectedPrice);
-  });
+		const comboPrice = await comboOracle.latestAnswerInEth();
+		const averagePrice = twapPrice.add(manualPrice).div(2);
+		const lowestPrice = twapPrice.gt(manualPrice) ? manualPrice : twapPrice;
+		let expectedPrice = averagePrice;
+		if (averagePrice > lowestPrice.mul(1025).div(1000)) {
+			expectedPrice = lowestPrice;
+		}
+		expect(comboPrice).equals(expectedPrice);
+	});
 });

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -31,16 +31,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 		oracle = _oracle;
 	}
 
-	function getInterestRateStrategySlopes(DefaultReserveInterestRateStrategy interestRateStrategy)
-		internal
-		view
-		returns (
-			uint256,
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	function getInterestRateStrategySlopes(
+		DefaultReserveInterestRateStrategy interestRateStrategy
+	) internal view returns (uint256, uint256, uint256, uint256) {
 		return (
 			interestRateStrategy.variableRateSlope1(),
 			interestRateStrategy.variableRateSlope2(),
@@ -49,16 +42,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 		);
 	}
 
-	function getReservesData(ILendingPoolAddressesProvider provider, address user)
+	function getReservesData(
+		ILendingPoolAddressesProvider provider,
+		address user
+	)
 		external
 		view
 		override
-		returns (
-			AggregatedReserveData[] memory,
-			UserReserveData[] memory,
-			uint256,
-			IncentivesControllerData memory
-		)
+		returns (AggregatedReserveData[] memory, UserReserveData[] memory, uint256, IncentivesControllerData memory)
 	{
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		address[] memory reserves = lendingPool.getReservesList();
@@ -193,6 +184,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 			incentivesControllerData.emissionEndTimestamp = incentivesController.DISTRIBUTION_END();
 		}
 
-		return (reservesData, userReservesData, 10**8, incentivesControllerData);
+		return (reservesData, userReservesData, 10 ** 8, incentivesControllerData);
 	}
 }

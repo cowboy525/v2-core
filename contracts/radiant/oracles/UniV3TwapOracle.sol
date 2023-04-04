@@ -1,17 +1,16 @@
-pragma solidity 0.8.4;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.12;
 
 import "./BaseOracle.sol";
-
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-core/contracts/UniswapV3Factory.sol";
 
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 
 contract UniV3TwapOracle is Initializable, BaseOracle {
 	using SafeMath for uint256;
@@ -49,6 +48,9 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		address _ethChainlinkFeed,
 		uint32 _lookbackSecs
 	) external initializer {
+		require(_pair != address(0), "pair is 0 address");
+		require(_rdnt != address(0), "rdnt is 0 address");
+		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
 		pool = IUniswapV3Pool(_pair);
 		token0 = IERC20Metadata(pool.token0());
 		token1 = IERC20Metadata(pool.token1());
@@ -59,7 +61,6 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		lookbackSecs = _lookbackSecs;
 
 		priceInToken0 = false;
-
 		__BaseOracle_init(_rdnt, _ethChainlinkFeed);
 	}
 
@@ -116,22 +117,22 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		if (priceInToken0) {
 			if (decimals0 <= 18) {
 				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10**decimals1), address(token1), address(token0))
-					.mul(10**(18 - decimals0));
+					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
+					.mul(10 ** (18 - decimals0));
 			} else {
 				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10**decimals1), address(token1), address(token0))
-					.div(10**(decimals0 - 18));
+					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
+					.div(10 ** (decimals0 - 18));
 			}
 		} else {
 			if (decimals1 <= 18) {
 				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10**decimals0), address(token0), address(token1))
-					.mul(10**(18 - decimals1));
+					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
+					.mul(10 ** (18 - decimals1));
 			} else {
 				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10**decimals0), address(token0), address(token1))
-					.div(10**(decimals1 - 18));
+					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
+					.div(10 ** (decimals1 - 18));
 			}
 		}
 	}
@@ -149,13 +150,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	function latestRoundData()
 		external
 		view
-		returns (
-			uint80 roundId,
-			int256 answer,
-			uint256 startedAt,
-			uint256 updatedAt,
-			uint80 answeredInRound
-		)
+		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
 		return (0, int256(getPrecisePrice()), 0, block.timestamp, 0);
 	}

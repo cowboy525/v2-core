@@ -10,7 +10,7 @@ import {
   MockERC20,
   MockToken,
   RadiantOFT,
-} from "../../typechain-types";
+} from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -37,14 +37,12 @@ describe("MFDs split Platform Revenue", () => {
   let rUSDC: MockERC20;
   let lendingPool: LendingPool;
   let chef: ChefIncentivesController;
-  let multiFeeDistribution: MultiFeeDistribution;
   let middleFeeDistribution: MiddleFeeDistribution;
-  let lpFeeDistribution: MultiFeeDistribution;
+  let multiFeeDistribution: MultiFeeDistribution;
   let radiantToken: RadiantOFT;
 
   const usdcPerAccount = ethers.utils.parseUnits("10000", 6);
   const borrowAmt = ethers.utils.parseUnits("1000", 6);
-  const lpRewardRatio = 5000;
   const opRatio = 1000;
 
   // REPLACED w/ real values from MFD.
@@ -78,16 +76,15 @@ describe("MFDs split Platform Revenue", () => {
     lendingPool = fixture.lendingPool;
     chef = fixture.chefIncentivesController;
     multiFeeDistribution = fixture.multiFeeDistribution;
-    lpFeeDistribution = fixture.lpFeeDistribution;
+    multiFeeDistribution = fixture.multiFeeDistribution;
     middleFeeDistribution = fixture.middleFeeDistribution;
     radiantToken = fixture.rdntToken;
 
     REWARDS_DURATION = (
-      await multiFeeDistribution.REWARDS_DURATION()
+      await multiFeeDistribution.rewardsDuration()
     ).toNumber();
-    duration = (await multiFeeDistribution.DEFAULT_LOCK_DURATION()).toNumber();
+    duration = (await multiFeeDistribution.defaultLockDuration()).toNumber();
 
-    await middleFeeDistribution.setLpLockingRewardRatio(lpRewardRatio);
     await middleFeeDistribution.setOperationExpenses(opEx.address, opRatio);
 
     await zapIntoEligibility(deployer, deployData);
@@ -176,39 +173,28 @@ describe("MFDs split Platform Revenue", () => {
       aTokenBalance.push(
         await rewardToken.balanceOf(middleFeeDistribution.address)
       );
-      lpBalances0.push(await rewardToken.balanceOf(lpFeeDistribution.address));
+      lpBalances0.push(await rewardToken.balanceOf(multiFeeDistribution.address));
       mfdBalances0.push(
         await rewardToken.balanceOf(multiFeeDistribution.address)
       );
     }
-    await lpFeeDistribution.getReward(aTokens);
+    await multiFeeDistribution.getReward(aTokens);
     await advanceTimeAndBlock(REWARDS_DURATION);
     for (let i = 0; i < length; i += 1) {
       const rewardToken = await ethers.getContractAt("ERC20", aTokens[i]);
 
-      const lpBalance = await rewardToken.balanceOf(lpFeeDistribution.address);
+      const lpBalance = await rewardToken.balanceOf(multiFeeDistribution.address);
       const lpRewards = lpBalance.sub(lpBalances0[i]);
-
-      const mfdBalance = await rewardToken.balanceOf(
-        multiFeeDistribution.address
-      );
-      const mfdRewards = mfdBalance.sub(mfdBalances0[i]);
 
       const opExBalance = await rewardToken.balanceOf(opEx.address);
 
       const opExRewards = aTokenBalance[i].mul(opRatio).div(1e4);
       const expectedLPRewards = aTokenBalance[i]
         .sub(opExRewards)
-        .mul(lpRewardRatio)
-        .div(1e4);
-      const expectedMFDRewards = aTokenBalance[i]
-        .sub(opExRewards)
-        .sub(expectedLPRewards);
 
       // balance no change cuz deployer not staked
       expect(opExBalance).to.be.equal(opExRewards);
-      expect(expectedLPRewards).to.be.equal(lpRewards); //.to.be.equal(lpData.balance);
-      expect(expectedMFDRewards).to.be.closeTo(mfdRewards, 5); // .to.be.equal(mfdData.balance);
+      expect(expectedLPRewards.toNumber()).to.be.approximately(lpRewards.toNumber(), 5); //.to.be.equal(lpData.balance);
     }
   });
 

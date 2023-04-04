@@ -39,6 +39,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		address _vault,
 		IWeightedPoolFactory _poolFactory
 	) external initializer {
+		require(_inTokenAddr != address(0), "inTokenAddr is 0 address");
+		require(_outTokenAddr != address(0), "outTokenAddr is 0 address");
+		require(_wethAddr != address(0), "wethAddr is 0 address");
+		require(_vault != address(0), "vault is 0 address");
 		__Ownable_init();
 		inTokenAddr = _inTokenAddr;
 		outTokenAddr = _outTokenAddr;
@@ -109,13 +113,13 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 			maxAmountsIn[1] = inTokenAmt;
 		}
 
-		IVault.JoinPoolRequest memory InRequest = IVault.JoinPoolRequest(
+		IVault.JoinPoolRequest memory inRequest = IVault.JoinPoolRequest(
 			assets,
 			maxAmountsIn,
 			abi.encode(0, maxAmountsIn),
 			false
 		);
-		IVault(vaultAddr).joinPool(poolId, address(this), address(this), InRequest);
+		IVault(vaultAddr).joinPool(poolId, address(this), address(this), inRequest);
 		uint256 liquidity = lp.balanceOf(address(this));
 		lp.safeTransfer(msg.sender, liquidity);
 	}
@@ -232,8 +236,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		}
 
 		bytes memory userDataEncoded = abi.encode(IWeightedPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT, maxAmountsIn, 0);
-		IVault.JoinPoolRequest memory InRequest = IVault.JoinPoolRequest(assets, maxAmountsIn, userDataEncoded, false);
-		IVault(vaultAddr).joinPool(poolId, address(this), address(this), InRequest);
+		IVault.JoinPoolRequest memory inRequest = IVault.JoinPoolRequest(assets, maxAmountsIn, userDataEncoded, false);
+		IVault(vaultAddr).joinPool(poolId, address(this), address(this), inRequest);
 
 		IERC20 lp = IERC20(lpTokenAddr);
 		liquidity = lp.balanceOf(address(this));
@@ -285,7 +289,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		bytes32 _poolId = IWeightedPool(_lpAddr).getPoolId();
 
 		bytes memory userDataEncoded = abi.encode(); //https://dev.balancer.fi/helpers/encoding
-		IVault.SingleSwap memory SingleSwapRequest = IVault.SingleSwap(
+		IVault.SingleSwap memory singleSwapRequest = IVault.SingleSwap(
 			_poolId,
 			IVault.SwapKind.GIVEN_IN,
 			tokenInAddress,
@@ -293,7 +297,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 			_amount,
 			userDataEncoded
 		);
-		IVault.FundManagement memory FundManagementRequest = IVault.FundManagement(
+		IVault.FundManagement memory fundManagementRequest = IVault.FundManagement(
 			address(this),
 			false,
 			payable(address(this)),
@@ -303,14 +307,25 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 limit = 0;
 
 		amountOut = IVault(vaultAddr).swap(
-			SingleSwapRequest,
-			FundManagementRequest,
+			singleSwapRequest,
+			fundManagementRequest,
 			limit,
 			(block.timestamp + 3 minutes)
 		);
 	}
 
 	function setLockZap(address _lockZap) external onlyOwner {
+		require(_lockZap != address(0), "lockZap is 0 address");
 		lockZap = _lockZap;
+	}
+
+	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
+		IWeightedPool pool = IWeightedPool(lpTokenAddr);
+		fee = pool.getSwapFeePercentage();
+	}
+
+	function setSwapFeePercentage(uint256 _fee) public onlyOwner {
+		IWeightedPool pool = IWeightedPool(lpTokenAddr);
+		pool.setSwapFeePercentage(_fee);
 	}
 }

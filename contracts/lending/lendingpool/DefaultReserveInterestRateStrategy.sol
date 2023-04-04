@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.4;
+pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IReserveInterestRateStrategy} from "../../interfaces/IReserveInterestRateStrategy.sol";
@@ -117,16 +117,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	)
-		external
-		view
-		override
-		returns (
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	) external view override returns (uint256, uint256, uint256) {
 		uint256 availableLiquidity = IERC20(reserve).balanceOf(aToken);
 		//avoid stack too deep
 		availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
@@ -169,16 +160,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	)
-		public
-		view
-		override
-		returns (
-			uint256,
-			uint256,
-			uint256
-		)
-	{
+	) public view override returns (uint256, uint256, uint256) {
 		CalcInterestRatesLocalVars memory vars;
 
 		vars.totalDebt = totalStableDebt.add(totalVariableDebt);

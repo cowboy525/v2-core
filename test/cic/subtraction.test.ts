@@ -6,7 +6,7 @@ import {
   MultiFeeDistribution,
   MockToken,
   EligibilityDataProvider,
-} from "../../typechain-types";
+} from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -25,7 +25,7 @@ describe("Ensure Users can borrow after Eligibility change (no sub revert)", () 
   let USDC: MockToken;
 
   let lendingPool: LendingPool;
-  let lpFeeDistribution: MultiFeeDistribution;
+  let multiFeeDistribution: MultiFeeDistribution;
   let eligibilityDataProvider: EligibilityDataProvider;
   let chef: ChefIncentivesController;
 
@@ -48,7 +48,7 @@ describe("Ensure Users can borrow after Eligibility change (no sub revert)", () 
 
     lendingPool = fixture.lendingPool;
     chef = fixture.chefIncentivesController;
-    lpFeeDistribution = fixture.lpFeeDistribution;
+    multiFeeDistribution = fixture.multiFeeDistribution;
     eligibilityDataProvider = fixture.eligibilityProvider;
 
     await USDC.mint(user2.address, tokenPerAccount);
@@ -71,7 +71,7 @@ describe("Ensure Users can borrow after Eligibility change (no sub revert)", () 
   });
 
   it("Wait for lock expire, user 2 borrow, ensure no revert", async () => {
-    const lockDuration = await lpFeeDistribution.DEFAULT_LOCK_DURATION();
+    const lockDuration = await multiFeeDistribution.defaultLockDuration();
     await advanceTimeAndBlock(lockDuration.mul(2).toNumber());
 
     expect(

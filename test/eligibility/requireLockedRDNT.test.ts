@@ -11,7 +11,7 @@ import {
   PriceProvider,
   RadiantOFT,
   EligibilityDataProvider,
-} from "../../typechain-types";
+} from "../../typechain";
 import _ from "lodash";
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
@@ -39,7 +39,6 @@ describe("Require Locked Value", () => {
   let lendingPool: LendingPool;
   let chef: ChefIncentivesController;
   let multiFeeDistribution: MultiFeeDistribution;
-  let lpFeeDistribution: MultiFeeDistribution;
   let radiantToken: RadiantOFT;
   let eligibilityDataProvider: EligibilityDataProvider;
   let priceProvider: PriceProvider;
@@ -50,8 +49,8 @@ describe("Require Locked Value", () => {
   let RDNT_LIQUDITY = BigNumber.from(0);
   let usdcAddress = "";
 
-  const usdcPerAccount = ethers.utils.parseUnits("100000", 6);
-  const borrowAmt = ethers.utils.parseUnits("10000", 6);
+  const usdcPerAccount = ethers.utils.parseUnits("10000", 6);
+  const borrowAmt = ethers.utils.parseUnits("1000", 6);
 
   let deployData: DeployData;
   let deployConfig: DeployConfig;
@@ -84,7 +83,6 @@ describe("Require Locked Value", () => {
     chef = fixture.chefIncentivesController;
     multiFeeDistribution = fixture.multiFeeDistribution;
     radiantToken = fixture.rdntToken;
-    lpFeeDistribution = fixture.lpFeeDistribution;
     eligibilityDataProvider = fixture.eligibilityProvider;
     priceProvider = fixture.priceProvider;
 
@@ -145,7 +143,7 @@ describe("Require Locked Value", () => {
     const lpBalance = await LPToken.balanceOf(deployer.address);
     await LPToken.transfer(user2.address, lpBalance);
     await LPToken.connect(user2).approve(
-      lpFeeDistribution.address,
+      multiFeeDistribution.address,
       ethers.constants.MaxUint256
     );
     const lockedVaule0 = await eligibilityDataProvider.lockedUsdValue(
@@ -153,7 +151,7 @@ describe("Require Locked Value", () => {
     );
     expect(lockedVaule0).to.be.equal(0);
 
-    await lpFeeDistribution.connect(user2).stake(lpBalance, user2.address, 0);
+    await multiFeeDistribution.connect(user2).stake(lpBalance, user2.address, 0);
 
     const lockedVaule1 = await eligibilityDataProvider.lockedUsdValue(
       user2.address
@@ -166,30 +164,11 @@ describe("Require Locked Value", () => {
 
     expect(lockedVaule1).to.be.equal(expectedLockedUsdVal);
 
-    await radiantToken.connect(dao).transfer(user2.address, RDNT_LIQUDITY);
-    await radiantToken
-      .connect(user2)
-      .approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
-    await multiFeeDistribution
-      .connect(user2)
-      .stake(RDNT_LIQUDITY, user2.address, 0);
-
-    const lockedVaule2 = await eligibilityDataProvider.lockedUsdValue(
-      user2.address
-    );
-
-    const rdntPriceUsd = await priceProvider.getTokenPriceUsd();
-    const expectedLockedUsdVal2 = expectedLockedUsdVal.add(
-      rdntPriceUsd.mul(RDNT_LIQUDITY).div(ethers.utils.parseUnits("1", 18))
-    );
-
-    expect(lockedVaule2).to.be.equal(expectedLockedUsdVal2);
-
     // For test purpose, lockedValue should exceed required
     const required = await eligibilityDataProvider.requiredUsdValue(
       user2.address
     );
-    expect(lockedVaule2).to.be.gt(required);
+    expect(lockedVaule1).to.be.gt(required);
     expect(
       await eligibilityDataProvider.isEligibleForRewards(user2.address)
     ).to.be.equal(true);
@@ -220,9 +199,7 @@ describe("Require Locked Value", () => {
 
     await advanceTimeAndBlock(duration);
     await multiFeeDistribution.connect(user2).setRelock(false);
-    await lpFeeDistribution.connect(user2).setRelock(false);
     await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
-    await lpFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
 
     const lockedVaule0 = await eligibilityDataProvider.lockedUsdValue(
       user2.address
@@ -251,13 +228,6 @@ describe("Require Locked Value", () => {
     expect(lockedVaule0).to.be.equal(0);
 
     await zapIntoEligibility(user2, deployData);
-
-    await radiantToken
-      .connect(user2)
-      .approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
-    await multiFeeDistribution
-      .connect(user2)
-      .stake(RDNT_LIQUDITY, user2.address, 0);
 
     const lockedVaule2 = await eligibilityDataProvider.lockedUsdValue(
       user2.address
