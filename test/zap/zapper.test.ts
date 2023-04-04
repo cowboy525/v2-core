@@ -12,7 +12,8 @@ import {
   UniswapPoolHelper,
   VariableDebtToken,
   TestnetLockZap,
-	WETH
+	WETH,
+  PriceProvider
 } from "../../typechain";
 import { advanceTimeAndBlock } from "../shared/helpers";
 import { DeployConfig, DeployData, LP_PROVIDER } from "../../scripts/deploy/types";
@@ -53,6 +54,7 @@ describe("Zapper", function () {
   let liquidityZapAddress: string;
   let liquidityZap: LiquidityZap;
   let poolHelper: UniswapPoolHelper;
+  let priceProvider: PriceProvider;
 
   beforeEach(async function () {
 		const { deploy } = deployments;
@@ -87,6 +89,7 @@ describe("Zapper", function () {
     poolHelper = <UniswapPoolHelper>(
       await ethers.getContractAt("UniswapPoolHelper", poolHelperAddress)
     );
+    priceProvider = fixture.priceProvider;
 		if (deployConfig.LP_PROVIDER == LP_PROVIDER.UNISWAP) {
 			liquidityZapAddress = await poolHelper.getLiquidityZap();
 			liquidityZap = await ethers.getContractAt(
@@ -464,4 +467,26 @@ describe("Zapper", function () {
 			}
 		});
 	});
+  describe("Alternate token zap", async () => {
+    it("Can zap USDC", async () => {
+      await lockZap.setPriceProvider(priceProvider.address);
+      const zapAmount = ethers.BigNumber.from(100 * 10**6);
+      await USDC.approve(
+        lockZap.address,
+        zapAmount
+      );
+      const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
+      await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0);
+      const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
+      const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
+
+      const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
+      const lpValueGained = lockedLpBalanceGained.mul(lpTokenPriceUsd).div(10**8);
+      const minAcceptedRatio = 9500;
+      const bpsUnit = 10_000;
+      const minAcceptedLpValue = zapAmount.mul(10**12).mul(minAcceptedRatio).div(bpsUnit);
+
+      expect(lpValueGained).to.be.gt(minAcceptedLpValue);
+    });
+  });
 });

@@ -163,4 +163,22 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 			priceInEth = weth.mul(10 ** 8).div(rdnt);
 		}
 	}
+
+	/**
+     * @dev Helper function to swap a token to weth given an {_inToken} and swap {_amount}.
+		 * Will revert if the output is under the {_minAmountOut}
+     */
+    function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
+			address[] memory path = new address[](2);
+			path[0] = _inToken;
+			path[1] = wethAddr;
+			IERC20(_inToken).safeIncreaseAllowance(address(router), _amount);
+			router.swapExactTokensForTokens(
+				_amount,
+				_minAmountOut,
+				path,
+				msg.sender,
+				block.timestamp
+			);
+    }
 }

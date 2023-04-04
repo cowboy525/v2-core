@@ -319,6 +319,69 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		lockZap = _lockZap;
 	}
 
+	/**
+	 * @notice Swaps tokens like USDC, DAI, USDT, WBTC to WETH
+	 * @param _inToken address of the asset to swap
+	 * @param _amount the amount of asset to swap
+	 * @param _minAmountOut the minimum WETH amount to accept without reverting
+	 */
+	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
+		require(_inToken != address(0), "Cannot swap 0x address");
+		require(_amount != 0, "Cannot swap 0 amount");
+		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
+		bytes32 daiUsdtUsdcPoolId = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
+		address realWethAddr = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+
+		address usdtAddress = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
+		address daiAddress = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
+		address usdcAddress = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
+		bool isSingleSwap = true;
+		if (_inToken == usdtAddress || _inToken == daiAddress) {
+			isSingleSwap = false;
+		}
+
+		if (!isSingleSwap) {
+			uint256 usdcBalanceBefore = IERC20(usdcAddress).balanceOf(address(this));
+			_swap(_inToken, usdcAddress, _amount, 0, daiUsdtUsdcPoolId, address(this));
+			uint256 usdcBalanceAfter = IERC20(usdcAddress).balanceOf(address(this));
+			_inToken = usdcAddress;
+			_amount = usdcBalanceAfter - usdcBalanceBefore;
+		}
+
+		_swap(_inToken, realWethAddr, _amount, _minAmountOut, wbtcWethUsdcPoolId, msg.sender);
+	}
+
+	/**
+	 * @notice Swaps tokens using the Balancer swap function
+	 * @param _inToken address of the asset to swap
+	 * @param _outToken address of the asset to receieve
+	 * @param _amount the amount of asset to swap
+	 * @param _minAmountOut the minimum WETH amount to accept without reverting
+	 * @param _poolId The ID of the pool to use for swapping
+	 * @param _recipient the receiver of the outToken
+	 */
+	function _swap(address _inToken, address _outToken, uint256 _amount, uint256 _minAmountOut, bytes32 _poolId, address _recipient) internal {
+			IVault.SingleSwap memory singleSwap;
+			singleSwap.poolId = _poolId;
+			singleSwap.kind = IVault.SwapKind.GIVEN_IN;
+			singleSwap.assetIn = IAsset(_inToken);
+			singleSwap.assetOut = IAsset(_outToken);
+			singleSwap.amount = _amount;
+			singleSwap.userData = abi.encode(0);
+
+			IVault.FundManagement memory funds;
+			funds.sender = address(this);
+			funds.fromInternalBalance = false;
+			funds.recipient = payable(address(_recipient));
+			funds.toInternalBalance = false;
+
+			uint256 currentAllowance = IERC20(_inToken).allowance(address(this), vaultAddr);
+			if (_amount > currentAllowance) {
+			  IERC20(_inToken).safeIncreaseAllowance(vaultAddr, _amount - currentAllowance);
+			}
+			IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
+	}
+
 	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		fee = pool.getSwapFeePercentage();

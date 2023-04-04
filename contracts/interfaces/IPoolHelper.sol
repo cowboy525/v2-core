@@ -19,6 +19,8 @@ interface IPoolHelper {
 	function getReserves() external view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply);
 
 	function getPrice() external view returns (uint256 priceInEth);
+
+	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external;
 }
 
 interface IBalancerPoolHelper is IPoolHelper {

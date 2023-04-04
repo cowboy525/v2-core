@@ -177,4 +177,33 @@ describe('Looping/Leverager', () => {
 		console.log('required2: ', parseFloat(ethers.utils.formatUnits(required2, 8)));
 		console.log('locked2: ', parseFloat(ethers.utils.formatUnits(locked2, 8)));
 	});
+
+	it('loop ETH from Borrow', async () => {
+		const {leverager, wethGateway, lendingPool, user2, usdc, weth}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+
+		await vdUSDC.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		const ethBalance = await ethers.provider.getBalance(user2.address);
+		console.log("user2 eth balance: ", ethBalance);
+
+		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
+			value: ethBalance,
+		});
+
+		const ethBalance2 = await ethers.provider.getBalance(user2.address);
+		expect(ethBalance2).to.equal(BigNumber.from(0));
+
+		let borrowRatio = 8000;
+		let amt = usdcPerAccount;
+		let loops = 1;
+		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops);
+
+	});
 });

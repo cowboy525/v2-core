@@ -77,6 +77,7 @@ export interface DeployConfig {
 		POOL_IDS: number[];
 	};
 	LOCK_INFO: {LOCK_PERIOD: number[]; MULTIPLIER: number[]};
+	POSTDEPLOY_TOKEN_CONFIG: any[];
 }
 
 export interface DeployData {

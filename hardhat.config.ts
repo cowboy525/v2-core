@@ -77,8 +77,8 @@ const config: HardhatUserConfig = {
 			// chainId: 42161,
 			chainId: 56,
 			forking: {
-				url: 'https://rpc-bsc.radiant.capital/e2af014b7281333ef80331dd368694e6b2e5c738/',
-				// blockNumber: 26829124,
+				url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
+				blockNumber: 72082642,
 			},
 			tags: ['mocks', 'testing'],
 		},

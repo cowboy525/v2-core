@@ -5,6 +5,7 @@ pragma abicoder v2;
 import "./helpers/DustRefunder.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -20,6 +21,7 @@ import "../../interfaces/IPoolHelper.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/IWETH.sol";
+import "../../interfaces/IPriceOracle.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
@@ -200,6 +202,42 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);
+	}
+
+	/**
+	 * @notice Zap tokens like USDC, DAI, USDT, WBTC to lp
+	 * @param _asset address of the asset to zap in
+	 * @param _amount the amount of asset to zap
+	 * @param _lockTypeIndex lock length index.
+	 */
+	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public {
+		require(_asset != address(0), "asset is 0 address");
+		require(_amount != 0, "amount is 0");
+		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
+		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
+		uint256 assetPrice = priceOracle.getAssetPrice(_asset);
+		uint256 ethPrice = uint256(ethOracle.latestAnswer());
+		uint256 expectedEthAmount = _amount * (10**(18 - assetDecimals)) * assetPrice / ethPrice;
+
+		IERC20(_asset).transferFrom(msg.sender, address(poolHelper), _amount);
+		uint256 wethBalanceBefore = weth.balanceOf(address(poolHelper));
+		uint256 minAcceptableWeth = expectedEthAmount * ACCEPTABLE_RATIO / RATIO_DIVISOR;
+		poolHelper.swapToWeth(_asset, _amount, minAcceptableWeth);
+		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
+		
+		weth.approve(address(poolHelper), wethGained);
+		uint256 liquidity = poolHelper.zapWETH(wethGained);
+
+		if (address(priceProvider) != address(0)) {
+			uint256 slippage = _calcSlippage(wethGained, liquidity);
+			require(slippage >= ACCEPTABLE_RATIO, "too much slippage");
+		}
+
+		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
+		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
+		emit Zapped(false, wethGained, 0, msg.sender, msg.sender, _lockTypeIndex);
+
+		refundDust(rdntAddr, address(weth), msg.sender);
 	}
 
 	/**

@@ -196,6 +196,8 @@ contract Leverager is Ownable {
 
 		if (!isBorrow) {
 			lendingPool.deposit(asset, amount, msg.sender, referralCode);
+		}else {
+			amount = amount.mul(RATIO_DIVISOR).div(borrowRatio);
 		}
 
 		cic.setEligibilityExempt(msg.sender, true);
@@ -239,6 +241,8 @@ contract Leverager is Ownable {
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
+		cic.setEligibilityExempt(msg.sender, true);
+
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
@@ -250,6 +254,47 @@ contract Leverager is Ownable {
 			weth.deposit{value: amount.sub(fee)}();
 			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
 		}
+
+		cic.setEligibilityExempt(msg.sender, false);
+
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+	}
+
+	/**
+	 * @dev Loop the borrow and deposit of ETH
+	 * @param interestRateMode stable or variable borrow mode
+	 * @param amount initial amount to borrow
+	 * @param borrowRatio Ratio of tokens to borrow
+	 * @param loopCount Repeat count for loop
+	 **/
+	function loopETHFromBorrow(uint256 interestRateMode, uint256 amount, uint256 borrowRatio, uint256 loopCount) external {
+		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		uint16 referralCode = 0;
+		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
+			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
+		}
+		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
+			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
+		}
+
+		uint256 fee;
+
+		cic.setEligibilityExempt(msg.sender, true);
+
+		for (uint256 i = 0; i < loopCount; i += 1) {
+			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
+			weth.withdraw(amount);
+
+			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+			_safeTransferETH(treasury, fee);
+
+			weth.deposit{value: amount.sub(fee)}();
+			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			
+			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
+		}
+
+		cic.setEligibilityExempt(msg.sender, false);
 
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
