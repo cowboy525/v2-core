@@ -31,6 +31,20 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	event RoutesUpdated(address _token, address[] _routes);
 
+  error AddressZero();
+
+  error InvalidCompoundFee();
+
+  error InvalidSlippage();
+
+  error NotBountyManager();
+
+  error NotEligible();
+
+  error InsufficientStakeAmount();
+
+  error ArrayLengthMismatch();
+
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public compoundFee;
 	uint256 public slippageLimit;
@@ -57,13 +71,18 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 _compoundFee,
 		uint256 _slippageLimit
 	) public initializer {
-		require(_uniRouter != address(0), "0x0 address");
-		require(_mfd != address(0), "0x0 address");
-		require(_baseToken != address(0), "0x0 address");
-		require(_addressProvider != address(0), "0x0 address");
-		require(_lockZap != address(0), "0x0 address");
-		require(_compoundFee > 0 && _compoundFee <= 2000, "Invalid compound fee");
-		require(_slippageLimit >= 8000 && _slippageLimit < PERCENT_DIVISOR, "Invalid slippage limit");
+    if (_uniRouter == address(0)) revert AddressZero();
+    if (_mfd == address(0)) revert AddressZero();
+    if (_baseToken == address(0)) revert AddressZero();
+    if (_addressProvider == address(0)) revert AddressZero();
+    if (_lockZap == address(0)) revert AddressZero();
+    if (_compoundFee <= 0) revert InvalidCompoundFee();
+    if (_compoundFee > 2000) revert InvalidCompoundFee();
+    if (_slippageLimit < 8000) {
+      if (_slippageLimit >= PERCENT_DIVISOR) {
+        revert InvalidSlippage();
+      }
+    }
 
 		uniRouter = _uniRouter;
 		multiFeeDistribution = _mfd;
@@ -98,17 +117,22 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setBountyManager(address _manager) external onlyOwner {
-		require(_manager != address(0), "bountyManager is 0 address");
+    if (_manager == address(0)) revert AddressZero();
 		bountyManager = _manager;
 	}
 
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
-		require(_compoundFee > 0 && _compoundFee <= 2000, "Invalid compound fee");
+    if (_compoundFee <= 0) revert InvalidCompoundFee();
+    if (_compoundFee > 2000) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		require(_slippageLimit >= 8000 && _slippageLimit < PERCENT_DIVISOR, "Invalid slippage limit");
+		if (_slippageLimit < 8000) {
+      if (_slippageLimit >= PERCENT_DIVISOR) {
+        revert InvalidSlippage();
+      }
+    }
 		slippageLimit = _slippageLimit;
 	}
 
@@ -166,17 +190,17 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 noSlippagePendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 
 		if (isAutoCompound) {
-			require(msg.sender == bountyManager, "!bountymanager");
+      if (msg.sender != bountyManager) revert NotBountyManager();
 			bool eligible = isEligibleForAutoCompound(_user, noSlippagePendingEth);
 			if (!eligible) {
 				if (_execute) {
-					revert("not eligible for autocompound");
+					revert NotEligible();
 				} else {
 					return (0);
 				}
 			}
 		} else {
-			require(isEligibleForCompound(noSlippagePendingEth), "min stake amt not met");
+      if (!isEligibleForCompound(noSlippagePendingEth)) revert InsufficientStakeAmount();
 		}
 
 		if (!_execute) {
@@ -186,7 +210,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
-		require((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth >= slippageLimit, "too much slippage");
+    if (PERCENT_DIVISOR * actualWethAfterSwap / noSlippagePendingEth < slippageLimit) revert InvalidSlippage();
 
 		if (isAutoCompound) {
 			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute);
@@ -234,7 +258,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256[] memory _amtsIn,
 		address _out
 	) internal view returns (uint256 amtOut) {
-		require(_in.length == _amtsIn.length, "length mismatch");
+    if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
 		uint256 length = _in.length;
 		for (uint i = 0; i < length; i++) {
 			amtOut += _estimateTokensOut(_in[i], _out, _amtsIn[i]);
@@ -263,7 +287,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		require(ethValueOfRDNT / 10 ** 8 >= (_wethIn * slippageLimit) / 10000, "too much slippage");
+    if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
 	}
 
 	function autocompoundThreshold() public view returns (uint256 minStakeAmtEth) {
