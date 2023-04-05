@@ -58,6 +58,39 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	event Disqualified(address indexed user);
 
+  /********************** Errors ***********************/
+  error AddressZero();
+
+  error UnknownPool();
+
+  error PoolExists();
+
+  error AlreadyStarted();
+
+  error NotAllowed();
+
+  error ArrayLengthMismatch();
+
+  error NotAscending();
+
+  error ExceedsMaxInt();
+
+  error InvalidStart();
+
+  error InvalidRToken();
+
+  error InsufficientPermission();
+
+  error NotMFD();
+
+  error BountyOnly();
+
+  error UserStillEligible();
+
+  error NotEligible();
+
+  error CadenceTooLong();
+
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
@@ -130,9 +163,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		IMiddleFeeDistribution _rewardMinter,
 		uint256 _rewardsPerSecond
 	) public initializer {
-		require(address(_poolConfigurator) != address(0), "!invalid address");
-		require(address(_eligibleDataProvider) != address(0), "!invalid address");
-		require(address(_rewardMinter) != address(0), "!invalid address");
+    if (address(_poolConfigurator) == address(0)) revert AddressZero();
+    if (address(_eligibleDataProvider) == address(0)) revert AddressZero();
+    if (address(_rewardMinter) == address(0)) revert AddressZero();
 
 		__Ownable_init();
 		__Pausable_init();
@@ -156,8 +189,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	function setOnwardIncentives(address _token, IOnwardIncentivesController _incentives) external onlyOwner {
-		require(poolInfo[_token].lastRewardTime != 0, "pool doesn't exist");
-		poolInfo[_token].onwardIncentives = _incentives;
+    PoolInfo storage pool = poolInfo[_token];
+		if (pool.lastRewardTime == 0) revert UnknownPool();
+		pool.onwardIncentives = _incentives;
 	}
 
 	function setBountyManager(address _bountyManager) external onlyOwner {
@@ -171,35 +205,32 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/********************** Pool Setup + Admin ***********************/
 
 	function start() public onlyOwner {
-		require(startTime == 0, "already started");
+    if (startTime != 0) revert AlreadyStarted();
 		startTime = block.timestamp;
 	}
 
 	// Add a new lp to the pool. Can only be called by the poolConfigurator.
 	function addPool(address _token, uint256 _allocPoint) external {
-		require(msg.sender == poolConfigurator, "not allowed");
-		require(poolInfo[_token].lastRewardTime == 0, "pool already exists");
+		if (msg.sender != poolConfigurator) revert NotAllowed();
+    if (poolInfo[_token].lastRewardTime != 0) revert PoolExists();
 		_updateEmissions();
 		totalAllocPoint = totalAllocPoint.add(_allocPoint);
 		registeredTokens.push(_token);
-		poolInfo[_token] = PoolInfo({
-			totalSupply: 0,
-			allocPoint: _allocPoint,
-			lastRewardTime: block.timestamp,
-			accRewardPerShare: 0,
-			onwardIncentives: IOnwardIncentivesController(address(0))
-		});
+    PoolInfo storage pool = poolInfo[_token];
+    pool.allocPoint = _allocPoint;
+    pool.lastRewardTime = block.timestamp;
+    pool.onwardIncentives = IOnwardIncentivesController(address(0));
 		validRTokens[_token] = true;
 	}
 
 	// Update the given pool's allocation point. Can only be called by the owner.
 	function batchUpdateAllocPoint(address[] calldata _tokens, uint256[] calldata _allocPoints) public onlyOwner {
-		require(_tokens.length == _allocPoints.length, "params length mismatch");
+    if (_tokens.length != _allocPoints.length) revert ArrayLengthMismatch();
 		_massUpdatePools();
 		uint256 _totalAllocPoint = totalAllocPoint;
 		for (uint256 i = 0; i < _tokens.length; i++) {
 			PoolInfo storage pool = poolInfo[_tokens[i]];
-			require(pool.lastRewardTime > 0, "pool doesn't exist");
+      if (pool.lastRewardTime == 0) revert UnknownPool();
 			_totalAllocPoint = _totalAllocPoint.sub(pool.allocPoint).add(_allocPoints[i]);
 			pool.allocPoint = _allocPoints[i];
 		}
@@ -237,17 +268,21 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256[] calldata _rewardsPerSecond
 	) external onlyOwner {
 		uint256 length = _startTimeOffsets.length;
-		require(length > 0 && length == _rewardsPerSecond.length, "empty or mismatch params");
+    if (length == 0) {
+      if (length != _rewardsPerSecond.length) {
+        revert ArrayLengthMismatch();
+      }
+    }
 
 		for (uint256 i = 0; i < length; i++) {
 			if (i > 0) {
-				require(_startTimeOffsets[i - 1] < _startTimeOffsets[i], "should be ascending");
+        if (_startTimeOffsets[i - 1] > _startTimeOffsets[i]) revert NotAscending();
 			}
-			require(_startTimeOffsets[i] <= type(uint128).max, "startTimeOffsets > max uint128");
-			require(_rewardsPerSecond[i] <= type(uint128).max, "rewardsPerSecond > max uint128");
+      if (_startTimeOffsets[i] > type(uint128).max) revert ExceedsMaxInt();
+      if (_rewardsPerSecond[i] > type(uint128).max) revert ExceedsMaxInt();
 
 			if (startTime > 0) {
-				require(_startTimeOffsets[i] > block.timestamp.sub(startTime), "invalid start time");
+        if (_startTimeOffsets[i] < block.timestamp.sub(startTime)) revert InvalidStart();
 			}
 			emissionSchedule.push(
 				EmissionPoint({
@@ -344,9 +379,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		userBaseClaimable[_user] = 0;
 		uint256 _totalAllocPoint = totalAllocPoint;
 		for (uint256 i = 0; i < _tokens.length; i++) {
-			require(validRTokens[_tokens[i]], "invalid rtoken");
+      if (!validRTokens[_tokens[i]]) revert InvalidRToken();
 			PoolInfo storage pool = poolInfo[_tokens[i]];
-			require(pool.lastRewardTime > 0, "pool doesn't exist");
+      if (pool.lastRewardTime == 0) revert UnknownPool();
 			_updatePool(pool, _totalAllocPoint);
 			UserInfo storage user = userInfo[_tokens[i]][_user];
 			uint256 rewardDebt = user.amount.mul(pool.accRewardPerShare).div(ACC_REWARD_PRECISION);
@@ -375,7 +410,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	function setEligibilityExempt(address _contract, bool _value) public {
-		require(msg.sender == owner() || msg.sender == address(leverager), "!authorized");
+    if (msg.sender != owner()) revert InsufficientPermission();
+    if (msg.sender != address(leverager)) revert InsufficientPermission();
 		eligibilityExempt[_contract] = _value;
 	}
 
@@ -390,7 +426,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @dev important! eligible status can be updated here
 	 */
 	function handleActionAfter(address _user, uint256 _balance, uint256 _totalSupply) external {
-		require(validRTokens[msg.sender] || msg.sender == address(_getMfd()), "!rToken || mfd");
+    if (!validRTokens[msg.sender]) revert InvalidRToken();
+    if (msg.sender != address(_getMfd())) revert NotMFD();
+
 
 		if (_user == address(rewardMinter) || _user == address(_getMfd()) || eligibilityExempt[_user]) {
 			return;
@@ -414,7 +452,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 _totalSupply
 	) internal {
 		PoolInfo storage pool = poolInfo[_token];
-		require(pool.lastRewardTime > 0, "pool doesn't exist");
+    if (pool.lastRewardTime == 0) revert UnknownPool();
 		// _updateEmissions();
 		_updatePool(pool, totalAllocPoint);
 		UserInfo storage user = userInfo[_token][_user];
@@ -453,7 +491,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @dev Called by the locking contracts after locking or unlocking happens
 	 */
 	function afterLockUpdate(address _user) external {
-		require(msg.sender == address(_getMfd()), "!MFD");
+    if (msg.sender != address(_getMfd())) revert NotMFD();
 		if (eligibilityEnabled) {
 			eligibleDataProvider.refresh(_user);
 			if (eligibleDataProvider.lastEligibleStatus(_user)) {
@@ -513,14 +551,14 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	function claimBounty(address _user, bool _execute) public returns (bool issueBaseBounty) {
-		require(msg.sender == address(bountyManager), "bounty only");
+    if (msg.sender != address(bountyManager)) revert BountyOnly();
 		issueBaseBounty = checkAndProcessEligibility(_user, _execute, true);
 	}
 
 	function stopEmissionsFor(address _user) internal {
-		require(eligibilityEnabled, "!EE");
+    if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-		require(!eligibleDataProvider.lastEligibleStatus(_user), "user is still eligible");
+    if (eligibleDataProvider.lastEligibleStatus(_user)) revert UserStillEligible();
 		for (uint256 i = 0; i < poolLength(); ++i) {
 			address token = registeredTokens[i];
 			PoolInfo storage pool = poolInfo[token];
@@ -586,7 +624,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	function setEndingTimeUpdateCadence(uint256 _lapse) external onlyOwner {
-		require(_lapse <= 1 weeks, "cadence too long");
+    if (_lapse > 1 weeks) revert CadenceTooLong();
 		endingTime.updateCadence = _lapse;
 	}
 

@@ -82,6 +82,15 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/// @notice Emitted when a new token is added
 	event AddToken(address indexed token);
 
+  /********************** Errors ***********************/
+  error AddressZero();
+
+  error LPTokenSet();
+
+  error InvalidRatio();
+
+  error OnlyCIC();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -93,9 +102,9 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		IMiddleFeeDistribution _middleFeeDistribution,
 		IPriceProvider _priceProvider
 	) public initializer {
-		require(address(_lendingPool) != address(0), "Not a valid address");
-		require(address(_middleFeeDistribution) != (address(0)), "Not a valid address");
-		require(address(_priceProvider) != (address(0)), "Not a valid address");
+    if (address(_lendingPool) == address(0)) revert AddressZero();
+    if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
+    if (address(_priceProvider) == address(0)) revert AddressZero();
 
 		lendingPool = _lendingPool;
 		middleFeeDistribution = _middleFeeDistribution;
@@ -112,7 +121,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _chef address.
 	 */
 	function setChefIncentivesController(IChefIncentivesController _chef) external onlyOwner {
-		require(address(_chef) != address(0), "chef is 0 address");
+    if (address(_chef) == address(0)) revert AddressZero();
 		chef = _chef;
 		emit ChefIncentivesControllerUpdated(_chef);
 	}
@@ -121,7 +130,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Set LP token
 	 */
 	function setLPToken(address _lpToken) external onlyOwner {
-		require(lpToken == address(0), "LP token already set");
+    if (lpToken != address(0)) revert LPTokenSet();
 		lpToken = _lpToken;
 
 		emit LPTokenUpdated(_lpToken);
@@ -132,7 +141,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _requiredDepositRatio Ratio in bips.
 	 */
 	function setRequiredDepositRatio(uint256 _requiredDepositRatio) external onlyOwner {
-		require(_requiredDepositRatio <= RATIO_DIVISOR, "Invalid ratio");
+    if (_requiredDepositRatio > RATIO_DIVISOR) revert InvalidRatio();
 		requiredDepositRatio = _requiredDepositRatio;
 
 		emit RequiredDepositRatioUpdated(_requiredDepositRatio);
@@ -143,7 +152,11 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-		require(_priceToleranceRatio >= 8000 && _priceToleranceRatio <= RATIO_DIVISOR, "Invalid ratio");
+    if (_priceToleranceRatio < 8000) {
+      if (_priceToleranceRatio > RATIO_DIVISOR) {
+        revert InvalidRatio();
+      }
+    }
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
@@ -156,7 +169,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _time for DQ
 	 */
 	function setDqTime(address _user, uint256 _time) external {
-		require(msg.sender == address(chef), "Only CIC");
+    if (msg.sender != address(chef)) revert OnlyCIC();
 		disqualifiedTime[_user] = _time;
 
 		emit DqTimeUpdated(_user, _time);
@@ -246,7 +259,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param user's address
 	 */
 	function refresh(address user) external {
-		require(msg.sender == address(chef), "Can only be called by CIC");
+    if (msg.sender != address(chef)) revert OnlyCIC();
 		assert(user != address(0));
 
 		bool currentEligble = isEligibleForRewards(user);
