@@ -51,6 +51,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
+  error ZapExists();
+  error InvalidETHAmount();
+  error AddressZero();
+  error InsufficientPermision();
+
 	address public _token;
 	address public _tokenWETHPair;
 	IWETH public weth;
@@ -62,7 +67,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
-		require(!initialized, "already initialized");
+    if (initialized) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
 		_tokenWETHPair = tokenWethPair;
@@ -77,15 +82,15 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	function zapETH(address payable _onBehalf) external payable returns (uint256 liquidity) {
-		require(msg.value > 0, "LiquidityZAP: ETH amount must be greater than 0");
+    if (msg.value == 0) revert InvalidETHAmount();
 		return addLiquidityETHOnly(_onBehalf);
 	}
 
 	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256 liquidity) {
-		require(msg.sender == poolHelper, "!poolhelper");
-		require(to != address(0), "Invalid address");
+    if (msg.sender != poolHelper) revert InsufficientPermision();
+    if (to == address(0)) revert AddressZero();
 		uint256 buyAmount = _amount.div(2);
-		require(buyAmount > 0, "Insufficient ETH amount");
+    if (buyAmount == 0) revert InvalidETHAmount();
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
 		uint256 outTokens = UniswapV2Library.getAmountOut(buyAmount, reserveWeth, reserveTokens);
@@ -104,9 +109,9 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	function addLiquidityETHOnly(address payable to) public payable returns (uint256 liquidity) {
-		require(to != address(0), "LiquidityZAP: Invalid address");
+    if (to == address(0)) revert AddressZero();
 		uint256 buyAmount = msg.value.div(2);
-		require(buyAmount > 0, "LiquidityZAP: Insufficient ETH amount");
+    if (buyAmount == 0) revert InvalidETHAmount();
 		weth.deposit{value: msg.value}();
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();

@@ -23,6 +23,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
+  error AddressZero();
+  error PoolExists();
+  error InsufficientPermision();
+  error IdenticalAddresses();
+  error ZeroAmount();
+
 	address public inTokenAddr;
 	address public outTokenAddr;
 	address public wethAddr;
@@ -39,10 +45,11 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		address _vault,
 		IWeightedPoolFactory _poolFactory
 	) external initializer {
-		require(_inTokenAddr != address(0), "inTokenAddr is 0 address");
-		require(_outTokenAddr != address(0), "outTokenAddr is 0 address");
-		require(_wethAddr != address(0), "wethAddr is 0 address");
-		require(_vault != address(0), "vault is 0 address");
+    if (_inTokenAddr == address(0)) revert AddressZero();
+    if (_outTokenAddr == address(0)) revert AddressZero();
+    if (_wethAddr == address(0)) revert AddressZero();
+    if (_vault == address(0)) revert AddressZero();
+
 		__Ownable_init();
 		inTokenAddr = _inTokenAddr;
 		outTokenAddr = _outTokenAddr;
@@ -52,7 +59,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
-		require(lpTokenAddr == address(0), "Already initialized");
+    if (lpTokenAddr != address(0)) revert PoolExists();
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
 
@@ -244,7 +251,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
-		require(msg.sender == lockZap, "!lockZap");
+    if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
 		liquidity = joinPool(amount, 0);
 		IERC20 lp = IERC20(lpTokenAddr);
@@ -253,7 +260,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
-		require(msg.sender == lockZap, "!lockZap");
+    if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 
@@ -265,9 +272,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
-		require(tokenA != tokenB, "BalancerZap: IDENTICAL_ADDRESSES");
+    if (tokenA == tokenB) revert IdenticalAddresses();
 		(token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-		require(token0 != address(0), "BalancerZap: ZERO_ADDRESS");
+    if (token0 == address(0)) revert AddressZero();
 	}
 
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
@@ -315,7 +322,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function setLockZap(address _lockZap) external onlyOwner {
-		require(_lockZap != address(0), "lockZap is 0 address");
+    if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
 	}
 
@@ -326,8 +333,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _minAmountOut the minimum WETH amount to accept without reverting
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-		require(_inToken != address(0), "Cannot swap 0x address");
-		require(_amount != 0, "Cannot swap 0 amount");
+    if (_inToken == address(0)) revert AddressZero();
+    if (_amount == 0) revert ZeroAmount();
 		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
 		bytes32 daiUsdtUsdcPoolId = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
 		address realWethAddr = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
