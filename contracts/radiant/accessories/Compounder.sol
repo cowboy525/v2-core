@@ -141,7 +141,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		mfd.claimFromConverter(_user);
 		ILendingPool lendingPool = ILendingPool(ILendingPoolAddressesProvider(addressProvider).getLendingPool());
 
-		for (uint256 i = 0; i < rewardBaseTokens.length; i++) {
+    uint256 length = rewardBaseTokens.length;
+		for (uint256 i; i < length;) {
 			uint256 balance = IERC20(rewardBaseTokens[i]).balanceOf(address(this));
 			if (balance == 0) {
 				continue;
@@ -161,6 +162,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 					)
 				{} catch {}
 			}
+      unchecked { i++; }
 		}
 		return IERC20(baseToken).balanceOf(address(this));
 	}
@@ -235,12 +237,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		tokens = new address[](pending.length - 1);
 		amts = new uint256[](pending.length - 1);
 		uint256 index;
-		for (uint256 i = 0; i < pending.length; i++) {
+    uint256 length = pending.length;
+		for (uint256 i; i < length;) {
 			if (pending[i].token != address(rdntToken)) {
 				tokens[index] = IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS();
 				amts[index] = pending[i].amount;
 				index++;
 			}
+      unchecked { i++; }
 		}
 	}
 
@@ -260,8 +264,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	) internal view returns (uint256 amtOut) {
     if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
 		uint256 length = _in.length;
-		for (uint i = 0; i < length; i++) {
+		for (uint i; i < length;) {
 			amtOut += _estimateTokensOut(_in[i], _out, _amtsIn[i]);
+      unchecked { i++; }
 		}
 	}
 
