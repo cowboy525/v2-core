@@ -12,11 +12,11 @@ const {deployments, getNamedAccounts, network} = hre;
 	const owner = await read('ChefIncentivesController', 'owner');
 	console.log(`CIC Owner: ${owner}`);
 
-	const signer2 = await hre.ethers.getSigner('0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266');
-	const tx = await signer2.sendTransaction({
-		to: owner,
-		value: hre.ethers.utils.parseEther('1.0'),
-	});
+	// const signer2 = await hre.ethers.getSigner('0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266');
+	// const tx = await signer2.sendTransaction({
+	// 	to: owner,
+	// 	value: hre.ethers.utils.parseEther('1.0'),
+	// });
 
 	await hre.network.provider.request({
 		method: 'hardhat_impersonateAccount',

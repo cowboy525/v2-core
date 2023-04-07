@@ -1059,7 +1059,11 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		_unpause();
 	}
 
+	function requalifyFor(address _user) public {
+		incentivesController.afterLockUpdate(_user);
+	}
+
 	function requalify() external {
-		incentivesController.afterLockUpdate(msg.sender);
+		requalifyFor(msg.sender);
 	}
 }
