@@ -83,7 +83,7 @@
     "@openzeppelin/hardhat-defender": "^1.8.2",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@tenderly/hardhat-tenderly": "^1.6.1",
-    "@uniswap/lib": "github:radiant-capital/uniswapv2-solc0.8#81fe929d92dbddb549651e2fbf875f1211d0be09",
+    "@uniswap/lib": "github:radiant-capital/uniswapv2-solc0.8",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v3-core": "github:Uniswap/v3-core.git#0.8",
     "@uniswap/v3-periphery": "github:Uniswap/v3-periphery.git#0.8",
