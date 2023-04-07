@@ -36,8 +36,8 @@ async function main() {
 					strategy: {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyVolatileBTC',
-						optimalUtilizationRate: '650000000000000000000000000',
-						variableRateSlope1: '100000000000000000000000000',
+						optimalUtilizationRate: '670000000000000000000000000',
+						variableRateSlope1: '125000000000000000000000000',
 						variableRateSlope2: '950000000000000000000000000',
 						stableRateSlope1: '100000000000000000000000000',
 						stableRateSlope2: '3000000000000000000000000000',
@@ -53,7 +53,7 @@ async function main() {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyStableBUSD',
 						optimalUtilizationRate: '700000000000000000000000000',
-						variableRateSlope1: '70000000000000000000000000',
+						variableRateSlope1: '75000000000000000000000000',
 						variableRateSlope2: '650000000000000000000000000',
 						stableRateSlope1: '60000000000000000000000000',
 						stableRateSlope2: '750000000000000000000000000',
@@ -68,8 +68,8 @@ async function main() {
 					strategy: {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyStableUSDC',
-						optimalUtilizationRate: '675000000000000000000000000',
-						variableRateSlope1: '70000000000000000000000000',
+						optimalUtilizationRate: '670000000000000000000000000',
+						variableRateSlope1: '75000000000000000000000000',
 						variableRateSlope2: '650000000000000000000000000',
 						stableRateSlope1: '60000000000000000000000000',
 						stableRateSlope2: '750000000000000000000000000',
@@ -84,8 +84,8 @@ async function main() {
 					strategy: {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyStableUSDT',
-						optimalUtilizationRate: '675000000000000000000000000',
-						variableRateSlope1: '70000000000000000000000000',
+						optimalUtilizationRate: '670000000000000000000000000',
+						variableRateSlope1: '75000000000000000000000000',
 						variableRateSlope2: '650000000000000000000000000',
 						stableRateSlope1: '60000000000000000000000000',
 						stableRateSlope2: '750000000000000000000000000',
@@ -99,9 +99,9 @@ async function main() {
 				reservesParams: {
 					strategy: {
 						baseVariableBorrowRate: '0',
-						name: 'rateStrategyWBNB',
-						optimalUtilizationRate: '620000000000000000000000000',
-						variableRateSlope1: '100000000000000000000000000',
+						name: 'rateStrategyBNB',
+						optimalUtilizationRate: '625000000000000000000000000',
+						variableRateSlope1: '125000000000000000000000000',
 						variableRateSlope2: '950000000000000000000000000',
 						stableRateSlope1: '100000000000000000000000000',
 						stableRateSlope2: '3000000000000000000000000000',
@@ -117,7 +117,7 @@ async function main() {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyWETH',
 						optimalUtilizationRate: '650000000000000000000000000',
-						variableRateSlope1: '100000000000000000000000000',
+						variableRateSlope1: '125000000000000000000000000',
 						variableRateSlope2: '950000000000000000000000000',
 						stableRateSlope1: '100000000000000000000000000',
 						stableRateSlope2: '3000000000000000000000000000',
@@ -201,9 +201,9 @@ async function main() {
 		console.log(stratAddr);
 		console.log(' ');
 
-		// let wow = await configurator.connect(admin).setReserveInterestRateStrategyAddress(underlyingAddr, stratAddr);
-		// console.log(`nice`);
-		// console.log(wow.hash);
+		let wow = await configurator.connect(admin).setReserveInterestRateStrategyAddress(underlyingAddr, stratAddr);
+		console.log(`nice`);
+		console.log(wow.hash);
 	}
 }
 

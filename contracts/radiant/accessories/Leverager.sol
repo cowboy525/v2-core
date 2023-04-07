@@ -194,25 +194,28 @@ contract Leverager is Ownable {
 			IERC20(asset).safeApprove(treasury, type(uint256).max);
 		}
 
+		cic.setEligibilityExempt(msg.sender, true);
+
 		if (!isBorrow) {
 			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}else {
 			amount = amount.mul(RATIO_DIVISOR).div(borrowRatio);
 		}
 
-		cic.setEligibilityExempt(msg.sender, true);
-
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
+
 			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 

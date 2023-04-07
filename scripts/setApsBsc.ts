@@ -29,17 +29,17 @@ const {deployments, getNamedAccounts, network} = hre;
 
 	const allocInfo: {[key: string]: number} = {
 		rBTCB: 30,
-		vdBTCB: 45,
-		rUSDT: 25,
-		vdUSDT: 37,
+		vdBTCB: 40,
+		rUSDT: 30,
+		vdUSDT: 50,
 		rBUSD: 8,
-		vdBUSD: 12,
+		vdBUSD: 14,
 		rUSDC: 3,
 		vdUSDC: 5,
 		rETH: 6,
 		vdETH: 9,
-		rWBNB: 70,
-		vdWBNB: 70,
+		rWBNB: 60,
+		vdWBNB: 80,
 	};
 	const tokens = [];
 	const allocPoints = [];

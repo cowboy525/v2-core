@@ -6,7 +6,7 @@ const {ethers} = require('hardhat');
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
-	const {deploy, read} = deployments;
+	const {deploy, read, execute} = deployments;
 	const {deployer, treasury} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
 
@@ -102,6 +102,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				ReserveLogic: reserveLogic.address,
 			},
 		});
+
+		await execute('LendingPool', {from: deployer, log: true}, 'initialize', lendingPoolAddressesProvider.address);
 
 		await (await lendingPoolAddressesProvider.setLendingPoolImpl(lendingPool.address)).wait();
 
