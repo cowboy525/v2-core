@@ -64,7 +64,7 @@ const config: HardhatUserConfig = {
 	},
 	networks: {
 		hardhat: {
-			loggingEnabled: true,
+			// loggingEnabled: true,
 			initialBaseFeePerGas: 0,
 			allowUnlimitedContractSize: false,
 			gasPrice: 0,
@@ -75,7 +75,7 @@ const config: HardhatUserConfig = {
 			// blockNumber: 76739035,
 			// },
 			// chainId: 42161,
-			chainId: 56,
+			// chainId: 56,
 			forking: {
 				url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
 				blockNumber: 72082642,
@@ -86,7 +86,7 @@ const config: HardhatUserConfig = {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			// accounts: accounts(),
-			chainId: 56,
+			// chainId: 56,
 			timeout: 10000000000000,
 			// accounts: [process.env.PRIVATE_KEY_BSC || ''],
 			tags: ['mocks', 'testing'],
