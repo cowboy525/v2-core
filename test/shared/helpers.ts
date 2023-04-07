@@ -240,7 +240,7 @@ export const depositAndBorrowAll = async (
 	deployData: DeployData,
 	delay: boolean = false
 ) => {
-	console.log("allTokens: ", deployData.allTokens)
+	// console.log("allTokens: ", deployData.allTokens)
 	const keys = Object.keys(deployData.allTokens).filter((k) => k.charAt(0) == 'r');
 
 	for (let i = 0; i < keys.length; i++) {
@@ -280,7 +280,7 @@ export const depositAndBorrowAll = async (
 			const tx = await asset.connect(user).mint(formattedAmt);
 			await tx.wait();
 		} else {
-			console.log("asset: ", asset.address)
+			// console.log("asset: ", asset.address)
 			const tx = await asset.mint(user.address, formattedAmt);
 			await tx.wait();
 		}
