@@ -26,6 +26,8 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function totalBalance(address user) external view returns (uint256);
 
+  function lockedBalance(address user) external view returns (uint256);
+
 	function zapVestingToLp(address _address) external returns (uint256);
 
 	function withdrawExpiredLocksFor(address _address) external returns (uint256);

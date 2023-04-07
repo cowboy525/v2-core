@@ -371,6 +371,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return balances[user].locked;
 	}
 
+  function lockedBalance(address user) external view override returns (uint256 amount) {
+    return balances[user].locked;
+  }
+
 	/**
 	 * @notice Information on a user's lockings
 	 * @return total balance of locks
