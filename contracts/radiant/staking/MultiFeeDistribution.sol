@@ -159,21 +159,21 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	event Recovered(address token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
 
-  /********************** Errors ***********************/
-  error AddressZero();
-  error AmountZero();
-  error InvalidBurn();
-  error InvalidLookback();
-  error MintersSet();
-  error InvalidLockPeriod();
-  error InsufficientPermission();
-  error AlreadyAdded();
-  error InvalidType();
-  error ActiveReward();
-  error InvalidAmount();
-  error InvalidEarned();
-  error InvalidTime();
-  error InvalidPeriod();
+	/********************** Errors ***********************/
+	error AddressZero();
+	error AmountZero();
+	error InvalidBurn();
+	error InvalidLookback();
+	error MintersSet();
+	error InvalidLockPeriod();
+	error InsufficientPermission();
+	error AlreadyAdded();
+	error InvalidType();
+	error ActiveReward();
+	error InvalidAmount();
+	error InvalidEarned();
+	error InvalidTime();
+	error InvalidPeriod();
 
 	/**
 	 * @dev Constructor
@@ -196,17 +196,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 _burnRatio,
 		uint256 _vestDuration
 	) public initializer {
-    if (_rdntToken == address(0)) revert AddressZero();
-    if (_lockZap == address(0)) revert AddressZero();
-    if (_dao == address(0)) revert AddressZero();
-    if (_userlist == address(0)) revert AddressZero();
-    if (priceProvider == address(0)) revert AddressZero();
-    if (_rewardsDuration == uint256(0)) revert AmountZero();
-    if (_rewardsLookback == uint256(0)) revert AmountZero();
-    if (_lockDuration == uint256(0)) revert AmountZero();
-    if (_vestDuration == uint256(0)) revert AmountZero();
-    if (_burnRatio > WHOLE) revert InvalidBurn();
-    if (_rewardsLookback > _rewardsDuration) revert InvalidLookback();
+		if (_rdntToken == address(0)) revert AddressZero();
+		if (_lockZap == address(0)) revert AddressZero();
+		if (_dao == address(0)) revert AddressZero();
+		if (_userlist == address(0)) revert AddressZero();
+		if (priceProvider == address(0)) revert AddressZero();
+		if (_rewardsDuration == uint256(0)) revert AmountZero();
+		if (_rewardsLookback == uint256(0)) revert AmountZero();
+		if (_lockDuration == uint256(0)) revert AmountZero();
+		if (_vestDuration == uint256(0)) revert AmountZero();
+		if (_burnRatio > WHOLE) revert InvalidBurn();
+		if (_rewardsLookback > _rewardsDuration) revert InvalidLookback();
 
 		__Pausable_init();
 		__Ownable_init();
@@ -233,24 +233,26 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @dev Can be called only once
 	 */
 	function setMinters(address[] calldata _minters) external onlyOwner {
-    if (mintersAreSet) revert MintersSet();
-    uint256 length = _minters.length;
-		for (uint256 i; i < length;) {
-      if (_minters[i] == address(0)) revert AddressZero();
+		if (mintersAreSet) revert MintersSet();
+		uint256 length = _minters.length;
+		for (uint256 i; i < length; ) {
+			if (_minters[i] == address(0)) revert AddressZero();
 			minters[_minters[i]] = true;
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		mintersAreSet = true;
 	}
 
 	function setBountyManager(address _bounty) external onlyOwner {
-    if (_bounty == address(0)) revert AddressZero();
+		if (_bounty == address(0)) revert AddressZero();
 		bountyManager = _bounty;
 		minters[_bounty] = true;
 	}
 
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
-    if (_rewardConverter == address(0)) revert AddressZero();
+		if (_rewardConverter == address(0)) revert AddressZero();
 		rewardConverter = _rewardConverter;
 	}
 
@@ -258,14 +260,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Add a new reward token to be distributed to stakers.
 	 */
 	function setLockTypeInfo(uint256[] calldata _lockPeriod, uint256[] calldata _rewardMultipliers) external onlyOwner {
-    if (_lockPeriod.length != _rewardMultipliers.length) revert InvalidLockPeriod();
+		if (_lockPeriod.length != _rewardMultipliers.length) revert InvalidLockPeriod();
 		delete lockPeriod;
 		delete rewardMultipliers;
-    uint256 length = _lockPeriod.length;
-		for (uint256 i; i < length;) {
+		uint256 length = _lockPeriod.length;
+		for (uint256 i; i < length; ) {
 			lockPeriod.push(_lockPeriod[i]);
 			rewardMultipliers.push(_rewardMultipliers[i]);
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -277,8 +281,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		IMiddleFeeDistribution _middleFeeDistribution,
 		address _treasury
 	) external onlyOwner {
-    if (address(_controller) == address(0)) revert AddressZero();
-    if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
+		if (address(_controller) == address(0)) revert AddressZero();
+		if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
 		incentivesController = _controller;
 		middleFeeDistribution = _middleFeeDistribution;
 		startfleetTreasury = _treasury;
@@ -288,8 +292,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Set LP token.
 	 */
 	function setLPToken(address _stakingToken) external onlyOwner {
-    if (_stakingToken == address(0)) revert AddressZero();
-    if (stakingToken == address(0)) revert AddressZero();
+		if (_stakingToken == address(0)) revert AddressZero();
+		if (stakingToken == address(0)) revert AddressZero();
 		stakingToken = _stakingToken;
 	}
 
@@ -297,14 +301,14 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Add a new reward token to be distributed to stakers.
 	 */
 	function addReward(address _rewardToken) external override {
-    if (_rewardToken == address(0)) revert InvalidBurn();
-    if (!minters[msg.sender]) revert InsufficientPermission();
-    if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
+		if (_rewardToken == address(0)) revert InvalidBurn();
+		if (!minters[msg.sender]) revert InsufficientPermission();
+		if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
 		rewardTokens.push(_rewardToken);
 
-    Reward storage rewardData = rewardData[_rewardToken];
-    rewardData.lastUpdateTime = block.timestamp;
-    rewardData.periodFinish = block.timestamp;
+		Reward storage rewardData = rewardData[_rewardToken];
+		rewardData.lastUpdateTime = block.timestamp;
+		rewardData.periodFinish = block.timestamp;
 	}
 
 	/********************** View functions ***********************/
@@ -313,7 +317,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Set default lock type index for user relock.
 	 */
 	function setDefaultRelockTypeIndex(uint256 _index) external override {
-    if (_index >= lockPeriod.length) revert InvalidType();
+		if (_index >= lockPeriod.length) revert InvalidType();
 		defaultLockIndex[msg.sender] = _index;
 	}
 
@@ -347,7 +351,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders.
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-    if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
+		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
 		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
 		emit Recovered(tokenAddress, tokenAmount);
 	}
@@ -371,9 +375,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return balances[user].locked;
 	}
 
-  function lockedBalance(address user) external view override returns (uint256 amount) {
-    return balances[user].locked;
-  }
+	function lockedBalance(address user) external view override returns (uint256 amount) {
+		return balances[user].locked;
+	}
 
 	/**
 	 * @notice Information on a user's lockings
@@ -399,8 +403,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	{
 		LockedBalance[] storage locks = userLocks[user];
 		uint256 idx;
-    uint256 length = locks.length;
-		for (uint256 i; i < length;) {
+		uint256 length = locks.length;
+		for (uint256 i; i < length; ) {
 			if (locks[i].unlockTime > block.timestamp) {
 				if (idx == 0) {
 					lockData = new LockedBalance[](locks.length - i);
@@ -412,7 +416,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			} else {
 				unlockable = unlockable.add(locks[i].amount);
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
 	}
@@ -430,8 +436,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		unlocked = balances[user].unlocked;
 		LockedBalance[] storage earnings = userEarnings[user];
 		uint256 idx;
-    uint256 length = earnings.length;
-		for (uint256 i; i < length;) {
+		uint256 length = earnings.length;
+		for (uint256 i; i < length; ) {
 			if (earnings[i].unlockTime > block.timestamp) {
 				if (idx == 0) {
 					earningsData = new EarnedBalance[](earnings.length - i);
@@ -445,7 +451,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			} else {
 				unlocked = unlocked.add(earnings[i].amount);
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		return (total, unlocked, earningsData);
 	}
@@ -460,13 +468,15 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 earned = balances[user].earned;
 		if (earned > 0) {
 			uint256 length = userEarnings[user].length;
-			for (uint256 i; i < length;) {
+			for (uint256 i; i < length; ) {
 				uint256 earnedAmount = userEarnings[user][i].amount;
 				if (earnedAmount == 0) continue;
 				(, , uint256 newPenaltyAmount, uint256 newBurnAmount) = _penaltyInfo(userEarnings[user][i]);
 				penaltyAmount = penaltyAmount.add(newPenaltyAmount);
 				burnAmount = burnAmount.add(newBurnAmount);
-        unchecked { i++; }
+				unchecked {
+					i++;
+				}
 			}
 		}
 		amount = balances[user].unlocked.add(earned).sub(penaltyAmount);
@@ -527,8 +537,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	) public view override returns (IFeeDistribution.RewardData[] memory rewardsData) {
 		rewardsData = new IFeeDistribution.RewardData[](rewardTokens.length);
 
-    uint256 length = rewardTokens.length;
-		for (uint256 i; i < length;) {
+		uint256 length = rewardTokens.length;
+		for (uint256 i; i < length; ) {
 			rewardsData[i].token = rewardTokens[i];
 			rewardsData[i].amount = _earned(
 				account,
@@ -536,17 +546,19 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				balances[account].lockedWithMultiplier,
 				rewardPerToken(rewardsData[i].token)
 			).div(1e12);
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		return rewardsData;
 	}
 
 	function claimFromConverter(address onBehalf) external override whenNotPaused {
-    if (msg.sender != rewardConverter) revert InsufficientPermission();
+		if (msg.sender != rewardConverter) revert InsufficientPermission();
 		_updateReward(onBehalf);
 		middleFeeDistribution.forwardReward(rewardTokens);
 		uint256 length = rewardTokens.length;
-		for (uint256 i; i < length;) {
+		for (uint256 i; i < length; ) {
 			address token = rewardTokens[i];
 			_notifyUnseenReward(token);
 			uint256 reward = rewards[onBehalf][token].div(1e12);
@@ -557,7 +569,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				IERC20(token).safeTransfer(rewardConverter, reward);
 				emit RewardPaid(onBehalf, token, reward);
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		IPriceProvider(_priceProvider).update();
 		lastClaimTime[onBehalf] = block.timestamp;
@@ -576,9 +590,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function _stake(uint256 amount, address onBehalfOf, uint256 typeIndex, bool isRelock) internal whenNotPaused {
 		if (amount == 0) return;
 		if (bountyManager != address(0)) {
-      if (amount < IBountyManager(bountyManager).minDLPBalance()) revert InvalidAmount();
+			if (amount < IBountyManager(bountyManager).minDLPBalance()) revert InvalidAmount();
 		}
-    if (typeIndex >= lockPeriod.length) revert InvalidAmount();
+		if (typeIndex >= lockPeriod.length) revert InvalidAmount();
 
 		_updateReward(onBehalfOf);
 
@@ -648,7 +662,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 *  withdrawn before vestDuration has passed.
 	 */
 	function mint(address user, uint256 amount, bool withPenalty) external override whenNotPaused {
-    if (!minters[msg.sender]) revert InsufficientPermission();
+		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (amount == 0) return;
 
 		if (user == address(this)) {
@@ -679,7 +693,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function withdraw(uint256 amount) external {
 		address _address = msg.sender;
-    if (amount == 0) revert InvalidAmount();
+		if (amount == 0) revert InvalidAmount();
 
 		uint256 penaltyAmount;
 		uint256 burnAmount;
@@ -689,7 +703,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			bal.unlocked = bal.unlocked.sub(amount);
 		} else {
 			uint256 remaining = amount.sub(bal.unlocked);
-      if (bal.earned < remaining) revert InvalidEarned();
+			if (bal.earned < remaining) revert InvalidEarned();
 			bal.unlocked = 0;
 			uint256 sumEarned = bal.earned;
 			uint256 i;
@@ -716,7 +730,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				if (remaining == 0) {
 					break;
 				} else {
-          if (sumEarned == 0) revert InvalidEarned();
+					if (sumEarned == 0) revert InvalidEarned();
 				}
 			}
 			if (i > 0) {
@@ -740,14 +754,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		address user,
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
-    uint256 length = userEarnings[user].length;
-		for (uint256 i; i < length;) {
+		uint256 length = userEarnings[user].length;
+		for (uint256 i; i < length; ) {
 			if (userEarnings[user][i].unlockTime == unlockTime) {
 				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][i]);
 				index = i;
 				break;
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -756,7 +772,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function individualEarlyExit(bool claimRewards, uint256 unlockTime) external {
 		address onBehalfOf = msg.sender;
-    if (unlockTime <= block.timestamp) revert InvalidTime();
+		if (unlockTime <= block.timestamp) revert InvalidTime();
 		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalances(
 			onBehalfOf,
 			unlockTime
@@ -766,10 +782,12 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			return;
 		}
 
-    uint256 length = userEarnings[onBehalfOf].length;
-		for (uint256 i = index + 1; i < length;) {
+		uint256 length = userEarnings[onBehalfOf].length;
+		for (uint256 i = index + 1; i < length; ) {
 			userEarnings[onBehalfOf][i - 1] = userEarnings[onBehalfOf][i];
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		userEarnings[onBehalfOf].pop();
 
@@ -833,7 +851,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function _updateReward(address account) internal {
 		uint256 balance = balances[account].lockedWithMultiplier;
 		uint256 length = rewardTokens.length;
-		for (uint256 i = 0; i < length;) {
+		for (uint256 i = 0; i < length; ) {
 			address token = rewardTokens[i];
 			uint256 rpt = rewardPerToken(token);
 
@@ -845,7 +863,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				rewards[account][token] = _earned(account, token, balance, rpt);
 				userRewardPerTokenPaid[account][token] = rpt;
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -874,13 +894,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 *  rewards were sent to the contract or accrued via aToken interest.
 	 */
 	function _notifyUnseenReward(address token) internal {
-    if (token == address(0)) revert AddressZero();
+		if (token == address(0)) revert AddressZero();
 		if (token == address(rdntToken)) {
 			return;
 		}
 		Reward storage r = rewardData[token];
 		uint256 periodFinish = r.periodFinish;
-    if (periodFinish == 0) revert InvalidPeriod();
+		if (periodFinish == 0) revert InvalidPeriod();
 		if (periodFinish < block.timestamp.add(rewardsDuration - rewardsLookback)) {
 			uint256 unseen = IERC20(token).balanceOf(address(this)).sub(r.balance);
 			if (unseen > 0) {
@@ -901,7 +921,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function _getReward(address _user, address[] memory _rewardTokens) internal whenNotPaused {
 		middleFeeDistribution.forwardReward(_rewardTokens);
 		uint256 length = _rewardTokens.length;
-		for (uint256 i; i < length;) {
+		for (uint256 i; i < length; ) {
 			address token = _rewardTokens[i];
 			_notifyUnseenReward(token);
 			uint256 reward = rewards[_user][token].div(1e12);
@@ -910,10 +930,12 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				rewardData[token].balance = rewardData[token].balance.sub(reward);
 
 				IERC20(token).safeTransfer(_user, reward);
-        // TODO: ask if bulk event is possible. Roughly 50% cheaper
+				// TODO: ask if bulk event is possible. Roughly 50% cheaper
 				emit RewardPaid(_user, token, reward);
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -927,7 +949,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 burnAmount,
 		bool claimRewards
 	) internal {
-    if (onBehalfOf != msg.sender) revert InsufficientPermission();
+		if (onBehalfOf != msg.sender) revert InsufficientPermission();
 		_updateReward(onBehalfOf);
 
 		rdntToken.safeTransfer(onBehalfOf, amount);
@@ -1042,7 +1064,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	function zapVestingToLp(address _user) external override returns (uint256 zapped) {
-    if (msg.sender != lockZap) revert InsufficientPermission();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 
 		_updateReward(_user);
 
@@ -1077,7 +1099,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @param _user address.
 	 */
 	function claimBounty(address _user, bool _execute) public whenNotPaused returns (bool issueBaseBounty) {
-    if (msg.sender != address(bountyManager)) revert InsufficientPermission();
+		if (msg.sender != address(bountyManager)) revert InsufficientPermission();
 
 		(, uint256 unlockable, , , ) = lockedBalances(_user);
 		if (unlockable == 0) {

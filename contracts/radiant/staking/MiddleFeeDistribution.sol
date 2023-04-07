@@ -63,21 +63,21 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 
-  /********************** Errors ***********************/
-  error ZeroAddress();
+	/********************** Errors ***********************/
+	error ZeroAddress();
 
-  error InvalidRatio();
-  
-  error NotMFD();
-  
-  error InsufficientPermission();
+	error InvalidRatio();
+
+	error NotMFD();
+
+	error InsufficientPermission();
 
 	/**
 	 * @dev Throws if called by any account other than the admin or owner.
 	 */
 	modifier onlyAdminOrOwner() {
-    if (admin != _msgSender()) revert InsufficientPermission();
-    if (owner() != _msgSender()) revert InsufficientPermission();
+		if (admin != _msgSender()) revert InsufficientPermission();
+		if (owner() != _msgSender()) revert InsufficientPermission();
 		_;
 	}
 
@@ -86,8 +86,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		address aaveOracle,
 		IMultiFeeDistribution _multiFeeDistribution
 	) public initializer {
-    if (_rdntToken == address(0)) revert ZeroAddress();
-    if (aaveOracle == address(0)) revert ZeroAddress();
+		if (_rdntToken == address(0)) revert ZeroAddress();
+		if (aaveOracle == address(0)) revert ZeroAddress();
 		__Ownable_init();
 
 		rdntToken = IMintableToken(_rdntToken);
@@ -101,15 +101,15 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Set operation expenses account
 	 */
 	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
-    if (RATIO_DIVISOR > _operationExpenseRatio) revert InvalidRatio();
-    if (_operationExpenses == address(0)) revert ZeroAddress();
+		if (RATIO_DIVISOR > _operationExpenseRatio) revert InvalidRatio();
+		if (_operationExpenses == address(0)) revert ZeroAddress();
 		operationExpenses = _operationExpenses;
 		operationExpenseRatio = _operationExpenseRatio;
 		emit OperationExpensesUpdated(_operationExpenses, _operationExpenseRatio);
 	}
 
 	function setAdmin(address _configurator) external onlyOwner {
-    if (_configurator == address(0)) revert ZeroAddress();
+		if (_configurator == address(0)) revert ZeroAddress();
 		admin = _configurator;
 	}
 
@@ -125,7 +125,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
 	 */
 	function forwardReward(address[] memory _rewardTokens) external override {
-    if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
+		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
 			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));

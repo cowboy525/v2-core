@@ -63,12 +63,12 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	event BountyReserveEmpty(uint256 _bal);
 	event WhitelistActiveChanged(bool isActive);
 
-  error AddressZero();
-  error InvalidNumber();
-  error QuoteFail();
-  error Ineligible();
-  error Override();
-  error InvalidSlippage();
+	error AddressZero();
+	error InvalidNumber();
+	error QuoteFail();
+	error Ineligible();
+	error Override();
+	error InvalidSlippage();
 
 	/**
 	 * @notice Initialize
@@ -95,16 +95,16 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		uint256 _maxBaseBounty,
 		uint256 _bountyBooster
 	) external initializer {
-    if (_rdnt == address(0)) revert AddressZero();
-    if (_weth == address(0)) revert AddressZero();
-    if (_mfd == address(0)) revert AddressZero();
-    if (_chef == address(0)) revert AddressZero();
-    if (_priceProvider == address(0)) revert AddressZero();
-    if (_eligibilityDataProvider == address(0)) revert AddressZero();
-    if (_compounder == address(0)) revert AddressZero();
-    if (_hunterShare > 10000) revert InvalidNumber();
-    if (_baseBountyUsdTarget == 0) revert InvalidNumber();
-    if (_maxBaseBounty == 0) revert InvalidNumber();
+		if (_rdnt == address(0)) revert AddressZero();
+		if (_weth == address(0)) revert AddressZero();
+		if (_mfd == address(0)) revert AddressZero();
+		if (_chef == address(0)) revert AddressZero();
+		if (_priceProvider == address(0)) revert AddressZero();
+		if (_eligibilityDataProvider == address(0)) revert AddressZero();
+		if (_compounder == address(0)) revert AddressZero();
+		if (_hunterShare > 10000) revert InvalidNumber();
+		if (_baseBountyUsdTarget == 0) revert InvalidNumber();
+		if (_maxBaseBounty == 0) revert InvalidNumber();
 
 		rdnt = _rdnt;
 		weth = _weth;
@@ -140,7 +140,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		(bool success, bytes memory data) = address(this).staticcall(
 			abi.encodeWithSignature("executeBounty(address,bool,uint256)", _user, false, 0)
 		);
-    if (!success) revert QuoteFail();
+		if (!success) revert QuoteFail();
 
 		(bounty, actionType) = abi.decode(data, (uint256, uint256));
 	}
@@ -175,7 +175,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		uint256 _actionType
 	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
 		if (_execute && msg.sender != address(this)) {
-      if (!_canBountyHunt(msg.sender)) revert Ineligible();
+			if (!_canBountyHunt(msg.sender)) revert Ineligible();
 		}
 
 		uint256 totalBounty;
@@ -339,7 +339,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	function setHunterShare(uint256 _newVal) external onlyOwner {
-    if (_newVal > 10000) revert Override();
+		if (_newVal > 10000) revert Override();
 		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
@@ -355,7 +355,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	function setSlippageLimit(uint256 _newVal) external onlyOwner {
-    if (_newVal > 10000) revert InvalidSlippage();
+		if (_newVal > 10000) revert InvalidSlippage();
 		slippageLimit = _newVal;
 		emit SlippageLimitUpdated(_newVal);
 	}

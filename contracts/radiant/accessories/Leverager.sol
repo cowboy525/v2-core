@@ -196,7 +196,7 @@ contract Leverager is Ownable {
 
 		if (!isBorrow) {
 			lendingPool.deposit(asset, amount, msg.sender, referralCode);
-		}else {
+		} else {
 			amount = amount.mul(RATIO_DIVISOR).div(borrowRatio);
 		}
 
@@ -267,7 +267,12 @@ contract Leverager is Ownable {
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
 	 **/
-	function loopETHFromBorrow(uint256 interestRateMode, uint256 amount, uint256 borrowRatio, uint256 loopCount) external {
+	function loopETHFromBorrow(
+		uint256 interestRateMode,
+		uint256 amount,
+		uint256 borrowRatio,
+		uint256 loopCount
+	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
@@ -290,7 +295,7 @@ contract Leverager is Ownable {
 
 			weth.deposit{value: amount.sub(fee)}();
 			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
-			
+
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
 

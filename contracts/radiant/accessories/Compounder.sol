@@ -31,19 +31,19 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	event RoutesUpdated(address _token, address[] _routes);
 
-  error AddressZero();
+	error AddressZero();
 
-  error InvalidCompoundFee();
+	error InvalidCompoundFee();
 
-  error InvalidSlippage();
+	error InvalidSlippage();
 
-  error NotBountyManager();
+	error NotBountyManager();
 
-  error NotEligible();
+	error NotEligible();
 
-  error InsufficientStakeAmount();
+	error InsufficientStakeAmount();
 
-  error ArrayLengthMismatch();
+	error ArrayLengthMismatch();
 
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public compoundFee;
@@ -71,18 +71,18 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 _compoundFee,
 		uint256 _slippageLimit
 	) public initializer {
-    if (_uniRouter == address(0)) revert AddressZero();
-    if (_mfd == address(0)) revert AddressZero();
-    if (_baseToken == address(0)) revert AddressZero();
-    if (_addressProvider == address(0)) revert AddressZero();
-    if (_lockZap == address(0)) revert AddressZero();
-    if (_compoundFee <= 0) revert InvalidCompoundFee();
-    if (_compoundFee > 2000) revert InvalidCompoundFee();
-    if (_slippageLimit < 8000) {
-      if (_slippageLimit >= PERCENT_DIVISOR) {
-        revert InvalidSlippage();
-      }
-    }
+		if (_uniRouter == address(0)) revert AddressZero();
+		if (_mfd == address(0)) revert AddressZero();
+		if (_baseToken == address(0)) revert AddressZero();
+		if (_addressProvider == address(0)) revert AddressZero();
+		if (_lockZap == address(0)) revert AddressZero();
+		if (_compoundFee <= 0) revert InvalidCompoundFee();
+		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_slippageLimit < 8000) {
+			if (_slippageLimit >= PERCENT_DIVISOR) {
+				revert InvalidSlippage();
+			}
+		}
 
 		uniRouter = _uniRouter;
 		multiFeeDistribution = _mfd;
@@ -117,22 +117,22 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setBountyManager(address _manager) external onlyOwner {
-    if (_manager == address(0)) revert AddressZero();
+		if (_manager == address(0)) revert AddressZero();
 		bountyManager = _manager;
 	}
 
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
-    if (_compoundFee <= 0) revert InvalidCompoundFee();
-    if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee <= 0) revert InvalidCompoundFee();
+		if (_compoundFee > 2000) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
 		if (_slippageLimit < 8000) {
-      if (_slippageLimit >= PERCENT_DIVISOR) {
-        revert InvalidSlippage();
-      }
-    }
+			if (_slippageLimit >= PERCENT_DIVISOR) {
+				revert InvalidSlippage();
+			}
+		}
 		slippageLimit = _slippageLimit;
 	}
 
@@ -141,8 +141,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		mfd.claimFromConverter(_user);
 		ILendingPool lendingPool = ILendingPool(ILendingPoolAddressesProvider(addressProvider).getLendingPool());
 
-    uint256 length = rewardBaseTokens.length;
-		for (uint256 i; i < length;) {
+		uint256 length = rewardBaseTokens.length;
+		for (uint256 i; i < length; ) {
 			uint256 balance = IERC20(rewardBaseTokens[i]).balanceOf(address(this));
 			if (balance == 0) {
 				continue;
@@ -162,7 +162,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 					)
 				{} catch {}
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 		return IERC20(baseToken).balanceOf(address(this));
 	}
@@ -192,7 +194,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 noSlippagePendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 
 		if (isAutoCompound) {
-      if (msg.sender != bountyManager) revert NotBountyManager();
+			if (msg.sender != bountyManager) revert NotBountyManager();
 			bool eligible = isEligibleForAutoCompound(_user, noSlippagePendingEth);
 			if (!eligible) {
 				if (_execute) {
@@ -202,7 +204,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 				}
 			}
 		} else {
-      if (!isEligibleForCompound(noSlippagePendingEth)) revert InsufficientStakeAmount();
+			if (!isEligibleForCompound(noSlippagePendingEth)) revert InsufficientStakeAmount();
 		}
 
 		if (!_execute) {
@@ -212,7 +214,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
-    if (PERCENT_DIVISOR * actualWethAfterSwap / noSlippagePendingEth < slippageLimit) revert InvalidSlippage();
+		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < slippageLimit) revert InvalidSlippage();
 
 		if (isAutoCompound) {
 			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute);
@@ -237,14 +239,16 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		tokens = new address[](pending.length - 1);
 		amts = new uint256[](pending.length - 1);
 		uint256 index;
-    uint256 length = pending.length;
-		for (uint256 i; i < length;) {
+		uint256 length = pending.length;
+		for (uint256 i; i < length; ) {
 			if (pending[i].token != address(rdntToken)) {
 				tokens[index] = IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS();
 				amts[index] = pending[i].amount;
 				index++;
 			}
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -262,11 +266,13 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256[] memory _amtsIn,
 		address _out
 	) internal view returns (uint256 amtOut) {
-    if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
+		if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
 		uint256 length = _in.length;
-		for (uint i; i < length;) {
+		for (uint i; i < length; ) {
 			amtOut += _estimateTokensOut(_in[i], _out, _amtsIn[i]);
-      unchecked { i++; }
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -292,7 +298,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-    if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
 	}
 
 	function autocompoundThreshold() public view returns (uint256 minStakeAmtEth) {

@@ -10,80 +10,76 @@ import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
 
 contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgradeable {
-    AggregatorV3Interface public ethChainlinkFeed;
-    AggregatorV3Interface public tokenChainlinkFeed;
-    address public token;
+	AggregatorV3Interface public ethChainlinkFeed;
+	AggregatorV3Interface public tokenChainlinkFeed;
+	address public token;
 
-    uint256 public ethLatestTimestamp;
-    uint256 public tokenLatestTimestamp;
-    function initialize(
-        address _token,
-		address _ethChainlinkFeed,
-        address _tokenChainlinkFeed
-	) external initializer {
-        require(_token != address(0), "token is 0 address");
-        require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
-        require(_tokenChainlinkFeed != address(0), "tokenChainlinkFeed is 0 address");
-        ethChainlinkFeed = AggregatorV3Interface(_ethChainlinkFeed);
-        tokenChainlinkFeed = AggregatorV3Interface(_tokenChainlinkFeed);
-        token = _token;
+	uint256 public ethLatestTimestamp;
+	uint256 public tokenLatestTimestamp;
+
+	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
+		require(_token != address(0), "token is 0 address");
+		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		require(_tokenChainlinkFeed != address(0), "tokenChainlinkFeed is 0 address");
+		ethChainlinkFeed = AggregatorV3Interface(_ethChainlinkFeed);
+		tokenChainlinkFeed = AggregatorV3Interface(_tokenChainlinkFeed);
+		token = _token;
 		__Ownable_init();
-    }
+	}
 
-    function latestAnswer() public view returns (uint256 price){
-        (,int256 answer,,,) = tokenChainlinkFeed.latestRoundData();
-        require(answer > 0, "Price must be positive");
-        price = uint256(answer);
-    }
+	function latestAnswer() public view returns (uint256 price) {
+		(, int256 answer, , , ) = tokenChainlinkFeed.latestRoundData();
+		require(answer > 0, "Price must be positive");
+		price = uint256(answer);
+	}
 
-	function latestAnswerInEth() public view returns (uint256 price){
-        (,int256 tokenAnswer,,,) = tokenChainlinkFeed.latestRoundData();
-        (,int256 ethAnswer,,,) = ethChainlinkFeed.latestRoundData();
-        require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
-        price = (uint256(tokenAnswer) * (10**8)) / uint256(ethAnswer);
-
-    }
+	function latestAnswerInEth() public view returns (uint256 price) {
+		(, int256 tokenAnswer, , , ) = tokenChainlinkFeed.latestRoundData();
+		(, int256 ethAnswer, , , ) = ethChainlinkFeed.latestRoundData();
+		require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
+		price = (uint256(tokenAnswer) * (10 ** 8)) / uint256(ethAnswer);
+	}
 
 	function update() public {
-        (,,,ethLatestTimestamp,) = ethChainlinkFeed.latestRoundData();
-        (,,,tokenLatestTimestamp,) = tokenChainlinkFeed.latestRoundData();
-    }
+		(, , , ethLatestTimestamp, ) = ethChainlinkFeed.latestRoundData();
+		(, , , tokenLatestTimestamp, ) = tokenChainlinkFeed.latestRoundData();
+	}
 
-	function canUpdate() public view returns (bool){
-        return false;
-
-    }
+	function canUpdate() public view returns (bool) {
+		return false;
+	}
 
 	function consult() public view returns (uint256 price) {
-        return latestAnswer();
-    }
+		return latestAnswer();
+	}
 
-    function version() external view returns (uint256) {
-        return tokenChainlinkFeed.version();
-    }
+	function version() external view returns (uint256) {
+		return tokenChainlinkFeed.version();
+	}
 
-   function decimals() external view returns (uint8){
-        return tokenChainlinkFeed.decimals();
-   }
+	function decimals() external view returns (uint8) {
+		return tokenChainlinkFeed.decimals();
+	}
 
-   function description() external view returns (string memory){
-        return tokenChainlinkFeed.description();
-   }
+	function description() external view returns (string memory) {
+		return tokenChainlinkFeed.description();
+	}
 
-   	function getRoundData(
+	function getRoundData(
 		uint80 _roundId
 	)
-    external
-    view
-    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound){
-        return tokenChainlinkFeed.getRoundData(_roundId);
-    }
+		external
+		view
+		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+	{
+		return tokenChainlinkFeed.getRoundData(_roundId);
+	}
 
-    
 	function latestRoundData()
 		public
 		view
-		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound){
-            return tokenChainlinkFeed.latestRoundData();
-        }
+		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+	{
+		return tokenChainlinkFeed.latestRoundData();
+	}
 }

@@ -23,11 +23,11 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
-  error AddressZero();
-  error PoolExists();
-  error InsufficientPermision();
-  error IdenticalAddresses();
-  error ZeroAmount();
+	error AddressZero();
+	error PoolExists();
+	error InsufficientPermision();
+	error IdenticalAddresses();
+	error ZeroAmount();
 
 	address public inTokenAddr;
 	address public outTokenAddr;
@@ -45,10 +45,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		address _vault,
 		IWeightedPoolFactory _poolFactory
 	) external initializer {
-    if (_inTokenAddr == address(0)) revert AddressZero();
-    if (_outTokenAddr == address(0)) revert AddressZero();
-    if (_wethAddr == address(0)) revert AddressZero();
-    if (_vault == address(0)) revert AddressZero();
+		if (_inTokenAddr == address(0)) revert AddressZero();
+		if (_outTokenAddr == address(0)) revert AddressZero();
+		if (_wethAddr == address(0)) revert AddressZero();
+		if (_vault == address(0)) revert AddressZero();
 
 		__Ownable_init();
 		inTokenAddr = _inTokenAddr;
@@ -59,7 +59,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
-    if (lpTokenAddr != address(0)) revert PoolExists();
+		if (lpTokenAddr != address(0)) revert PoolExists();
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
 
@@ -251,7 +251,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
-    if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
 		liquidity = joinPool(amount, 0);
 		IERC20 lp = IERC20(lpTokenAddr);
@@ -260,7 +260,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
-    if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 
@@ -272,9 +272,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
-    if (tokenA == tokenB) revert IdenticalAddresses();
+		if (tokenA == tokenB) revert IdenticalAddresses();
 		(token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-    if (token0 == address(0)) revert AddressZero();
+		if (token0 == address(0)) revert AddressZero();
 	}
 
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
@@ -322,7 +322,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	function setLockZap(address _lockZap) external onlyOwner {
-    if (_lockZap == address(0)) revert AddressZero();
+		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
 	}
 
@@ -333,8 +333,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _minAmountOut the minimum WETH amount to accept without reverting
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-    if (_inToken == address(0)) revert AddressZero();
-    if (_amount == 0) revert ZeroAmount();
+		if (_inToken == address(0)) revert AddressZero();
+		if (_amount == 0) revert ZeroAmount();
 		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
 		bytes32 daiUsdtUsdcPoolId = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
 		address realWethAddr = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
@@ -367,26 +367,33 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _poolId The ID of the pool to use for swapping
 	 * @param _recipient the receiver of the outToken
 	 */
-	function _swap(address _inToken, address _outToken, uint256 _amount, uint256 _minAmountOut, bytes32 _poolId, address _recipient) internal {
-			IVault.SingleSwap memory singleSwap;
-			singleSwap.poolId = _poolId;
-			singleSwap.kind = IVault.SwapKind.GIVEN_IN;
-			singleSwap.assetIn = IAsset(_inToken);
-			singleSwap.assetOut = IAsset(_outToken);
-			singleSwap.amount = _amount;
-			singleSwap.userData = abi.encode(0);
+	function _swap(
+		address _inToken,
+		address _outToken,
+		uint256 _amount,
+		uint256 _minAmountOut,
+		bytes32 _poolId,
+		address _recipient
+	) internal {
+		IVault.SingleSwap memory singleSwap;
+		singleSwap.poolId = _poolId;
+		singleSwap.kind = IVault.SwapKind.GIVEN_IN;
+		singleSwap.assetIn = IAsset(_inToken);
+		singleSwap.assetOut = IAsset(_outToken);
+		singleSwap.amount = _amount;
+		singleSwap.userData = abi.encode(0);
 
-			IVault.FundManagement memory funds;
-			funds.sender = address(this);
-			funds.fromInternalBalance = false;
-			funds.recipient = payable(address(_recipient));
-			funds.toInternalBalance = false;
+		IVault.FundManagement memory funds;
+		funds.sender = address(this);
+		funds.fromInternalBalance = false;
+		funds.recipient = payable(address(_recipient));
+		funds.toInternalBalance = false;
 
-			uint256 currentAllowance = IERC20(_inToken).allowance(address(this), vaultAddr);
-			if (_amount > currentAllowance) {
-			  IERC20(_inToken).safeIncreaseAllowance(vaultAddr, _amount - currentAllowance);
-			}
-			IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
+		uint256 currentAllowance = IERC20(_inToken).allowance(address(this), vaultAddr);
+		if (_amount > currentAllowance) {
+			IERC20(_inToken).safeIncreaseAllowance(vaultAddr, _amount - currentAllowance);
+		}
+		IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
 	}
 
 	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {

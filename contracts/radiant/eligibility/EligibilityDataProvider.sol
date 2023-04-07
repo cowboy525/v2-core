@@ -82,14 +82,14 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/// @notice Emitted when a new token is added
 	event AddToken(address indexed token);
 
-  /********************** Errors ***********************/
-  error AddressZero();
+	/********************** Errors ***********************/
+	error AddressZero();
 
-  error LPTokenSet();
+	error LPTokenSet();
 
-  error InvalidRatio();
+	error InvalidRatio();
 
-  error OnlyCIC();
+	error OnlyCIC();
 
 	/**
 	 * @notice Constructor
@@ -102,9 +102,9 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		IMiddleFeeDistribution _middleFeeDistribution,
 		IPriceProvider _priceProvider
 	) public initializer {
-    if (address(_lendingPool) == address(0)) revert AddressZero();
-    if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
-    if (address(_priceProvider) == address(0)) revert AddressZero();
+		if (address(_lendingPool) == address(0)) revert AddressZero();
+		if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
+		if (address(_priceProvider) == address(0)) revert AddressZero();
 
 		lendingPool = _lendingPool;
 		middleFeeDistribution = _middleFeeDistribution;
@@ -121,7 +121,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _chef address.
 	 */
 	function setChefIncentivesController(IChefIncentivesController _chef) external onlyOwner {
-    if (address(_chef) == address(0)) revert AddressZero();
+		if (address(_chef) == address(0)) revert AddressZero();
 		chef = _chef;
 		emit ChefIncentivesControllerUpdated(_chef);
 	}
@@ -130,7 +130,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Set LP token
 	 */
 	function setLPToken(address _lpToken) external onlyOwner {
-    if (lpToken != address(0)) revert LPTokenSet();
+		if (lpToken != address(0)) revert LPTokenSet();
 		lpToken = _lpToken;
 
 		emit LPTokenUpdated(_lpToken);
@@ -141,7 +141,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _requiredDepositRatio Ratio in bips.
 	 */
 	function setRequiredDepositRatio(uint256 _requiredDepositRatio) external onlyOwner {
-    if (_requiredDepositRatio > RATIO_DIVISOR) revert InvalidRatio();
+		if (_requiredDepositRatio > RATIO_DIVISOR) revert InvalidRatio();
 		requiredDepositRatio = _requiredDepositRatio;
 
 		emit RequiredDepositRatioUpdated(_requiredDepositRatio);
@@ -152,11 +152,11 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-    if (_priceToleranceRatio < 8000) {
-      if (_priceToleranceRatio > RATIO_DIVISOR) {
-        revert InvalidRatio();
-      }
-    }
+		if (_priceToleranceRatio < 8000) {
+			if (_priceToleranceRatio > RATIO_DIVISOR) {
+				revert InvalidRatio();
+			}
+		}
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
@@ -169,7 +169,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _time for DQ
 	 */
 	function setDqTime(address _user, uint256 _time) external {
-    if (msg.sender != address(chef)) revert OnlyCIC();
+		if (msg.sender != address(chef)) revert OnlyCIC();
 		disqualifiedTime[_user] = _time;
 
 		emit DqTimeUpdated(_user, _time);
@@ -185,9 +185,9 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
 			middleFeeDistribution.getMultiFeeDistributionAddress()
 		);
-    // TODO: re-visit this
+		// TODO: re-visit this
 		// (, , uint256 lockedLP, , ) = multiFeeDistribution.lockedBalances(user);
-    uint256 lockedLP = multiFeeDistribution.lockedBalance(user);
+		uint256 lockedLP = multiFeeDistribution.lockedBalance(user);
 		return _lockedUsdValue(lockedLP);
 	}
 
@@ -261,7 +261,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param user's address
 	 */
 	function refresh(address user) external {
-    if (msg.sender != address(chef)) revert OnlyCIC();
+		if (msg.sender != address(chef)) revert OnlyCIC();
 		assert(user != address(0));
 
 		bool currentEligble = isEligibleForRewards(user);
