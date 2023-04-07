@@ -64,7 +64,7 @@ const config: HardhatUserConfig = {
 	},
 	networks: {
 		hardhat: {
-			loggingEnabled: true,
+			// loggingEnabled: true,
 			initialBaseFeePerGas: 0,
 			allowUnlimitedContractSize: false,
 			gasPrice: 0,
@@ -75,7 +75,7 @@ const config: HardhatUserConfig = {
 			// blockNumber: 76739035,
 			// },
 			// chainId: 42161,
-			chainId: 56,
+			// chainId: 56,
 			forking: {
 				url: 'https://rpc-bsc.radiant.capital/e2af014b7281333ef80331dd368694e6b2e5c738/',
 				// blockNumber: 26829124,
@@ -86,7 +86,7 @@ const config: HardhatUserConfig = {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			// accounts: accounts(),
-			chainId: 56,
+			// chainId: 56,
 			timeout: 10000000000000,
 			// accounts: [process.env.PRIVATE_KEY_BSC || ''],
 			tags: ['mocks', 'testing'],
