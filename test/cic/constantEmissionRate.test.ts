@@ -36,11 +36,11 @@ describe('Ensure Emissions consistant', () => {
 		cic = fixture.chefIncentivesController;
 		eligibilityProvider = fixture.eligibilityProvider;
 
-		await cic.setEligibilityEnabled(false);
+		await cic.connect(user1).setEligibilityEnabled(false);
 	});
 
 	it('user1 emission rate unchanged after user2 deposits', async () => {
-		await depositAndBorrowAll(user2, ['.1', '10'], deployData);
+		await depositAndBorrowAll(user2, ['0.1', '10'], deployData);
 		await zapIntoEligibility(user2, deployData);
 
 		const startTimestamp = await getLatestBlockTimestamp();
@@ -57,10 +57,11 @@ describe('Ensure Emissions consistant', () => {
 
 		let rewardsGained = pendingRewards1.sub(initialPendingRewards);
 
-		expect(parseInt(ethers.utils.formatUnits(rewardsGained.toString(), 18))).to.be.approximately(
-			parseInt(ethers.utils.formatUnits(expectedRewards1.toString(), 18)),
-			3
+		expect(parseFloat(ethers.utils.formatUnits(rewardsGained.toString(), 18))).to.be.approximately(
+			parseFloat(ethers.utils.formatUnits(expectedRewards1.toString(), 18)),
+			4
 		);
+		console.log("F")
 
 		await depositAndBorrowAll(user1, ['150', '10000000'], deployData);
 
