@@ -293,7 +293,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function setLPToken(address _stakingToken) external onlyOwner {
 		if (_stakingToken == address(0)) revert AddressZero();
-		if (stakingToken == address(0)) revert AddressZero();
+		if (stakingToken != address(0)) revert AddressZero();
 		stakingToken = _stakingToken;
 	}
 

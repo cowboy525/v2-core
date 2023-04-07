@@ -16,6 +16,8 @@ import "../../interfaces/IAaveOracle.sol";
 import "../../interfaces/IAToken.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 
+import 'hardhat/console.sol';
+
 /// @title Fee distributor inside
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
@@ -76,8 +78,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @dev Throws if called by any account other than the admin or owner.
 	 */
 	modifier onlyAdminOrOwner() {
-		if (admin != _msgSender()) revert InsufficientPermission();
-		if (owner() != _msgSender()) revert InsufficientPermission();
+		require(admin == _msgSender() || owner() == _msgSender(), "caller is not the admin or owner");
 		_;
 	}
 
@@ -101,7 +102,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Set operation expenses account
 	 */
 	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
-		if (RATIO_DIVISOR > _operationExpenseRatio) revert InvalidRatio();
+    console.log("setOperationExpenses", _operationExpenses, _operationExpenseRatio);
+		if (_operationExpenseRatio > RATIO_DIVISOR) revert InvalidRatio();
 		if (_operationExpenses == address(0)) revert ZeroAddress();
 		operationExpenses = _operationExpenses;
 		operationExpenseRatio = _operationExpenseRatio;

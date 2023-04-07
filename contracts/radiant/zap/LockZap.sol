@@ -300,8 +300,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _lockTypeIndex,
 		address _refundAddress
 	) internal returns (uint256 liquidity) {
-		if (_wethAmt == 0) revert AmountZero();
-		if (msg.value == 0) revert AmountZero();
+		if (_wethAmt == 0 && msg.value == 0) revert AmountZero();
 		if (msg.value != 0) {
 			if (_borrow) revert InvalidZapETHSource();
 			_wethAmt = msg.value;

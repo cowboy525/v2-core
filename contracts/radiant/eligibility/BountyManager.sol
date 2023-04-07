@@ -21,6 +21,8 @@ import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
 import "../../interfaces/ICompounder.sol";
 
+import 'hardhat/console.sol';
+
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -174,17 +176,19 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool _execute,
 		uint256 _actionType
 	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
+    console.log("in executeBounty function");
 		if (_execute && msg.sender != address(this)) {
 			if (!_canBountyHunt(msg.sender)) revert Ineligible();
 		}
-
+    console.log("1");
 		uint256 totalBounty;
 		bool issueBaseBounty;
 		address incentivizer;
 		uint256 bb = getBaseBounty();
+    console.log("2");
 
 		(incentivizer, totalBounty, issueBaseBounty, actionType) = getBestBounty(_user, _execute, _actionType);
-
+    console.log("3");
 		if (issueBaseBounty) {
 			bounty = bb;
 		} else {
@@ -192,6 +196,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 				bounty = totalBounty.mul(hunterShare).div(10000);
 			}
 		}
+    console.log("4");
 
 		if (_execute && bounty != 0) {
 			if (!issueBaseBounty) {
@@ -199,6 +204,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			}
 			_sendBounty(msg.sender, bounty);
 		}
+    console.log("5");
 	}
 
 	function _canBountyHunt(address _user) internal view returns (bool) {

@@ -91,6 +91,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error CadenceTooLong();
 
+  error NotRTokenOrMfd();
+
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
@@ -432,8 +434,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	function setEligibilityExempt(address _contract, bool _value) public {
-		if (msg.sender != owner()) revert InsufficientPermission();
-		if (msg.sender != address(leverager)) revert InsufficientPermission();
+    if (msg.sender != owner() && msg.sender != address(leverager)) revert InsufficientPermission();
 		eligibilityExempt[_contract] = _value;
 	}
 
@@ -448,8 +449,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @dev important! eligible status can be updated here
 	 */
 	function handleActionAfter(address _user, uint256 _balance, uint256 _totalSupply) external {
-		if (!validRTokens[msg.sender]) revert InvalidRToken();
-		if (msg.sender != address(_getMfd())) revert NotMFD();
+		if (!validRTokens[msg.sender] && msg.sender != address(_getMfd())) revert NotRTokenOrMfd();
 
 		if (_user == address(rewardMinter) || _user == address(_getMfd()) || eligibilityExempt[_user]) {
 			return;
