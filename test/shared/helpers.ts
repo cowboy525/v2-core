@@ -240,6 +240,7 @@ export const depositAndBorrowAll = async (
 	deployData: DeployData,
 	delay: boolean = false
 ) => {
+	console.log("allTokens: ", deployData.allTokens)
 	const keys = Object.keys(deployData.allTokens).filter((k) => k.charAt(0) == 'r');
 
 	for (let i = 0; i < keys.length; i++) {
@@ -249,6 +250,8 @@ export const depositAndBorrowAll = async (
 			amount = amounts[0];
 		} else if (ticker == 'rWETH') {
 			amount = amounts[0];
+		} else if (ticker == 'rwstETH' || ticker == 'rMAGIC') {
+			continue;
 		} else {
 			amount = amounts[1];
 		}
@@ -277,6 +280,7 @@ export const depositAndBorrowAll = async (
 			const tx = await asset.connect(user).mint(formattedAmt);
 			await tx.wait();
 		} else {
+			console.log("asset: ", asset.address)
 			const tx = await asset.mint(user.address, formattedAmt);
 			await tx.wait();
 		}
