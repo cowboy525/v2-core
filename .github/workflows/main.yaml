@@ -1,24 +1,24 @@
 name: CI
 on:
-  pull_request:
-    branches: [main]
+    pull_request:
+        branches: [main, audit]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install packages
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
-    - run: cp .env.example .env
-    - run: yarn install
-    - run: yarn run test-ci
-    - name: Test Report
-      uses: dorny/test-reporter@v1.6.0
-      if: success() || failure()
-      with:
-        name: Test Report
-        path: test-results.json
-        reporter: mocha-json
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install packages
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+            - run: cp .env.example .env
+            - run: yarn install
+            - run: yarn run test-ci
+            - name: Test Report
+              uses: dorny/test-reporter@v1.6.0
+              if: success() || failure()
+              with:
+                  name: Test Report
+                  path: test-results.json
+                  reporter: mocha-json
