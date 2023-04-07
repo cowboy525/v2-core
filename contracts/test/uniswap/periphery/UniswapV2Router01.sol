@@ -1,4 +1,4 @@
-pragma solidity =0.6.6;
+pragma solidity ^0.8.12;
 
 // import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 import "./libraries/TransferHelper.sol";
@@ -9,8 +9,8 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IWETH.sol";
 
 contract UniswapV2Router01 is IUniswapV2Router01 {
-	address public immutable override factory;
-	address public immutable override WETH;
+	address public immutable factory;
+	address public immutable WETH;
 
 	modifier ensure(uint deadline) {
 		require(deadline >= block.timestamp, "UniswapV2Router: EXPIRED");
