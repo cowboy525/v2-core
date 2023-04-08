@@ -179,7 +179,7 @@ describe("Zapper", function () {
       lockZap.connect(user2).zapFromVesting(false, 0, {
         value: wethRequired.div(2),
       })
-    ).to.be.revertedWith("ETH sent is not enough");
+    ).to.be.revertedWith("InsufficientETH");
 
     await lockZap.connect(user2).zapFromVesting(false, 0, {
       value: wethRequired,
@@ -316,7 +316,7 @@ describe("Zapper", function () {
 
     await expect(
       lockZap.connect(user4).zapFromVesting(true, 0)
-    ).to.be.revertedWith("Not enough availableBorrowsETH");
+    ).to.be.revertedWith("ExceedsAvailableBorrowsETH");
 
     await lendingPool
       .connect(user4)
@@ -441,7 +441,7 @@ describe("Zapper", function () {
 		it("zapEth validation", async () => {
 			if (liquidityZap) {
 				await expect(liquidityZap.zapETH(user2.address)).to.be.revertedWith(
-					"LiquidityZAP: ETH amount must be greater than 0"
+					"InvalidETHAmount"
 				);
 			}
 		});
@@ -452,11 +452,11 @@ describe("Zapper", function () {
 					liquidityZap.addLiquidityETHOnly(ethers.constants.AddressZero, {
 						value: ethers.utils.parseEther("1"),
 					})
-				).to.be.revertedWith("LiquidityZAP: Invalid address");
+				).to.be.revertedWith("AddressZero");
 
 				await expect(
 					liquidityZap.addLiquidityETHOnly(user2.address)
-				).to.be.revertedWith("LiquidityZAP: Insufficient ETH amount");
+				).to.be.revertedWith("InvalidETHAmount");
 
 				expect(await liquidityZap.quote(ethers.utils.parseEther("1"))).to.be.gt(
 					0

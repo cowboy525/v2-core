@@ -16,8 +16,6 @@ import "../../interfaces/IAaveOracle.sol";
 import "../../interfaces/IAToken.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 
-import 'hardhat/console.sol';
-
 /// @title Fee distributor inside
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
@@ -102,7 +100,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Set operation expenses account
 	 */
 	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
-    console.log("setOperationExpenses", _operationExpenses, _operationExpenseRatio);
 		if (_operationExpenseRatio > RATIO_DIVISOR) revert InvalidRatio();
 		if (_operationExpenses == address(0)) revert ZeroAddress();
 		operationExpenses = _operationExpenses;
