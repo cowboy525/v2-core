@@ -6,62 +6,65 @@ import "../../interfaces/IBaseOracle.sol";
 
 /// @notice Provides wstETH/USD price using stETH/USD Chainlink oracle and wstETH/stETH exchange rate provided by stETH smart contract
 contract WSTETHOracle is OwnableUpgradeable {
-    AggregatorV3Interface public stETHUSDOracle;
-    AggregatorV3Interface public stEthPerWstETHOracle;
+	AggregatorV3Interface public stETHUSDOracle;
+	AggregatorV3Interface public stEthPerWstETHOracle;
 
-    function initialize(
-        address _stETHUSDOracle, 
-        address _stEthPerWstETHOracle
-    ) public initializer {
-        //stETHUSDOracle = 0x07c5b924399cc23c24a95c8743de4006a32b7f2a;
-        //stEthPerWstETHOracle = 0xB1552C5e96B312d0Bf8b554186F846C40614a540;
+	function initialize(address _stETHUSDOracle, address _stEthPerWstETHOracle) public initializer {
+		//stETHUSDOracle = 0x07c5b924399cc23c24a95c8743de4006a32b7f2a;
+		//stEthPerWstETHOracle = 0xB1552C5e96B312d0Bf8b554186F846C40614a540;
 
-        stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
-        stEthPerWstETHOracle = AggregatorV3Interface(_stEthPerWstETHOracle); //18 decimals 
-        __Ownable_init();
+		stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
+		stEthPerWstETHOracle = AggregatorV3Interface(_stEthPerWstETHOracle); //18 decimals
+		__Ownable_init();
+	}
 
-    }
+	function decimals() external view returns (uint8) {
+		return 8;
+	}
 
-    function decimals() external view returns (uint8) {
-        return 8;
-    }
+	function description() external view returns (string memory) {
+		return "WSTETH/USD";
+	}
 
-    function description() external view returns (string memory) {
-        return "WSTETH/USD";
-    }
+	function latestTimestamp() external view returns (uint256) {
+		(
+			,
+			,
+			,
+			//uint80 roundId
+			//int256 answer
+			//uint256 startedAt
+			uint256 updatedAt, //uint256 answeredInRound
 
-    function latestTimestamp() external view returns (uint256) {
-        (//uint80 roundId
-        ,//int256 answer
-        ,//uint256 startedAt
-        ,uint256 updatedAt
-        ,//uint256 answeredInRound
-        ) = stETHUSDOracle.latestRoundData();
-        return updatedAt;
-    }
+		) = stETHUSDOracle.latestRoundData();
+		return updatedAt;
+	}
 
-    /// @notice Get wstETH/ETH price. It does not check Chainlink oracle staleness! If staleness check needed, it's recommended to use latestTimestamp() function
-    /// @return answer wstETH/ETH price or 0 if failure
-    function latestAnswer() external view returns (int256 answer) {
-        (//uint80 roundId
-        ,int256 stETHPrice
-        ,//uint256 startedAt
-        ,//uint256 updatedAt
-        ,//uint256 answeredInRound
-        ) = stETHUSDOracle.latestRoundData();
+	/// @notice Get wstETH/ETH price. It does not check Chainlink oracle staleness! If staleness check needed, it's recommended to use latestTimestamp() function
+	/// @return answer wstETH/ETH price or 0 if failure
+	function latestAnswer() external view returns (int256 answer) {
+		(
+			,
+			//uint80 roundId
+			int256 stETHPrice, //uint256 startedAt //uint256 updatedAt //uint256 answeredInRound
+			,
+			,
 
-        (//uint80 roundId
-        ,int256 wstETHRatio
-        ,//uint256 startedAt
-        ,//uint256 updatedAt
-        ,//uint256 answeredInRound
-        ) = stEthPerWstETHOracle.latestRoundData();
+		) = stETHUSDOracle.latestRoundData();
 
-        answer = (stETHPrice * wstETHRatio) / 1 ether; 
+		(
+			,
+			//uint80 roundId
+			int256 wstETHRatio, //uint256 startedAt //uint256 updatedAt //uint256 answeredInRound
+			,
+			,
 
-    }
+		) = stEthPerWstETHOracle.latestRoundData();
 
-    function version() external view returns (uint256){
-        return 1;
-    }
+		answer = (stETHPrice * wstETHRatio) / 1 ether;
+	}
+
+	function version() external view returns (uint256) {
+		return 1;
+	}
 }

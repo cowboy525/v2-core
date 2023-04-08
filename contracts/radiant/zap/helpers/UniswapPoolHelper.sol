@@ -25,6 +25,9 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeMath for uint256;
 	using HomoraMath for uint;
 
+	error AddressZero();
+	error InsufficientPermision();
+
 	address public lpTokenAddr;
 	address public rdntAddr;
 	address public wethAddr;
@@ -77,7 +80,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
-		require(msg.sender == lockZap, "!lockZap only");
+		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(liquidityZap), amount);
 		liquidity = liquidityZap.addLiquidityWETHOnly(amount, payable(address(this)));
@@ -128,7 +131,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public returns (uint256 liquidity) {
-		require(msg.sender == lockZap, "!lockZap only");
+		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(rdntAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
@@ -148,12 +151,12 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function setLiquidityZap(address _liquidityZap) external onlyOwner {
-		require(_liquidityZap != address(0), "LiquidityZap can't be 0 address");
+		if (_liquidityZap == address(0)) revert AddressZero();
 		liquidityZap = ILiquidityZap(_liquidityZap);
 	}
 
 	function setLockZap(address _lockZap) external onlyOwner {
-		require(_lockZap != address(0), "LockZap can't be 0 address");
+		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
 	}
 
@@ -165,20 +168,14 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	/**
-     * @dev Helper function to swap a token to weth given an {_inToken} and swap {_amount}.
-		 * Will revert if the output is under the {_minAmountOut}
-     */
-    function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-			address[] memory path = new address[](2);
-			path[0] = _inToken;
-			path[1] = wethAddr;
-			IERC20(_inToken).safeIncreaseAllowance(address(router), _amount);
-			router.swapExactTokensForTokens(
-				_amount,
-				_minAmountOut,
-				path,
-				msg.sender,
-				block.timestamp
-			);
-    }
+	 * @dev Helper function to swap a token to weth given an {_inToken} and swap {_amount}.
+	 * Will revert if the output is under the {_minAmountOut}
+	 */
+	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
+		address[] memory path = new address[](2);
+		path[0] = _inToken;
+		path[1] = wethAddr;
+		IERC20(_inToken).safeIncreaseAllowance(address(router), _amount);
+		router.swapExactTokensForTokens(_amount, _minAmountOut, path, msg.sender, block.timestamp);
+	}
 }
