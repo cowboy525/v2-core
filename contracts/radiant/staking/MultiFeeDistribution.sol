@@ -375,10 +375,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return balances[user].locked;
 	}
 
-	function lockedBalance(address user) external view override returns (uint256 amount) {
-		return balances[user].locked;
-	}
-
 	/**
 	 * @notice Information on a user's lockings
 	 * @return total balance of locks
@@ -422,6 +418,19 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
 	}
+
+  function lockedBalance(address user) public view override returns (uint256 locked) {
+    LockedBalance[] storage locks = userLocks[user];
+    uint256 length = locks.length;
+    for (uint i; i < length;) {
+      if (locks[i].unlockTime > block.timestamp) {
+        locked = locked.add(locks[i].amount);
+      }
+      unchecked {
+        i++;
+      }
+    }
+  }
 
 	/**
 	 * @notice Earnings which is locked yet
