@@ -511,7 +511,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 					}
 				}
 			} else {
-				checkAndProcessEligibility(_user, true, false);
+				_processEligibility(_user, isCurrentlyEligible, true);
 			}
 		}
 	}
