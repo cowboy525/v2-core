@@ -436,8 +436,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			return;
 		}
 		if (eligibilityEnabled) {
-			eligibleDataProvider.refresh(_user);
-			if (eligibleDataProvider.lastEligibleStatus(_user)) {
+			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
+			if (isCurrentlyEligible) {
 				_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
 			} else {
 				checkAndProcessEligibility(_user, true, false);
@@ -495,8 +495,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function afterLockUpdate(address _user) external {
 		if (msg.sender != address(_getMfd())) revert NotMFD();
 		if (eligibilityEnabled) {
-			eligibleDataProvider.refresh(_user);
-			if (eligibleDataProvider.lastEligibleStatus(_user)) {
+			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
+			if (isCurrentlyEligible) {
 				uint256 length = poolLength();
 				for (uint256 i; i < length; i++) {
 					uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
@@ -521,11 +521,24 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function hasEligibleDeposits(address _user) internal view returns (bool hasDeposits) {
 		uint256 length = poolLength();
 		for (uint256 i; i < length; i++) {
-			UserInfo storage user = userInfo[registeredTokens[i]][_user];
-			if (user.amount != 0) {
+			if (userInfo[registeredTokens[i]][_user].amount != 0) {
 				hasDeposits = true;
 				break;
 			}
+		}
+	}
+
+  function _processEligibility(address _user, bool _isEligible, bool _execute) internal returns (bool issueBaseBounty) {
+		bool hasEligDeposits = hasEligibleDeposits(_user);
+		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
+		bool alreadyDqd = lastDqTime != 0;
+
+		if (!_isEligible && hasEligDeposits && !alreadyDqd) {
+			issueBaseBounty = true;
+		}
+		if (_execute && issueBaseBounty) {
+			stopEmissionsFor(_user, _isEligible);
+			emit Disqualified(_user);
 		}
 	}
 
@@ -536,22 +549,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	) internal returns (bool issueBaseBounty) {
 		bool isEligible;
 		if (_refresh && _execute) {
-			eligibleDataProvider.refresh(_user);
-			isEligible = eligibleDataProvider.lastEligibleStatus(_user);
+			isEligible = eligibleDataProvider.refresh(_user);
 		} else {
 			isEligible = eligibleDataProvider.isEligibleForRewards(_user);
 		}
-		bool hasEligDeposits = hasEligibleDeposits(_user);
-		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
-		bool alreadyDqd = lastDqTime != 0;
-
-		if (!isEligible && hasEligDeposits && !alreadyDqd) {
-			issueBaseBounty = true;
-		}
-		if (_execute && issueBaseBounty) {
-			stopEmissionsFor(_user);
-			emit Disqualified(_user);
-		}
+		return _processEligibility(_user, isEligible, _execute);
 	}
 
 	function claimBounty(address _user, bool _execute) public returns (bool issueBaseBounty) {
@@ -559,10 +561,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		issueBaseBounty = checkAndProcessEligibility(_user, _execute, true);
 	}
 
-	function stopEmissionsFor(address _user) internal {
+	function stopEmissionsFor(address _user, bool _isEligible) internal {
 		if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-		if (eligibleDataProvider.lastEligibleStatus(_user)) revert UserStillEligible();
+    if (_isEligible) revert UserStillEligible();
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ++i) {
 			address token = registeredTokens[i];

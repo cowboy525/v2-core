@@ -260,15 +260,15 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Refresh token amount for eligibility
 	 * @param user's address
 	 */
-	function refresh(address user) external {
+	function refresh(address user) external returns (bool currentEligibility) {
 		if (msg.sender != address(chef)) revert OnlyCIC();
 		assert(user != address(0));
 
-		bool currentEligble = isEligibleForRewards(user);
-		if (currentEligble && disqualifiedTime[user] != 0) {
+		currentEligibility = isEligibleForRewards(user);
+		if (currentEligibility && disqualifiedTime[user] != 0) {
 			disqualifiedTime[user] = 0;
 		}
-		lastEligibleStatus[user] = currentEligble;
+		lastEligibleStatus[user] = currentEligibility;
 	}
 
 	/**
