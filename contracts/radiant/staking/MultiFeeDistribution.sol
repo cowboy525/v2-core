@@ -928,16 +928,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		if (locks.length != 0) {
 			uint256 length = locks.length <= limit ? locks.length : limit;
-			for (uint256 i = 0; i < length; ) {
-				if (locks[i].unlockTime <= block.timestamp) {
-					lockAmount = lockAmount.add(locks[i].amount);
-					lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
-					locks[i] = locks[locks.length - 1];
-					locks.pop();
-					length = length.sub(1);
-				} else {
-					i = i + 1;
-				}
+			uint256 i;
+			while (i < length && locks[i].unlockTime <= block.timestamp) {
+				lockAmount = lockAmount.add(locks[i].amount);
+				lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
+				i = i + 1;
+			}
+			for (uint256 j = i; j < locks.length; j = j + 1) {
+				locks[j - i] = locks[j];
+			}
+			for (uint256 j = 0; j < i; j = j + 1) {
+				locks.pop();
 			}
 			if (locks.length == 0) {
 				lockAmount = totalLock;
