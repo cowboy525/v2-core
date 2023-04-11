@@ -3,7 +3,6 @@ pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -13,7 +12,6 @@ import "../../interfaces/IMultiFeeDistribution.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
 import "../../interfaces/ILeverager.sol";
 import "../../interfaces/IOnwardIncentivesController.sol";
-import "../../interfaces/IAToken.sol";
 import "../../interfaces/IMiddleFeeDistribution.sol";
 
 // based on the Sushi MasterChef

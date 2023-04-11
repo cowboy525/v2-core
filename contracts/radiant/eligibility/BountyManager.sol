@@ -2,7 +2,6 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -10,11 +9,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/ILendingPoolAddressesProvider.sol";
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/ILockZap.sol";
 import "../../interfaces/IChefIncentivesController.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";

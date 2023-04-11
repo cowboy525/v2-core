@@ -11,10 +11,6 @@ import "../../interfaces/IChefIncentivesController.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IMiddleFeeDistribution.sol";
 import "../../interfaces/LockedBalance.sol";
-import "../../interfaces/uniswap/IUniswapV2Router02.sol";
-import "../../interfaces/uniswap/IUniswapV2Factory.sol";
-import "../../interfaces/uniswap/IUniswapV2Pair.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs

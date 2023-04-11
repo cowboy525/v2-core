@@ -3,7 +3,6 @@ pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -17,7 +16,6 @@ import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol"
 import "../../interfaces/IMintableToken.sol";
 import "../../interfaces/ILockerList.sol";
 import "../../interfaces/LockedBalance.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract
