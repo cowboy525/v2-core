@@ -16,7 +16,6 @@ import "../../interfaces/ILendingPoolAddressesProvider.sol";
 import "../../interfaces/ILendingPool.sol";
 import "../../interfaces/ILockZap.sol";
 import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
 import "../../interfaces/ICompounder.sol";
