@@ -54,8 +54,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		_;
 	}
 
-	event Disqualified(address user);
-	event ChefIncentivesControllerUpdated(IChefIncentivesController _chef);
 	event BaseBountyUsdTargetUpdated(uint256 _newVal);
 	event HunterShareUpdated(uint256 _newVal);
 	event MaxBaseBountyUpdated(uint256 _newVal);

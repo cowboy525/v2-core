@@ -78,9 +78,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	/// @notice Emitted when DQ time is set
 	event DqTimeUpdated(address _user, uint256 _time);
-
-	/// @notice Emitted when a new token is added
-	event AddToken(address indexed token);
+	
 
 	/********************** Errors ***********************/
 	error AddressZero();
