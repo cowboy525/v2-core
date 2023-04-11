@@ -3,7 +3,7 @@ pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
 interface IEligibilityDataProvider {
-	function refresh(address user) external;
+	function refresh(address user) external returns (bool currentEligibility);
 
 	function updatePrice() external;
 
