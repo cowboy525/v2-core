@@ -55,9 +55,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/// @notice Emitted when reward token is forwarded
 	event ForwardReward(address token, uint256 amount);
 
-	/// @notice Emitted when OpEx info is updated
-	event SetOperationExpenses(address opEx, uint256 ratio);
-
 	/// @notice Emitted when operation expenses is set
 	event OperationExpensesUpdated(address _operationExpenses, uint256 _operationExpenseRatio);
 
@@ -138,6 +135,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			}
 			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
+
+			emit ForwardReward(_rewardTokens[i], total);
 
 			emitNewTransferAdded(_rewardTokens[i], total);
 		}

@@ -142,7 +142,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/********************** Events ***********************/
 
-	//event RewardAdded(uint256 reward);
 	// event Staked(address indexed user, uint256 amount, bool locked);
 	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, bool isLP);
 	event Withdrawn(
@@ -154,8 +153,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isLP
 	);
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
-	event IneligibleRewardRemoved(address indexed user, address indexed rewardToken, uint256 reward);
-	event RewardsDurationUpdated(address token, uint256 newDuration);
 	event Recovered(address token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
 
@@ -982,7 +979,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			balances[onBehalfOf].locked,
 			penaltyAmount,
 			burnAmount,
-			stakingToken != address(rdntToken)
+			false
 		);
 	}
 
