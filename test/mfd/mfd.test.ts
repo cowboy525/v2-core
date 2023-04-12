@@ -961,4 +961,40 @@ describe("MultiFeeDistribution", () => {
 
     expect(await mfd.totalBalance(user1.address)).to.be.equal(0);
   });
+
+	it("Funds shouldn't be withdrawn by other person to staker", async () => {
+    const LOCK_DURATION = (await mfd.defaultLockDuration()).div(3);
+    const depositAmount = ethers.utils.parseUnits("100", 18);
+    await radiant.mint(mfd.address, depositAmount.mul(10));
+
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
+    await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+    await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
+
+		const victim = user1.address;
+		// attack part
+		const totalBalanceBefore = await mfd.totalBalance(victim)
+		const lockInfoBefore = await mfd.lockInfo(victim)
+		const autoRelockDisabled = await mfd.autoRelockDisabled(victim)
+
+		expect(autoRelockDisabled).equal(false) // the victim prefers to re-lock their funds
+
+		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
+
+		await expect(mfd.connect(user2).withdrawExpiredLocksForWithOptions(victim, 1, true)).to.be.reverted; // only withdrawing one lock because it's just a POC
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(victim, 1, true); // only withdrawing one lock because it's just a POC
+
+		const totalBalanceAfter = await mfd.totalBalance(victim)
+		const lockInfoAfter = await mfd.lockInfo(victim)
+
+		expect(totalBalanceAfter).to.be.lte(totalBalanceBefore) // we successfully forces a user to withdraw even though he preferred to re-lock
+		expect(lockInfoAfter.length).to.be.lte(lockInfoBefore.length) // There are less locks after the withdrawal as expected
+	})
 });
