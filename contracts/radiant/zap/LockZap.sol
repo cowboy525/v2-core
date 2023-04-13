@@ -11,7 +11,6 @@ import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Init
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 
-import {IUniswapV2Router02} from "../../interfaces/uniswap/IUniswapV2Router02.sol";
 import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
@@ -258,7 +257,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** ERC20(address(weth)).decimals());
+		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
 		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
