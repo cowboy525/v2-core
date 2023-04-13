@@ -2,19 +2,19 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/IEligibilityDataProvider.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/ILockZap.sol";
-import "../../interfaces/IAaveOracle.sol";
-import "../../interfaces/IWETH.sol";
+import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
+import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
+import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
+import {IWETH} from "../../interfaces/IWETH.sol";
 
 /// @title Leverager Contract
 /// @author Radiant

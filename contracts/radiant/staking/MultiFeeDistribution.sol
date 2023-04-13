@@ -2,21 +2,22 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/IBountyManager.sol";
-import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IMintableToken.sol";
-import "../../interfaces/ILockerList.sol";
-import "../../interfaces/LockedBalance.sol";
-import "../../interfaces/IPriceProvider.sol";
+import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
+import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
+import {IBountyManager} from "../../interfaces/IBountyManager.sol";
+import {IMultiFeeDistribution, IFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {ILockerList} from "../../interfaces/ILockerList.sol";
+import {LockedBalance, Balances, Reward, EarnedBalance} from "../../interfaces/LockedBalance.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract
 /// @author Radiant
@@ -140,7 +141,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/********************** Events ***********************/
 
-	//event RewardAdded(uint256 reward);
 	// event Staked(address indexed user, uint256 amount, bool locked);
 	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, bool isLP);
 	event Withdrawn(
@@ -152,8 +152,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isLP
 	);
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
-	event IneligibleRewardRemoved(address indexed user, address indexed rewardToken, uint256 reward);
-	event RewardsDurationUpdated(address token, uint256 newDuration);
 	event Recovered(address token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
 
@@ -980,7 +978,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			balances[onBehalfOf].locked,
 			penaltyAmount,
 			burnAmount,
-			stakingToken != address(rdntToken)
+			false
 		);
 	}
 
@@ -999,16 +997,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		if (locks.length != 0) {
 			uint256 length = locks.length <= limit ? locks.length : limit;
-			for (uint256 i = 0; i < length; ) {
-				if (locks[i].unlockTime <= block.timestamp) {
-					lockAmount = lockAmount.add(locks[i].amount);
-					lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
-					locks[i] = locks[locks.length - 1];
-					locks.pop();
-					length = length.sub(1);
-				} else {
-					i = i + 1;
-				}
+			uint256 i;
+			while (i < length && locks[i].unlockTime <= block.timestamp) {
+				lockAmount = lockAmount.add(locks[i].amount);
+				lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
+				i = i + 1;
+			}
+			for (uint256 j = i; j < locks.length; j = j + 1) {
+				locks[j - i] = locks[j];
+			}
+			for (uint256 j = 0; j < i; j = j + 1) {
+				locks.pop();
 			}
 			if (locks.length == 0) {
 				lockAmount = totalLock;
@@ -1030,6 +1029,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool doTransfer,
 		uint256 limit
 	) internal whenNotPaused returns (uint256 amount) {
+		require(isRelockAction == false || _address == msg.sender || lockZap == msg.sender);
 		_updateReward(_address);
 
 		uint256 amountWithMultiplier;

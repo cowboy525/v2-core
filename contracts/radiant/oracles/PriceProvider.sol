@@ -2,14 +2,14 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "../../interfaces/IBaseOracle.sol";
-import "../../interfaces/IPoolHelper.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IEligibilityDataProvider.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
+import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
 /// @title PriceProvider Contract
 /// @author Radiant

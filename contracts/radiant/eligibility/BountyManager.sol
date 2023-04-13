@@ -2,19 +2,23 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
-import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IEligibilityDataProvider.sol";
-import "../../interfaces/ICompounder.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import {IAToken} from "../../interfaces/IAToken.sol";
+import {IMultiFeeDistribution, IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
+import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
+import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
+import {ICompounder} from "../../interfaces/ICompounder.sol";
 
-import 'hardhat/console.sol';
 
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
@@ -48,8 +52,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		_;
 	}
 
-	event Disqualified(address user);
-	event ChefIncentivesControllerUpdated(IChefIncentivesController _chef);
 	event BaseBountyUsdTargetUpdated(uint256 _newVal);
 	event HunterShareUpdated(uint256 _newVal);
 	event MaxBaseBountyUpdated(uint256 _newVal);

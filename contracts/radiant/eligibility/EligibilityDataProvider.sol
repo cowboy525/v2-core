@@ -2,15 +2,15 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/LockedBalance.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
+import {LockedBalance} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
@@ -74,9 +74,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	/// @notice Emitted when DQ time is set
 	event DqTimeUpdated(address _user, uint256 _time);
-
-	/// @notice Emitted when a new token is added
-	event AddToken(address indexed token);
+	
 
 	/********************** Errors ***********************/
 	error AddressZero();
