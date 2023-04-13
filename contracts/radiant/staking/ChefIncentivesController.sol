@@ -440,7 +440,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (isCurrentlyEligible) {
 				_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
 			} else {
-				_processEligibility(_user, isCurrentlyEligible, true);
+				checkAndProcessEligibility(_user, true, false);
 			}
 		} else {
 			_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);

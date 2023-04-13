@@ -303,9 +303,10 @@ runs.forEach(function (run) {
 				it('disqualifying action', async () => {
 					await chefIncentivesController.connect(user1).claimAll(user1.address);
 
-          const receivedRewards = parseFloat(
-            ethers.utils.formatEther((await multiFeeDistribution.getBalances(user1.address)).earned)
-          )
+					const receivedRewards = parseFloat(
+						ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(user1.address)).total)
+					);
+
 					const expectedReceivedRewards = pendingWithInelig;
 
 					expect(receivedRewards).closeTo(parseFloat(ethers.utils.formatEther(expectedReceivedRewards)), 1);
