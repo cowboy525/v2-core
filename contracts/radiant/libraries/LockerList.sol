@@ -2,8 +2,8 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./AddressPagination.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {AddressPagination} from "./AddressPagination.sol";
 
 /// @title Locker List Contract
 /// @author Radiant
