@@ -440,7 +440,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (isCurrentlyEligible) {
 				_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
 			} else {
-				checkAndProcessEligibility(_user, true, false);
+				_processEligibility(_user, isCurrentlyEligible, true);
 			}
 		} else {
 			_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
@@ -528,7 +528,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-  function _processEligibility(address _user, bool _isEligible, bool _execute) internal returns (bool issueBaseBounty) {
+	function _processEligibility(
+		address _user,
+		bool _isEligible,
+		bool _execute
+	) internal returns (bool issueBaseBounty) {
 		bool hasEligDeposits = hasEligibleDeposits(_user);
 		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
 		bool alreadyDqd = lastDqTime != 0;
@@ -564,7 +568,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function stopEmissionsFor(address _user, bool _isEligible) internal {
 		if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-    if (_isEligible) revert UserStillEligible();
+		if (_isEligible) revert UserStillEligible();
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ++i) {
 			address token = registeredTokens[i];

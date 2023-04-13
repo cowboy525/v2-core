@@ -20,7 +20,7 @@ import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IEligibilityDataProvider.sol";
 import "../../interfaces/ICompounder.sol";
 
-import 'hardhat/console.sol';
+import "hardhat/console.sol";
 
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;

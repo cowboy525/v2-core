@@ -416,18 +416,18 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
 	}
 
-  function lockedBalance(address user) public view override returns (uint256 locked) {
-    LockedBalance[] storage locks = userLocks[user];
-    uint256 length = locks.length;
-    for (uint i; i < length;) {
-      if (locks[i].unlockTime > block.timestamp) {
-        locked = locked.add(locks[i].amount);
-      }
-      unchecked {
-        i++;
-      }
-    }
-  }
+	function lockedBalance(address user) public view override returns (uint256 locked) {
+		LockedBalance[] storage locks = userLocks[user];
+		uint256 length = locks.length;
+		for (uint i; i < length; ) {
+			if (locks[i].unlockTime > block.timestamp) {
+				locked = locked.add(locks[i].amount);
+			}
+			unchecked {
+				i++;
+			}
+		}
+	}
 
 	/**
 	 * @notice Earnings which is locked yet
@@ -462,6 +462,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			}
 		}
 		return (total, unlocked, earningsData);
+	}
+
+	/**
+	 * @notice Total balance of an account, including unlocked, locked and earned tokens.
+	 */
+	function getBalances(address _user) external view returns (Balances memory) {
+		return balances[_user];
 	}
 
 	/**
@@ -973,14 +980,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		IPriceProvider(_priceProvider).update();
 
-		emit Withdrawn(
-			onBehalfOf,
-			amount,
-			balances[onBehalfOf].locked,
-			penaltyAmount,
-			burnAmount,
-			false
-		);
+		emit Withdrawn(onBehalfOf, amount, balances[onBehalfOf].locked, penaltyAmount, burnAmount, false);
 	}
 
 	/********************** Eligibility + Disqualification ***********************/

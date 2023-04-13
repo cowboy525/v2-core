@@ -82,7 +82,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	//console.log(config.POSTDEPLOY_TOKEN_CONFIG[0][1]);
 	let i;
-	for(i = 0; i < config.POSTDEPLOY_TOKEN_CONFIG.length; i++){
+	for (i = 0; i < config.POSTDEPLOY_TOKEN_CONFIG.length; i++) {
 		console.log(config.POSTDEPLOY_TOKEN_CONFIG.length);
 		let initInputParams = config.POSTDEPLOY_TOKEN_CONFIG[i][1].initInputParams;
 		let reserveInputParams = config.POSTDEPLOY_TOKEN_CONFIG[i][1].reservesParams;
@@ -149,9 +149,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		await execute('ATokensAndRatesHelper', {from: deployer, log: true}, 'configureReserves', reserveArray);
 		await execute('LendingPoolAddressesProvider', {from: deployer, log: true}, 'setPoolAdmin', deployer);
 		let oracle;
-		
+
 		oracle = config.POSTDEPLOY_TOKEN_CONFIG[i][1].chainlinkAggregator;
-		if(oracle === ``){
+		if (oracle === ``) {
 			oracle = wstethOracle.address;
 		}
 		await execute(

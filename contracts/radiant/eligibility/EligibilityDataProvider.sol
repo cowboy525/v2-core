@@ -78,7 +78,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	/// @notice Emitted when DQ time is set
 	event DqTimeUpdated(address _user, uint256 _time);
-	
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -183,8 +182,8 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
 			middleFeeDistribution.getMultiFeeDistributionAddress()
 		);
-    uint256 lockedLP = multiFeeDistribution.lockedBalance(user);
-		return _lockedUsdValue(lockedLP);
+		Balances memory _balances = multiFeeDistribution.getBalances(user);
+		return _lockedUsdValue(_balances.locked);
 	}
 
 	/**

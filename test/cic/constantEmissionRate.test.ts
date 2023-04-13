@@ -61,7 +61,7 @@ describe('Ensure Emissions consistant', () => {
 			parseFloat(ethers.utils.formatUnits(expectedRewards1.toString(), 18)),
 			4
 		);
-		console.log("F")
+		console.log('F');
 
 		await depositAndBorrowAll(user1, ['150', '10000000'], deployData);
 

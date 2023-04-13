@@ -278,7 +278,8 @@ const chainConfig = {
 		],
 	],
 	POSTDEPLOY_TOKEN_CONFIG: [
-			[[
+		[
+			[
 				'WSTETH',
 				{
 					assetAddress: '0x5979D7b546E38E414F7E9822514be443A4800529',
@@ -370,7 +371,7 @@ const chainConfig = {
 					},
 				},
 			],
-		]
+		],
 	],
 	STARGATE_CONFIG: {
 		ASSETS: ['0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'],

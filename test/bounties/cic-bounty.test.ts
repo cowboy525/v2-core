@@ -304,7 +304,7 @@ runs.forEach(function (run) {
 					await chefIncentivesController.connect(user1).claimAll(user1.address);
 
 					const receivedRewards = parseFloat(
-						ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(user1.address)).total)
+						ethers.utils.formatEther((await multiFeeDistribution.getBalances(user1.address)).total)
 					);
 
 					const expectedReceivedRewards = pendingWithInelig;

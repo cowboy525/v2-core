@@ -194,13 +194,17 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 		).to.not.be.reverted;
 		rps = await chefIncentivesController.rewardsPerSecond();
 		assert.equal(rps, newRPS, `manual rewards setting`);
-		
+
 		// - once that time passed, do a claim, ensure rewards per sec has changed
 		advanceTimeAndBlock(skipDuration);
 		await chefIncentivesController.claimAll(deployer.address);
-		assert.equal((await chefIncentivesController.emissionScheduleIndex()), cicRewardsPerSecond.length, `get rps from schedule`);
 		assert.equal(
-			(await chefIncentivesController.rewardsPerSecond()),
+			await chefIncentivesController.emissionScheduleIndex(),
+			cicRewardsPerSecond.length,
+			`get rps from schedule`
+		);
+		assert.equal(
+			await chefIncentivesController.rewardsPerSecond(),
 			cicRewardsPerSecond[0],
 			`get rps from schedule`
 		);
