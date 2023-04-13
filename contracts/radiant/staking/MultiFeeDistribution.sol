@@ -1032,7 +1032,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool doTransfer,
 		uint256 limit
 	) internal whenNotPaused returns (uint256 amount) {
-		require(isRelockAction == false || _address == msg.sender);
+		require(isRelockAction == false || _address == msg.sender || lockZap == msg.sender);
 		_updateReward(_address);
 
 		uint256 amountWithMultiplier;
