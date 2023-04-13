@@ -183,8 +183,9 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
 			middleFeeDistribution.getMultiFeeDistributionAddress()
 		);
-    uint256 lockedLP = multiFeeDistribution.lockedBalance(user);
-		return _lockedUsdValue(lockedLP);
+    // uint256 lockedLP = multiFeeDistribution.lockedBalance(user);
+    Balances memory _balances = multiFeeDistribution.getBalances(user);
+		return _lockedUsdValue(_balances.locked);
 	}
 
 	/**

@@ -372,6 +372,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return balances[user].locked;
 	}
 
+  /**
+   * @notice Total balance of an account, including unlocked, locked and earned tokens.
+   */
+  function getBalances(address _user) external view returns (Balances memory) {
+    return balances[_user];
+  }
+
 	/**
 	 * @notice Information on a user's lockings
 	 * @return total balance of locks
