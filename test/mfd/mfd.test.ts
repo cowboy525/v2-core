@@ -342,7 +342,63 @@ describe("MultiFeeDistribution", () => {
     expect(lockedBal1).to.be.equal(lockedBal2);
   });
 
-  it("withdrawing works for various lock lengths", async () => {
+  it("the array is sorted when withdraw expired locks with smaller limit than lock length", async () => {
+    await mfd.connect(user1).setRelock(false);
+
+    const LOCK_DURATION = (await mfd.defaultLockDuration()).div(3);
+    const depositAmount = ethers.utils.parseUnits("100", 18);
+    await radiant.mint(mfd.address, depositAmount.mul(10));
+
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
+    await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
+    await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+    await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
+    await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
+
+		// array is sorted
+		const expectSorted = async () => {
+			const lockInfo = await mfd.lockInfo(user1.address);
+			for (let i = 1; i < lockInfo.length; i += 1) {
+				expect(lockInfo[i].unlockTime).to.be.gt(lockInfo[i - 1].unlockTime);
+			}
+		}
+
+    // x1 was locked 3 times
+    await advanceTimeAndBlock(LOCK_DURATION.toNumber());
+    await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+
+		await expectSorted();
+
+		// x3 was locked 3 times
+    await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
+    await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+
+		await expectSorted();
+
+		// x6 was locked 2 times
+    await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
+    await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+
+		await expectSorted();
+
+		// x12 was locked 2 times
+    await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
+    await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+
+		await expectSorted();
+
+		// withdraw all left
+    await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+
+		await expectSorted();
+	});
+
+	it("withdrawing works for various lock lengths", async () => {
     await mfd.connect(user1).setRelock(false);
 
     const LOCK_DURATION = (await mfd.defaultLockDuration()).div(3);
