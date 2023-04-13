@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./BaseOracle.sol";
-import "../../dependencies/uniswap/contracts/FixedPoint.sol";
-import "../../dependencies/uniswap/contracts/UniswapV2OracleLibrary.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {BaseOracle, Initializable} from "./BaseOracle.sol";
+import {FixedPoint} from "../../dependencies/uniswap/contracts/FixedPoint.sol";
+import {UniswapV2OracleLibrary, IUniswapV2Pair} from "../../dependencies/uniswap/contracts/UniswapV2OracleLibrary.sol";
 
 /// @title UniV2TwapOracle Contract
 /// @author Radiant team

@@ -2,26 +2,26 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "./helpers/DustRefunder.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import {DustRefunder} from "./helpers/DustRefunder.sol";
+import {IUniswapV2Factory} from "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 
-import "../../interfaces/uniswap/IUniswapV2Router02.sol";
-import "../../interfaces/ILiquidityZap.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/IPoolHelper.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IWETH.sol";
-import "../../interfaces/IPriceOracle.sol";
+import {IUniswapV2Router02} from "../../interfaces/uniswap/IUniswapV2Router02.sol";
+import {ILiquidityZap} from "../../interfaces/ILiquidityZap.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
+import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IWETH} from "../../interfaces/IWETH.sol";
+import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
