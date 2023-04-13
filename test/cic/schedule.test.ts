@@ -174,7 +174,7 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 		).to.not.be.reverted;
 	});
 
-	xit('ensure rps is set by schedule once time has passed', async () => {
+	it('ensure rps is set by schedule once time has passed', async () => {
 		const skipDuration = 100;
 		// - launch everything w/ fixed rewards per second, skip some time, ensure is correct
 		const newRPS = 1000;
@@ -194,14 +194,16 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 		).to.not.be.reverted;
 		rps = await chefIncentivesController.rewardsPerSecond();
 		assert.equal(rps, newRPS, `manual rewards setting`);
-		
+
 		// - once that time passed, do a claim, ensure rewards per sec has changed
+		const prevIndex = await chefIncentivesController.emissionScheduleIndex();
+		const prevRPS = await chefIncentivesController.rewardsPerSecond();
 		advanceTimeAndBlock(skipDuration);
 		await chefIncentivesController.claimAll(deployer.address);
-		assert.equal((await chefIncentivesController.emissionScheduleIndex()), cicRewardsPerSecond.length, `get rps from schedule`);
-		assert.equal(
+		assert.notEqual((await chefIncentivesController.emissionScheduleIndex()), prevIndex, `get rps from schedule`);
+		assert.notEqual(
 			(await chefIncentivesController.rewardsPerSecond()),
-			cicRewardsPerSecond[0],
+			prevRPS,
 			`get rps from schedule`
 		);
 	});

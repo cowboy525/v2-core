@@ -116,7 +116,7 @@ describe('Radiant OFT: ', function () {
 		expect(daoDstBal).to.be.equal(dstSupply);
 	});
 
-	xit('admin perms', async function () {
+	it('admin perms', async function () {
 		await expect(execute('RadiantOFT', {from: dao}, 'setFee', 1000)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);

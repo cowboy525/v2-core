@@ -15,7 +15,7 @@ import { setupTest } from "../setup";
 
 chai.use(solidity);
 
-xdescribe("Interest split 75/25 between lockers and depositors", () => {
+describe("Interest split 75/25 between lockers and depositors", () => {
   let deployData: DeployData;
   let deployConfig: DeployConfig;
 

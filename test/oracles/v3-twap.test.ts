@@ -19,7 +19,7 @@ const {expect} = chai;
  * ensure hardhat fork config is forking Arbi
  *
  */
-xdescribe('Uni V3 TWAP', () => {
+describe('Uni V3 TWAP', () => {
 	let oracle: UniV3TwapOracle;
 	let owner: SignerWithAddress;
 	let wethContract: WETH;
