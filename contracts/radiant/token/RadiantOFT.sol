@@ -4,10 +4,12 @@ pragma solidity 0.8.12;
 import {OFTV2} from "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../../interfaces/IPriceProvider.sol";
 
-contract RadiantOFT is OFTV2, Pausable {
+contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	using SafeMath for uint256;
 
 	/// @notice bridge fee reciever
@@ -110,10 +112,9 @@ contract RadiantOFT is OFTV2, Pausable {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override returns (uint256 amount) {
+	) internal override nonReentrant returns (uint256 amount) {
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
-		payable(treasury).transfer(fee);
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
@@ -123,6 +124,8 @@ contract RadiantOFT is OFTV2, Pausable {
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
+
+		Address.sendValue(payable(treasury), fee);
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
