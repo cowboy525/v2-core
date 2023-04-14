@@ -23,7 +23,7 @@ import "../../../interfaces/IERC20DetailedBytes.sol";
 contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
-	using HomoraMath for uint;
+	using HomoraMath for uint256;
 
 	error AddressZero();
 	error InsufficientPermision();
@@ -106,27 +106,27 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	// https://cmichel.io/pricing-lp-tokens/
 	// https://blog.alphafinance.io/fair-lp-token-pricing/
 	// https://github.com/AlphaFinanceLab/alpha-homora-v2-contract/blob/master/contracts/oracle/UniswapV2Oracle.sol
-	function getLpPrice(uint rdntPriceInEth) public view returns (uint256 priceInEth) {
+	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
 		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
 
-		(uint reserve0, uint reserve1, ) = lpToken.getReserves();
-		uint wethReserve = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
-		uint rdntReserve = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
+		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
+		uint256 wethReserve = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
+		uint256 rdntReserve = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
 
-		uint lpSupply = lpToken.totalSupply();
+		uint256 lpSupply = lpToken.totalSupply();
 
-		uint sqrtK = HomoraMath.sqrt(rdntReserve.mul(wethReserve)).fdiv(lpSupply); // in 2**112
+		uint256 sqrtK = HomoraMath.sqrt(rdntReserve.mul(wethReserve)).fdiv(lpSupply); // in 2**112
 
 		// rdnt in eth, decis 8
-		uint px0 = rdntPriceInEth.mul(2 ** 112); // in 2**112
+		uint256 px0 = rdntPriceInEth.mul(2 ** 112); // in 2**112
 		// eth in eth, decis 8
-		uint px1 = uint256(100000000).mul(2 ** 112); // in 2**112
+		uint256 px1 = uint256(100000000).mul(2 ** 112); // in 2**112
 
 		// fair token0 amt: sqrtK * sqrt(px1/px0)
 		// fair token1 amt: sqrtK * sqrt(px0/px1)
 		// fair lp price = 2 * sqrt(px0 * px1)
-		// split into 2 sqrts multiplication to prevent uint overflow (note the 2**112)
-		uint result = sqrtK.mul(2).mul(HomoraMath.sqrt(px0)).div(2 ** 56).mul(HomoraMath.sqrt(px1)).div(2 ** 56);
+		// split into 2 sqrts multiplication to prevent uint256 overflow (note the 2**112)
+		uint256 result = sqrtK.mul(2).mul(HomoraMath.sqrt(px0)).div(2 ** 56).mul(HomoraMath.sqrt(px1)).div(2 ** 56);
 		priceInEth = result.div(2 ** 112);
 	}
 

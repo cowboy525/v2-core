@@ -14,7 +14,7 @@ interface IPoolHelper {
 
 	function quoteFromToken(uint256 tokenAmount) external view returns (uint256 optimalWETHAmount);
 
-	function getLpPrice(uint rdntPriceInEth) external view returns (uint256 priceInEth);
+	function getLpPrice(uint256 rdntPriceInEth) external view returns (uint256 priceInEth);
 
 	function getReserves() external view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply);
 

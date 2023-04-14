@@ -83,10 +83,10 @@ contract RadiantOFT is OFTV2, Pausable {
 	function estimateSendFee(
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount,
+		uint256 _amount,
 		bool _useZro,
 		bytes calldata _adapterParams
-	) public view override returns (uint nativeFee, uint zroFee) {
+	) public view override returns (uint256 nativeFee, uint256 zroFee) {
 		(nativeFee, zroFee) = super.estimateSendFee(_dstChainId, _toAddress, _amount, _useZro, _adapterParams);
 		nativeFee = nativeFee.add(getBridgeFee(_amount));
 	}
@@ -106,11 +106,11 @@ contract RadiantOFT is OFTV2, Pausable {
 		address _from,
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount,
+		uint256 _amount,
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override returns (uint amount) {
+	) internal override returns (uint256 amount) {
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
 		payable(treasury).transfer(fee);
@@ -138,8 +138,8 @@ contract RadiantOFT is OFTV2, Pausable {
 		address _from,
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount
-	) internal override whenNotPaused returns (uint) {
+		uint256 _amount
+	) internal override whenNotPaused returns (uint256) {
 		return super._debitFrom(_from, _dstChainId, _toAddress, _amount);
 	}
 
