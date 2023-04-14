@@ -94,5 +94,5 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	/**
 	 * @dev implement in child contract
 	 */
-	function consult() public view virtual returns (uint256 amountOut) {}
+	function consult() public view virtual returns (uint256) {}
 }

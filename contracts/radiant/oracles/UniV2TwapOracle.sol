@@ -162,7 +162,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/**
 	 * @notice Returns current price.
 	 */
-	function consult() public view override returns (uint256 amountOut) {
+	function consult() public view override returns (uint256) {
 		uint8 decimals = IERC20Metadata(token).decimals();
 		return _consult(token, 10 ** decimals);
 	}

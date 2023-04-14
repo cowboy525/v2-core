@@ -179,7 +179,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _wethAmt,
 		uint256 _rdntAmt,
 		uint256 _lockTypeIndex
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		return _zap(_borrow, _wethAmt, _rdntAmt, msg.sender, msg.sender, _lockTypeIndex, msg.sender);
 	}
 
@@ -196,7 +196,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _wethAmt,
 		uint256 _rdntAmt,
 		address _onBehalf
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		uint256 duration = mfd.defaultLockIndex(_onBehalf);
 		return _zap(_borrow, _wethAmt, _rdntAmt, msg.sender, _onBehalf, duration, _onBehalf);
 	}
@@ -209,7 +209,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function zapFromVesting(
 		bool _borrow,
 		uint256 _lockTypeIndex
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);

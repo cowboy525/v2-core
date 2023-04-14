@@ -80,12 +80,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		}
 	}
 
-	function zapETH(address payable _onBehalf) external payable returns (uint256 liquidity) {
+	function zapETH(address payable _onBehalf) external payable returns (uint256) {
 		if (msg.value == 0) revert InvalidETHAmount();
 		return addLiquidityETHOnly(_onBehalf);
 	}
 
-	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256 liquidity) {
+	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256) {
 		if (msg.sender != poolHelper) revert InsufficientPermision();
 		if (to == address(0)) revert AddressZero();
 		uint256 buyAmount = _amount.div(2);
@@ -107,7 +107,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		return _addLiquidity(outTokens, buyAmount, to);
 	}
 
-	function addLiquidityETHOnly(address payable to) public payable returns (uint256 liquidity) {
+	function addLiquidityETHOnly(address payable to) public payable returns (uint256) {
 		if (to == address(0)) revert AddressZero();
 		uint256 buyAmount = msg.value.div(2);
 		if (buyAmount == 0) revert InvalidETHAmount();
@@ -140,7 +140,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	}
 
 	// use with quote
-	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256 liquidity) {
+	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256) {
 		IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);

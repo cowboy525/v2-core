@@ -641,7 +641,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-	function availableRewards() internal view returns (uint256 amount) {
+	function availableRewards() internal view returns (uint256) {
 		return depositedRewards.sub(accountedRewards);
 	}
 
