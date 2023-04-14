@@ -77,7 +77,8 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint112 reserve1;
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 
-		require(reserve0 != 0 && reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
+		require(reserve0 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
+		require(reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
 		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 
 		period = _period;
