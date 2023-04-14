@@ -9,6 +9,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 
 import "../../interfaces/IPriceProvider.sol";
 
+/// @title Radiant token contract with OFT integration
+/// @author Radiant Devs
+/// @dev All function calls are currently implemented without side effects
 contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	using SafeMath for uint256;
 
@@ -61,14 +64,24 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		}
 	}
 
+	/**
+	 * @notice Burn tokens.
+	 * @param _amount to burn
+	 */
 	function burn(uint256 _amount) public {
 		_burn(_msgSender(), _amount);
 	}
 
+	/**
+	 * @notice Pause bridge operation.
+	 */
 	function pause() public onlyOwner {
 		_pause();
 	}
 
+	/**
+	 * @notice Unpause bridge operation.
+	 */
 	function unpause() public onlyOwner {
 		_unpause();
 	}

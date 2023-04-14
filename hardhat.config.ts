@@ -163,7 +163,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		bail: true,
+		bail: false,
 	},
 	external: process.env.HARDHAT_FORK
 		? {

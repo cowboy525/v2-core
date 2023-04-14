@@ -41,6 +41,10 @@ contract LockerList is Ownable {
 		return userlist.paginate(page, limit);
 	}
 
+	/**
+	 * @notice Add a locker.
+	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 */
 	function addToList(address user) external onlyOwner {
 		if (inserted[user] == false) {
 			inserted[user] = true;
@@ -51,6 +55,10 @@ contract LockerList is Ownable {
 		emit LockerAdded(user);
 	}
 
+	/**
+	 * @notice Remove a locker.
+	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 */
 	function removeFromList(address user) external onlyOwner {
 		assert(inserted[user] == true);
 

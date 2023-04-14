@@ -340,14 +340,23 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		refundDust(rdntAddr, address(weth), _refundAddress);
 	}
 
+	/**
+	 * @notice Pause zapping operation.
+	 */
 	function pause() external onlyOwner {
 		_pause();
 	}
 
+	/**
+	 * @notice Unpause zapping operation.
+	 */
 	function unpause() external onlyOwner {
 		_unpause();
 	}
 
+	/**
+	 * @notice Updates acceptable slippage ratio.
+	 */
 	function setAcceptableRatio(uint256 _newRatio) external onlyOwner {
 		if (_newRatio > RATIO_DIVISOR) revert InvalidRatio();
 		ACCEPTABLE_RATIO = _newRatio;

@@ -35,6 +35,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
 
+	/**
+	 * @notice Initializer
+	 * @param _inTokenAddr input token of the pool
+	 * @param _outTokenAddr output token of the pool
+	 * @param _wethAddr WETH address
+	 * @param _vault Balancer Vault
+	 * @param _poolFactory Balancer pool factory address
+	 */
 	function initialize(
 		address _inTokenAddr,
 		address _outTokenAddr,
@@ -55,6 +63,11 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		poolFactory = _poolFactory;
 	}
 
+	/**
+	 * @notice Initialize a new pool.
+	 * @param _tokenName Token name of lp token
+	 * @param _tokenSymbol Token symbol of lp token
+	 */
 	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
 		if (lpTokenAddr != address(0)) revert PoolExists();
 
@@ -168,6 +181,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		}
 	}
 
+	/**
+	 * @notice Calculates LP price
+	 * @dev Return value decimal is 8
+	 * @param rdntPriceInEth RDNT price in ETH
+	 * @return priceInEth LP price in ETH
+	 */
 	function getLpPrice(uint256 rdntPriceInEth) public view override returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
@@ -224,6 +243,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		lpTokenSupply = lpToken.totalSupply().div(1e18);
 	}
 
+	/**
+	 * @notice Add liquidity
+	 * @param _wethAmt WETH amount
+	 * @param _rdntAmt RDNT amount
+	 * @return liquidity amount of LP token
+	 */
 	function joinPool(uint256 _wethAmt, uint256 _rdntAmt) internal returns (uint256 liquidity) {
 		(address token0, address token1) = sortTokens(outTokenAddr, inTokenAddr);
 		IAsset[] memory assets = new IAsset[](2);
@@ -247,6 +272,11 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		liquidity = lp.balanceOf(address(this));
 	}
 
+	/**
+	 * @notice Zap WETH
+	 * @param amount to zap
+	 * @return liquidity token amount
+	 */
 	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
@@ -256,6 +286,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		refundDust(outTokenAddr, wethAddr, msg.sender);
 	}
 
+	/**
+	 * @notice Zap WETH ad RDNT
+	 * @param _wethAmt WETH amount
+	 * @param _rdntAmt RDNT amount
+	 * @return liquidity token amount
+	 */
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
@@ -268,12 +304,20 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		refundDust(outTokenAddr, wethAddr, msg.sender);
 	}
 
+	/**
+	 * @notice Sort tokens
+	 */
 	function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
 		if (tokenA == tokenB) revert IdenticalAddresses();
 		(token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
 		if (token0 == address(0)) revert AddressZero();
 	}
 
+	/**
+	 * @notice Calculate quote in WETH from token
+	 * @param tokenAmount RDNT amount
+	 * @return optimalWETHAmount WETH amount
+	 */
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth.mul(1e10);
@@ -281,6 +325,13 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
 	}
 
+	/**
+	 * @notice Perform swap operation
+	 * @param _amount Input amount
+	 * @param _tokenInAddress Input token address
+	 * @param _tokenOutAddress Output token address
+	 * @param _lpAddr LP address
+	 */
 	function swap(
 		uint256 _amount,
 		address _tokenInAddress,
@@ -318,6 +369,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		);
 	}
 
+	/**
+	 * @notice Set lockzap contract
+	 */
 	function setLockZap(address _lockZap) external onlyOwner {
 		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
@@ -393,11 +447,17 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
 	}
 
+	/**
+	 * @notice Get swap fee percentage
+	 */
 	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		fee = pool.getSwapFeePercentage();
 	}
 
+	/**
+	 * @notice Set swap fee percentage
+	 */
 	function setSwapFeePercentage(uint256 _fee) public onlyOwner {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		pool.setSwapFeePercentage(_fee);

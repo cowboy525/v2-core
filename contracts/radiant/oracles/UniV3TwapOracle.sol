@@ -9,6 +9,9 @@ import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLib
 
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 
+/// @title UniV3TwapOracle Contract
+/// @author Radiant
+/// @dev All function calls are currently implemented without side effects
 contract UniV3TwapOracle is Initializable, BaseOracle {
 	using SafeMath for uint256;
 

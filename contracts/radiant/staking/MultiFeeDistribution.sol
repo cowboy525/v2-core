@@ -56,6 +56,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	/// @notice Duration of vesting RDNT
 	uint256 public vestDuration;
 
+	/// @notice Returns reward converter
 	address public rewardConverter;
 
 	/********************** Contract Addresses ***********************/
@@ -130,11 +131,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	/// @notice Flag to prevent more minter addings
 	bool public mintersAreSet;
 
-	// Users list
+	/// @notice Users list
 	ILockerList public userlist;
 
+	/// @notice Last claim time of the user
 	mapping(address => uint256) public lastClaimTime;
 
+	/// @notice Bounty manager contract
 	address public bountyManager;
 
 	// to prevent unbounded lock length iteration during withdraw/clean
@@ -241,12 +244,18 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		mintersAreSet = true;
 	}
 
+	/**
+	 * @notice Sets bounty manager contract.
+	 */
 	function setBountyManager(address _bounty) external onlyOwner {
 		if (_bounty == address(0)) revert AddressZero();
 		bountyManager = _bounty;
 		minters[_bounty] = true;
 	}
 
+	/**
+	 * @notice Sets reward convert contract.
+	 */
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
 		if (_rewardConverter == address(0)) revert AddressZero();
 		rewardConverter = _rewardConverter;
@@ -317,14 +326,23 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		defaultLockIndex[msg.sender] = _index;
 	}
 
+	/**
+	 * @notice Sets option if auto compound is enabled.
+	 */
 	function setAutocompound(bool _status) external {
 		autocompoundEnabled[msg.sender] = _status;
 	}
 
+	/**
+	 * @notice Return lock duration.
+	 */
 	function getLockDurations() external view returns (uint256[] memory) {
 		return lockPeriod;
 	}
 
+	/**
+	 * @notice Return reward multipliers.
+	 */
 	function getLockMultipliers() external view returns (uint256[] memory) {
 		return rewardMultipliers;
 	}
@@ -415,18 +433,23 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
 	}
 
-  function lockedBalance(address user) public view override returns (uint256 locked) {
-    LockedBalance[] storage locks = userLocks[user];
-    uint256 length = locks.length;
-    for (uint256 i; i < length;) {
-      if (locks[i].unlockTime > block.timestamp) {
-        locked = locked.add(locks[i].amount);
-      }
-      unchecked {
-        i++;
-      }
-    }
-  }
+	/**
+	 * @notice Reward locked amount of the user.
+	 * @param user address
+	 * @return locked amount
+	 */
+	function lockedBalance(address user) public view override returns (uint256 locked) {
+		LockedBalance[] storage locks = userLocks[user];
+		uint256 length = locks.length;
+		for (uint i; i < length;) {
+			if (locks[i].unlockTime > block.timestamp) {
+				locked = locked.add(locks[i].amount);
+			}
+			unchecked {
+				i++;
+			}
+		}
+	}
 
 	/**
 	 * @notice Earnings which is locked yet
@@ -488,6 +511,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return (amount, penaltyAmount, burnAmount);
 	}
 
+	/**
+	 * @notice Penalty information of individual earning
+	 * @return amount of available earning.
+	 * @return penaltyFactor penalty rate.
+	 * @return penaltyAmount amount of penalty.
+	 * @return burnAmount amount to burn.
+	 */
 	function _penaltyInfo(
 		LockedBalance memory earning
 	) internal view returns (uint256 amount, uint256 penaltyFactor, uint256 penaltyAmount, uint256 burnAmount) {
@@ -558,6 +588,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return rewardsData;
 	}
 
+	/**
+	 * @notice Claim rewards by converter.
+	 * @dev Rewards are transfered to converter.
+	 */
 	function claimFromConverter(address onBehalf) external override whenNotPaused {
 		if (msg.sender != rewardConverter) revert InsufficientPermission();
 		_updateReward(onBehalf);
@@ -647,6 +681,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		emit Locked(onBehalfOf, amount, balances[onBehalfOf].locked, stakingToken != address(rdntToken));
 	}
 
+	/**
+	 * @notice Add new lockings
+	 * @dev We keep the array to be sorted by unlock time.
+	 */
 	function _insertLock(address _user, LockedBalance memory newLock) internal {
 		LockedBalance[] storage locks = userLocks[_user];
 		uint256 length = locks.length;
@@ -755,6 +793,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		_withdrawTokens(_address, amount, penaltyAmount, burnAmount, false);
 	}
 
+	/**
+	 * @notice Returns withdrawable balances at exact unlock time
+	 */
 	function ieeWithdrawableBalances(
 		address user,
 		uint256 unlockTime
@@ -916,6 +957,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	function onUpgrade() public {}
 
+	/**
+	 * @notice Sets the loopback period
+	 */
 	function setLookback(uint256 _lookback) public onlyOwner {
 		rewardsLookback = _lookback;
 	}
@@ -1060,6 +1104,12 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return _withdrawExpiredLocksFor(_address, false, true, userLocks[_address].length);
 	}
 
+	/**
+	 * @notice Withdraw expired locks with options
+	 * @param _address for withdraw
+	 * @param _limit of lock length for withdraw
+	 * @param _ignoreRelock option to ignore relock
+	 */
 	function withdrawExpiredLocksForWithOptions(
 		address _address,
 		uint256 _limit,
@@ -1070,6 +1120,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return _withdrawExpiredLocksFor(_address, _ignoreRelock, true, _limit);
 	}
 
+	/**
+	 * @notice Zap vesting RDNT tokens to LP
+	 */
 	function zapVestingToLp(address _user) external override returns (uint256 zapped) {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 
@@ -1096,6 +1149,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		return zapped;
 	}
 
+	/**
+	 * @notice Returns price provider address
+	 */
 	function getPriceProvider() external view override returns (address) {
 		return _priceProvider;
 	}
@@ -1122,18 +1178,30 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		_withdrawExpiredLocksFor(_user, false, true, userLocks[_user].length);
 	}
 
+	/**
+	 * @notice Pause MFD functionalities
+	 */
 	function pause() public onlyOwner {
 		_pause();
 	}
 
+	/**
+	 * @notice Resume MFD functionalities
+	 */
 	function unpause() public onlyOwner {
 		_unpause();
 	}
 
+	/**
+	 * @notice Requalify user for reward elgibility
+	 */
 	function requalifyFor(address _user) public {
 		incentivesController.afterLockUpdate(_user);
 	}
 
+	/**
+	 * @notice Requalify user
+	 */
 	function requalify() external {
 		requalifyFor(msg.sender);
 	}

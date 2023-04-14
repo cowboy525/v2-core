@@ -34,10 +34,16 @@ contract Migration is Ownable, Pausable {
 		_pause();
 	}
 
+	/**
+	 * @notice Pause migrations.
+	 */
 	function pause() public onlyOwner {
 		_pause();
 	}
 
+	/**
+	 * @notice Unpause migration.
+	 */
 	function unpause() public onlyOwner {
 		_unpause();
 	}

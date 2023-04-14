@@ -111,21 +111,33 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		return poolHelper.lpTokenAddr();
 	}
 
+	/**
+	 * @notice Sets new oracle.
+	 */
 	function setOracle(address _newOracle) external onlyOwner {
 		require(_newOracle != address(0), 'Invalid oracle address');
 		oracle = IBaseOracle(_newOracle);
 	}
 
+	/**
+	 * @notice Sets pool heler contract.
+	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
 		require(getLpTokenPrice() != 0, "invalid oracle");
 	}
 
+	/**
+	 * @notice Sets base token price aggregator.
+	 */
 	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
 		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
 		require(getLpTokenPriceUsd() != 0, "invalid oracle");
 	}
 
+	/**
+	 * @notice Sets option to use pool.
+	 */
 	function setUsePool(bool _usePool) external onlyOwner {
 		usePool = _usePool;
 	}

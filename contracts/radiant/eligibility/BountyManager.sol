@@ -19,7 +19,9 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {ICompounder} from "../../interfaces/ICompounder.sol";
 
-
+/// @title BountyManager Contract
+/// @author Radiant Devs
+/// @dev All function calls are currently implemented without side effects
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -319,65 +321,111 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		}
 	}
 
+	/**
+	 * @notice Minimum locked lp balance
+	 */
 	function minDLPBalance() public view returns (uint256 min) {
 		uint256 lpTokenPrice = IPriceProvider(priceProvider).getLpTokenPriceUsd();
 		min = minStakeAmount.mul(1e8).div(lpTokenPrice);
 	}
 
+	/**
+	 * @notice Sets minimum stake amount.
+	 * @dev Only owner can call this function.
+	 */
 	function setMinStakeAmount(uint256 _minStakeAmount) external onlyOwner {
 		minStakeAmount = _minStakeAmount;
 	}
 
+	/**
+	 * @notice Sets target price of base bounty.
+	 * @dev Only owner can call this function.
+	 */
 	function setBaseBountyUsdTarget(uint256 _newVal) external onlyOwner {
 		baseBountyUsdTarget = _newVal;
 		emit BaseBountyUsdTargetUpdated(_newVal);
 	}
 
+	/**
+	 * @notice Sets hunter's share ratio.
+	 * @dev Only owner can call this function.
+	 */
 	function setHunterShare(uint256 _newVal) external onlyOwner {
 		if (_newVal > 10000) revert Override();
 		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
 
+	/**
+	 * @notice Updates maximum base bounty.
+	 * @dev Only owner can call this function.
+	 */
 	function setMaxBaseBounty(uint256 _newVal) external onlyOwner {
 		maxBaseBounty = _newVal;
 		emit MaxBaseBountyUpdated(_newVal);
 	}
 
+	/**
+	 * @notice Updates slippage limit.
+	 * @dev Only owner can call this function.
+	 */
 	function setBountyBooster(uint256 _newVal) external onlyOwner {
 		bountyBooster = _newVal;
 		emit BountyBoosterUpdated(_newVal);
 	}
 
+	/**
+	 * @notice Updates slippage limit.
+	 * @dev Only owner can call this function.
+	 */
 	function setSlippageLimit(uint256 _newVal) external onlyOwner {
 		if (_newVal > 10000) revert InvalidSlippage();
 		slippageLimit = _newVal;
 		emit SlippageLimitUpdated(_newVal);
 	}
 
+	/**
+	 * @notice Set bounty operations.
+	 * @dev Only owner can call this function.
+	 */
 	function setBounties() external onlyOwner {
 		bounties[1] = getMfdBounty;
 		bounties[2] = getChefBounty;
 		bounties[3] = getAutoCompoundBounty;
 	}
 
+	/**
+	 * @notice Recover ERC20 tokens from the contract.
+	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
 		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
 	}
 
+	/**
+	 * @notice Add new address to whitelist.
+	 */
 	function addAddressToWL(address user, bool status) external onlyOwner {
 		whitelist[user] = status;
 	}
 
+	/**
+	 * @notice Update whitelist active status.
+	 */
 	function changeWL(bool status) external onlyOwner {
 		whitelistActive = status;
 		emit WhitelistActiveChanged(status);
 	}
 
+	/**
+	 * @notice Pause the bounty operations.
+	 */
 	function pause() public onlyOwner {
 		_pause();
 	}
 
+	/**
+	 * @notice Unpause the bounty operations.
+	 */
 	function unpause() public onlyOwner {
 		_unpause();
 	}

@@ -77,6 +77,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		_;
 	}
 
+	/**
+	 * @notice Initializer
+	 * @param _rdntToken RDNT address
+	 * @param aaveOracle Aave oracle address
+	 * @param _multiFeeDistribution Multi fee distribution contract
+	 */
 	function initialize(
 		address _rdntToken,
 		address aaveOracle,
@@ -104,6 +110,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		emit OperationExpensesUpdated(_operationExpenses, _operationExpenseRatio);
 	}
 
+	/**
+	 * @notice Sets pool configurator as admin.
+	 */
 	function setAdmin(address _configurator) external onlyOwner {
 		if (_configurator == address(0)) revert ZeroAddress();
 		admin = _configurator;
@@ -142,10 +151,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		}
 	}
 
+	/**
+	 * @notice Returns RDNT token address.
+	 */
 	function getRdntTokenAddress() external view override returns (address) {
 		return address(rdntToken);
 	}
 
+	/**
+	 * @notice Returns MFD address.
+	 */
 	function getMultiFeeDistributionAddress() external view override returns (address) {
 		return address(multiFeeDistribution);
 	}
@@ -160,6 +175,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		return multiFeeDistribution.lockedBalances(user);
 	}
 
+	/**
+	 * @notice Emit event for new asset reward
+	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
 		if (asset != address(rdntToken)) {
 			address underlying = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
