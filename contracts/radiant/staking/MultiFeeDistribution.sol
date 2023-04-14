@@ -17,7 +17,6 @@ import {IMultiFeeDistribution, IFeeDistribution} from "../../interfaces/IMultiFe
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
 import {ILockerList} from "../../interfaces/ILockerList.sol";
 import {LockedBalance, Balances, Reward, EarnedBalance} from "../../interfaces/LockedBalance.sol";
-import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract

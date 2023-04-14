@@ -10,11 +10,8 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
-import {ILiquidityZap} from "../../../interfaces/ILiquidityZap.sol";
 import {IBalancerPoolHelper} from "../../../interfaces/IPoolHelper.sol";
-import {IMultiFeeDistribution} from "../../../interfaces/IMultiFeeDistribution.sol";
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {ILendingPool} from "../../../interfaces/ILendingPool.sol";
 import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
 
 /// @title Balance Pool Helper Contract

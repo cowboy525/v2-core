@@ -13,7 +13,6 @@ import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol"
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {ILeverager} from "../../interfaces/ILeverager.sol";
 import {IOnwardIncentivesController} from "../../interfaces/IOnwardIncentivesController.sol";
-import {IAToken} from "../../interfaces/IAToken.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 
 // based on the Sushi MasterChef
