@@ -23,7 +23,7 @@ contract RadiantOFT is OFTV2, Pausable {
 	IPriceProvider public priceProvider;
 
 	/// @notice Emitted when fee ratio is updated
-	event FeeUpdated(uint256 fee);
+	event FeeUpdated(uint256 indexed fee);
 
 	/// @notice Emitted when PriceProvider is updated
 	event PriceProviderUpdated(IPriceProvider indexed priceProvider);

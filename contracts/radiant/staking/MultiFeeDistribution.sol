@@ -152,7 +152,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isLP
 	);
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
-	event Recovered(address token, uint256 amount);
+	event Recovered(address indexed token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
 
 	/********************** Errors ***********************/

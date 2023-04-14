@@ -51,9 +51,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	event EmissionScheduleAppended(uint256[] startTimeOffsets, uint256[] rewardsPerSeconds);
 
-	event ChefReserveLow(uint256 _balance);
+	event ChefReserveLow(uint256 indexed _balance);
 
-	event ChefReserveEmpty(uint256 _balance);
+	event ChefReserveEmpty(uint256 indexed _balance);
 
 	event Disqualified(address indexed user);
 

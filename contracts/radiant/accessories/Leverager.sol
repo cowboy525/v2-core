@@ -54,7 +54,7 @@ contract Leverager is Ownable {
 	address public treasury;
 
 	/// @notice Emitted when fee ratio is updated
-	event FeePercentUpdated(uint256 _feePercent);
+	event FeePercentUpdated(uint256 indexed _feePercent);
 
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);

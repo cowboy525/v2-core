@@ -52,13 +52,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		_;
 	}
 
-	event BaseBountyUsdTargetUpdated(uint256 _newVal);
-	event HunterShareUpdated(uint256 _newVal);
-	event MaxBaseBountyUpdated(uint256 _newVal);
-	event BountyBoosterUpdated(uint256 _newVal);
-	event SlippageLimitUpdated(uint256 _newVal);
-	event BountyReserveEmpty(uint256 _bal);
-	event WhitelistActiveChanged(bool isActive);
+	event BaseBountyUsdTargetUpdated(uint256 indexed _newVal);
+	event HunterShareUpdated(uint256 indexed _newVal);
+	event MaxBaseBountyUpdated(uint256 indexed _newVal);
+	event BountyBoosterUpdated(uint256 indexed _newVal);
+	event SlippageLimitUpdated(uint256 indexed _newVal);
+	event BountyReserveEmpty(uint256 indexed _bal);
+	event WhitelistActiveChanged(bool indexed isActive);
 
 	error AddressZero();
 	error InvalidNumber();

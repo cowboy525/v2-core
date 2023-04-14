@@ -50,13 +50,13 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/********************** Events ***********************/
 
 	/// @notice Emitted when ERC20 token is recovered
-	event Recovered(address token, uint256 amount);
+	event Recovered(address indexed token, uint256 amount);
 
 	/// @notice Emitted when reward token is forwarded
-	event ForwardReward(address token, uint256 amount);
+	event ForwardReward(address indexed token, uint256 amount);
 
 	/// @notice Emitted when operation expenses is set
-	event OperationExpensesUpdated(address _operationExpenses, uint256 _operationExpenseRatio);
+	event OperationExpensesUpdated(address indexed _operationExpenses, uint256 _operationExpenseRatio);
 
 	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 

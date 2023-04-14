@@ -63,7 +63,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _lockTypeIndex
 	);
 
-	event SlippageRatioChanged(uint256 newRatio);
+	event SlippageRatioChanged(uint256 indexed newRatio);
 
 	error AddressZero();
 

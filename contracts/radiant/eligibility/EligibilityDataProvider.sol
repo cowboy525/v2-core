@@ -61,20 +61,20 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Events ***********************/
 
 	/// @notice Emitted when CIC is set
-	event ChefIncentivesControllerUpdated(IChefIncentivesController _chef);
+	event ChefIncentivesControllerUpdated(IChefIncentivesController indexed _chef);
 
 	/// @notice Emitted when LP token is set
-	event LPTokenUpdated(address _lpToken);
+	event LPTokenUpdated(address indexed _lpToken);
 
 	/// @notice Emitted when required TVL ratio is updated
-	event RequiredDepositRatioUpdated(uint256 requiredDepositRatio);
+	event RequiredDepositRatioUpdated(uint256 indexed requiredDepositRatio);
 
 	/// @notice Emitted when price tolerance ratio is updated
-	event PriceToleranceRatioUpdated(uint256 priceToleranceRatio);
+	event PriceToleranceRatioUpdated(uint256 indexed priceToleranceRatio);
 
 	/// @notice Emitted when DQ time is set
-	event DqTimeUpdated(address _user, uint256 _time);
-	
+	event DqTimeUpdated(address indexed _user, uint256 _time);
+
 
 	/********************** Errors ***********************/
 	error AddressZero();

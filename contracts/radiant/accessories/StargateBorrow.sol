@@ -91,7 +91,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	event DAOTreasuryUpdated(address indexed _daoTreasury);
 
 	/// @notice Emitted when fee info is updated
-	event XChainBorrowFeePercentUpdated(uint256 percent);
+	event XChainBorrowFeePercentUpdated(uint256 indexed percent);
 
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
