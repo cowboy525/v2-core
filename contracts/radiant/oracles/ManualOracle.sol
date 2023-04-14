@@ -35,7 +35,7 @@ contract ManualOracle is Initializable, BaseOracle {
 	/**
 	 * @notice Returns current price
 	 */
-	function consult() public view override returns (uint) {
+	function consult() public view override returns (uint256) {
 		return price;
 	}
 }

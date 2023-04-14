@@ -213,7 +213,7 @@ library ValidationLogic {
 	/**
 	 * @dev Validates a repay action
 	 * @param reserve The reserve state from which the user is repaying
-	 * @param amountSent The amount sent for the repayment. Can be an actual value or uint(-1)
+	 * @param amountSent The amount sent for the repayment. Can be an actual value or uint256(-1)
 	 * @param onBehalfOf The address of the user msg.sender is repaying for
 	 * @param stableDebt The borrow balance of the user
 	 * @param variableDebt The borrow balance of the user

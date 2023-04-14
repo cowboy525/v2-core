@@ -419,7 +419,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
   function lockedBalance(address user) public view override returns (uint256 locked) {
     LockedBalance[] storage locks = userLocks[user];
     uint256 length = locks.length;
-    for (uint i; i < length;) {
+    for (uint256 i; i < length;) {
       if (locks[i].unlockTime > block.timestamp) {
         locked = locked.add(locks[i].amount);
       }

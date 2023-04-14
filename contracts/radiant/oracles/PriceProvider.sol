@@ -87,9 +87,9 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	/**
 	 * @notice Returns lp token price in ETH.
 	 */
-	function getLpTokenPrice() public view returns (uint) {
+	function getLpTokenPrice() public view returns (uint256) {
 		// decis 8
-		uint rdntPriceInEth = getTokenPrice();
+		uint256 rdntPriceInEth = getTokenPrice();
 		return poolHelper.getLpPrice(rdntPriceInEth);
 	}
 
