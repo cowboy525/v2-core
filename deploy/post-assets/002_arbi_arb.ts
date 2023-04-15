@@ -9,26 +9,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const chainId = await hre.getChainId();
 
 	if (chainId == '31337' || chainId == '42161') {
-		const wstethOracle = await deploy('WSTETHOracle', {
-			from: deployer,
-			log: true,
-			proxy: {
-				proxyContract: 'OpenZeppelinTransparentProxy',
-				execute: {
-					init: {
-						methodName: 'initialize',
-						args: [
-							'0x07c5b924399cc23c24a95c8743de4006a32b7f2a',
-							'0xB1552C5e96B312d0Bf8b554186F846C40614a540',
-						],
-					},
-				},
-			},
-		});
-
 		let asset = {
-			assetAddress: '0x5979D7b546E38E414F7E9822514be443A4800529',
-			chainlinkAggregator: wstethOracle.address,
+			assetAddress: '0x912CE59144191C1204E64559FE8253a0e49E6548',
+			chainlinkAggregator: '0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6',
 			borrowRate: '30000000000000000000000000',
 			reservesParams: {
 				aTokenImpl: 'AToken',
@@ -41,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				stableBorrowRateEnabled: false,
 				strategy: {
 					baseVariableBorrowRate: '0',
-					name: 'rateStrategyWSTETH',
+					name: 'rateStrategyARB',
 					optimalUtilizationRate: '700000000000000000000000000',
 					variableRateSlope1: '175000000000000000000000000',
 					variableRateSlope2: '950000000000000000000000000',
@@ -50,16 +33,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				},
 			},
 			initInputParams: {
-				aTokenName: 'Radiant interest bearing WSTETH',
-				aTokenSymbol: 'rWSTETH',
+				aTokenName: 'Radiant interest bearing ARB',
+				aTokenSymbol: 'rARB',
 				params: '0x10',
-				stableDebtTokenName: 'Radiant stable debt bearing WSTETH',
-				stableDebtTokenSymbol: 'stableDebtWSTETH',
-				underlyingAsset: '0x5979D7b546E38E414F7E9822514be443A4800529',
+				stableDebtTokenName: 'Radiant stable debt bearing ARB',
+				stableDebtTokenSymbol: 'stableDebtARB',
+				underlyingAsset: '0x912CE59144191C1204E64559FE8253a0e49E6548',
 				underlyingAssetDecimals: '18',
-				underlyingAssetName: 'WSTETH',
-				variableDebtTokenName: 'Radiant variable debt bearing WSTETH',
-				variableDebtTokenSymbol: 'variableDebtWSTETH',
+				underlyingAssetName: 'ARB',
+				variableDebtTokenName: 'Radiant variable debt bearing ARB',
+				variableDebtTokenSymbol: 'variableDebtARB',
 				allocPoint: 100,
 			},
 		};
@@ -68,5 +51,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-func.id = 'arbi_wsteth';
-func.tags = ['arbi_wsteth'];
+func.id = 'arbi_arb';
+func.tags = ['arbi_arb'];
