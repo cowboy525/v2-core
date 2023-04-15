@@ -8,8 +8,8 @@ const VEST_TIME: number = 30 * DAY;
 
 const LP_PLATFORM = LP_PROVIDER.UNISWAP;
 const LP_INIT_ETH = 50000;
-export const targetPrice = 0.5;
-export const ethPrice = 1600;
+export const targetPrice = 0.41;
+export const ethPrice = 2100;
 const LP_INIT_RDNT = getInitLpAmts(LP_PLATFORM, LP_INIT_ETH, ethPrice, targetPrice);
 
 const chainConfig = {

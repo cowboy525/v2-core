@@ -78,7 +78,7 @@ const config: HardhatUserConfig = {
 			// chainId: 56,
 			forking: {
 				url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
-				blockNumber: 72082642,
+				blockNumber: 80557339,
 			},
 			tags: ['mocks', 'testing'],
 		},
