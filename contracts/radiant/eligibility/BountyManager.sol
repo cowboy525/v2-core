@@ -332,6 +332,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Sets minimum stake amount.
 	 * @dev Only owner can call this function.
+	 * @param _minStakeAmount Minimum stake amount
 	 */
 	function setMinStakeAmount(uint256 _minStakeAmount) external onlyOwner {
 		minStakeAmount = _minStakeAmount;
@@ -340,6 +341,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Sets target price of base bounty.
 	 * @dev Only owner can call this function.
+	 * @param _newVal New USD value
 	 */
 	function setBaseBountyUsdTarget(uint256 _newVal) external onlyOwner {
 		baseBountyUsdTarget = _newVal;
@@ -349,6 +351,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Sets hunter's share ratio.
 	 * @dev Only owner can call this function.
+	 * @param _newVal New hunter share ratio
 	 */
 	function setHunterShare(uint256 _newVal) external onlyOwner {
 		if (_newVal > 10000) revert Override();
@@ -359,6 +362,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Updates maximum base bounty.
 	 * @dev Only owner can call this function.
+	 * @param _newVal Maximum base bounty
 	 */
 	function setMaxBaseBounty(uint256 _newVal) external onlyOwner {
 		maxBaseBounty = _newVal;
@@ -366,8 +370,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	/**
-	 * @notice Updates slippage limit.
+	 * @notice Updates bounty booster.
 	 * @dev Only owner can call this function.
+	 * @param _newVal New bounty booster
 	 */
 	function setBountyBooster(uint256 _newVal) external onlyOwner {
 		bountyBooster = _newVal;
@@ -377,6 +382,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/**
 	 * @notice Updates slippage limit.
 	 * @dev Only owner can call this function.
+	 * @param _newVal New slippage limit
 	 */
 	function setSlippageLimit(uint256 _newVal) external onlyOwner {
 		if (_newVal > 10000) revert InvalidSlippage();
@@ -396,6 +402,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	/**
 	 * @notice Recover ERC20 tokens from the contract.
+	 * @param tokenAddress Token address to recover
+	 * @param tokenAmount Amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
 		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
@@ -403,6 +411,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	/**
 	 * @notice Add new address to whitelist.
+	 * @param user address
+	 * @param status for whitelist
 	 */
 	function addAddressToWL(address user, bool status) external onlyOwner {
 		whitelist[user] = status;
@@ -410,6 +420,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	/**
 	 * @notice Update whitelist active status.
+	 * @param status New whitelist status
 	 */
 	function changeWL(bool status) external onlyOwner {
 		whitelistActive = status;

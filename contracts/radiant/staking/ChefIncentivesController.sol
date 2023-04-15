@@ -216,6 +216,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Returns address of MFD.
+	 * @return mfd contract address
 	 */
 	function _getMfd() internal view returns (IMultiFeeDistribution mfd) {
 		address multiFeeDistribution = rewardMinter.getMultiFeeDistributionAddress();
@@ -224,6 +225,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Sets incentive controllers for custom token.
+	 * @param _token for reward pool
+	 * @param _incentives incentives contract address
 	 */
 	function setOnwardIncentives(address _token, IOnwardIncentivesController _incentives) external onlyOwner {
 		PoolInfo storage pool = poolInfo[_token];
@@ -233,6 +236,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Updates bounty manager contract.
+	 * @param _bountyManager Bounty Manager contract.
 	 */
 	function setBountyManager(address _bountyManager) external onlyOwner {
 		bountyManager = _bountyManager;
@@ -240,6 +244,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Enable/Disable eligibility
+	 * @param _newVal New value.
 	 */
 	function setEligibilityEnabled(bool _newVal) external onlyOwner {
 		eligibilityEnabled = _newVal;
@@ -257,6 +262,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Add a new lp to the pool. Can only be called by the poolConfigurator.
+	 * @param _token for reward pool
+	 * @param _allocPoint allocation point of the pool
 	 */
 	function addPool(address _token, uint256 _allocPoint) external {
 		if (msg.sender != poolConfigurator) revert NotAllowed();
@@ -273,6 +280,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Update the given pool's allocation point. Can only be called by the owner.
+	 * @param _tokens for reward pools
+	 * @param _allocPoints allocation points of the pools
 	 */
 	function batchUpdateAllocPoint(address[] calldata _tokens, uint256[] calldata _allocPoints) public onlyOwner {
 		if (_tokens.length != _allocPoints.length) revert ArrayLengthMismatch();
@@ -292,6 +301,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @notice Sets the reward per second to be distributed. Can only be called by the owner.
 	 * @dev Its decimals count is ACC_REWARD_PRECISION
 	 * @param _rewardsPerSecond The amount of reward to be distributed per second.
+	 * @param _persist true if RPS is fixed, otherwise RPS is by emission schedule.
 	 */
 	function setRewardsPerSecond(uint256 _rewardsPerSecond, bool _persist) external onlyOwner {
 		_massUpdatePools();
@@ -320,6 +330,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Updates RDNT emission schedule.
 	 * @dev This appends the new offsets and RPS.
+	 * @param _startTimeOffsets Offsets array.
+	 * @param _rewardsPerSecond RPS array.
 	 */
 	function setEmissionSchedule(
 		uint256[] calldata _startTimeOffsets,
@@ -350,6 +362,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Recover tokens in this contract. Callable by owner.
+	 * @param tokenAddress Token address for recover
+	 * @param tokenAmount Amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
 		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);

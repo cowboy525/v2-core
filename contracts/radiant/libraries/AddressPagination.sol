@@ -5,6 +5,13 @@ pragma solidity 0.8.12;
 /// @author Radiant Devs
 /// @dev All function calls are currently implemented without side effects
 library AddressPagination {
+	/**
+	 * @notice Paginate address array.
+	 * @param array source address array.
+	 * @param page number
+	 * @param limit per page
+	 * @return result address array.
+	 */
 	function paginate(
 		address[] memory array,
 		uint256 page,
