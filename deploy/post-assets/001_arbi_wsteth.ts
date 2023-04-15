@@ -39,7 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				reserveDecimals: '18',
 				reserveFactor: '7500',
 				stableBorrowRateEnabled: false,
-				strategy: {
+				strategy: wstETHstrategy1
 					baseVariableBorrowRate: '0',
 					name: 'rateStrategyWSTETH',
 					optimalUtilizationRate: '700000000000000000000000000',
