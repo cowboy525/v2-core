@@ -15,19 +15,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			borrowRate: '30000000000000000000000000',
 			reservesParams: {
 				aTokenImpl: 'AToken',
-				baseLTVAsCollateral: '8000',
+				baseLTVAsCollateral: '4000',
 				borrowingEnabled: true,
 				liquidationBonus: '11500',
-				liquidationThreshold: '8250',
+				liquidationThreshold: '5000',
 				reserveDecimals: '18',
 				reserveFactor: '7500',
 				stableBorrowRateEnabled: false,
 				strategy: {
 					baseVariableBorrowRate: '0',
 					name: 'rateStrategyARB',
-					optimalUtilizationRate: '700000000000000000000000000',
+					optimalUtilizationRate: '600000000000000000000000000',
 					variableRateSlope1: '175000000000000000000000000',
-					variableRateSlope2: '950000000000000000000000000',
+					variableRateSlope2: '1000000000000000000000000000',
 					stableRateSlope1: '100000000000000000000000000',
 					stableRateSlope2: '3000000000000000000000000000',
 				},
@@ -43,7 +43,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				underlyingAssetName: 'ARB',
 				variableDebtTokenName: 'Radiant variable debt bearing ARB',
 				variableDebtTokenSymbol: 'variableDebtARB',
-				allocPoint: 100,
+				allocPoint: 1,
 			},
 		};
 		await deployAsset(asset, hre);
