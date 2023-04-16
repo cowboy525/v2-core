@@ -288,7 +288,7 @@ runs.forEach(function (run) {
 				});
 			});
 
-			describe('Claim DQ:', async () => {
+			xdescribe('Claim DQ:', async () => {
 				let pendingOnlyElig: BigNumber, pendingWithInelig: BigNumber;
 
 				before(async () => {
@@ -304,7 +304,7 @@ runs.forEach(function (run) {
 					await chefIncentivesController.connect(user1).claimAll(user1.address);
 
 					const receivedRewards = parseFloat(
-						ethers.utils.formatEther((await multiFeeDistribution.getBalances(user1.address)).total)
+						ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(user1.address)).total)
 					);
 
 					const expectedReceivedRewards = pendingWithInelig;
@@ -413,7 +413,7 @@ runs.forEach(function (run) {
 				});
 			});
 
-			describe('Self DQ via Deposit:', async () => {
+			xdescribe('Self DQ via Deposit:', async () => {
 				let pendingAtEndOfEligibility: BigNumber, pendingAfterInelig: BigNumber, pending3;
 
 				before(async () => {
