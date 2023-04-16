@@ -836,8 +836,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		Balances storage bal = balances[onBehalfOf];
 		bal.total = bal.total.sub(bal.unlocked).sub(bal.earned);
-		bal.unlocked = 0;
-		bal.earned = 0;
 
 		_withdrawTokens(onBehalfOf, amount, penaltyAmount, burnAmount, claimRewards);
 	}
