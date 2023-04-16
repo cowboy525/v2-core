@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IBaseOracle.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
@@ -94,5 +94,5 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	/**
 	 * @dev implement in child contract
 	 */
-	function consult() public view virtual returns (uint amountOut) {}
+	function consult() public view virtual returns (uint256) {}
 }

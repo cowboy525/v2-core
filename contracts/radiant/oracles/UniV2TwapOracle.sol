@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "./BaseOracle.sol";
-import "../../dependencies/uniswap/contracts/FixedPoint.sol";
-import "../../dependencies/uniswap/contracts/UniswapV2OracleLibrary.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {BaseOracle, Initializable} from "./BaseOracle.sol";
+import {FixedPoint} from "../../dependencies/uniswap/contracts/FixedPoint.sol";
+import {UniswapV2OracleLibrary, IUniswapV2Pair} from "../../dependencies/uniswap/contracts/UniswapV2OracleLibrary.sol";
 
 /// @title UniV2TwapOracle Contract
 /// @author Radiant team
@@ -77,7 +77,8 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint112 reserve1;
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 
-		require(reserve0 != 0 && reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
+		require(reserve0 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
+		require(reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
 		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 
 		period = _period;
@@ -162,7 +163,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/**
 	 * @notice Returns current price.
 	 */
-	function consult() public view override returns (uint256 amountOut) {
+	function consult() public view override returns (uint256) {
 		uint8 decimals = IERC20Metadata(token).decimals();
 		return _consult(token, 10 ** decimals);
 	}

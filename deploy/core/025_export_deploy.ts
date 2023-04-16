@@ -110,4 +110,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-func.tags = ['export2'];
+func.runAtTheEnd = true;
+func.tags = ['v2_export'];

@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {OFTV2} from "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../../interfaces/IPriceProvider.sol";
 
-contract RadiantOFT is OFTV2, Pausable {
+contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	using SafeMath for uint256;
 
 	/// @notice bridge fee reciever
@@ -23,7 +25,7 @@ contract RadiantOFT is OFTV2, Pausable {
 	IPriceProvider public priceProvider;
 
 	/// @notice Emitted when fee ratio is updated
-	event FeeUpdated(uint256 fee);
+	event FeeUpdated(uint256 indexed fee);
 
 	/// @notice Emitted when PriceProvider is updated
 	event PriceProviderUpdated(IPriceProvider indexed priceProvider);
@@ -83,10 +85,10 @@ contract RadiantOFT is OFTV2, Pausable {
 	function estimateSendFee(
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount,
+		uint256 _amount,
 		bool _useZro,
 		bytes calldata _adapterParams
-	) public view override returns (uint nativeFee, uint zroFee) {
+	) public view override returns (uint256 nativeFee, uint256 zroFee) {
 		(nativeFee, zroFee) = super.estimateSendFee(_dstChainId, _toAddress, _amount, _useZro, _adapterParams);
 		nativeFee = nativeFee.add(getBridgeFee(_amount));
 	}
@@ -106,14 +108,13 @@ contract RadiantOFT is OFTV2, Pausable {
 		address _from,
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount,
+		uint256 _amount,
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override returns (uint amount) {
+	) internal override nonReentrant returns (uint256 amount) {
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
-		payable(treasury).transfer(fee);
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
@@ -123,6 +124,8 @@ contract RadiantOFT is OFTV2, Pausable {
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
+
+		Address.sendValue(payable(treasury), fee);
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
@@ -138,8 +141,8 @@ contract RadiantOFT is OFTV2, Pausable {
 		address _from,
 		uint16 _dstChainId,
 		bytes32 _toAddress,
-		uint _amount
-	) internal override whenNotPaused returns (uint) {
+		uint256 _amount
+	) internal override whenNotPaused returns (uint256) {
 		return super._debitFrom(_from, _dstChainId, _toAddress, _amount);
 	}
 

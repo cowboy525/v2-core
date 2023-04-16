@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "./BaseOracle.sol";
-import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import "@uniswap/v3-core/contracts/UniswapV3Factory.sol";
+import {BaseOracle} from "./BaseOracle.sol";
+import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 
 contract UniV3TwapOracle is Initializable, BaseOracle {
 	using SafeMath for uint256;
@@ -150,7 +147,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	function latestRoundData()
 		external
 		view
-		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+		returns (uint80, int256, uint256, uint256, uint80)
 	{
 		return (0, int256(getPrecisePrice()), 0, block.timestamp, 0);
 	}

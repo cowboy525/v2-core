@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "./BaseOracle.sol";
+import {BaseOracle} from "./BaseOracle.sol";
 
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 
 /// @title ManualOracle Contract
 /// @author Radiant
@@ -35,7 +35,7 @@ contract ManualOracle is Initializable, BaseOracle {
 	/**
 	 * @notice Returns current price
 	 */
-	function consult() public view override returns (uint) {
+	function consult() public view override returns (uint256) {
 		return price;
 	}
 }

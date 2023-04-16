@@ -2,19 +2,15 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IChefIncentivesController.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/LockedBalance.sol";
-import "../../interfaces/uniswap/IUniswapV2Router02.sol";
-import "../../interfaces/uniswap/IUniswapV2Factory.sol";
-import "../../interfaces/uniswap/IUniswapV2Pair.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
+import {LockedBalance} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
@@ -65,19 +61,19 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Events ***********************/
 
 	/// @notice Emitted when CIC is set
-	event ChefIncentivesControllerUpdated(IChefIncentivesController _chef);
+	event ChefIncentivesControllerUpdated(IChefIncentivesController indexed _chef);
 
 	/// @notice Emitted when LP token is set
-	event LPTokenUpdated(address _lpToken);
+	event LPTokenUpdated(address indexed _lpToken);
 
 	/// @notice Emitted when required TVL ratio is updated
-	event RequiredDepositRatioUpdated(uint256 requiredDepositRatio);
+	event RequiredDepositRatioUpdated(uint256 indexed requiredDepositRatio);
 
 	/// @notice Emitted when price tolerance ratio is updated
-	event PriceToleranceRatioUpdated(uint256 priceToleranceRatio);
+	event PriceToleranceRatioUpdated(uint256 indexed priceToleranceRatio);
 
 	/// @notice Emitted when DQ time is set
-	event DqTimeUpdated(address _user, uint256 _time);
+	event DqTimeUpdated(address indexed _user, uint256 _time);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -208,7 +204,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
-	function isEligibleForRewards(address _user) public view returns (bool isEligible) {
+	function isEligibleForRewards(address _user) public view returns (bool) {
 		uint256 lockedValue = lockedUsdValue(_user);
 		uint256 requiredValue = requiredUsdValue(_user).mul(priceToleranceRatio).div(RATIO_DIVISOR);
 		return requiredValue != 0 && lockedValue >= requiredValue;

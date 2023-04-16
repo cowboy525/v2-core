@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IEligibilityDataProvider.sol";
-import "../../interfaces/ILeverager.sol";
-import "../../interfaces/IOnwardIncentivesController.sol";
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IMiddleFeeDistribution.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
+import {ILeverager} from "../../interfaces/ILeverager.sol";
+import {IOnwardIncentivesController} from "../../interfaces/IOnwardIncentivesController.sol";
+import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 
 // based on the Sushi MasterChef
 // https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
@@ -52,9 +51,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	event EmissionScheduleAppended(uint256[] startTimeOffsets, uint256[] rewardsPerSeconds);
 
-	event ChefReserveLow(uint256 _balance);
+	event ChefReserveLow(uint256 indexed _balance);
 
-	event ChefReserveEmpty(uint256 _balance);
+	event ChefReserveEmpty(uint256 indexed _balance);
 
 	event Disqualified(address indexed user);
 
@@ -646,7 +645,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-	function availableRewards() internal view returns (uint256 amount) {
+	function availableRewards() internal view returns (uint256) {
 		return depositedRewards.sub(accountedRewards);
 	}
 

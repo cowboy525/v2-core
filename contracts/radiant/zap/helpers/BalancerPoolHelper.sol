@@ -2,20 +2,17 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "./DustRefunder.sol";
-import "../../../dependencies/math/BNum.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {DustRefunder} from "./DustRefunder.sol";
+import {BNum} from "../../../dependencies/math/BNum.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
-import "../../../interfaces/ILiquidityZap.sol";
-import "../../../interfaces/IPoolHelper.sol";
-import "../../../interfaces/IMultiFeeDistribution.sol";
-import "../../../interfaces/IWETH.sol";
-import "../../../interfaces/ILendingPool.sol";
-import "../../../interfaces/balancer/IWeightedPoolFactory.sol";
+import {IBalancerPoolHelper} from "../../../interfaces/IPoolHelper.sol";
+import {IWETH} from "../../../interfaces/IWETH.sol";
+import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
 
 /// @title Balance Pool Helper Contract
 /// @author Radiant
@@ -206,7 +203,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
-	function getPrice() public view returns (uint256 priceInEth) {
+	function getPrice() public view returns (uint256) {
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];

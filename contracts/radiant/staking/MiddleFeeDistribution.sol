@@ -2,19 +2,19 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
-import "../../interfaces/IMiddleFeeDistribution.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/IMintableToken.sol";
-import "../../interfaces/IAaveOracle.sol";
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
+import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
+import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
+import {IAToken} from "../../interfaces/IAToken.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 
 /// @title Fee distributor inside
 /// @author Radiant
@@ -50,13 +50,13 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/********************** Events ***********************/
 
 	/// @notice Emitted when ERC20 token is recovered
-	event Recovered(address token, uint256 amount);
+	event Recovered(address indexed token, uint256 amount);
 
 	/// @notice Emitted when reward token is forwarded
-	event ForwardReward(address token, uint256 amount);
+	event ForwardReward(address indexed token, uint256 amount);
 
 	/// @notice Emitted when operation expenses is set
-	event OperationExpensesUpdated(address _operationExpenses, uint256 _operationExpenseRatio);
+	event OperationExpensesUpdated(address indexed _operationExpenses, uint256 _operationExpenseRatio);
 
 	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 
@@ -156,18 +156,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 */
 	function lockedBalances(
 		address user
-	)
-		external
-		view
-		override
-		returns (
-			uint256 total,
-			uint256 unlockable,
-			uint256 locked,
-			uint256 lockedWithMultiplier,
-			LockedBalance[] memory lockData
-		)
-	{
+	) external view override returns (uint256, uint256, uint256, uint256, LockedBalance[] memory) {
 		return multiFeeDistribution.lockedBalances(user);
 	}
 

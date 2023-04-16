@@ -2,13 +2,13 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "../../interfaces/IStargateRouter.sol";
-import "../../interfaces/IRouterETH.sol";
-import "../../interfaces/ILendingPool.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IStargateRouter} from "../../interfaces/IStargateRouter.sol";
+import {IRouterETH} from "../../interfaces/IRouterETH.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
 
 /*
@@ -91,7 +91,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	event DAOTreasuryUpdated(address indexed _daoTreasury);
 
 	/// @notice Emitted when fee info is updated
-	event XChainBorrowFeePercentUpdated(uint256 percent);
+	event XChainBorrowFeePercentUpdated(uint256 indexed percent);
 
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);

@@ -2,26 +2,22 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import "./helpers/DustRefunder.sol";
-import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import {DustRefunder} from "./helpers/DustRefunder.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
 
-import "../../interfaces/uniswap/IUniswapV2Router02.sol";
-import "../../interfaces/ILiquidityZap.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/IPoolHelper.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/IWETH.sol";
-import "../../interfaces/IPriceOracle.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
+import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IWETH} from "../../interfaces/IWETH.sol";
+import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
@@ -67,7 +63,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _lockTypeIndex
 	);
 
-	event SlippageRatioChanged(uint256 newRatio);
+	event SlippageRatioChanged(uint256 indexed newRatio);
 
 	error AddressZero();
 
@@ -183,7 +179,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _wethAmt,
 		uint256 _rdntAmt,
 		uint256 _lockTypeIndex
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		return _zap(_borrow, _wethAmt, _rdntAmt, msg.sender, msg.sender, _lockTypeIndex, msg.sender);
 	}
 
@@ -200,7 +196,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _wethAmt,
 		uint256 _rdntAmt,
 		address _onBehalf
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		uint256 duration = mfd.defaultLockIndex(_onBehalf);
 		return _zap(_borrow, _wethAmt, _rdntAmt, msg.sender, _onBehalf, duration, _onBehalf);
 	}
@@ -213,7 +209,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function zapFromVesting(
 		bool _borrow,
 		uint256 _lockTypeIndex
-	) public payable whenNotPaused returns (uint256 liquidity) {
+	) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);
@@ -261,7 +257,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** ERC20(address(weth)).decimals());
+		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
 		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;

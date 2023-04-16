@@ -262,7 +262,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	) internal view returns (uint256 amtOut) {
 		if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
 		uint256 length = _in.length;
-		for (uint i; i < length; i++) {
+		for (uint256 i; i < length; i++) {
 			amtOut += _estimateTokensOut(_in[i], _out, _amtsIn[i]);
 		}
 	}
