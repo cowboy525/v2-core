@@ -203,7 +203,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
-	function getPrice() public view returns (uint256 priceInEth) {
+	function getPrice() public view returns (uint256) {
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];

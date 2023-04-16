@@ -153,7 +153,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function claim(
 		address _user,
 		uint256 _actionType
-	) public whenNotPaused isWhitelisted returns (uint256 bounty, uint256 actionType) {
+	) public whenNotPaused isWhitelisted returns (uint256, uint256) {
 		return executeBounty(_user, true, _actionType);
 	}
 
@@ -244,7 +244,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function getMfdBounty(
 		address _user,
 		bool _execute
-	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
+	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IMFDPlus(mfd).claimBounty(_user, _execute);
 		incentivizer = mfd;
 	}
@@ -260,7 +260,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function getChefBounty(
 		address _user,
 		bool _execute
-	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
+	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IChefIncentivesController(chef).claimBounty(_user, _execute);
 		incentivizer = chef;
 	}

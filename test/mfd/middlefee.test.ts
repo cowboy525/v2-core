@@ -39,9 +39,9 @@ describe("MiddleFeeDistribution", () => {
   it("lockedBalances", async () => {
     const mfdLock = await mfd.lockedBalances(user1.address);
     const middleLock = await middle.lockedBalances(user1.address);
-    expect(mfdLock.total).to.be.equal(middleLock.total);
-    expect(mfdLock.unlockable).to.be.equal(middleLock.unlockable);
-    expect(mfdLock.locked).to.be.equal(middleLock.locked);
+    expect(mfdLock[0]).to.be.equal(middleLock[0]);
+    expect(mfdLock.unlockable).to.be.equal(middleLock[1]);
+    expect(mfdLock.locked).to.be.equal(middleLock[2]);
   });
 });
 

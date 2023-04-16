@@ -156,18 +156,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 */
 	function lockedBalances(
 		address user
-	)
-		external
-		view
-		override
-		returns (
-			uint256 total,
-			uint256 unlockable,
-			uint256 locked,
-			uint256 lockedWithMultiplier,
-			LockedBalance[] memory lockData
-		)
-	{
+	) external view override returns (uint256, uint256, uint256, uint256, LockedBalance[] memory) {
 		return multiFeeDistribution.lockedBalances(user);
 	}
 

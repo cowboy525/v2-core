@@ -364,7 +364,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	/**
 	 * @notice Total balance of an account, including unlocked, locked and earned tokens.
 	 */
-	function totalBalance(address user) external view override returns (uint256 amount) {
+	function totalBalance(address user) external view override returns (uint256) {
 		if (stakingToken == address(rdntToken)) {
 			return balances[user].total;
 		}
@@ -386,7 +386,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		view
 		override
 		returns (
-			uint256 total,
+			uint256,
 			uint256 unlockable,
 			uint256 locked,
 			uint256 lockedWithMultiplier,

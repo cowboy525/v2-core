@@ -205,7 +205,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
-	function isEligibleForRewards(address _user) public view returns (bool isEligible) {
+	function isEligibleForRewards(address _user) public view returns (bool) {
 		uint256 lockedValue = lockedUsdValue(_user);
 		uint256 requiredValue = requiredUsdValue(_user).mul(priceToleranceRatio).div(RATIO_DIVISOR);
 		return requiredValue != 0 && lockedValue >= requiredValue;
