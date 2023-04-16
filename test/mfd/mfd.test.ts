@@ -381,7 +381,7 @@ describe('MultiFeeDistribution', () => {
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(depositAmount.mul(7));
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(7));
 		expect(lockInfo.lockData.length).to.be.equal(7);
 
 		// x3 was locked 3 times
@@ -392,7 +392,7 @@ describe('MultiFeeDistribution', () => {
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(depositAmount.mul(4));
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(4));
 		expect(lockInfo.lockData.length).to.be.equal(4);
 
 		// x6 was locked 2 times
@@ -403,7 +403,7 @@ describe('MultiFeeDistribution', () => {
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(depositAmount.mul(2));
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(2));
 		expect(lockInfo.lockData.length).to.be.equal(2);
 
 		// x12 was locked 2 times
@@ -414,7 +414,7 @@ describe('MultiFeeDistribution', () => {
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(0);
+		expect(lockInfo.locked).to.be.equal(0);
 		expect(lockInfo.lockData.length).to.be.equal(0);
 	});
 
@@ -430,7 +430,7 @@ describe('MultiFeeDistribution', () => {
 		}
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(depositAmount.mul(50));
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(50));
 		expect(lockInfo.lockData.length).to.be.equal(50);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
@@ -440,7 +440,7 @@ describe('MultiFeeDistribution', () => {
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(50));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.total).to.be.equal(0);
+		expect(lockInfo.locked).to.be.equal(0);
 		expect(lockInfo.lockData.length).to.be.equal(0);
 	});
 

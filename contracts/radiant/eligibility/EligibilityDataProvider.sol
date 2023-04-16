@@ -10,7 +10,7 @@ import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol"
 import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
-import {LockedBalance} from "../../interfaces/LockedBalance.sol";
+import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs

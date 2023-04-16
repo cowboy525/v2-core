@@ -35,14 +35,6 @@ describe('MiddleFeeDistribution', () => {
 
 		lp = await ethers.getContractAt('CustomERC20', await mfd.stakingToken());
 	});
-
-	it('lockedBalances', async () => {
-		const mfdLock = await mfd.lockedBalances(user1.address);
-		const middleLock = await middle.lockedBalances(user1.address);
-		expect(mfdLock.total).to.be.equal(middleLock.total);
-		expect(mfdLock.unlockable).to.be.equal(middleLock.unlockable);
-		expect(mfdLock.locked).to.be.equal(middleLock.locked);
-	});
 });
 
 // Test with mock ownership

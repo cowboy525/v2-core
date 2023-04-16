@@ -3,12 +3,12 @@ import {DeployFunction} from 'hardhat-deploy/types';
 import {deployAsset} from '../../scripts/deploy/helpers/deploy-asset';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments, getNamedAccounts} = hre;
+	const {deployments, getNamedAccounts, network} = hre;
 	const {deploy} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const chainId = await hre.getChainId();
 
-	if (chainId == '31337' || chainId == '42161') {
+	if (network.tags.post_assets && (chainId == '31337' || chainId == '42161')) {
 		let asset = {
 			assetAddress: '0x912CE59144191C1204E64559FE8253a0e49E6548',
 			chainlinkAggregator: '0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6',
