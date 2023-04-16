@@ -2,7 +2,7 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {network} from 'hardhat';
-import {getWeth} from '../../scripts/getDepenencies';
+import {getWeth, wait} from '../../scripts/getDepenencies';
 import {LP_PROVIDER} from '../../scripts/deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -16,11 +16,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	let radiantToken = await deployments.get('RadiantOFT');
 	const {chainlinkEthUsd} = await getWeth(hre);
 
+	let oracle;
 	if (network.tags.oracle_v3) {
 		const pair2 = '0x2334d412da299a21486b663d12c392185b313aaa';
 		const fallbackPair = '0x24704aff49645d32655a76df6d407e02d146dafc';
 
-		let oracle = await deploy('UniV3TwapOracle', {
+		oracle = await deploy('UniV3TwapOracle', {
 			from: deployer,
 			contract: 'UniV3TwapOracle',
 			log: true,
@@ -44,31 +45,32 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			},
 		});
 		if (fallback.newlyDeployed) {
-			console.log(fallback.address);
-			// await execute('UniV3TwapOracle', {from: deployer, log: true}, 'toggleTokenForPricing');
 			await execute('UniV3TwapOracle', {from: deployer, log: true}, 'setFallback', fallback.address);
 			await execute('UniV2TwapOracle', {from: deployer, log: true}, 'update');
 		}
 	}
-	//  else {
-	// 	console.log('LP');
-	// 	console.log(stakingAddress);
-	// 	let oracle = await deploy('UniV2TwapOracle', {
-	// 		from: deployer,
-	// 		log: true,
-	// 		proxy: {
-	// 			proxyContract: 'OpenZeppelinTransparentProxy',
-	// 			execute: {
-	// 				methodName: 'initialize',
-	// 				args: [stakingAddress, radiantToken.address, chainlinkEthUsd, config.TWAP_PERIOD, 30, true],
-	// 			},
-	// 		},
-	// 	});
-	// 	if (oracle.newlyDeployed) {
-	// 		await execute('PriceProvider', {from: deployer, log: true}, 'setOracle', oracle.address);
-	// 		await execute('PriceProvider', {from: deployer, log: true}, 'setUsePool', false);
-	// 	}
-	// }
+
+	if (network.tags.oracle_v2) {
+		oracle = await deploy('UniV2TwapOracle', {
+			contract: 'UniV2TwapOracle',
+			from: deployer,
+			log: true,
+			proxy: {
+				proxyContract: 'OpenZeppelinTransparentProxy',
+				execute: {
+					methodName: 'initialize',
+					args: [stakingAddress, radiantToken.address, chainlinkEthUsd, config.TWAP_PERIOD, 120, true],
+				},
+			},
+		});
+	}
+
+	if (oracle?.newlyDeployed) {
+		await wait(config.TWAP_PERIOD);
+		await execute('UniV2TwapOracle', {from: deployer, log: true}, 'update');
+		await execute('PriceProvider', {from: deployer, log: true}, 'setUsePool', false);
+		await execute('PriceProvider', {from: deployer, log: true}, 'setOracle', oracle.address);
+	}
 };
 export default func;
 func.tags = ['oracle_v3'];

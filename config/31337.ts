@@ -19,7 +19,7 @@ const chainConfig = {
 	MINT_AMT: ethers.utils.parseUnits('100000000000', 18),
 
 	MFD_VEST_DURATION: VEST_TIME,
-	TWAP_PERIOD: 3600,
+	// TWAP_PERIOD: 3600,
 
 	SUPPLY_MAX: ethers.utils.parseUnits('100000000', 18),
 	SUPPLY_MAX_MINT: ethers.utils.parseUnits('100000000', 18),
@@ -42,6 +42,8 @@ const chainConfig = {
 	DQ_BOOSTER: ethers.utils.parseUnits('0', 18),
 	DQ_MAX_BASE_BOUNTY: ethers.utils.parseUnits('100', 18),
 	ZAP_SLIPPAGE_LIMIT: 9000,
+
+	TWAP_PERIOD: 10,
 
 	// RADIANT_V1: '0x0c4681e6c0235179ec3d4f4fc4df3d14fdd96017',
 

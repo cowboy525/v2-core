@@ -31,9 +31,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			if (name !== baseAssetWrapped) {
 				let token = await ethers.getContract(name);
 				let amt =
-					price === 100000000 || price === 96000000
-						? ethers.utils.parseUnits('200000000', decimals)
-						: ethers.utils.parseUnits('100', decimals);
+					name === 'WETH' || name === 'WBTC' || name === 'WSTETH'
+						? ethers.utils.parseUnits('100', decimals)
+						: ethers.utils.parseUnits('200000000', decimals);
 
 				await execute(name, {from: deployer, log: true}, 'mint', deployer, amt.mul(2));
 				await execute(name, {from: deployer}, 'approve', lendingPool.address, ethers.constants.MaxUint256);
@@ -46,4 +46,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-func.tags = ['core', 'mintme2'];
+func.tags = ['populate'];

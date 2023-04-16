@@ -22,27 +22,32 @@ const config: HardhatUserConfig = {
 		deployer: {
 			default: 0,
 			56: '0x225c6084086F83eCe4BC747403f292a7d324Fd2E',
-			42161: '0x7759124915160E94C77EcE5B96E8a7fCec44Aa19',
+			// 42161: '0x7759124915160E94C77EcE5B96E8a7fCec44Aa19',
+			42161: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 		},
 		dao: {
 			default: 1,
 			56: '0x23a06b7644405bE380ACC1be0Ff54eeBeEC69aEd',
-			42161: '0x750129c21c7846CFE0ce2c966D84c0bcA5658497',
+			// 42161: '0x750129c21c7846CFE0ce2c966D84c0bcA5658497',
+			42161: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 		},
 		treasury: {
 			default: 2,
 			56: '0x769549Ab2765f2541FF6d5b6655B8bD36f99705E',
-			42161: '0x769549Ab2765f2541FF6d5b6655B8bD36f99705E',
+			// 42161: '0x769549Ab2765f2541FF6d5b6655B8bD36f99705E',
+			42161: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 		},
 		admin: {
 			default: 0,
 			56: '0xE4714D6BD9a6c0F6194C1aa8602850b0a1cE1416',
-			42161: '0x111CEEee040739fD91D29C34C33E6B3E112F2177',
+			// 42161: '0x111CEEee040739fD91D29C34C33E6B3E112F2177',
+			42161: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 		},
 		vestManager: {
 			default: 4,
 			56: '0xA90a20698ff30486A14B685eCdC0d86269C404EB',
-			42161: '0x1BAABe1e4128E76EdB1FF76EE528864e4772C17d',
+			// 42161: '0x1BAABe1e4128E76EdB1FF76EE528864e4772C17d',
+			42161: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 		},
 	},
 	solidity: {
@@ -52,7 +57,7 @@ const config: HardhatUserConfig = {
 				settings: {
 					optimizer: {
 						enabled: true,
-						runs: 1000,
+						runs: 10000,
 						details: {
 							yul: true,
 						},
@@ -74,7 +79,7 @@ const config: HardhatUserConfig = {
 			// url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
 			// blockNumber: 76739035,
 			// },
-			// chainId: 42161,
+			chainId: 42161,
 			// chainId: 56,
 			forking: {
 				url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
@@ -86,10 +91,10 @@ const config: HardhatUserConfig = {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			// accounts: accounts(),
-			// chainId: 56,
+			chainId: 42161,
 			timeout: 10000000000000,
-			// accounts: [process.env.PRIVATE_KEY_BSC || ''],
-			tags: ['mocks', 'testing'],
+			accounts: [process.env.PRIVATE_KEY_ARBITRUM || ''],
+			tags: ['mocks', 'testing', 'post_assets'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -119,7 +124,8 @@ const config: HardhatUserConfig = {
 					apiUrl: 'https://api.arbiscan.io/',
 				},
 			},
-			// tags: ['oracle_v3'],
+			// tags: ['post_assets'],
+			tags: ['mocks', 'testing', 'post_assets'],
 		},
 		production: {
 			url: node_url('mainnet'),

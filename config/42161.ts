@@ -5,16 +5,28 @@ import BaseConfig from './BaseConfig';
 import {DAY, HOUR, MINUTE} from './constants';
 
 const LP_PLATFORM = LP_PROVIDER.BALANCER;
-const LP_INIT_ETH = 0.5;
-export const targetPrice = 0.35;
-export const ethPrice = 1765;
+const LP_INIT_ETH = 1000;
+export const targetPrice = 0.5;
+export const ethPrice = 2100;
 const LP_INIT_RDNT = getInitLpAmts(LP_PLATFORM, LP_INIT_ETH, ethPrice, targetPrice);
+const REWARDS_DURATION = 5 * MINUTE;
+const LOOKBACK_DURATION = 2 * MINUTE;
+const LOCK_TIME: number = 2 * HOUR;
+const VEST_TIME: number = LOCK_TIME;
 
 const chainConfig = {
 	NETWORK: 'arbitrum',
 	CHAIN_ID: 42161,
 	SYMBOL: 'NOVA',
 	TOKEN_NAME: 'Nova',
+	MFD_REWARD_DURATION_SECS: REWARDS_DURATION.toString(),
+	MFD_REWARD_LOOKBACK_SECS: LOOKBACK_DURATION.toString(),
+	MFD_VEST_DURATION: VEST_TIME,
+
+	LOCK_INFO: {
+		LOCK_PERIOD: [LOCK_TIME, LOCK_TIME * 3, LOCK_TIME * 6, LOCK_TIME * 12],
+		MULTIPLIER: [1, 4, 10, 25],
+	},
 
 	DQ_TARGET_BASE_BOUNTY_USD: ethers.utils.parseUnits('.50', 18),
 	DQ_MAX_BASE_BOUNTY: ethers.utils.parseUnits('1000', 18),
@@ -29,7 +41,7 @@ const chainConfig = {
 	LP_INIT_ETH: ethers.utils.parseUnits(LP_INIT_ETH.toString(), 18),
 	LP_INIT_RDNT: ethers.utils.parseUnits(LP_INIT_RDNT.toString(), 18),
 
-	STARFLEET_TREASURY: '0x5ea8c86d3e99412b856b800A035D8cFcab6F1589',
+	STARFLEET_TREASURY: '0x091fFE38e101e8Ac10832e74f059D1b33aeFAe99',
 
 	DQ_BOOSTER: ethers.utils.parseUnits('0', 18),
 	WETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',

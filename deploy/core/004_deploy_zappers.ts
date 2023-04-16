@@ -16,15 +16,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const {weth} = await getWeth(hre);
 	const wethAddr = weth.address;
-	console.log(`WETH is ${wethAddr}`);
 
 	const radiantToken = await deployments.get('RadiantOFT');
 
 	let poolHelper;
 	let useUniswapLpProvider = config.LP_PROVIDER === LP_PROVIDER.UNISWAP;
-	if (network.tags.mocks && network.tags.testing) {
-		useUniswapLpProvider = true;
-	}
 
 	if (useUniswapLpProvider) {
 		let router;

@@ -11,11 +11,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	const {deployer, treasury, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
 
-	// await setNonce(deployer, 0);
-
 	if (hre.network.tags.mocks) {
 		const {baseAssetWrapped} = getConfigForChain(await hre.getChainId());
-		const baseAssetPrice = baseAssetWrapped === 'WBNB' ? 300 : 1600;
+		const baseAssetPrice = baseAssetWrapped === 'WBNB' ? 300 : 2100;
 
 		const weth = await deploy(baseAssetWrapped, {
 			from: deployer,

@@ -33,25 +33,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	if (pp.newlyDeployed) {
 		await execute('RadiantOFT', {from: deployer}, 'setPriceProvider', pp.address);
-	}
-
-	if (config.LP_PROVIDER === LP_PROVIDER.UNISWAP && pp.newlyDeployed) {
-		let oracle = await deploy('UniV2TwapOracle', {
-			contract: 'UniV2TwapOracle',
-			from: deployer,
-			log: true,
-			proxy: {
-				proxyContract: 'OpenZeppelinTransparentProxy',
-				execute: {
-					methodName: 'initialize',
-					args: [stakingAddress, radiantToken.address, chainlinkEthUsd, config.TWAP_PERIOD, 120, true],
-				},
-			},
-		});
-
-		await execute('RadiantOFT', {from: deployer, log: true}, 'setPriceProvider', pp.address);
-		await execute('PriceProvider', {from: deployer, log: true}, 'setUsePool', false);
-		await execute('PriceProvider', {from: deployer, log: true}, 'setOracle', oracle.address);
 		await execute('LockZap', {from: deployer, log: true}, 'setPriceProvider', pp.address);
 	}
 };

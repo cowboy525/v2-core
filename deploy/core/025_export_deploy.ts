@@ -84,7 +84,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		bountyManager: deps['BountyManager'].address,
 		poolHelper: deps['PoolHelper'].address,
-		uniV2TwapOracle: deps['UniV2TwapOracle'].address,
+		// uniV2TwapOracle: deps['UniV2TwapOracle'].address,
 		daoTreasury: dao,
 		baseAssetWrappedAddress: wethAddr,
 		lendingPoolAddressProvider: deps['LendingPoolAddressesProvider'].address,
@@ -111,4 +111,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.runAtTheEnd = true;
-func.tags = ['v2_export'];
+func.tags = ['export'];
