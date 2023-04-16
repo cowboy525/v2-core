@@ -657,15 +657,30 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function _insertLock(address _user, LockedBalance memory newLock) internal {
 		LockedBalance[] storage locks = userLocks[_user];
 		uint256 length = locks.length;
-		uint256 i;
-		while (i < length && locks[i].unlockTime < newLock.unlockTime) {
-			i = i + 1;
-		}
-		locks.push(newLock);
-		for (uint256 j = length; j > i; j -= 1) {
+		uint256 i = _binarySearch(locks, length, newLock.unlockTime);
+		locks.push();
+		for (uint256 j = length; j > i; j--) {
 			locks[j] = locks[j - 1];
 		}
 		locks[i] = newLock;
+	}
+
+	function _binarySearch(
+		LockedBalance[] storage locks,
+		uint256 length,
+		uint256 unlockTime
+	) private view returns (uint256) {
+		uint256 low = 0;
+		uint256 high = length;
+		while (low < high) {
+			uint256 mid = (low + high) / 2;
+			if (locks[mid].unlockTime < unlockTime) {
+				low = mid + 1;
+			} else {
+				high = mid;
+			}
+		}
+		return low;
 	}
 
 	/**
@@ -821,8 +836,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		Balances storage bal = balances[onBehalfOf];
 		bal.total = bal.total.sub(bal.unlocked).sub(bal.earned);
-		bal.unlocked = 0;
-		bal.earned = 0;
 
 		_withdrawTokens(onBehalfOf, amount, penaltyAmount, burnAmount, claimRewards);
 	}
