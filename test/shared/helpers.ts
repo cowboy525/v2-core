@@ -186,7 +186,7 @@ export const sellRdnt = async (
 	// not very accurate, but works. sell for 50% of eth in there
 	let partEth = wethReserve.div(2);
 	let inRdnt = partEth.mul(BigNumber.from(10).pow(await priceProvider.decimals())).div(rdntPrice);
-	const maxSell = inRdnt;
+	const maxSell = inRdnt.mul(5);
 
 	let amount;
 	if (amt === 'max') {

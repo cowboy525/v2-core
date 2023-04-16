@@ -7,7 +7,7 @@ import {DAY, MINUTE} from './constants';
 const VEST_TIME: number = 30 * DAY;
 
 const LP_PLATFORM = LP_PROVIDER.UNISWAP;
-const LP_INIT_ETH = 50000;
+const LP_INIT_ETH = 5000;
 export const targetPrice = 0.41;
 export const ethPrice = 2100;
 const LP_INIT_RDNT = getInitLpAmts(LP_PLATFORM, LP_INIT_ETH, ethPrice, targetPrice);
@@ -41,7 +41,7 @@ const chainConfig = {
 
 	DQ_BOOSTER: ethers.utils.parseUnits('0', 18),
 	DQ_MAX_BASE_BOUNTY: ethers.utils.parseUnits('100', 18),
-	ZAP_SLIPPAGE_LIMIT: 9000,
+	ZAP_SLIPPAGE_LIMIT: 7000,
 
 	TWAP_PERIOD: 10,
 

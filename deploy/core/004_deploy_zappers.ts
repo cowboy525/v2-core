@@ -63,8 +63,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		});
 
 		if (poolHelper.newlyDeployed) {
-			console.log(`WETH bal dep: ${deployer} | ${await weth.balanceOf(deployer)}`);
-			console.log(`WETH transfer: ${poolHelper.address} | ${config.LP_INIT_ETH}`);
+			// console.log(`WETH bal dep: ${deployer} | ${await weth.balanceOf(deployer)}`);
+			// console.log(`WETH transfer: ${poolHelper.address} | ${config.LP_INIT_ETH}`);
 			// await weth.connect(signer).deposit(config.LP_INIT_ETH);
 			if (network.tags.mocks) {
 				await execute(baseAssetWrapped, txnOpts, 'mint', config.LP_INIT_ETH);
@@ -81,7 +81,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				await wait(10);
 				console.log(`wait done`);
 			}
-			console.log(`WETH bal dep post: ${deployer} | ${await weth.balanceOf(deployer)}`);
+			// console.log(`WETH bal dep post: ${deployer} | ${await weth.balanceOf(deployer)}`);
 
 			await execute('RadiantOFT', txnOpts, 'transfer', poolHelper.address, config.LP_INIT_RDNT);
 
