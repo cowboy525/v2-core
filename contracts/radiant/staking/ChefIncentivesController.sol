@@ -519,11 +519,14 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	function hasEligibleDeposits(address _user) internal view returns (bool hasDeposits) {
 		uint256 length = poolLength();
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length;) {
 			if (userInfo[registeredTokens[i]][_user].amount != 0) {
 				hasDeposits = true;
 				break;
 			}
+      unchecked {
+        ++i;
+      }
 		}
 	}
 
