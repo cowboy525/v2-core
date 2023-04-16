@@ -4,41 +4,37 @@ import {getConfigForChain} from '../../config';
 import {getDependency} from '../../scripts/getDepenencies';
 import {setNonce} from '@nomicfoundation/hardhat-network-helpers';
 import fs from 'fs';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	const {deployments, getNamedAccounts, network, ethers} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, treasury, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	if (hre.network.tags.mocks) {
 		const {baseAssetWrapped} = getConfigForChain(await hre.getChainId());
 		const baseAssetPrice = baseAssetWrapped === 'WBNB' ? 300 : 2100;
 
-		const weth = await deploy(baseAssetWrapped, {
-			from: deployer,
-			log: true,
-		});
+		const weth = await deploy(baseAssetWrapped, txnOpts);
 		await deploy(`${baseAssetWrapped.toUpperCase()}Aggregator`, {
+			...txnOpts,
 			contract: 'MockChainlinkAggregator',
-			from: deployer,
-			log: true,
 			args: [hre.ethers.utils.parseUnits(baseAssetPrice.toString(), 8)],
 		});
 
 		const uniswapV2Factory = await deploy('UniswapV2Factory', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			args: [deployer],
 		});
 
 		await deploy('UniswapV2Router02', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			args: [uniswapV2Factory.address, weth.address],
 		});
 
-		await execute(baseAssetWrapped, {from: deployer, log: true}, 'mint', hre.ethers.utils.parseEther('100000000'));
+		await execute(baseAssetWrapped, txnOpts, 'mint', hre.ethers.utils.parseEther('100000000'));
 
 		const mockAssets = JSON.parse(fs.readFileSync(`./config/mock-assets.json`).toString());
 		const assets = mockAssets[config.CHAIN_ID];
@@ -51,16 +47,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 					await deployments.get(name);
 				} catch (e) {
 					let mockTokenDep = await deploy(name, {
+						...txnOpts,
 						contract: 'MockToken',
-						from: deployer,
-						log: true,
 						args: [name, name, decimals || 18],
 					});
 
 					await deploy(`${name.toUpperCase()}Aggregator`, {
+						...txnOpts,
 						contract: 'MockChainlinkAggregator',
-						from: deployer,
-						log: true,
 						args: [price],
 					});
 
@@ -74,7 +68,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 					await execute(
 						name,
-						{from: deployer, log: true},
+						txnOpts,
 						'mint',
 						deployer,
 						ethers.utils.parseUnits(assetAmt.toString(), decimals)
@@ -83,22 +77,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 					await execute(
 						baseAssetWrapped,
-						{from: deployer, log: true},
+						txnOpts,
 						'approve',
 						uniswapV2Router02.address,
 						ethers.constants.MaxUint256
 					);
-					await execute(
-						name,
-						{from: deployer, log: true},
-						'approve',
-						uniswapV2Router02.address,
-						ethers.constants.MaxUint256
-					);
+					await execute(name, txnOpts, 'approve', uniswapV2Router02.address, ethers.constants.MaxUint256);
 
 					await execute(
 						'UniswapV2Router02',
-						{from: deployer, log: true},
+						txnOpts,
 						'addLiquidity',
 						mockTokenDep.address,
 						weth.address,

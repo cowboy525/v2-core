@@ -1,12 +1,14 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {deployAsset} from '../../scripts/deploy/helpers/deploy-asset';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, get} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const chainId = await hre.getChainId();
+	const txnOpts = await getTxnOpts(hre);
 
 	if (network.tags.post_assets) {
 		const assetName = 'WSTETH';

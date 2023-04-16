@@ -2,12 +2,14 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const baseAsset = (await getWeth(hre)).weth;
 	const lockZap = await deployments.get(`LockZap`);
@@ -17,14 +19,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const cic = await deployments.get(`ChefIncentivesController`);
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 
-	await deploy('Multicall', {
-		from: deployer,
-		log: true,
-	});
+	await deploy('Multicall', txnOpts);
 
 	let leverager = await deploy('Leverager', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		args: [
 			lendingPool,
 			edp.address,
@@ -38,20 +36,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (leverager.newlyDeployed) {
-		await execute(
-			'ChefIncentivesController',
-			{
-				from: deployer,
-				log: true,
-			},
-			'setLeverager',
-			leverager.address
-		);
+		await execute('ChefIncentivesController', txnOpts, 'setLeverager', leverager.address);
 	}
 
 	let sgBorrow = await deploy('StargateBorrow', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
 			execute: {

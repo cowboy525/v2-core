@@ -1,11 +1,13 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {getConfigForChain} from '../../../config';
+import {getTxnOpts} from './getTxnOpts';
 
 export const deployAsset = async (asset: any, hre: HardhatRuntimeEnvironment) => {
 	const {deployments, getNamedAccounts, ethers} = hre;
 	const {deploy, execute, read, get} = deployments;
 	const {deployer, admin, treasury} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const lendingPoolAddressesProvider = await deployments.get(`LendingPoolAddressesProvider`);
 	const aTokensAndRatesHelper = await deployments.get('ATokensAndRatesHelper');
@@ -23,8 +25,7 @@ export const deployAsset = async (asset: any, hre: HardhatRuntimeEnvironment) =>
 
 	let strategy = asset.reservesParams.strategy;
 	let strategyContract = await deploy(strategy.name, {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		contract: 'DefaultReserveInterestRateStrategy',
 		args: [
 			lendingPoolAddressesProvider.address,
@@ -58,18 +59,13 @@ export const deployAsset = async (asset: any, hre: HardhatRuntimeEnvironment) =>
 		},
 	];
 
-	await execute(
-		'LendingPoolAddressesProvider',
-		{from: deployer, log: true},
-		'setPoolAdmin',
-		aTokensAndRatesHelper.address
-	);
+	await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', aTokensAndRatesHelper.address);
 
-	await execute('ATokensAndRatesHelper', {from: deployer, log: true}, 'configureReserves', reserveArray);
-	await execute('LendingPoolAddressesProvider', {from: deployer, log: true}, 'setPoolAdmin', deployer);
+	await execute('ATokensAndRatesHelper', txnOpts, 'configureReserves', reserveArray);
+	await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', deployer);
 	await execute(
 		'AaveOracle',
-		{from: deployer, log: true},
+		txnOpts,
 		'setAssetSources',
 		[initInputParams.underlyingAsset],
 		[asset.chainlinkAggregator]

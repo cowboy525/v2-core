@@ -4,12 +4,14 @@ import {getConfigForChain} from '../../config/index';
 import {network} from 'hardhat';
 import {getWeth, wait} from '../../scripts/getDepenencies';
 import {LP_PROVIDER} from '../../scripts/deploy/types';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	let poolHelper = await deployments.get('PoolHelper');
 	const stakingAddress = await read('PoolHelper', 'lpTokenAddr');
@@ -22,9 +24,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		const fallbackPair = '0x24704aff49645d32655a76df6d407e02d146dafc';
 
 		oracle = await deploy('UniV3TwapOracle', {
-			from: deployer,
+			...txnOpts,
 			contract: 'UniV3TwapOracle',
-			log: true,
 			proxy: {
 				proxyContract: 'OpenZeppelinTransparentProxy',
 				execute: {
@@ -34,8 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			},
 		});
 		let fallback = await deploy('UniV2TwapOracle', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			proxy: {
 				proxyContract: 'OpenZeppelinTransparentProxy',
 				execute: {
@@ -52,9 +52,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	if (network.tags.oracle_v2) {
 		oracle = await deploy('UniV2TwapOracle', {
+			...txnOpts,
 			contract: 'UniV2TwapOracle',
-			from: deployer,
-			log: true,
 			proxy: {
 				proxyContract: 'OpenZeppelinTransparentProxy',
 				execute: {
@@ -63,14 +62,31 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				},
 			},
 		});
+		await wait(config.TWAP_PERIOD);
+		await execute('UniV2TwapOracle', {from: deployer, log: true}, 'update');
+	}
+
+	if (network.tags.oracle_cl) {
+		// ARBI
+		const rdntClFeed = '0x20d0Fcab0ECFD078B036b6CAf1FaC69A6453b352';
+		const ethClFeed = config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY;
+		oracle = await deploy('ChainlinkV3Adapter', {
+			...txnOpts,
+			contract: 'ChainlinkV3Adapter',
+			proxy: {
+				proxyContract: 'OpenZeppelinTransparentProxy',
+				execute: {
+					methodName: 'initialize',
+					args: [radiantToken.address, ethClFeed, rdntClFeed],
+				},
+			},
+		});
 	}
 
 	if (oracle?.newlyDeployed) {
-		await wait(config.TWAP_PERIOD);
-		await execute('UniV2TwapOracle', {from: deployer, log: true}, 'update');
 		await execute('PriceProvider', {from: deployer, log: true}, 'setUsePool', false);
 		await execute('PriceProvider', {from: deployer, log: true}, 'setOracle', oracle.address);
 	}
 };
 export default func;
-func.tags = ['oracle_v3'];
+func.tags = ['oracle'];

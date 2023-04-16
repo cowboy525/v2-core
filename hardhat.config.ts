@@ -57,7 +57,7 @@ const config: HardhatUserConfig = {
 				settings: {
 					optimizer: {
 						enabled: true,
-						runs: 10000,
+						runs: 30000,
 						details: {
 							yul: true,
 						},
@@ -79,13 +79,13 @@ const config: HardhatUserConfig = {
 			// url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
 			// blockNumber: 76739035,
 			// },
-			chainId: 42161,
+			// chainId: 42161,
 			// chainId: 56,
 			forking: {
 				url: 'https://black-autumn-bush.arbitrum-mainnet.quiknode.pro/378c9248c6a64af89c198dff184e09664f56f7c7/',
-				blockNumber: 80581510,
+				blockNumber: 80970476,
 			},
-			tags: ['mocks', 'testing'],
+			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
 			url: node_url('localhost'),
@@ -94,7 +94,7 @@ const config: HardhatUserConfig = {
 			chainId: 42161,
 			timeout: 10000000000000,
 			accounts: [process.env.PRIVATE_KEY_ARBITRUM || ''],
-			tags: ['mocks', 'testing', 'post_assets'],
+			tags: ['mocks', 'testing', 'oracle_cl', 'post_assets'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -125,7 +125,7 @@ const config: HardhatUserConfig = {
 				},
 			},
 			// tags: ['post_assets'],
-			tags: ['mocks', 'testing', 'post_assets'],
+			tags: ['mocks', 'testing', 'post_assets', 'oracle_cl'],
 		},
 		production: {
 			url: node_url('mainnet'),
@@ -183,7 +183,7 @@ const config: HardhatUserConfig = {
 		: undefined,
 
 	tenderly: {
-		project: 'arbi-v2',
+		project: 'arbi-gas',
 		username: 'radiant',
 	},
 	defender: {

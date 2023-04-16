@@ -2,12 +2,14 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 const {ethers} = require('hardhat');
 import {getConfigForChain} from '../../config/index';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, admin} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const middleFeeDistribution = await deployments.get(`MiddleFeeDistribution`);
 	const lendingPoolAddressesProvider = await deployments.get(`LendingPoolAddressesProvider`);
@@ -30,8 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		if (!strategyAddresses.has(strategyName)) {
 			let strat = await deploy(strategyName, {
-				from: deployer,
-				log: true,
+				...txnOpts,
 				contract: 'DefaultReserveInterestRateStrategy',
 				args: [
 					lendingPoolAddressesProvider.address,
@@ -79,12 +80,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	let currentAdmin = await read('MiddleFeeDistribution', 'admin');
 	if (currentAdmin === deployer) {
-		await execute(
-			'MiddleFeeDistribution',
-			{from: deployer, log: true},
-			'setAdmin',
-			lendingPoolConfiguratorProxy.address
-		);
+		await execute('MiddleFeeDistribution', txnOpts, 'setAdmin', lendingPoolConfiguratorProxy.address);
 
 		const inits = Array.from(enhancedTokensConfig.values()).map((value: any) => value.initInputParams);
 		// console.log(inits);
@@ -119,35 +115,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		}
 		const aTokensAndRatesHelper = await deployments.get('ATokensAndRatesHelper');
 		const aaveProtocolDataProvider = await deployments.get('AaveProtocolDataProvider');
-		await execute(
-			'LendingPoolAddressesProvider',
-			{from: deployer, log: true, waitConfirmations: 3, autoMine: true},
-			'setPoolAdmin',
-			aTokensAndRatesHelper.address
-		);
+		await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', aTokensAndRatesHelper.address);
 
-		await execute(
-			'ATokensAndRatesHelper',
-			{from: deployer, log: true, waitConfirmations: 3, autoMine: true},
-			'configureReserves',
-			inputParams
-		);
+		await execute('ATokensAndRatesHelper', txnOpts, 'configureReserves', inputParams);
 
 		// Set deployer back as admin
-		await execute('LendingPoolAddressesProvider', {from: deployer, log: true}, 'setPoolAdmin', deployer);
+		await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', deployer);
 
-		let collatManager = await deploy('LendingPoolCollateralManager', {from: deployer, log: true});
+		let collatManager = await deploy('LendingPoolCollateralManager', txnOpts);
 
 		await execute(
 			'LendingPoolAddressesProvider',
-			{from: deployer, log: true},
+			txnOpts,
 			'setLendingPoolCollateralManager',
 			collatManager.address
 		);
 
 		await execute(
 			'LendingPoolAddressesProvider',
-			{from: deployer, log: true},
+			txnOpts,
 			'setAddress',
 			'0x0100000000000000000000000000000000000000000000000000000000000000',
 			aaveProtocolDataProvider.address

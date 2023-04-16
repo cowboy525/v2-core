@@ -2,12 +2,14 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 const {ethers} = require('hardhat');
 import {getConfigForChain} from '../../config/index';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const edp = await deployments.get(`EligibilityDataProvider`);
 	const middleFeeDistribution = await deployments.get(`MiddleFeeDistribution`);
@@ -17,8 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	);
 
 	const cic = await deploy('ChefIncentivesController', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
 			execute: {
@@ -36,21 +37,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (cic.newlyDeployed) {
-		await execute('ChefIncentivesController', {from: deployer, log: true}, 'start');
-		await execute('RadiantOFT', {from: deployer, log: true}, 'transfer', cic.address, config.SUPPLY_CIC_RESERVE);
-		await execute(
-			'ChefIncentivesController',
-			{from: deployer, log: true},
-			'registerRewardDeposit',
-			config.SUPPLY_CIC_RESERVE
-		);
-		await execute(
-			'EligibilityDataProvider',
-			{from: deployer, log: true},
-			'setChefIncentivesController',
-			cic.address
-		);
-		await execute(`ChefIncentivesController`, {from: deployer, log: true}, 'setEndingTimeUpdateCadence', 86400);
+		await execute('ChefIncentivesController', txnOpts, 'start');
+		await execute('RadiantOFT', txnOpts, 'transfer', cic.address, config.SUPPLY_CIC_RESERVE);
+		await execute('ChefIncentivesController', txnOpts, 'registerRewardDeposit', config.SUPPLY_CIC_RESERVE);
+		await execute('EligibilityDataProvider', txnOpts, 'setChefIncentivesController', cic.address);
+		await execute(`ChefIncentivesController`, txnOpts, 'setEndingTimeUpdateCadence', 86400);
 	}
 };
 export default func;

@@ -2,11 +2,13 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 const {ethers} = require('hardhat');
 import {getConfigForChain} from '../../config/index';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {execute, read} = deployments;
 	const {deployer} = await getNamedAccounts();
+	const txnOpts = await getTxnOpts(hre);
 
 	const stakingAddress = await read('PoolHelper', 'lpTokenAddr');
 	const priceProvider = await deployments.get(`PriceProvider`);
@@ -14,8 +16,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const currentStakingToken = await read('MFD', {}, 'stakingToken');
 
 	if (currentStakingToken == '0x0000000000000000000000000000000000000000') {
-		await execute('MFD', {from: deployer}, 'setLPToken', stakingAddress);
-		await execute('EligibilityDataProvider', {from: deployer}, 'setLPToken', stakingAddress);
+		await execute('MFD', txnOpts, 'setLPToken', stakingAddress);
+		await execute('EligibilityDataProvider', txnOpts, 'setLPToken', stakingAddress);
 
 		const libraries = {
 			'contracts/lending/libraries/logic/ValidationLogic.sol:ValidationLogic': (
