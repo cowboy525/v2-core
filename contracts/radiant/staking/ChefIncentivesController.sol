@@ -607,31 +607,26 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/********************** RDNT Reserve Management ***********************/
 
 	function endRewardTime() public returns (uint256) {
-		if (endingTime.lastUpdatedTime + endingTime.updateCadence >= block.timestamp) {
-			return endingTime.estimatedTime;
-		}
-
-		uint256 unclaimedRewards = depositedRewards.sub(accountedRewards);
+		uint256 unclaimedRewards = depositedRewards - accountedRewards;
 		uint256 extra = 0;
 		uint256 length = poolLength();
-		for (uint256 i; i < length; i++) {
+		for (uint256 i = 0; i < length; ) {
 			PoolInfo storage pool = poolInfo[registeredTokens[i]];
-			if (pool.lastRewardTime <= lastAllPoolUpdate) {
-				continue;
-			} else {
-				extra = extra.add(
-					pool.lastRewardTime.sub(lastAllPoolUpdate).mul(pool.allocPoint).mul(rewardsPerSecond).div(
-						totalAllocPoint
-					)
-				);
+			if (pool.lastRewardTime > lastAllPoolUpdate) {
+				extra +=
+					((pool.lastRewardTime - lastAllPoolUpdate) * pool.allocPoint * rewardsPerSecond) /
+					totalAllocPoint;
+			}
+			unchecked {
+				i++;
 			}
 		}
+		endingTime.lastUpdatedTime = block.timestamp;
 		if (rewardsPerSecond == 0) {
 			endingTime.estimatedTime = type(uint256).max;
 		} else {
-			endingTime.estimatedTime = (unclaimedRewards + extra).div(rewardsPerSecond) + (lastAllPoolUpdate);
+			endingTime.estimatedTime = (unclaimedRewards + extra) / rewardsPerSecond + lastAllPoolUpdate;
 		}
-		endingTime.lastUpdatedTime = block.timestamp;
 		return endingTime.estimatedTime;
 	}
 
