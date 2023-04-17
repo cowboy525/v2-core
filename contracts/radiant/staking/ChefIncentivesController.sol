@@ -610,7 +610,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 unclaimedRewards = depositedRewards - accountedRewards;
 		uint256 extra = 0;
 		uint256 length = poolLength();
-		for (uint256 i = 0; i < length; ) {
+		for (uint256 i; i < length; ) {
 			PoolInfo storage pool = poolInfo[registeredTokens[i]];
 			if (pool.lastRewardTime > lastAllPoolUpdate) {
 				extra +=
