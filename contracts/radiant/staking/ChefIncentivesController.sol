@@ -398,6 +398,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @dev Update reward variables of the given pool to be up-to-date.
+	 * @param pool pool info
+	 * @param _totalAllocPoint allocation point of the pool
 	 */
 	function _updatePool(PoolInfo storage pool, uint256 _totalAllocPoint) internal {
 		uint256 timestamp = block.timestamp;
@@ -434,6 +436,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @notice Pending rewards of a user.
 	 * @param _user address for claim
 	 * @param _tokens array of reward-bearing tokens
+	 * @return claimable rewards array
 	 */
 	function pendingRewards(address _user, address[] memory _tokens) public view returns (uint256[] memory) {
 		uint256[] memory claimable = new uint256[](_tokens.length);
@@ -501,8 +504,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	/**
-	 * @notice Exempt a contract from eligbility check.
-	 * @dev Can be called by owner or leverager contract
+	 * @notice Vest tokens to MFD.
+	 * @dev Can be called by owner or leverager contract.
+	 * @param _user address to receive
+	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
 		_amount = _sendRadiant(address(_getMfd()), _amount);
@@ -512,6 +517,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Exempt a contract from eligbility check.
 	 * @dev Can be called by owner or leverager contract
+	 * @param _contract address to exempt
+	 * @param _value flag for exempt
 	 */
 	function setEligibilityExempt(address _contract, bool _value) public {
 		if (msg.sender != owner() && msg.sender != address(leverager)) revert InsufficientPermission();
@@ -520,6 +527,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Updates leverager, only callable by owner.
+	 * @param _leverager contract
 	 */
 	function setLeverager(ILeverager _leverager) external onlyOwner {
 		leverager = _leverager;
@@ -530,6 +538,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice `after` Hook for deposit and borrow update.
 	 * @dev important! eligible status can be updated here
+	 * @param _user address
+	 * @param _balance balance of token
+	 * @param _totalSupply total supply of the token
 	 */
 	function handleActionAfter(address _user, uint256 _balance, uint256 _totalSupply) external {
 		if (!validRTokens[msg.sender] && msg.sender != address(_getMfd())) revert NotRTokenOrMfd();
@@ -552,6 +563,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice `after` Hook for deposit and borrow update.
 	 * @dev important! eligible status can be updated here
+	 * @param _token address
+	 * @param _user address
+	 * @param _balance new amount
+	 * @param _totalSupply total supply of the token
 	 */
 	function _handleActionAfterForToken(
 		address _token,
@@ -585,18 +600,21 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice `before` Hook for deposit and borrow update.
+	 * @param _user address
 	 */
 	function handleActionBefore(address _user) external {}
 
 	/**
 	 * @notice Hook for lock update.
 	 * @dev Called by the locking contracts before locking or unlocking happens
+	 * @param _user address
 	 */
 	function beforeLockUpdate(address _user) external {}
 
 	/**
 	 * @notice Hook for lock update.
 	 * @dev Called by the locking contracts after locking or unlocking happens
+	 * @param _user address
 	 */
 	function afterLockUpdate(address _user) external {
 		if (msg.sender != address(_getMfd())) revert NotMFD();
@@ -643,6 +661,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address of recipient
 	 * @param _isEligible user's eligible status
 	 * @param _execute true if it's actual execution
+	 * @return issueBaseBounty true for base bounty
 	 */
     function _processEligibility(address _user, bool _isEligible, bool _execute) internal returns (bool issueBaseBounty) {
 		bool hasEligDeposits = hasEligibleDeposits(_user);
@@ -664,6 +683,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address of recipient
 	 * @param _execute true if it's actual execution
 	 * @param _refresh true if needs to refresh user's eligible status
+	 * @return issueBaseBounty true for base bounty
 	 */
 	function checkAndProcessEligibility(
 		address _user,
@@ -679,6 +699,12 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		return _processEligibility(_user, isEligible, _execute);
 	}
 
+	/**
+	 * @notice Claim bounty
+	 * @param _user address of recipient
+	 * @param _execute true if it's actual execution
+	 * @return issueBaseBounty true for base bounty
+	 */
 	function claimBounty(address _user, bool _execute) public returns (bool issueBaseBounty) {
 		if (msg.sender != address(bountyManager)) revert BountyOnly();
 		issueBaseBounty = checkAndProcessEligibility(_user, _execute, true);
@@ -768,6 +794,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Updates cadence duration of ending time.
 	 * @dev Only callable by owner.
+	 * @param _lapse new cadence
 	 */
 	function setEndingTimeUpdateCadence(uint256 _lapse) external onlyOwner {
 		if (_lapse > 1 weeks) revert CadenceTooLong();
@@ -777,6 +804,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Add new rewards.
 	 * @dev Only callable by owner.
+	 * @param _amount new deposit amount
 	 */
 	function registerRewardDeposit(uint256 _amount) external onlyOwner {
 		depositedRewards = depositedRewards.add(_amount);
@@ -789,6 +817,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Available reward amount for future distribution.
 	 * @dev This value is equal to `depositedRewards` - `accountedRewards`.
+	 * @return amount available
 	 */
 	function availableRewards() internal view returns (uint256 amount) {
 		return depositedRewards.sub(accountedRewards);
@@ -805,6 +834,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @notice Sum of all pending RDNT rewards.
 	 * @param _user address of the user
+	 * @return pending reward amount
 	 */
 	function allPendingRewards(address _user) public view returns (uint256 pending) {
 		pending = userBaseClaimable[_user];
