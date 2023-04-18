@@ -1,8 +1,6 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config';
-import {getDependency} from '../../scripts/getDepenencies';
-import {setNonce} from '@nomicfoundation/hardhat-network-helpers';
 import fs from 'fs';
 import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
@@ -102,7 +100,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 		}
 	}
 };
-// func.tags = ['RadiantOFT'];
-// func.dependencies = ['dependencies'];
-// func.tags = ['rdnt44'];
 export default func;

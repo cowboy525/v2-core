@@ -39,13 +39,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 		rdntRequired = rdntRequired.add(config.SUPPLY_MIGRATION_MINT);
 	}
 
-	console.log(`=== Deployer will need RDNT: `, ethers.utils.formatEther(rdntRequired));
-	console.log(`Has: ${await read('RadiantOFT', 'balanceOf', deployer)}`);
-	console.log(`DAO Has: ${await read('RadiantOFT', 'balanceOf', dao)}`);
+	// console.log(`=== Deployer will need RDNT: `, ethers.utils.formatEther(rdntRequired));
+	// console.log(`Has: ${await read('RadiantOFT', 'balanceOf', deployer)}`);
+	// console.log(`DAO Has: ${await read('RadiantOFT', 'balanceOf', dao)}`);
 
 	if (network.tags.testing) {
 		await execute('RadiantOFT', {from: dao}, 'transfer', deployer, rdntRequired);
 	}
 };
-func.tags = ['rdnt44'];
 export default func;

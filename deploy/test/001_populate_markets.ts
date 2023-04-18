@@ -41,7 +41,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				await execute(name, txnOpts, 'approve', lendingPool.address, ethers.constants.MaxUint256);
 				await (await lendingPool.deposit(token.address, amt, deployer, 0)).wait();
 				await new Promise((res, rej) => {
-					setTimeout(res, 5 * 1000);
+					setTimeout(res, 1 * 1000);
 				});
 			}
 		}

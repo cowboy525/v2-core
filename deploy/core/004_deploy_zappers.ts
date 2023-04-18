@@ -169,5 +169,3 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-// func.dependencies = ['rdnt', 'weth', 'lending'];
-func.tags = ['upgrade_zap'];

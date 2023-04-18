@@ -19,8 +19,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 
 	let deployerBalance = await read('RadiantOFT', 'balanceOf', deployer);
-	console.log(`=== Deployer will need RDNT: `, ethers.utils.formatEther(rdntRequired));
-	console.log(`--- has: `, ethers.utils.formatEther(deployerBalance));
+	// console.log(`=== Deployer will need RDNT: `, ethers.utils.formatEther(rdntRequired));
+	// console.log(`--- has: `, ethers.utils.formatEther(deployerBalance));
 	if (rdntRequired.gt(deployerBalance)) {
 		console.log(`======= STOP NOW =======`);
 		throw new Error('deployer short');
@@ -76,13 +76,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			'contracts/lending/libraries/logic/ReserveLogic.sol:ReserveLogic': reserveLogic.address,
 		};
 
-		// const LendingPoolImpl = await ethers.getContractFactory('LendingPool', {
-		// 	libraries,
-		// });
-		// const lendingPoolImpl = await LendingPoolImpl.deploy();
-		// await lendingPoolImpl.deployed();
-		// await (await lendingPoolImpl.initialize(lendingPoolAddressesProvider.address)).wait();
-
 		let lendingPool = await deploy('LendingPool', {
 			...txnOpts,
 			libraries: {
@@ -98,11 +91,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		await wait(5);
 
 		// // LendingPool (InitializableImmutableAdminUpgradeabilityProxy)
-		// const lendingPoolProxy: any = LendingPoolImpl.attach(await lendingPoolAddressesProvider.getLendingPool());
-
-		// const LendingPoolConfiguratorImpl = await ethers.getContractFactory('LendingPoolConfigurator');
-		// const lendingPoolConfiguratorImpl = await LendingPoolConfiguratorImpl.deploy();
-		// await lendingPoolConfiguratorImpl.deployed();
 		let lendingPoolConfigurator = await deploy('LendingPoolConfigurator', {
 			...txnOpts,
 			libraries: {
@@ -123,5 +111,3 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 };
 export default func;
-// func.dependencies = ['rdnt'];
-func.tags = ['lending'];

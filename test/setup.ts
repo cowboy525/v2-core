@@ -6,7 +6,8 @@ const hre = require('hardhat');
 const {deployments, getNamedAccounts} = hre;
 
 export const setupTest = deployments.createFixture(async ({deployments, getNamedAccounts, ethers}, options) => {
-	const [deployer, dao, treasury, team, eco, user1, user2, user3, user4] = await ethers.getSigners();
+	const [deployer, dao, treasury, admin, vestManager, starfleet, user1, user2, user3, user4] =
+		await ethers.getSigners();
 
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
 	await deployments.fixture(); // ensure you start from a fresh deployments

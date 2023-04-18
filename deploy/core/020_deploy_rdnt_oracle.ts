@@ -62,8 +62,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				},
 			},
 		});
-		await wait(config.TWAP_PERIOD);
-		await execute('UniV2TwapOracle', {from: deployer, log: true}, 'update');
 	}
 
 	if (network.tags.oracle_cl) {

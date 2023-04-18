@@ -67,7 +67,8 @@ const config: HardhatUserConfig = {
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			tags: ['mocks', 'testing', 'oracle_cl', 'post_assets'],
+			// tags: ['mocks', 'testing', 'oracle_cl', 'post_assets'],
+			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
