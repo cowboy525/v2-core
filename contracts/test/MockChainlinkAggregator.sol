@@ -20,4 +20,15 @@ contract MockChainlinkAggregator {
 	function setPrice(int256 _price) external {
 		price = _price;
 	}
+
+	function latestRoundData()
+		public
+		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+	{
+		roundId = 18446744073709552278;
+		answer = 33364970;
+		startedAt = 1681179848;
+		updatedAt = 1681179848;
+		answeredInRound = 18446744073709552278;
+	}
 }

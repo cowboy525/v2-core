@@ -1,22 +1,21 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	const {deployments, getNamedAccounts, network, ethers} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, treasury, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	let lzEndpoint = config.LZ_ENDPOINT;
 
 	if (network.tags.mocks) {
 		await deploy('LZEndpointSrcMock', {
+			...txnOpts,
 			contract: 'LZEndpointMock',
-			from: deployer,
-			log: true,
-			waitConfirmations: 1,
-			autoMine: true,
 			skipIfAlreadyDeployed: false,
 			args: [1],
 		});
@@ -25,14 +24,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	}
 
 	let rdnt = await deploy('RadiantOFT', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		skipIfAlreadyDeployed: true,
 		args: [config.TOKEN_NAME, config.SYMBOL, lzEndpoint, dao, treasury, config.MINT_AMT],
 	});
 
 	if (rdnt.newlyDeployed) {
-		await execute('RadiantOFT', {from: deployer, log: true}, 'setFee', config.FEE_BRIDGING);
+		await execute('RadiantOFT', txnOpts, 'setFee', config.FEE_BRIDGING);
 	}
 
 	let rdntRequired = config.LP_INIT_RDNT.add(config.SUPPLY_CIC_RESERVE).add(config.SUPPLY_DQ_RESERVE);

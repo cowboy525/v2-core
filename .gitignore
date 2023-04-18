@@ -48,6 +48,7 @@ yalc.lock
 contractsInfo.json
 deployments/hardhat
 deployments/localhost
+deployments/beta
 
 /.dapp
 .env

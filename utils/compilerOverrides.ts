@@ -37,5 +37,18 @@ export const generateCompilerOverrides = () => {
 		};
 	}
 
+	overrides['contracts/lending/lendingpool/LendingPool.sol'] = {
+		version: '0.8.12',
+		settings: {
+			optimizer: {
+				enabled: true,
+				runs: 1000,
+				details: {
+					yul: true,
+				},
+			},
+		},
+	};
+
 	return overrides;
 };

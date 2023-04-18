@@ -2,6 +2,7 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config';
 import {wait} from '../../scripts/getDepenencies';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 const {ethers} = require('hardhat');
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -9,6 +10,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deploy, read, execute} = deployments;
 	const {deployer, treasury} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	let rdntRequired = config.LP_INIT_RDNT.add(config.SUPPLY_CIC_RESERVE).add(config.SUPPLY_DQ_RESERVE);
 
@@ -24,14 +26,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		throw new Error('deployer short');
 	}
 
-	const lendingPoolAddressesProviderRegistryDep = await deploy('LendingPoolAddressesProviderRegistry', {
-		from: deployer,
-		log: true,
-	});
+	const lendingPoolAddressesProviderRegistryDep = await deploy('LendingPoolAddressesProviderRegistry', txnOpts);
 
 	const lendingPoolAddressesProviderDep = await deploy('LendingPoolAddressesProvider', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		args: ['Radiant'],
 	});
 
@@ -60,21 +58,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		await (await lendingPoolAddressesProvider.setLiquidationFeeTo(treasury)).wait();
 
 		// Deploy libraries used by lending pool implementation, ReserveLogic
-		const reserveLogic = await deploy('ReserveLogic', {
-			from: deployer,
-			log: true,
-		});
+		const reserveLogic = await deploy('ReserveLogic', txnOpts);
 
 		// Deploy libraries used by lending pool implementation, GenericLogic
-		const genericLogic = await deploy('GenericLogic', {
-			from: deployer,
-			log: true,
-		});
+		const genericLogic = await deploy('GenericLogic', txnOpts);
 
 		// Deploy libraries used by lending pool implementation, ValidationLogic
 		const validationLogic = await deploy('ValidationLogic', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			libraries: {
 				GenericLogic: genericLogic.address,
 			},
@@ -93,17 +84,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		// await (await lendingPoolImpl.initialize(lendingPoolAddressesProvider.address)).wait();
 
 		let lendingPool = await deploy('LendingPool', {
-			from: deployer,
-			log: true,
-			waitConfirmations: network.tags.testing ? 0 : 5,
-			autoMine: true,
+			...txnOpts,
 			libraries: {
 				ValidationLogic: validationLogic.address,
 				ReserveLogic: reserveLogic.address,
 			},
 		});
 
-		await execute('LendingPool', {from: deployer, log: true}, 'initialize', lendingPoolAddressesProvider.address);
+		await execute('LendingPool', txnOpts, 'initialize', lendingPoolAddressesProvider.address);
 
 		await (await lendingPoolAddressesProvider.setLendingPoolImpl(lendingPool.address)).wait();
 
@@ -116,10 +104,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		// const lendingPoolConfiguratorImpl = await LendingPoolConfiguratorImpl.deploy();
 		// await lendingPoolConfiguratorImpl.deployed();
 		let lendingPoolConfigurator = await deploy('LendingPoolConfigurator', {
-			from: deployer,
-			log: true,
-			waitConfirmations: network.tags.testing ? 0 : 5,
-			autoMine: true,
+			...txnOpts,
 			libraries: {
 				ValidationLogic: validationLogic.address,
 				ReserveLogic: reserveLogic.address,

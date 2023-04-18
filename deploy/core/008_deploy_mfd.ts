@@ -1,12 +1,14 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute} = deployments;
 	const {deployer, treasury, dao} = await getNamedAccounts();
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	let radiantToken = await deployments.get('RadiantOFT');
 	let priceProvider = await deployments.get(`PriceProvider`);
@@ -14,14 +16,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	let aaveOracle = await deployments.get('AaveOracle');
 
 	const lockerList = await deploy('LockerList', {
+		...txnOpts,
 		contract: 'LockerList',
-		from: deployer,
-		log: true,
 	});
 
 	const mfd = await deploy('MFD', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		contract: 'MultiFeeDistribution',
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
@@ -46,8 +46,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	const middleFee = await deploy('MiddleFeeDistribution', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
 			execute: {
@@ -60,22 +59,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (mfd.newlyDeployed) {
-		await execute('LockerList', {from: deployer, log: true}, 'transferOwnership', mfd.address);
-		await execute(
-			'MiddleFeeDistribution',
-			{from: deployer, log: true},
-			'setOperationExpenses',
-			treasury,
-			config.OPEX_RATIO
-		);
-		await execute('LockZap', {from: deployer, log: true}, 'setMfd', mfd.address);
-		await execute(
-			'MFD',
-			{from: deployer, log: true},
-			'setLockTypeInfo',
-			config.LOCK_INFO.LOCK_PERIOD,
-			config.LOCK_INFO.MULTIPLIER
-		);
+		await execute('LockerList', txnOpts, 'transferOwnership', mfd.address);
+		await execute('MiddleFeeDistribution', txnOpts, 'setOperationExpenses', treasury, config.OPEX_RATIO);
+		await execute('LockZap', txnOpts, 'setMfd', mfd.address);
+		await execute('MFD', txnOpts, 'setLockTypeInfo', config.LOCK_INFO.LOCK_PERIOD, config.LOCK_INFO.MULTIPLIER);
 	}
 };
 export default func;

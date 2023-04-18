@@ -357,7 +357,7 @@ runs.forEach(function (run) {
 						value: ethers.utils.parseEther('1'),
 					});
 
-					let sellAmt = '500000000';
+					let sellAmt = '800000000';
 					if (deployConfig.LP_PROVIDER == LP_PROVIDER.BALANCER) {
 						sellAmt = ethers.utils.formatEther(deployConfig.LP_INIT_RDNT.div(5));
 					}

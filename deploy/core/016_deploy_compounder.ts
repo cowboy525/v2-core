@@ -2,12 +2,14 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const {weth} = await getWeth(hre);
 	const wethAddr = weth.address;
@@ -60,8 +62,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	};
 
 	const compounder = await deploy('Compounder', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
 			execute: {
@@ -82,17 +83,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (compounder.newlyDeployed) {
-		await execute('MFD', {from: deployer, log: true}, 'addRewardConverter', compounder.address);
+		await execute('MFD', txnOpts, 'addRewardConverter', compounder.address);
 
 		let {tickers} = await parseReserveTokens();
 		let aTokens = tickers.map((ticker: any) => ticker.deposit);
 		let underlying = tickers.map((ticker: any) => ticker.addr);
 
-		await execute('Compounder', {from: deployer}, 'addRewardBaseTokens', aTokens);
+		await execute('Compounder', txnOpts, 'addRewardBaseTokens', aTokens);
 
 		for (let i = 0; i < underlying.length; i++) {
 			const u = underlying[i];
-			await execute('Compounder', {from: deployer}, 'setRoutes', u, [u, wethAddr]);
+			await execute('Compounder', txnOpts, 'setRoutes', u, [u, wethAddr]);
 		}
 	}
 };

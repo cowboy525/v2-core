@@ -2,12 +2,14 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const radiantToken = await deployments.get('RadiantOFT');
 	const priceProvider = await deployments.get(`PriceProvider`);
@@ -19,8 +21,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const baseAsset = (await getWeth(hre)).weth;
 
 	let bountyManager = await deploy('BountyManager', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
 			execute: {
@@ -45,23 +46,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (bountyManager.newlyDeployed) {
-		await execute('RadiantOFT', {from: deployer}, 'transfer', bountyManager.address, config.SUPPLY_DQ_RESERVE);
+		await execute('RadiantOFT', txnOpts, 'transfer', bountyManager.address, config.SUPPLY_DQ_RESERVE);
 
-		await execute('BountyManager', {from: deployer}, 'setSlippageLimit', config.slippageLimit);
-		await execute('BountyManager', {from: deployer}, 'setMinStakeAmount', config.minStakeAmount);
-		await execute('BountyManager', {from: deployer}, 'setBounties');
+		await execute('BountyManager', txnOpts, 'setSlippageLimit', config.slippageLimit);
+		await execute('BountyManager', txnOpts, 'setMinStakeAmount', config.minStakeAmount);
+		await execute('BountyManager', txnOpts, 'setBounties');
 
-		await execute('MFD', {from: deployer}, 'setBountyManager', bountyManager.address);
-		await execute('ChefIncentivesController', {from: deployer}, 'setBountyManager', bountyManager.address);
-		await execute('Compounder', {from: deployer}, 'setBountyManager', bountyManager.address);
+		await execute('MFD', txnOpts, 'setBountyManager', bountyManager.address);
+		await execute('ChefIncentivesController', txnOpts, 'setBountyManager', bountyManager.address);
+		await execute('Compounder', txnOpts, 'setBountyManager', bountyManager.address);
 
-		await execute(
-			'ChefIncentivesController',
-			{from: deployer},
-			'setEligibilityExempt',
-			bountyManager.address,
-			true
-		);
+		await execute('ChefIncentivesController', txnOpts, 'setEligibilityExempt', bountyManager.address, true);
 	}
 };
 export default func;

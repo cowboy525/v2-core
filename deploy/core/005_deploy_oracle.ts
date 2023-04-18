@@ -1,12 +1,14 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts, network} = hre;
 	const {deploy, execute, read} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
 
 	const lendingPoolAddressesProvider = await deployments.get('LendingPoolAddressesProvider');
 
@@ -33,8 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const borrowRates = Array.from(config.TOKENS_CONFIG.values()).map((value: any) => value[1].borrowRate);
 
 	let aaveOracle = await deploy('AaveOracle', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		args: [
 			assetAddresses,
 			chainlinkAggregators,
@@ -45,26 +46,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (aaveOracle.newlyDeployed) {
-		await execute('LendingPoolAddressesProvider', {from: deployer}, 'setPriceOracle', aaveOracle.address);
+		await execute('LendingPoolAddressesProvider', txnOpts, 'setPriceOracle', aaveOracle.address);
 	}
 
 	let lendingRateOracle = await deploy('LendingRateOracle', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		args: [],
 	});
 
 	if (lendingRateOracle.newlyDeployed) {
-		await execute(
-			'LendingPoolAddressesProvider',
-			{from: deployer, log: true},
-			'setLendingRateOracle',
-			lendingRateOracle.address
-		);
+		await execute('LendingPoolAddressesProvider', txnOpts, 'setLendingRateOracle', lendingRateOracle.address);
 
 		await execute(
 			'LendingRateOracle',
-			{from: deployer, log: true},
+			txnOpts,
 			'transferOwnership',
 			(
 				await deployments.get('StableAndVariableTokensHelper')
@@ -73,7 +68,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		await execute(
 			'StableAndVariableTokensHelper',
-			{from: deployer, log: true},
+			txnOpts,
 			'setOracleBorrowRates',
 			assetAddresses,
 			borrowRates,
@@ -82,7 +77,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		await execute(
 			'StableAndVariableTokensHelper',
-			{from: deployer, log: true},
+			txnOpts,
 			'setOracleOwnership',
 			lendingRateOracle.address,
 			deployer
@@ -90,8 +85,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 
 	await deploy('AaveProtocolDataProvider', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		args: [lendingPoolAddressesProvider.address],
 	});
 };

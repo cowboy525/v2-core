@@ -3,6 +3,7 @@ import {DeployFunction, DeployResult} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {LP_PROVIDER} from '../../scripts/deploy/types';
 import {getWeth, wait} from '../../scripts/getDepenencies';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 const {ethers} = require('hardhat');
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -10,21 +11,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deploy, execute, read} = deployments;
 	const {deployer, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
+	const txnOpts = await getTxnOpts(hre);
+
 	const {baseAssetWrapped} = getConfigForChain(await hre.getChainId());
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 	let signer = await ethers.getSigner(deployer);
 
 	const {weth} = await getWeth(hre);
 	const wethAddr = weth.address;
-	console.log(`WETH is ${wethAddr}`);
 
 	const radiantToken = await deployments.get('RadiantOFT');
 
 	let poolHelper;
 	let useUniswapLpProvider = config.LP_PROVIDER === LP_PROVIDER.UNISWAP;
-	if (network.tags.mocks && network.tags.testing) {
-		useUniswapLpProvider = true;
-	}
 
 	if (useUniswapLpProvider) {
 		let router;
@@ -35,8 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		}
 
 		const liquidityZap = await deploy('LiquidityZap', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			proxy: {
 				proxyContract: 'OpenZeppelinTransparentProxy',
 				execute: {
@@ -52,8 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		}
 
 		poolHelper = await deploy('PoolHelper', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			skipIfAlreadyDeployed: true,
 			contract: phContract,
 			proxy: {
@@ -66,18 +63,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		});
 
 		if (poolHelper.newlyDeployed) {
-			console.log(`WETH bal dep: ${deployer} | ${await weth.balanceOf(deployer)}`);
-			console.log(`WETH transfer: ${poolHelper.address} | ${config.LP_INIT_ETH}`);
+			// console.log(`WETH bal dep: ${deployer} | ${await weth.balanceOf(deployer)}`);
+			// console.log(`WETH transfer: ${poolHelper.address} | ${config.LP_INIT_ETH}`);
 			// await weth.connect(signer).deposit(config.LP_INIT_ETH);
 			if (network.tags.mocks) {
-				await execute(baseAssetWrapped, {from: deployer, log: true}, 'mint', config.LP_INIT_ETH);
-				await execute(
-					baseAssetWrapped,
-					{from: deployer, log: true, waitConfirmations: 3, autoMine: true},
-					'transfer',
-					poolHelper.address,
-					config.LP_INIT_ETH
-				);
+				await execute(baseAssetWrapped, txnOpts, 'mint', config.LP_INIT_ETH);
+				await execute(baseAssetWrapped, txnOpts, 'transfer', poolHelper.address, config.LP_INIT_ETH);
 			} else {
 				// TODO: if not enough WETH/WBNB, deposit
 				await weth.connect(signer).deposit({
@@ -90,31 +81,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				await wait(10);
 				console.log(`wait done`);
 			}
-			console.log(`WETH bal dep post: ${deployer} | ${await weth.balanceOf(deployer)}`);
+			// console.log(`WETH bal dep post: ${deployer} | ${await weth.balanceOf(deployer)}`);
 
-			await execute(
-				'RadiantOFT',
-				{
-					from: deployer,
-					log: true,
-					waitConfirmations: 3,
-					autoMine: true,
-				},
-				'transfer',
-				poolHelper.address,
-				config.LP_INIT_RDNT
-			);
+			await execute('RadiantOFT', txnOpts, 'transfer', poolHelper.address, config.LP_INIT_RDNT);
 
 			// console.log(await weth.balanceOf(poolHelper.address));
 			// console.log(await read('RadiantOFT', 'balanceOf', poolHelper.address));
 
-			await execute('PoolHelper', {from: deployer, log: true}, 'initializePool');
+			await execute('PoolHelper', txnOpts, 'initializePool');
 		}
 	} else {
 		// Balancer
 		poolHelper = await deploy('PoolHelper', {
-			from: deployer,
-			log: true,
+			...txnOpts,
 			contract: 'BalancerPoolHelper',
 			proxy: {
 				proxyContract: 'OpenZeppelinTransparentProxy',
@@ -138,7 +117,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			console.log(`WETH transfer: ${poolHelper.address} | ${config.LP_INIT_ETH}`);
 			// await weth.connect(signer).deposit(config.LP_INIT_ETH);
 			if (network.tags.mocks) {
-				await execute(baseAssetWrapped, {from: deployer, log: true}, 'mint', config.LP_INIT_ETH);
+				await execute(baseAssetWrapped, txnOpts, 'mint', config.LP_INIT_ETH);
 			} else {
 				await weth.connect(signer).deposit({
 					value: config.LP_INIT_ETH,
@@ -148,23 +127,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			console.log(`WETH bal dep post: ${deployer} | ${await weth.balanceOf(deployer)}`);
 
 			await weth.connect(signer).transfer(poolHelper.address, config.LP_INIT_ETH);
-			await execute(
-				'RadiantOFT',
-				{
-					from: deployer,
-					log: true,
-					waitConfirmations: 3,
-					autoMine: true,
-				},
-				'transfer',
-				poolHelper.address,
-				config.LP_INIT_RDNT
-			);
+			await execute('RadiantOFT', txnOpts, 'transfer', poolHelper.address, config.LP_INIT_RDNT);
 
 			console.log(await weth.balanceOf(poolHelper.address));
 			console.log(await read('RadiantOFT', 'balanceOf', poolHelper.address));
 
-			await execute('PoolHelper', {from: deployer, log: true}, 'initializePool', 'RDNT-WETH', 'RDNT-WETH');
+			await execute('PoolHelper', txnOpts, 'initializePool', 'RDNT-WETH', 'RDNT-WETH');
 		}
 	}
 
@@ -176,8 +144,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	}
 
 	let lockZap = await deploy('LockZap', {
-		from: deployer,
-		log: true,
+		...txnOpts,
 		contract: lockzapContract,
 		proxy: {
 			proxyContract: 'OpenZeppelinTransparentProxy',
@@ -198,7 +165,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	});
 
 	if (lockZap.newlyDeployed) {
-		await execute('PoolHelper', {from: deployer, log: true}, 'setLockZap', lockZap.address);
+		await execute('PoolHelper', txnOpts, 'setLockZap', lockZap.address);
 	}
 };
 export default func;

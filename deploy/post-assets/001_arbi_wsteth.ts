@@ -1,34 +1,48 @@
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {deployAsset} from '../../scripts/deploy/helpers/deploy-asset';
+import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
-	const {deploy} = deployments;
+	const {deploy, get} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const chainId = await hre.getChainId();
+	const txnOpts = await getTxnOpts(hre);
 
-	if (network.tags.post_assets && (chainId == '31337' || chainId == '42161')) {
-		const wstethOracle = await deploy('WSTETHOracle', {
-			from: deployer,
-			log: true,
-			proxy: {
-				proxyContract: 'OpenZeppelinTransparentProxy',
-				execute: {
-					init: {
-						methodName: 'initialize',
-						args: [
-							'0x07c5b924399cc23c24a95c8743de4006a32b7f2a',
-							'0xB1552C5e96B312d0Bf8b554186F846C40614a540',
-						],
+	if (network.tags.post_assets) {
+		const assetName = 'WSTETH';
+		let assetAddress;
+		let oracleAddress;
+		if (chainId == '42161' && !network.tags.mocks) {
+			assetAddress = '0x5979D7b546E38E414F7E9822514be443A4800529';
+			const wstethOracle = await deploy('WSTETHOracle', {
+				from: deployer,
+				log: true,
+				proxy: {
+					proxyContract: 'OpenZeppelinTransparentProxy',
+					execute: {
+						init: {
+							methodName: 'initialize',
+							args: [
+								'0x07c5b924399cc23c24a95c8743de4006a32b7f2a',
+								'0xB1552C5e96B312d0Bf8b554186F846C40614a540',
+							],
+						},
 					},
 				},
-			},
-		});
+			});
+			oracleAddress = wstethOracle.address;
+		} else if (chainId == '31337' || (chainId == '42161' && network.tags.mocks)) {
+			assetAddress = (await get(assetName)).address;
+			oracleAddress = (await get(`${assetName}Aggregator`)).address;
+		} else {
+			return;
+		}
 
 		let asset = {
-			assetAddress: '0x5979D7b546E38E414F7E9822514be443A4800529',
-			chainlinkAggregator: wstethOracle.address,
+			assetAddress,
+			chainlinkAggregator: oracleAddress,
 			borrowRate: '30000000000000000000000000',
 			reservesParams: {
 				aTokenImpl: 'AToken',
@@ -41,7 +55,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				stableBorrowRateEnabled: false,
 				strategy: {
 					baseVariableBorrowRate: '0',
-					name: 'rateStrategyWSTETH',
+					name: `rateStrategy${assetName}`,
 					optimalUtilizationRate: '700000000000000000000000000',
 					variableRateSlope1: '130000000000000000000000000',
 					variableRateSlope2: '950000000000000000000000000',
@@ -50,16 +64,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				},
 			},
 			initInputParams: {
-				aTokenName: 'Radiant interest bearing WSTETH',
-				aTokenSymbol: 'rWSTETH',
+				aTokenName: `Radiant interest bearing ${assetName}`,
+				aTokenSymbol: `r${assetName}`,
 				params: '0x10',
-				stableDebtTokenName: 'Radiant stable debt bearing WSTETH',
-				stableDebtTokenSymbol: 'stableDebtWSTETH',
-				underlyingAsset: '0x5979D7b546E38E414F7E9822514be443A4800529',
+				stableDebtTokenName: `Radiant stable debt bearing ${assetName}`,
+				stableDebtTokenSymbol: `stableDebt${assetName}`,
+				underlyingAsset: assetAddress,
 				underlyingAssetDecimals: '18',
-				underlyingAssetName: 'WSTETH',
-				variableDebtTokenName: 'Radiant variable debt bearing WSTETH',
-				variableDebtTokenSymbol: 'variableDebtWSTETH',
+				underlyingAssetName: assetName,
+				variableDebtTokenName: `Radiant variable debt bearing ${assetName}`,
+				variableDebtTokenSymbol: `variableDebt${assetName}`,
 				allocPoint: 2,
 			},
 		};
