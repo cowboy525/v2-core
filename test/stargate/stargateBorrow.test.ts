@@ -61,15 +61,14 @@ describe('Stargate Borrow', () => {
 
 		const StargateBorrow = await ethers.getContractFactory('StargateBorrow');
 		stargateBorrow = <StargateBorrow>(
-			await upgrades.deployProxy(
-				StargateBorrow,
-				[mockRouter.address,
+			await upgrades.deployProxy(StargateBorrow, [
+				mockRouter.address,
 				mockRouterETH.address,
 				lendingPool.address,
 				wrappedEth.address,
 				fixture.treasury.address,
-				deployConfig.FEE_XCHAIN_BORROW]
-			)
+				deployConfig.FEE_XCHAIN_BORROW,
+			])
 		);
 		//stargateBorrow = <StargateBorrow> await ethers.getContractAt("StargateBorrow", deployData.stargateBorrow);
 	});

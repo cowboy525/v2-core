@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployer} = await getNamedAccounts();
 	const chainId = await hre.getChainId();
 
-	if (chainId == '31337' || chainId == '42161') {
+	if (network.tags.post_assets && (chainId == '31337' || chainId == '42161')) {
 		const wstethOracle = await deploy('WSTETHOracle', {
 			from: deployer,
 			log: true,

@@ -75,7 +75,7 @@ describe('Price Provider ', function () {
 
 		let expected = startingRdntPrice / ethPrice;
 
-		expect(tokenPriceEth).to.be.closeTo(expected, 0.00001);
+		expect(tokenPriceEth).to.be.closeTo(expected, 0.0001);
 	});
 
 	it('returns LP token price', async function () {

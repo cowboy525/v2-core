@@ -50,7 +50,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			'setChefIncentivesController',
 			cic.address
 		);
-		await execute(`ChefIncentivesController`, {from: deployer, log: true}, "setEndingTimeUpdateCadence", 86400);
+		await execute(`ChefIncentivesController`, {from: deployer, log: true}, 'setEndingTimeUpdateCadence', 86400);
 	}
 };
 export default func;

@@ -439,7 +439,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (isCurrentlyEligible) {
 				_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
 			} else {
-				checkAndProcessEligibility(_user, true, false);
+				_processEligibility(_user, isCurrentlyEligible, true);
 			}
 		} else {
 			_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
@@ -519,15 +519,22 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	function hasEligibleDeposits(address _user) internal view returns (bool hasDeposits) {
 		uint256 length = poolLength();
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			if (userInfo[registeredTokens[i]][_user].amount != 0) {
 				hasDeposits = true;
 				break;
 			}
+			unchecked {
+				++i;
+			}
 		}
 	}
 
-  function _processEligibility(address _user, bool _isEligible, bool _execute) internal returns (bool issueBaseBounty) {
+	function _processEligibility(
+		address _user,
+		bool _isEligible,
+		bool _execute
+	) internal returns (bool issueBaseBounty) {
 		bool hasEligDeposits = hasEligibleDeposits(_user);
 		uint256 lastDqTime = eligibleDataProvider.getDqTime(_user);
 		bool alreadyDqd = lastDqTime != 0;
@@ -563,7 +570,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function stopEmissionsFor(address _user, bool _isEligible) internal {
 		if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-    if (_isEligible) revert UserStillEligible();
+		if (_isEligible) revert UserStillEligible();
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ++i) {
 			address token = registeredTokens[i];
@@ -600,31 +607,26 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/********************** RDNT Reserve Management ***********************/
 
 	function endRewardTime() public returns (uint256) {
-		if (endingTime.lastUpdatedTime + endingTime.updateCadence >= block.timestamp) {
-			return endingTime.estimatedTime;
-		}
-
-		uint256 unclaimedRewards = depositedRewards.sub(accountedRewards);
+		uint256 unclaimedRewards = depositedRewards - accountedRewards;
 		uint256 extra = 0;
 		uint256 length = poolLength();
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			PoolInfo storage pool = poolInfo[registeredTokens[i]];
-			if (pool.lastRewardTime <= lastAllPoolUpdate) {
-				continue;
-			} else {
-				extra = extra.add(
-					pool.lastRewardTime.sub(lastAllPoolUpdate).mul(pool.allocPoint).mul(rewardsPerSecond).div(
-						totalAllocPoint
-					)
-				);
+			if (pool.lastRewardTime > lastAllPoolUpdate) {
+				extra +=
+					((pool.lastRewardTime - lastAllPoolUpdate) * pool.allocPoint * rewardsPerSecond) /
+					totalAllocPoint;
+			}
+			unchecked {
+				i++;
 			}
 		}
+		endingTime.lastUpdatedTime = block.timestamp;
 		if (rewardsPerSecond == 0) {
 			endingTime.estimatedTime = type(uint256).max;
 		} else {
-			endingTime.estimatedTime = (unclaimedRewards + extra).div(rewardsPerSecond) + (lastAllPoolUpdate);
+			endingTime.estimatedTime = (unclaimedRewards + extra) / rewardsPerSecond + lastAllPoolUpdate;
 		}
-		endingTime.lastUpdatedTime = block.timestamp;
 		return endingTime.estimatedTime;
 	}
 

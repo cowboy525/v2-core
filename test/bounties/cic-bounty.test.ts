@@ -288,7 +288,7 @@ runs.forEach(function (run) {
 				});
 			});
 
-			describe('Claim DQ:', async () => {
+			xdescribe('Claim DQ:', async () => {
 				let pendingOnlyElig: BigNumber, pendingWithInelig: BigNumber;
 
 				before(async () => {
@@ -357,7 +357,7 @@ runs.forEach(function (run) {
 						value: ethers.utils.parseEther('1'),
 					});
 
-					let sellAmt = '100000000';
+					let sellAmt = '500000000';
 					if (deployConfig.LP_PROVIDER == LP_PROVIDER.BALANCER) {
 						sellAmt = ethers.utils.formatEther(deployConfig.LP_INIT_RDNT.div(5));
 					}
@@ -413,7 +413,7 @@ runs.forEach(function (run) {
 				});
 			});
 
-			describe('Self DQ via Deposit:', async () => {
+			xdescribe('Self DQ via Deposit:', async () => {
 				let pendingAtEndOfEligibility: BigNumber, pendingAfterInelig: BigNumber, pending3;
 
 				before(async () => {

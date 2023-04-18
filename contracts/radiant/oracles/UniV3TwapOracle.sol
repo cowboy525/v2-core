@@ -144,11 +144,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	/**
 	 * @dev AggregatorV3Interface / Chainlink compatibility.
 	 */
-	function latestRoundData()
-		external
-		view
-		returns (uint80, int256, uint256, uint256, uint80)
-	{
+	function latestRoundData() external view returns (uint80, int256, uint256, uint256, uint80) {
 		return (0, int256(getPrecisePrice()), 0, block.timestamp, 0);
 	}
 }
