@@ -1,14 +1,12 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {ethers} from 'hardhat';
 import {IChainlinkAggregator, MockToken, TestnetLockZap, UniV2TwapOracle} from '../../typechain';
-import assert from 'assert';
 import {BigNumber} from 'ethers';
 import {expect} from 'chai';
 import {advanceTimeAndBlock, sellRdnt, toJsNum} from '../shared/helpers';
 import {DeployConfig, DeployData} from '../../scripts/deploy/types';
 import {RadiantOFT} from '../../typechain/contracts/oft';
-import {loadFixture} from '@nomicfoundation/hardhat-network-helpers';
-import {targetPrice} from '../../config/31337';
+import {targetPrice} from '../../config/BaseConfig';
 import {setupTest} from '../setup';
 
 const priceToJsNum = (oracleAnswer: BigNumber) => {

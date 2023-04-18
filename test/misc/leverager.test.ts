@@ -157,9 +157,6 @@ describe('Looping/Leverager', () => {
 
 		const required1 = await eligibilityProvider.requiredUsdValue(user2.address);
 		const locked1 = await eligibilityProvider.lockedUsdValue(user2.address);
-		console.log('required1: ', parseFloat(ethers.utils.formatUnits(required1, 8)));
-		console.log('locked1: ', parseFloat(ethers.utils.formatUnits(locked1, 8)));
-
 		let amt = ethers.utils.parseUnits('197967.89677', 6);
 		let leverage = 1.1;
 		let borrowRatio = Math.floor(loopingLeverageToLtv(leverage) * 10000);
@@ -174,8 +171,6 @@ describe('Looping/Leverager', () => {
 		// TODO: check these numbers
 		const required2 = await eligibilityProvider.requiredUsdValue(user2.address);
 		const locked2 = await eligibilityProvider.lockedUsdValue(user2.address);
-		console.log('required2: ', parseFloat(ethers.utils.formatUnits(required2, 8)));
-		console.log('locked2: ', parseFloat(ethers.utils.formatUnits(locked2, 8)));
 	});
 
 	it('loop ETH from Borrow', async () => {
@@ -191,7 +186,6 @@ describe('Looping/Leverager', () => {
 		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
 		const ethBalance = await ethers.provider.getBalance(user2.address);
-		console.log('user2 eth balance: ', ethBalance);
 
 		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
 			value: ethBalance,

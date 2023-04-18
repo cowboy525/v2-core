@@ -36,23 +36,6 @@ const config: HardhatUserConfig = {
 			default: 5,
 		},
 	},
-	solidity: {
-		compilers: [
-			{
-				version: '0.8.12',
-				settings: {
-					optimizer: {
-						enabled: true,
-						runs: parseInt(process.env.OPTIMIZER_RUNS || '1000'),
-						details: {
-							yul: true,
-						},
-					},
-				},
-			},
-		],
-		overrides: generateCompilerOverrides(),
-	},
 	networks: {
 		hardhat: {
 			initialBaseFeePerGas: 0,
@@ -67,7 +50,6 @@ const config: HardhatUserConfig = {
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			// tags: ['mocks', 'testing', 'oracle_cl', 'post_assets'],
 			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		arbitrum_goerli: {
@@ -119,6 +101,23 @@ const config: HardhatUserConfig = {
 			accounts: [process.env.PRIVATE_KEY_GOERLI || ''],
 		},
 	},
+	solidity: {
+		compilers: [
+			{
+				version: '0.8.12',
+				settings: {
+					optimizer: {
+						enabled: true,
+						runs: parseInt(process.env.OPTIMIZER_RUNS || '1000'),
+						details: {
+							yul: true,
+						},
+					},
+				},
+			},
+		],
+		overrides: generateCompilerOverrides(),
+	},
 	paths: {
 		sources: 'contracts',
 	},
@@ -135,7 +134,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		bail: true,
+		// bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {

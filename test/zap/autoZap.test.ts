@@ -57,8 +57,6 @@ describe('Looping/Leverager', () => {
 
 		const required1 = await eligibilityProvider.requiredUsdValue(user1.address);
 		const locked1 = await eligibilityProvider.lockedUsdValue(user1.address);
-		// console.log("required1: ", parseFloat(ethers.utils.formatUnits(required1, 8)));
-		// console.log("locked1: ", parseFloat(ethers.utils.formatUnits(locked1, 8)));
 
 		let leverage = 4;
 		let borrowRatio = Math.floor(loopingLeverageToLtv(leverage) * 10000);
@@ -73,9 +71,6 @@ describe('Looping/Leverager', () => {
 		// TODO: check these numbers
 		const required2 = await eligibilityProvider.requiredUsdValue(user1.address);
 		const locked2 = await eligibilityProvider.lockedUsdValue(user1.address);
-		// console.log("required2: ", parseFloat(ethers.utils.formatUnits(required2, 8)));
-		// console.log("locked2: ", parseFloat(ethers.utils.formatUnits(locked2, 8)));
-
 		expect(await eligibilityProvider.isEligibleForRewards(user1.address)).to.equal(true);
 	});
 });
