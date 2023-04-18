@@ -1,40 +1,17 @@
 import {ethers} from 'ethers';
-import {DeployConfig, LP_PROVIDER} from '../scripts/deploy/types';
-import {getInitLpAmts} from '../scripts/deploy/helpers/getInitLpAmts';
-import BaseConfig from './BaseConfig';
-import {MINUTE} from './constants';
 
-const LP_PLATFORM = LP_PROVIDER.UNISWAP;
+import {DeployConfig} from '../scripts/deploy/types';
+import BaseConfig from './BaseConfig';
 
 const chainConfig = {
 	NETWORK: 'bsc',
 	CHAIN_ID: 56,
 
-	MINT_AMT: ethers.utils.parseUnits('22000000', 18),
-
-	SUPPLY_CIC_RESERVE: ethers.utils.parseUnits('20000000', 18),
-	SUPPLY_DQ_RESERVE: ethers.utils.parseUnits('100000', 18),
-	LP_PROVIDER: LP_PLATFORM,
-
-	LP_INIT_ETH: ethers.utils.parseUnits('4.69', 18),
-	LP_INIT_RDNT: ethers.utils.parseUnits('5000', 18),
-	// LP_INIT_RDNT: ethers.utils.parseUnits('1500000', 18),
-
-	CIC_RPS: ethers.utils.parseUnits('.57071371', 18),
-	MIN_STAKE_AMT: ethers.utils.parseUnits('20', 18),
-	DQ_TARGET_BASE_BOUNTY_USD: ethers.utils.parseUnits('1.50', 18),
-	DQ_MAX_BASE_BOUNTY: ethers.utils.parseUnits('1000', 18),
-	DQ_BOOSTER: ethers.utils.parseUnits('0', 18),
-	TWAP_PERIOD: 10,
-	ZAP_SLIPPAGE_LIMIT: 8500,
-
-	STARFLEET_TREASURY: '0x99c57C94A5242237009B215F8a92dc7867a6ac7b',
 	WETH: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
 	LZ_ENDPOINT: '0x3c2269811836af69497E5F486A85D7316753cf62',
 	ROUTER_ADDR: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
 	STARGATE_ROUTER: '0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8',
 	STARGATE_ROUTER_ETH: '0x0000000000000000000000000000000000000000',
-	CHAINLINK_AGGREGATOR_PROXY: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
 	CHAINLINK_ETH_USD_AGGREGATOR_PROXY: '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE',
 
 	STARGATE_CONFIG: {
@@ -321,5 +298,5 @@ const chainConfig = {
 	],
 };
 
-const BscDeployConfig: DeployConfig = {...BaseConfig, ...chainConfig};
-export default BscDeployConfig;
+const HardhatDeployConfig: DeployConfig = {...BaseConfig, ...chainConfig};
+export default HardhatDeployConfig;

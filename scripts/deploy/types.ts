@@ -56,19 +56,14 @@ export interface DeployConfig {
 	P2P_RATIO: string;
 
 	RADIANT_V1?: string;
-	MIGRATE_EXCHANGE_RATIO: string;
 
-	STARFLEET_TREASURY: string;
 	WETH: string;
 	ROUTER_ADDR: string;
 	BAL_WEIGHTED_POOL_FACTORY?: string;
 	BAL_VAULT?: string;
-	BAL_WSTETH?: string;
-	BAL_WSTETH_POOL?: string;
 	STARGATE_ROUTER: string;
 	STARGATE_ROUTER_ETH?: string;
 	LZ_ENDPOINT: string;
-	CHAINLINK_AGGREGATOR_PROXY: string;
 	CHAINLINK_ETH_USD_AGGREGATOR_PROXY: string;
 
 	TOKENS_CONFIG: any[];
@@ -77,7 +72,6 @@ export interface DeployConfig {
 		POOL_IDS: number[];
 	};
 	LOCK_INFO: {LOCK_PERIOD: number[]; MULTIPLIER: number[]};
-	POSTDEPLOY_TOKEN_CONFIG: any[];
 }
 
 export interface DeployData {
@@ -149,7 +143,6 @@ export interface DeployConfigOverride {
 	NETWORK?: string;
 	TESTNET?: boolean;
 	DEPLOY_WETH?: boolean;
-	SUPPLY_MAX?: BigNumber;
 	SUPPLY_CIC_RESERVE?: BigNumber;
 	SUPPLY_MAX_MINT?: BigNumber;
 	SUPPLY_LP_MINT?: BigNumber;
@@ -183,13 +176,10 @@ export interface DeployConfigOverride {
 	ROUTER_ADDR?: string;
 	BAL_WEIGHTED_POOL_FACTORY?: string;
 	BAL_VAULT?: string;
-	BAL_WSTETH?: string;
-	BAL_WSTETH_POOL?: string;
 	DAO?: string;
 	TREASURY?: string;
 	TEAM_RECEIVER?: string;
 	LP_RECEIVER?: string;
-	ECOSYSTEM_RECEIVER?: string;
 	TIMELOCK_ADMIN?: string;
 	EMERGENCY_ADMIN?: string;
 	TIMELOCK_DELAY?: number;
@@ -199,7 +189,6 @@ export interface DeployConfigOverride {
 	SUSHI_ROUTER?: string;
 	WETH_ADDRESS?: string;
 	LZ_ENDPOINT?: string;
-	CHAINLINK_AGGREGATOR_PROXY?: string;
 	CHAINLINK_ETH_USD_AGGREGATOR_PROXY?: string;
 
 	TOKENS_CONFIG?: any[];

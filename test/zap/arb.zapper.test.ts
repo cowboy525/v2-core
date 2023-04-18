@@ -16,7 +16,7 @@ describe('Zapper', function () {
 	});
 
 	describe('Alternate token zap - Live Arbitrum', async () => {
-		it('Can zap USDC - Live Arbitrum', async () => {
+		xit('Can zap USDC - Live Arbitrum', async () => {
 			const realWethAddress = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
 			const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
 			const weightedPoolFactory = '0xf1665E19bc105BE4EDD3739F88315cC699cc5b65';
@@ -46,7 +46,7 @@ describe('Zapper', function () {
 			await poolHelper.swapToWeth(usdcAddress, zapAmount, 0);
 		});
 	});
-	it('Can zap USDT & DAI - Live Arbitrum', async () => {
+	xit('Can zap USDT & DAI - Live Arbitrum', async () => {
 		const realWethAddress = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
 		const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
 		const weightedPoolFactory = '0xf1665E19bc105BE4EDD3739F88315cC699cc5b65';

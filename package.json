@@ -37,9 +37,7 @@
     "format": "prettier --check \"**/*.{ts,js,sol}\"",
     "format:fix": "prettier --write \"**/*.{ts,js,sol}\"",
     "compile": "hardhat compile",
-    "void:deploy": "hardhat deploy --report-gas",
     "test": "npx hardhat test",
-    "test2": "cross-env HARDHAT_DEPLOY_FIXTURE=false HARDHAT_COMPILE=true mocha --bail --timeout 0 --recursive test",
     "node": "cross-env HH_LOG=true npx hardhat node --no-deploy",
     "gas": "cross-env REPORT_GAS=true hardhat test",
     "coverage": "cross-env HARDHAT_DEPLOY_FIXTURE=false hardhat coverage",
@@ -60,15 +58,8 @@
     "size": "npx hardhat size-contracts",
     "test-ci": "IS_CI=true hardhat test",
     "solhint": "npx solhint 'contracts/**/*.sol'",
-    "int": "npx hardhat run scripts/set-interval-mining.ts --network localhost",
-    "skip": "npx hardhat run scripts/skip.ts --network localhost",
-    "o1": "yarn deploy arbitrum --tags rdnt44",
-    "o2": "yarn deploy bsc --tags rdnt44",
-    "o3": "npx hardhat wireAll --e mainnet --s bsc --d arbitrum && npx hardhat wireAll --e mainnet --s arbitrum --d bsc",
-    "o4": "yarn deploy arbitrum_goerli --tags ownership",
-    "o5": "yarn deploy bsc_testnet --tags ownership",
-    "o6": "npx hardhat oftSend --qty 50000000000000000000 --target-network bsc --contract RadiantOFT --network arbitrum",
-    "o7": "npx hardhat oftSend --qty 45000000000000000000 --target-network arbitrum --contract RadiantOFT --network bsc"
+    "mine": "npx hardhat run scripts/set-interval-mining.ts --network localhost",
+    "skip": "npx hardhat run scripts/skip.ts --network localhost"
   },
   "dependencies": {
     "@gnosis.pm/safe-core-sdk": "^3.2.0",

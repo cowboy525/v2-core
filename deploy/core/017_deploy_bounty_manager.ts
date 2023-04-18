@@ -48,8 +48,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	if (bountyManager.newlyDeployed) {
 		await execute('RadiantOFT', txnOpts, 'transfer', bountyManager.address, config.SUPPLY_DQ_RESERVE);
 
-		await execute('BountyManager', txnOpts, 'setSlippageLimit', config.slippageLimit);
-		await execute('BountyManager', txnOpts, 'setMinStakeAmount', config.minStakeAmount);
+		await execute('BountyManager', txnOpts, 'setSlippageLimit', config.ZAP_SLIPPAGE_LIMIT);
+		await execute('BountyManager', txnOpts, 'setMinStakeAmount', config.MIN_STAKE_AMT);
 		await execute('BountyManager', txnOpts, 'setBounties');
 
 		await execute('MFD', txnOpts, 'setBountyManager', bountyManager.address);

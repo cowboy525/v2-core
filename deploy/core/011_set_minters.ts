@@ -6,7 +6,7 @@ import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts} = hre;
 	const {execute, read} = deployments;
-	const {deployer, admin, vestManager} = await getNamedAccounts();
+	const {deployer, admin, vestManager, starfleet} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
 	const txnOpts = await getTxnOpts(hre);
 
@@ -17,14 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	if (!mintersSet) {
 		await execute('MFD', txnOpts, 'setMinters', [cic.address, middleFeeDistribution.address, vestManager]);
 
-		await execute(
-			'MFD',
-			txnOpts,
-			'setAddresses',
-			cic.address,
-			middleFeeDistribution.address,
-			config.STARFLEET_TREASURY
-		);
+		await execute('MFD', txnOpts, 'setAddresses', cic.address, middleFeeDistribution.address, starfleet);
 	}
 };
 export default func;
