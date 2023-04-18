@@ -13,7 +13,7 @@ import {
 	UniV2TwapOracle,
 	WETH,
 } from '../../typechain';
-import {targetPrice} from '../../config/31337';
+import {targetPrice} from '../../config/BaseConfig';
 import {BigNumber} from 'ethers';
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {setupTest} from '../setup';

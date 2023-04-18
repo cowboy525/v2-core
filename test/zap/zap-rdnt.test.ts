@@ -40,8 +40,6 @@ describe('LockZap: 2-token zap', function () {
 		await vdWETH.connect(dao).approveDelegation(lockZap.address, ethers.constants.MaxUint256);
 		await advanceTimeAndBlock(deployConfig.TWAP_PERIOD);
 		await priceProvider.update();
-
-		console.log(await priceProvider.getTokenPrice());
 	});
 
 	it('2-token zap, with borrow', async function () {
@@ -49,10 +47,7 @@ describe('LockZap: 2-token zap', function () {
 		expect(lockInfo.lockData.length).to.be.equal(0);
 
 		const rdntZapAmt = ethers.utils.parseEther('100');
-		console.log(await priceProvider.getTokenPrice());
 		const wethAmt = await lockZap.quoteFromToken(rdntZapAmt);
-		console.log(wethAmt);
-		console.log(await rdntToken.balanceOf(dao.address));
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
