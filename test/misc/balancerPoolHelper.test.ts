@@ -143,9 +143,7 @@ describe('Balancer Pool Helper', function () {
 				)
 			);
 			await poolHelper.deployed();
-			await expect(poolHelper.initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith(
-				'IdenticalAddresses'
-			);
+			await expect(poolHelper.initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith('IdenticalAddresses');
 		});
 
 		it('sortTokens: ZERO_ADDRESS', async () => {
