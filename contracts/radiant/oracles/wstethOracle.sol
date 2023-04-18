@@ -10,9 +10,6 @@ contract WSTETHOracle is OwnableUpgradeable {
 	AggregatorV3Interface public stEthPerWstETHOracle;
 
 	function initialize(address _stETHUSDOracle, address _stEthPerWstETHOracle) public initializer {
-		//stETHUSDOracle = 0x07c5b924399cc23c24a95c8743de4006a32b7f2a;
-		//stEthPerWstETHOracle = 0xB1552C5e96B312d0Bf8b554186F846C40614a540;
-
 		stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
 		stEthPerWstETHOracle = AggregatorV3Interface(_stEthPerWstETHOracle); //18 decimals
 		__Ownable_init();

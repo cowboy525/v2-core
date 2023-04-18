@@ -288,51 +288,6 @@ runs.forEach(function (run) {
 				});
 			});
 
-			xdescribe('Claim DQ:', async () => {
-				let pendingOnlyElig: BigNumber, pendingWithInelig: BigNumber;
-
-				before(async () => {
-					await loadZappedUserFixture(run);
-					const lastEligibleTime = (await eligibilityProvider.lastEligibleTime(user1.address)).toNumber();
-					await advanceTimeAndBlock(lastEligibleTime - (await now()) - 1);
-					pendingOnlyElig = await chefIncentivesController.allPendingRewards(user1.address);
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-					pendingWithInelig = await chefIncentivesController.allPendingRewards(user1.address);
-				});
-
-				it('disqualifying action', async () => {
-					await chefIncentivesController.connect(user1).claimAll(user1.address);
-
-					const receivedRewards = parseFloat(
-						ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(user1.address)).total)
-					);
-
-					const expectedReceivedRewards = pendingWithInelig;
-
-					expect(receivedRewards).closeTo(parseFloat(ethers.utils.formatEther(expectedReceivedRewards)), 1);
-
-					const timestamp = await getLatestBlockTimestamp();
-					const dqTimePost = await eligibilityProvider.getDqTime(user1.address);
-					const isEligible = await eligibilityProvider.isEligibleForRewards(user1.address);
-
-					if (depositAmt === eligibleAmt) {
-						expect(dqTimePost).equals(timestamp);
-						expect(isEligible).equals(false);
-					}
-				});
-
-				it('doesnt earn emish', async () => {
-					const pendingPre = await chefIncentivesController.allPendingRewards(user1.address);
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-					const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
-
-					if (depositAmt === eligibleAmt) {
-						// was DQd, shouldnt earn
-						expect(pendingPost).equals(pendingPre);
-					}
-				});
-			});
-
 			describe('Market DQ:', async () => {
 				let pendingAtEndOfEligibility: BigNumber;
 
@@ -410,54 +365,6 @@ runs.forEach(function (run) {
 					const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
 					// was DQd, shouldnt earn
 					expect(pendingPre).equals(pendingPost);
-				});
-			});
-
-			xdescribe('Self DQ via Deposit:', async () => {
-				let pendingAtEndOfEligibility: BigNumber, pendingAfterInelig: BigNumber, pending3;
-
-				before(async () => {
-					await loadZappedUserFixture(run);
-
-					const lastEligibleTime = (await eligibilityProvider.lastEligibleTime(user1.address)).toNumber();
-
-					await advanceTimeAndBlock(lastEligibleTime - (await now()) - 1);
-					pendingAtEndOfEligibility = await chefIncentivesController.allPendingRewards(user1.address);
-
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-
-					pendingAfterInelig = await chefIncentivesController.allPendingRewards(user1.address);
-				});
-
-				it('disqualifying action', async () => {
-					if (depositAmt == eligibleAmt) {
-						const dqTimePre = await eligibilityProvider.getDqTime(user1.address);
-						expect(dqTimePre).equals(0);
-
-						await deposit('rUSDC', '69', user1, lendingPool, deployData);
-
-						const pendingAfterDeposit = parseFloat(
-							ethers.utils.formatEther(await chefIncentivesController.allPendingRewards(user1.address))
-						);
-						const expected = pendingAfterInelig;
-						expect(pendingAfterDeposit).closeTo(parseFloat(ethers.utils.formatEther(expected)), 1);
-
-						const timestamp = await getLatestBlockTimestamp();
-						const dqTimePost = await eligibilityProvider.getDqTime(user1.address);
-						const isEligible = await eligibilityProvider.isEligibleForRewards(user1.address);
-						expect(dqTimePost).equals(timestamp);
-						expect(isEligible).equals(false);
-					}
-				});
-
-				it('doesnt earn emish', async () => {
-					const pendingPre = await chefIncentivesController.allPendingRewards(user1.address);
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-					const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
-					if (depositAmt === eligibleAmt) {
-						// was DQd, shouldnt earn
-						expect(pendingPost).equals(pendingPre);
-					}
 				});
 			});
 

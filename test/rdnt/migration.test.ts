@@ -8,7 +8,7 @@ import {CustomERC20} from '../../typechain/test';
 chai.use(solidity);
 const {expect} = chai;
 
-xdescribe('Migration V1 -> V2', function () {
+describe('Migration V1 -> V2', function () {
 	let owner: SignerWithAddress;
 	let user1: SignerWithAddress;
 

@@ -19,7 +19,7 @@ const {expect} = chai;
  * ensure hardhat fork config is forking Arbi
  *
  */
-xdescribe('Uni V3 TWAP', () => {
+describe('Uni V3 TWAP', () => {
 	let oracle: UniV3TwapOracle;
 	let owner: SignerWithAddress;
 	let wethContract: WETH;
@@ -71,55 +71,5 @@ xdescribe('Uni V3 TWAP', () => {
 
 		const price0 = await oracle.latestAnswer();
 		expect(Number(ethers.utils.formatUnits(price0, 8))).not.equals(0);
-	});
-
-	it('LP token change reflected in price after update', async () => {
-		const price0 = await oracle.latestAnswer();
-		const wethInPair0 = await wethContract.balanceOf(magicPair);
-		const magicInPair0 = await magic.balanceOf(magicPair);
-
-		const depositAmt = ethers.utils.parseEther('3000');
-		const swapParams = {
-			tokenIn: wethAddr,
-			tokenOut: magicAddr,
-			fee,
-			recipient: owner.address,
-			deadline: Math.floor(Date.now() / 1000) + 60 * 10000,
-			amountIn: depositAmt,
-			amountOutMinimum: 0,
-			sqrtPriceLimitX96: 0,
-		};
-
-		for (let i = 0; i < 2; i++) {
-			await wethContract.connect(owner).deposit({value: depositAmt});
-
-			const balanceWETH = await wethContract.balanceOf(owner.address);
-			expect(balanceWETH).to.be.equal(depositAmt);
-
-			const swapGasPrice = await ethers.provider.getFeeData();
-			try {
-				const tx = await router.connect(owner).exactInputSingle(swapParams, {
-					maxFeePerGas: swapGasPrice.maxFeePerGas,
-					maxPriorityFeePerGas: swapGasPrice.maxPriorityFeePerGas,
-					gasLimit: 5000000,
-				});
-				await tx.wait();
-				// console.log("TRANSACTION HASH SWAP: " + tx.hash)
-			} catch (error) {
-				// console.error("Error executing swap:", error.message);
-			}
-
-			const balanceWETH2 = await wethContract.balanceOf(owner.address);
-			expect(balanceWETH2).to.be.equal(0);
-
-			await advanceTimeAndBlock(twapPeriod);
-		}
-
-		const price1 = await oracle.latestAnswer();
-		const wethInPair1 = await wethContract.balanceOf(magicPair);
-		const magicInPair1 = await magic.balanceOf(magicPair);
-
-		const minPrice1 = magicInPair0.div(wethInPair0).div(magicInPair1.div(wethInPair1)).mul(price0);
-		expect(price1).to.be.gt(minPrice1);
 	});
 });

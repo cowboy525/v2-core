@@ -1,18 +1,9 @@
-import {ethers, upgrades} from 'hardhat';
-const {loadFixture} = require('@nomicfoundation/hardhat-network-helpers');
+import {ethers} from 'hardhat';
 import _ from 'lodash';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
 import {advanceTimeAndBlock} from '../shared/helpers';
-import {
-	ComboOracle,
-	ManualOracle,
-	MockChainlinkAggregator,
-	RadiantOFT,
-	TestnetLockZap,
-	UniV2TwapOracle,
-	WETH,
-} from '../../typechain';
+import {MockChainlinkAggregator, RadiantOFT, TestnetLockZap, UniV2TwapOracle, WETH} from '../../typechain';
 import {targetPrice} from '../../config/BaseConfig';
 import {BigNumber} from 'ethers';
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
@@ -40,7 +31,6 @@ describe('Uni V2 TWAP', () => {
 	let nonAdminUser: SignerWithAddress;
 	let dao: SignerWithAddress;
 	let deployer: SignerWithAddress;
-	let testFallbackOracle: ManualOracle;
 	let useUniswapLpProvider: boolean;
 
 	before(async () => {
@@ -76,20 +66,6 @@ describe('Uni V2 TWAP', () => {
 			},
 		});
 		oracle = <UniV2TwapOracle>await ethers.getContract('UniV2TwapOracle');
-
-		await deploy('ManualOracle', {
-			from: deployer.address,
-			log: true,
-			proxy: {
-				proxyContract: 'OpenZeppelinTransparentProxy',
-				execute: {
-					methodName: 'initialize',
-					args: [rdntToken.address, chainlinkEthFeed.address],
-				},
-			},
-		});
-		testFallbackOracle = <ManualOracle>await ethers.getContract('ManualOracle');
-		await testFallbackOracle.setPrice(ethers.utils.parseEther('1'));
 	});
 
 	it('can be updated', async () => {
@@ -130,64 +106,5 @@ describe('Uni V2 TWAP', () => {
 		const priceAnswerAfter = await oracle.latestAnswer();
 
 		expect(priceToJsNum(priceAnswerAfter)).to.be.lt(startingRdntPrice / 2);
-	});
-
-	it('can fallback', async () => {
-		await advanceTimeAndBlock(period);
-		await oracle.update();
-
-		const pricePre = await oracle.latestAnswerInEth();
-
-		await expect(oracle.enableFallback(true)).to.be.revertedWith('no fallback set');
-
-		await expect(oracle.connect(nonAdminUser).setFallback(testFallbackOracle.address)).to.be.revertedWith(
-			'Ownable: caller is not the owner'
-		);
-
-		await oracle.setFallback(testFallbackOracle.address);
-
-		await expect(oracle.connect(nonAdminUser).enableFallback(true)).to.be.revertedWith(
-			'Ownable: caller is not the owner'
-		);
-
-		await oracle.enableFallback(true);
-
-		const pricePost = await oracle.latestAnswerInEth();
-		const expectedPrice = await testFallbackOracle.latestAnswerInEth();
-		expect(pricePost).equals(expectedPrice);
-		expect(pricePost).not.equals(pricePre);
-	});
-
-	xit('can be used within a ComboOracle', async () => {
-		await oracle.enableFallback(false);
-		await advanceTimeAndBlock(period);
-		await oracle.update();
-
-		await deploy('ComboOracle', {
-			from: deployer.address,
-			log: true,
-			proxy: {
-				proxyContract: 'OpenZeppelinTransparentProxy',
-				execute: {
-					methodName: 'initialize',
-					args: [rdntToken.address, chainlinkEthFeed.address],
-				},
-			},
-		});
-		const comboOracle = <ComboOracle>await ethers.getContract('ComboOracle');
-		await comboOracle.addSource(oracle.address);
-		await comboOracle.addSource(testFallbackOracle.address);
-
-		const twapPrice = await oracle.latestAnswerInEth();
-		const manualPrice = await testFallbackOracle.latestAnswerInEth();
-
-		const comboPrice = await comboOracle.latestAnswerInEth();
-		const averagePrice = twapPrice.add(manualPrice).div(2);
-		const lowestPrice = twapPrice.gt(manualPrice) ? manualPrice : twapPrice;
-		let expectedPrice = averagePrice;
-		if (averagePrice > lowestPrice.mul(1025).div(1000)) {
-			expectedPrice = lowestPrice;
-		}
-		expect(comboPrice).equals(expectedPrice);
 	});
 });

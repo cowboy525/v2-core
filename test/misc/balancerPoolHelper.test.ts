@@ -16,12 +16,13 @@ async function deployContract(contractName: string, opts: any, ...args: any) {
 	return contract;
 }
 
-xdescribe('Balancer Pool Helper', function () {
+describe('Balancer Pool Helper', function () {
 	let preTestSnapshotID: any;
 	let deployConfig: DeployConfig;
 
 	let deployer: SignerWithAddress;
 	let dao: SignerWithAddress;
+	let treasury: SignerWithAddress;
 
 	let poolHelper: BalancerPoolHelper;
 	let wethContract: WETH;
@@ -42,7 +43,7 @@ xdescribe('Balancer Pool Helper', function () {
 		const {chainId} = await ethers.provider.getNetwork();
 		deployConfig = getConfigForChain(chainId);
 
-		[deployer, dao] = await ethers.getSigners();
+		[deployer, dao, treasury] = await ethers.getSigners();
 
 		wethContract = <WETH>await deployContract('WETH', {});
 
@@ -54,7 +55,7 @@ xdescribe('Balancer Pool Helper', function () {
 				deployConfig.SYMBOL,
 				deployConfig.LZ_ENDPOINT,
 				dao.address,
-				deployConfig.TREASURY,
+				treasury.address,
 				deployConfig.MINT_AMT
 			)
 		);
@@ -142,32 +143,24 @@ xdescribe('Balancer Pool Helper', function () {
 				)
 			);
 			await poolHelper.deployed();
-			await expect(poolHelper.initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith(
-				'BalancerZap: IDENTICAL_ADDRESSES'
-			);
+			await expect(poolHelper.initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith('IdenticalAddresses');
 		});
 
 		it('sortTokens: ZERO_ADDRESS', async () => {
 			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
 			await expect(
-				(poolHelper = <BalancerPoolHelper>(
-					upgrades.deployProxy(
-						poolHelperFactory,
-						[
-							ethers.constants.AddressZero,
-							radiantToken.address,
-							wethContract.address,
-							deployConfig.BAL_VAULT,
-							deployConfig.BAL_WEIGHTED_POOL_FACTORY,
-						],
-						{initializer: 'initialize'}
-					)
-				))
-			).to.be.revertedWith('inTokenAddr is 0 address');
-			/*await poolHelper.deployed();
-      await expect(poolHelper.initializePool("RDNT-WETH", "RDNTLP")).to.be.revertedWith(
-        "BalancerZap: ZERO_ADDRESS"
-      );*/
+				upgrades.deployProxy(
+					poolHelperFactory,
+					[
+						ethers.constants.AddressZero,
+						radiantToken.address,
+						wethContract.address,
+						deployConfig.BAL_VAULT,
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+					],
+					{initializer: 'initialize'}
+				)
+			).to.be.revertedWith('AddressZero');
 		});
 	});
 
@@ -175,18 +168,13 @@ xdescribe('Balancer Pool Helper', function () {
 		const lpAddr = await poolHelper.lpTokenAddr();
 		const lpToken = await ethers.getContractAt('ERC20', lpAddr);
 		const lpSupply = await lpToken.totalSupply();
-		console.log('supply', lpSupply.toString());
-		console.log('eth amount', ethAmt.toString());
-		console.log('rdnt amount', rdntAmt.toString());
 
 		const rdntPriceInEth = BigNumber.from('10000000');
 		const ethPriceInEth = BigNumber.from('100000000');
 
 		const lpPrice = await poolHelper.getLpPrice(rdntPriceInEth);
-		console.log('lp price', lpPrice.toString());
 
 		const expectedPrice = rdntPriceInEth.mul(rdntAmt).add(ethPriceInEth.mul(ethAmt)).div(lpSupply);
-		console.log('expected price', expectedPrice.toString());
 		expect(lpPrice).to.be.equal(expectedPrice);
 	});
 
