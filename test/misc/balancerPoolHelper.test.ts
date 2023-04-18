@@ -168,18 +168,13 @@ describe('Balancer Pool Helper', function () {
 		const lpAddr = await poolHelper.lpTokenAddr();
 		const lpToken = await ethers.getContractAt('ERC20', lpAddr);
 		const lpSupply = await lpToken.totalSupply();
-		console.log('supply', lpSupply.toString());
-		console.log('eth amount', ethAmt.toString());
-		console.log('rdnt amount', rdntAmt.toString());
 
 		const rdntPriceInEth = BigNumber.from('10000000');
 		const ethPriceInEth = BigNumber.from('100000000');
 
 		const lpPrice = await poolHelper.getLpPrice(rdntPriceInEth);
-		console.log('lp price', lpPrice.toString());
 
 		const expectedPrice = rdntPriceInEth.mul(rdntAmt).add(ethPriceInEth.mul(ethAmt)).div(lpSupply);
-		console.log('expected price', expectedPrice.toString());
 		expect(lpPrice).to.be.equal(expectedPrice);
 	});
 

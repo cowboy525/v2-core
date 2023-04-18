@@ -43,6 +43,10 @@ const config: HardhatUserConfig = {
 			gasPrice: 0,
 			autoImpersonate: true,
 			blockGasLimit: 30000000000000,
+			forking: {
+				url: node_url('arbitrum'),
+				blockNumber: 81749742,
+			},
 			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {

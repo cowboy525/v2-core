@@ -368,54 +368,6 @@ runs.forEach(function (run) {
 				});
 			});
 
-			xdescribe('Self DQ via Deposit:', async () => {
-				let pendingAtEndOfEligibility: BigNumber, pendingAfterInelig: BigNumber, pending3;
-
-				before(async () => {
-					await loadZappedUserFixture(run);
-
-					const lastEligibleTime = (await eligibilityProvider.lastEligibleTime(user1.address)).toNumber();
-
-					await advanceTimeAndBlock(lastEligibleTime - (await now()) - 1);
-					pendingAtEndOfEligibility = await chefIncentivesController.allPendingRewards(user1.address);
-
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-
-					pendingAfterInelig = await chefIncentivesController.allPendingRewards(user1.address);
-				});
-
-				it('disqualifying action', async () => {
-					if (depositAmt == eligibleAmt) {
-						const dqTimePre = await eligibilityProvider.getDqTime(user1.address);
-						expect(dqTimePre).equals(0);
-
-						await deposit('rUSDC', '69', user1, lendingPool, deployData);
-
-						const pendingAfterDeposit = parseFloat(
-							ethers.utils.formatEther(await chefIncentivesController.allPendingRewards(user1.address))
-						);
-						const expected = pendingAfterInelig;
-						expect(pendingAfterDeposit).closeTo(parseFloat(ethers.utils.formatEther(expected)), 1);
-
-						const timestamp = await getLatestBlockTimestamp();
-						const dqTimePost = await eligibilityProvider.getDqTime(user1.address);
-						const isEligible = await eligibilityProvider.isEligibleForRewards(user1.address);
-						expect(dqTimePost).equals(timestamp);
-						expect(isEligible).equals(false);
-					}
-				});
-
-				it('doesnt earn emish', async () => {
-					const pendingPre = await chefIncentivesController.allPendingRewards(user1.address);
-					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
-					const pendingPost = await chefIncentivesController.allPendingRewards(user1.address);
-					if (depositAmt === eligibleAmt) {
-						// was DQd, shouldnt earn
-						expect(pendingPost).equals(pendingPre);
-					}
-				});
-			});
-
 			describe('While Eligible: bounty = 0, cant claim:', async () => {
 				before(async () => {
 					await loadZappedUserFixture(run);
