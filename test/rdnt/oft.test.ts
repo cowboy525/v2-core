@@ -20,7 +20,7 @@ describe('Radiant OFT: ', function () {
 
 	const dstSupply = ethers.utils.parseUnits('500000', 18);
 	const sendQty = ethers.utils.parseUnits('1', 18); // amount to be sent across
-	const adapterParams: string = "0x";
+	const adapterParams: string = '0x';
 
 	let config: DeployConfig;
 	let srcSupply: BigNumber;
@@ -89,7 +89,7 @@ describe('Radiant OFT: ', function () {
 			OFTSrc.address,
 			lzEndpointSrcMock.address
 		);
-		if (admin.address != await OFTSrc.owner()) {
+		if (admin.address != (await OFTSrc.owner())) {
 			await execute(
 				'RadiantOFT',
 				{

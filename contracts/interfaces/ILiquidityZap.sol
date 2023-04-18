@@ -10,20 +10,11 @@ interface ILiquidityZap {
 
 	function addLiquidityETHOnly(address to) external returns (uint256 liquidity);
 
-	function addLiquidityTokensOnly(
-		address from,
-		address to,
-		uint256 amount
-	) external returns (uint256 liquidity);
+	function addLiquidityTokensOnly(address from, address to, uint256 amount) external returns (uint256 liquidity);
 
 	function getLPTokenPerEthUnit(uint256 ethAmt) external view returns (uint256 liquidity);
 
-	function initLiquidityZap(
-		address token,
-		address WETH,
-		address tokenWethPair,
-		address helper
-	) external;
+	function initLiquidityZap(address token, address WETH, address tokenWethPair, address helper) external;
 
 	function quote(uint256 wethAmount) external view returns (uint256 optimalTokenAmount);
 

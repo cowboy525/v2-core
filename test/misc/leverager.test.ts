@@ -191,7 +191,7 @@ describe('Looping/Leverager', () => {
 		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
 		const ethBalance = await ethers.provider.getBalance(user2.address);
-		console.log("user2 eth balance: ", ethBalance);
+		console.log('user2 eth balance: ', ethBalance);
 
 		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
 			value: ethBalance,
@@ -204,6 +204,5 @@ describe('Looping/Leverager', () => {
 		let amt = usdcPerAccount;
 		let loops = 1;
 		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops);
-
 	});
 });

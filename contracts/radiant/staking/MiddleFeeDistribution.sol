@@ -166,16 +166,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
-	 * @notice Returns lock information of a user.
-	 * @dev It currently returns just MFD infos.
-	 */
-	function lockedBalances(
-		address user
-	) external view override returns (uint256, uint256, uint256, uint256, LockedBalance[] memory) {
-		return multiFeeDistribution.lockedBalances(user);
-	}
-
-	/**
 	 * @notice Emit event for new asset reward
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {

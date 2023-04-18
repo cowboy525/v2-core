@@ -12,8 +12,4 @@ interface IFeeDistribution {
 	}
 
 	function addReward(address rewardsToken) external;
-
-	function lockedBalances(
-		address user
-	) external view returns (uint256, uint256, uint256, uint256, LockedBalance[] memory);
 }

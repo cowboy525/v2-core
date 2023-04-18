@@ -206,10 +206,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _borrow option to borrow ETH
 	 * @param _lockTypeIndex lock length index.
 	 */
-	function zapFromVesting(
-		bool _borrow,
-		uint256 _lockTypeIndex
-	) public payable whenNotPaused returns (uint256) {
+	function zapFromVesting(bool _borrow, uint256 _lockTypeIndex) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);

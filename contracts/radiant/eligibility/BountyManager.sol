@@ -152,10 +152,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return bounty in RDNT to be paid to Hunter (via vesting)
 	 * @return actionType which bounty ran
 	 */
-	function claim(
-		address _user,
-		uint256 _actionType
-	) public whenNotPaused isWhitelisted returns (uint256, uint256) {
+	function claim(address _user, uint256 _actionType) public whenNotPaused isWhitelisted returns (uint256, uint256) {
 		return executeBounty(_user, true, _actionType);
 	}
 
