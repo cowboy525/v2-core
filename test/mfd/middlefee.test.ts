@@ -35,6 +35,7 @@ describe('MiddleFeeDistribution', () => {
 
 		lp = await ethers.getContractAt('CustomERC20', await mfd.stakingToken());
 	});
+	
 	describe('remove rewards with mock deployment', () => {
 		it('reward token arrays are adjusted accordingly', async () => {
 			const rewardToken1 = await mfd.rewardTokens(1);
@@ -43,6 +44,14 @@ describe('MiddleFeeDistribution', () => {
 			expect(await middle.isRewardToken(rewardToken1)).to.be.eq(false);
 			const previouslyLastRewardToken = await mfd.rewardTokens(1);
 			expect(previouslyLastRewardToken).to.not.be.eq(rewardToken1);
+	});
+
+	describe("addReward", async () => {
+		it('owner or admin permission', async () => {
+			await expect(middle.connect(user1).addReward(deployer.address)).to.be.revertedWith("caller is not the admin or owner");
+			await middle.setAdmin(user1.address);
+			await middle.connect(user1).addReward(deployer.address);
+			await middle.addReward(user1.address);
 		});
 	});
 });
@@ -92,6 +101,60 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 		await middle.deployed();
 	});
 
+
+	it('init params validation', async () => {
+		const middleFactory = await ethers.getContractFactory('MiddleFeeDistribution');
+		await expect(
+			middle.initialize(radiant.address, mfd.address, mfd.address)
+		).to.be.revertedWith('Contract instance has already been initialized');
+		await expect(
+			upgrades.deployProxy(
+				middleFactory,
+				[ethers.constants.AddressZero, mfd.address, mfd.address], //middle should be aaveoracle
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				middleFactory,
+				[radiant.address, ethers.constants.AddressZero, mfd.address], //middle should be aaveoracle
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+	});
+
+	describe("setOperationExpenses", async () => {
+		it('owner permission', async () => {
+			await expect(middle.connect(user1).setOperationExpenses(deployer.address, 100)).to.be.revertedWith("Ownable: caller is not the owner");
+		});
+
+		it('params validation', async () => {
+			await expect(middle.setOperationExpenses(deployer.address, 10001)).to.be.reverted;
+			await expect(middle.setOperationExpenses(ethers.constants.AddressZero, 1000)).to.be.reverted;
+		});
+	});
+
+	describe("setAdmin", async () => {
+		it('owner permission', async () => {
+			await expect(middle.connect(user1).setAdmin(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+		});
+
+		it('params validation', async () => {
+			await expect(middle.setAdmin(ethers.constants.AddressZero)).to.be.reverted;
+		});
+	});
+
+	describe("forwardReward", async () => {
+		it('permission', async () => {
+			await expect(middle.connect(user1).forwardReward([deployer.address])).to.be.reverted;
+		});
+
+		it('zero expense', async () => {
+			await middle.connect(mfd).forwardReward([radiant.address]);
+		});
+
+	});
+
 	it('recover ERC20', async () => {
 		const mintAmount = ethers.utils.parseUnits('604800', 18);
 		const erc20Factory = await ethers.getContractFactory('CustomERC20');
@@ -101,5 +164,7 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 		const balance = await mockErc20.balanceOf(deployer.address);
 		await middle.recoverERC20(mockErc20.address, mintAmount);
 		expect(await mockErc20.balanceOf(deployer.address)).to.be.equal(balance.add(mintAmount));
+
+		await expect(middle.connect(user1).recoverERC20(mockErc20.address, mintAmount)).to.be.revertedWith("Ownable: caller is not the owner");
 	});
 });

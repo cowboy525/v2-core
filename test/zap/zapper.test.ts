@@ -151,7 +151,11 @@ describe('Zapper', function () {
 
 		await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
 
-		let totalVesting = (await mfd.earnedBalances(user2.address)).totalVesting;
+		await advanceTimeAndBlock(deployConfig.MFD_VEST_DURATION + 1);
+
+		await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
+
+		let totalVesting = (await mfd.earnedBalances(user2.address)).total;
 
 		const wethRequired = await poolHelper.connect(user2).quoteFromToken(totalVesting);
 
