@@ -132,6 +132,11 @@ describe('Non-Elig CIC', () => {
 		it('non existing pool', async () => {
 			await expect(chefIncentivesController.batchUpdateAllocPoint([user1.address], [10])).to.be.reverted;
 		});
+
+		it('update works', async () => {
+			const rUSDCInfo = await chefIncentivesController.poolInfo(deployData.allTokens['rUSDC']);
+			await chefIncentivesController.batchUpdateAllocPoint([deployData.allTokens['rUSDC']], [rUSDCInfo.allocPoint]);
+		});
 	});
 
 	it('setOnwardIncentives', async () => {
@@ -425,11 +430,26 @@ describe('Non-Elig CIC', () => {
 			);
 		});
 
+		it('updatePool with high RPS', async () => {
+			const newRPS = 1000000000;
+
+			await chefIncentivesController.setRewardsPerSecond(newRPS, false);
+
+			advanceTimeAndBlock(1000000000);
+
+			await chefIncentivesController.registerRewardDeposit(0);
+			await chefIncentivesController.claim(user1.address, []);
+		});
+
 		it('withdraw all', async () => {
 			const amount = await rUSDC.balanceOf(user1.address);
 			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
 			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
 		});
+	});
+
+	it('afterLockUpdate', async () => {
+		expect(await chefIncentivesController.connect(user1).afterLockUpdate(user1.address)).to.be.revertedWith("NotMFD()");
 	});
 
 	it('registerRewardDeposit', async () => {
