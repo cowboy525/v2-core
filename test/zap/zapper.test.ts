@@ -96,6 +96,38 @@ describe('Zapper', function () {
 		}
 	});
 
+	it('initialize pool helper again', async () => {
+		await expect(
+			poolHelper.initialize(
+				radiant.address,
+				wethAddress,
+				deployer.address, // router
+				deployer.address // liquidity zap
+			)
+		).to.be.revertedWith('Contract instance has already been initialized');
+	});
+
+	it('poolHelper perms and views', async () => {
+		await expect(
+			poolHelper.zapWETH(0)
+		).to.be.revertedWith('InsufficientPermision');
+		await expect(
+			poolHelper.zapTokens(10, 10)
+		).to.be.revertedWith('InsufficientPermision');
+		await expect(
+			poolHelper.setLiquidityZap(ethers.constants.AddressZero)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			poolHelper.connect(user2).setLockZap(ethers.constants.AddressZero)
+		).to.be.revertedWith('Ownable: caller is not the owner');
+		await expect(
+			poolHelper.setLockZap(ethers.constants.AddressZero)
+		).to.be.revertedWith('AddressZero');
+		const reserves = await poolHelper.getReserves();
+		const price = await poolHelper.getPrice();
+		expect(price).to.be.equal(reserves.weth.mul(10**8).div(reserves.rdnt));
+	});
+
 	it('init params validation', async () => {
 		const zapFactory = await ethers.getContractFactory('LockZap');
 		await expect(
@@ -492,6 +524,10 @@ describe('Zapper', function () {
 		it('initLiquidityZap again fails', async () => {
 			if (liquidityZap) {
 				await expect(
+					liquidityZap.initialize()
+				).to.be.revertedWith('Contract instance has already been initialized');
+
+				await expect(
 					liquidityZap.initLiquidityZap(
 						ethers.constants.AddressZero,
 						ethers.constants.AddressZero,
@@ -516,11 +552,18 @@ describe('Zapper', function () {
 		it('zapEth validation', async () => {
 			if (liquidityZap) {
 				await expect(liquidityZap.zapETH(user2.address)).to.be.revertedWith('InvalidETHAmount');
+				await liquidityZap.connect(user2).zapETH(user2.address, { value: ethers.utils.parseEther("1") });
 			}
 		});
 
 		it('zapEth validation', async () => {
 			if (liquidityZap) {
+				await expect(
+					liquidityZap.addLiquidityETHOnly(ethers.constants.AddressZero, {
+						value: ethers.utils.parseEther('1'),
+					})
+				).to.be.revertedWith('AddressZero');
+
 				await expect(
 					liquidityZap.addLiquidityETHOnly(ethers.constants.AddressZero, {
 						value: ethers.utils.parseEther('1'),
@@ -533,7 +576,16 @@ describe('Zapper', function () {
 				expect(await liquidityZap.getLPTokenPerEthUnit(ethers.utils.parseEther('1'))).to.be.gt(0);
 			}
 		});
+
+		it('addLiquidityWETHOnly validation', async () => {
+			if (liquidityZap) {
+				await expect(
+					liquidityZap.addLiquidityWETHOnly(10, deployer.address)
+				).to.be.revertedWith('InsufficientPermision');
+			}
+		});
 	});
+
 	describe('Alternate token zap', async () => {
 		it('Can zap USDC', async () => {
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
