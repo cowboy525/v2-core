@@ -449,7 +449,7 @@ describe('Non-Elig CIC', () => {
 	});
 
 	it('afterLockUpdate', async () => {
-		expect(await chefIncentivesController.connect(user1).afterLockUpdate(user1.address)).to.be.revertedWith("NotMFD()");
+		await expect(chefIncentivesController.connect(user1).afterLockUpdate(user1.address)).to.be.revertedWith("NotMFD");
 	});
 
 	it('registerRewardDeposit', async () => {
