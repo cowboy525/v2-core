@@ -1,5 +1,5 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
-import {ethers} from 'hardhat';
+import {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock} from '../../scripts/utils';
 import {
 	BountyManager,
@@ -169,6 +169,180 @@ describe(`AutoCompound:`, async () => {
 		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
+
+	it('init params validation', async () => {
+		const compounderFactory = await ethers.getContractFactory('BalancerPoolHelper');
+		await expect(
+			compounder.initialize(
+				user1.address,
+				user1.address,
+				user1.address,
+				user1.address,
+				user1.address,
+				10,
+				1000,
+			)
+		).to.be.revertedWith('Initializable: contract is already initialized');
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					ethers.constants.AddressZero,
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					10,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					ethers.constants.AddressZero,
+					user1.address,
+					user1.address,
+					user1.address,
+					10,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					user1.address,
+					ethers.constants.AddressZero,
+					user1.address,
+					user1.address,
+					10,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					user1.address,
+					user1.address,
+					ethers.constants.AddressZero,
+					user1.address,
+					10,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					ethers.constants.AddressZero,
+					10,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					0,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				compounderFactory,
+				[
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					user1.address,
+					3000,
+					1000,
+				],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+	});
+
+	describe("pause/unpause", async () => {
+		it('owner permission', async () => {
+			await expect(compounder.connect(user1).pause()).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(compounder.connect(user1).unpause()).to.be.revertedWith("Ownable: caller is not the owner");
+			await compounder.pause();
+			await compounder.unpause();
+		});
+
+		it('while paused', async () => {
+			await compounder.pause();
+			await compounder.claimCompound(user1.address, true);
+			await compounder.unpause();
+		});
+	});
+
+	it('owner permission', async () => {
+		await expect(compounder.connect(user1).addRewardBaseTokens([])).to.be.revertedWith("Ownable: caller is not the owner");
+		await expect(compounder.connect(user1).setRoutes(ethers.constants.AddressZero, [])).to.be.revertedWith("Ownable: caller is not the owner");
+	});
+
+	it('setFeePercent', async function () {
+		await expect(compounder.connect(user2).setBountyManager(user2.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(compounder.setBountyManager(ethers.constants.AddressZero)).to.be.revertedWith('AddressZero');
+	});
+
+	it('setCompoundFee', async function () {
+		await expect(compounder.connect(user2).setCompoundFee(1000)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(compounder.setCompoundFee(0)).to.be.revertedWith(
+			'InvalidCompoundFee'
+		);
+		await expect(compounder.setCompoundFee(3000)).to.be.revertedWith(
+			'InvalidCompoundFee'
+		);
+		await compounder.setCompoundFee(await compounder.compoundFee());
+	});
+
+	it('setSlippageLimit', async function () {
+		await expect(compounder.connect(user2).setSlippageLimit(1000)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await compounder.setSlippageLimit(await compounder.slippageLimit());
+	});
+
+	it("eligible compound", async () => {
+		const uel = await compounder.userEligibleForCompound(user1.address);
+		const sel = await compounder.selfEligibleCompound();
+		expect(sel).to.be.equal(uel);
+	});
+
 	it('no bounty when no platform rev', async () => {
 		const quote = await bountyManager.connect(hunter).quote(user1.address);
 		// let quote = await bountyManager.connect(hunter).executeBounty(user1.address, false, 0);
@@ -225,7 +399,7 @@ describe(`AutoCompound:`, async () => {
 
 	it('cant AC user who has not enabled', async () => {
 		await multiFeeDistribution.connect(user1).setAutocompound(false, acceptableUserSlippage);
-		await expect(bountyManager.connect(hunter).claim(user1.address)).to.be.reverted;
+		await expect(bountyManager.connect(hunter).claim(user1.address,0)).to.be.reverted;
 		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
