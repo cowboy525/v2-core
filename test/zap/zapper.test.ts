@@ -249,16 +249,16 @@ describe('Zapper', function () {
 
 		it("functions when not paused", async () => {
 			await lockZap.pause();
-			await expect(lockZap.connect(user2).zap(true, 10, 10, 0)).to.be.revertedWith("Pausable: paused");
-			await expect(lockZap.connect(user2).zapOnBehalf(true, 10, 10, user3.address)).to.be.revertedWith("Pausable: paused");
-			await expect(lockZap.connect(user2).zapFromVesting(true, 0)).to.be.revertedWith("Pausable: paused");
+			await expect(lockZap.connect(user2).zap(true, 10, 10, 0, 0)).to.be.revertedWith("Pausable: paused");
+			await expect(lockZap.connect(user2).zapOnBehalf(true, 10, 10, user3.address, 0)).to.be.revertedWith("Pausable: paused");
+			await expect(lockZap.connect(user2).zapFromVesting(true, 0, 0)).to.be.revertedWith("Pausable: paused");
 		});
 	});
 
 	it("zapAlternateAsset", async () => {
 		await lockZap.pause();
-		await expect(lockZap.connect(user2).zapAlternateAsset(ethers.constants.AddressZero, 10, 0)).to.be.revertedWith("AddressZero");
-		await expect(lockZap.connect(user2).zapAlternateAsset(usdcAddress, 0, 0)).to.be.revertedWith("AmountZero");
+		await expect(lockZap.connect(user2).zapAlternateAsset(ethers.constants.AddressZero, 10, 0, 0)).to.be.revertedWith("AddressZero");
+		await expect(lockZap.connect(user2).zapAlternateAsset(usdcAddress, 0, 0, 0)).to.be.revertedWith("AmountZero");
 	});
 
 	it('setLiquidityZap', async function () {
@@ -298,11 +298,11 @@ describe('Zapper', function () {
 	});
 
 	it('zap errors', async function () {
-		await expect(lockZap.connect(user2).zap(false, 0, 0, 0, {
+		await expect(lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('0'),
 		})).to.be.revertedWith("AmountZero");
 
-		await expect(lockZap.connect(user2).zap(true, 0, 0, 0, {
+		await expect(lockZap.connect(user2).zap(true, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		})).to.be.revertedWith("InvalidZapETHSource");
 	});
@@ -330,17 +330,23 @@ describe('Zapper', function () {
 
 		await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
 
-		let totalVesting = (await mfd.earnedBalances(user2.address)).total;
+		let totalVesting = (await mfd.earnedBalances(user2.address)).totalVesting;
 
 		const wethRequired = await poolHelper.connect(user2).quoteFromToken(totalVesting);
 
 		await expect(
 			lockZap.connect(user2).zapFromVesting(false, 0, 0, {
+				value: wethRequired,
+			})
+		).to.be.revertedWith('InvalidLockLength');
+
+		await expect(
+			lockZap.connect(user2).zapFromVesting(false, 1, 0, {
 				value: wethRequired.div(2),
 			})
 		).to.be.revertedWith('InsufficientETH');
 
-		await lockZap.connect(user2).zapFromVesting(false, 0, 0, {
+		await lockZap.connect(user2).zapFromVesting(false, 1, 0, {
 			value: wethRequired,
 		});
 
@@ -405,8 +411,6 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		// expect((await lendingPool.getUserAccountData(user3.address)).totalCollateralETH).to.be.gt(BigNumber.from(0));
-		// console.log(await lendingPool.getUserAccountData(user3.address));
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.equal(BigNumber.from(0));
 
 		expect(await eligibilityProvider.isEligibleForRewards(user4.address)).to.be.equal(true);
@@ -419,7 +423,7 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 0)).to.be.revertedWith(
+		await expect(lockZap.connect(user4).zapFromVesting(true, 1, 0)).to.be.revertedWith(
 			'ExceedsAvailableBorrowsETH'
 		);
 
@@ -433,7 +437,6 @@ describe('Zapper', function () {
 		expect(lockedLpBal2).to.be.gt(lockedLpBal1);
 		expect(totalVesting).to.be.equal(0);
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.be.gt(BigNumber.from(0));
-		// console.log(await lendingPool.getUserAccountData(user4.address));
 	});
 
 	it('zap from Vesting fails with high slippage', async function () {
@@ -502,7 +505,7 @@ describe('Zapper', function () {
 
 		let totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
-		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 1, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 

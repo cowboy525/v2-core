@@ -87,6 +87,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error InvalidRatio();
 
+	error InvalidLockLength();
+
 	error AmountZero();
 
 	error SlippageTooHigh();
@@ -238,6 +240,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _lockTypeIndex,
 		uint256 _slippage
 	) public payable whenNotPaused returns (uint256) {
+		if(_lockTypeIndex == 0) revert InvalidLockLength();
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = poolHelper.quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender, _slippage);
