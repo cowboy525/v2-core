@@ -938,6 +938,45 @@ describe('MultiFeeDistribution', () => {
 		expect(balance11.sub(balance10)).to.be.equal(depositAmount);
 	});
 
+	it('Consecutive exits break accounting PoC', async () => {
+		let balances;
+
+		const amount = ethers.utils.parseUnits('100', 18);
+		await radiant.mint(mfd.address, amount);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log("User balances:")
+		console.log("Total:", balances.total.toString());
+		console.log("Earned:", balances.earned.toString());
+
+		console.log("1) Vesting of 20 RDNT starts...");
+		await mfd.mint(user1.address, amount.div(5), true);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log("User balances:")
+		console.log("Total:", balances.total.toString());
+		console.log("Earned:", balances.earned.toString());
+
+		console.log("2) User calls exit() for the first time...");
+		await mfd.connect(user1).exit(false);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log("User balances:")
+		console.log("Total:", balances.total.toString());
+		console.log("Earned:", balances.earned.toString());
+
+		console.log("3) Another 20 RDNT vesting starts...")
+		await mfd.mint(user1.address, amount.div(5), true);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log("User balances:")
+		console.log("Total:", balances.total.toString());
+		console.log("Earned:", balances.earned.toString());
+
+		console.log("4) User can trigger the exit() function, no underflow! Attempt to withdraw " + balances.earned.toString());
+		await expect(mfd.connect(user1).exit(false)).to.be.not.reverted;
+	});
+
 	it('withdraw; empty earnings', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		const LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
