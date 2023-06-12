@@ -173,6 +173,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidEarned();
 	error InvalidTime();
 	error InvalidPeriod();
+	error UnlockTimeNotFound();
 
 	/**
 	 * @dev Constructor
@@ -875,16 +876,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
 		uint256 length = userEarnings[user].length;
-		for (uint256 i; i < length; ) {
-			if (userEarnings[user][i].unlockTime == unlockTime) {
-				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][i]);
-				index = i;
-				break;
+		for (index; index < length; ) {
+			if (userEarnings[user][index].unlockTime == unlockTime) {
+				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][index]);
+				return (amount, penaltyAmount, burnAmount, index);
 			}
 			unchecked {
-				i++;
+				index++;
 			}
 		}
+		revert UnlockTimeNotFound();
 	}
 
 	/**
@@ -899,10 +900,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			onBehalfOf,
 			unlockTime
 		);
-
-		if (index >= userEarnings[onBehalfOf].length) {
-			return;
-		}
 
 		uint256 length = userEarnings[onBehalfOf].length;
 		for (uint256 i = index + 1; i < length; ) {
