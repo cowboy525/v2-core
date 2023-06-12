@@ -25,6 +25,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	error InsufficientPermision();
 	error IdenticalAddresses();
 	error ZeroAmount();
+	error UnauthorizedCaller();
 
 	address public inTokenAddr;
 	address public outTokenAddr;
@@ -384,6 +385,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _minAmountOut the minimum WETH amount to accept without reverting
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
+		if (msg.sender != lockZap) revert UnauthorizedCaller();
 		if (_inToken == address(0)) revert AddressZero();
 		if (_amount == 0) revert ZeroAmount();
 		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
