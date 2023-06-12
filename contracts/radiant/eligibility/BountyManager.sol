@@ -49,7 +49,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	modifier isWhitelisted() {
 		if (whitelistActive) {
-			require(whitelist[msg.sender] || msg.sender == address(this), "!whiteliested");
+			require(whitelist[msg.sender] || msg.sender == address(this), "!whitelisted");
 		}
 		_;
 	}
@@ -307,7 +307,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	/**
 	 * @notice Return RDNT amount for Base Bounty.
-	 * Base Bounty used to incentivize operations that dont generate their own reward to pay to Hunter.
+	 * Base Bounty used to incentivize operations that don't generate their own reward to pay to Hunter.
 	 * @return bounty in RDNT
 	 */
 	function getBaseBounty() public view whenNotPaused returns (uint256 bounty) {

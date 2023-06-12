@@ -133,7 +133,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	mapping(address => PoolInfo) public poolInfo;
 	mapping(address => bool) private validRTokens;
 
-	// Total allocation poitns. Must be the sum of all allocation points in all pools.
+	// Total allocation points. Must be the sum of all allocation points in all pools.
 	uint256 public totalAllocPoint;
 
 	// token => user => Info of each user that stakes LP tokens.
@@ -515,7 +515,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	/**
-	 * @notice Exempt a contract from eligbility check.
+	 * @notice Exempt a contract from eligibility check.
 	 * @dev Can be called by owner or leverager contract
 	 * @param _contract address to exempt
 	 * @param _value flag for exempt

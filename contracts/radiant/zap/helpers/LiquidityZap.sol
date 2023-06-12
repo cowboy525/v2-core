@@ -183,7 +183,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @dev use with quote
 	 * @param tokenAmount RDNT amount
 	 * @param _wethAmt WETH amount
-	 * @param to LP address to be transfered
+	 * @param to LP address to be transferred
 	 * @return liquidity LP amount
 	 */
 	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256) {
@@ -197,7 +197,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @dev use with quote
 	 * @param tokenAmount RDNT amount
 	 * @param wethAmount WETH amount
-	 * @param to LP address to be transfered
+	 * @param to LP address to be transferred
 	 * @return liquidity LP amount
 	 */
 	function _addLiquidity(

@@ -26,7 +26,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
-	/// @notice RAITO Divisor
+	/// @notice RATIO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
 	/// @notice Acceptable ratio
@@ -79,7 +79,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error InsufficientETH();
 
-	uint256 public ethLPRatio; // paramter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
+	uint256 public ethLPRatio; // parameter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
 
 	/**
 	 * @notice Initializer

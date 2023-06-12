@@ -391,7 +391,7 @@ contract Leverager is Ownable {
 
 	/**
 	 * @notice Returns required LP lock amount.
-	 * @param asset underlyig asset
+	 * @param asset underlying asset
 	 * @param amount of tokens
 	 **/
 	function requiredLocked(address asset, uint256 amount) internal view returns (uint256) {

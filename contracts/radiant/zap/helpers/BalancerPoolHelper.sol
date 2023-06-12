@@ -287,7 +287,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	/**
-	 * @notice Zap WETH ad RDNT
+	 * @notice Zap WETH and RDNT
 	 * @param _wethAmt WETH amount
 	 * @param _rdntAmt RDNT amount
 	 * @return liquidity token amount

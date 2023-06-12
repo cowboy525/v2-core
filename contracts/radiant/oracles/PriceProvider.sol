@@ -120,7 +120,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Sets pool heler contract.
+	 * @notice Sets pool helper contract.
 	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
