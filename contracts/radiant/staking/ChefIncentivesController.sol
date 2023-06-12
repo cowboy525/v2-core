@@ -102,6 +102,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error NotRTokenOrMfd();
 
+	error DuplicateSchedule();
+
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
@@ -327,6 +329,15 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
+	function checkDuplicateSchedule (uint256 _startTimeOffset) internal returns(bool) {
+		for (uint256 i = 0; i < emissionSchedule.length; i++) {
+			if(emissionSchedule[i].startTimeOffset == _startTimeOffset) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * @notice Updates RDNT emission schedule.
 	 * @dev This appends the new offsets and RPS.
@@ -346,6 +357,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			}
 			if (_startTimeOffsets[i] > type(uint128).max) revert ExceedsMaxInt();
 			if (_rewardsPerSecond[i] > type(uint128).max) revert ExceedsMaxInt();
+			if (checkDuplicateSchedule(_startTimeOffsets[i])) revert DuplicateSchedule();
 
 			if (startTime > 0) {
 				if (_startTimeOffsets[i] < block.timestamp.sub(startTime)) revert InvalidStart();
