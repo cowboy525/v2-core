@@ -36,6 +36,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Emitted when Treasury is updated
 	event TreasuryUpdated(address indexed treasury);
 
+	/// @notice Error message emitted when the provided ETH does not cover the bridge fee
+	error InsufficientETHForFee();
+
 	/**
 	 * @notice Create RadiantOFT
 	 * @param _tokenName token name
@@ -142,6 +145,35 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
+
+	function _sendAndCall(
+		address _from, 
+		uint16 _dstChainId, 
+		bytes32 _toAddress, 
+		uint _amount, 
+		bytes memory _payload, 
+		uint64 _dstGasForCall, 
+		address payable _refundAddress, 
+		address _zroPaymentAddress, 
+		bytes memory _adapterParams
+	) internal override nonReentrant returns (uint amount) {
+		uint256 fee = getBridgeFee(_amount);
+		if(msg.value >= fee) revert InsufficientETHForFee();
+
+        _checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
+
+        (amount,) = _removeDust(_amount);
+        amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
+        require(amount > 0, "OFTCore: amount too small");
+
+        // encode the msg.sender into the payload instead of _from
+        bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
+        _lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
+
+		Address.sendValue(payable(treasury), fee);
+
+        emit SendToChain(_dstChainId, _from, _toAddress, amount);
+    }
 
 	/**
 	 * @notice overrides default OFT _debitFrom function to make pauseable
