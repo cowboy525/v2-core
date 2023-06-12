@@ -7,7 +7,6 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
@@ -20,7 +19,7 @@ import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.so
 /// @dev All function calls are currently implemented without side effects
 /// based on the Sushi MasterChef
 ///	https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
-contract ChefIncentivesController is Initializable, PausableUpgradeable, OwnableUpgradeable {
+contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -101,6 +100,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	error CadenceTooLong();
 
 	error NotRTokenOrMfd();
+
+	error OutOfRewards();
 
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
@@ -196,7 +197,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (address(_rewardMinter) == address(0)) revert AddressZero();
 
 		__Ownable_init();
-		__Pausable_init();
 
 		poolConfigurator = _poolConfigurator;
 		eligibleDataProvider = _eligibleDataProvider;
@@ -459,11 +459,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Claim rewards. They are vested into MFD.
-	 * @dev This function is pausible.
 	 * @param _user address for claim
 	 * @param _tokens array of reward-bearing tokens
 	 */
-	function claim(address _user, address[] memory _tokens) public whenNotPaused {
+	function claim(address _user, address[] memory _tokens) public {
 		if (eligibilityEnabled) {
 			checkAndProcessEligibility(_user, true, true);
 		}
@@ -510,8 +509,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
-		_amount = _sendRadiant(address(_getMfd()), _amount);
-		_getMfd().mint(_user, _amount, true);
+		_sendRadiant(address(_getMfd()), _amount);
+		_getMfd().mint(_user, _amount, true);	
 	}
 
 	/**
@@ -744,24 +743,18 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address of recipient
 	 * @param _amount of RDNT
 	 */
-	function _sendRadiant(address _user, uint256 _amount) internal returns (uint256) {
+	function _sendRadiant(address _user, uint256 _amount) internal {
 		if (_amount == 0) {
-			return 0;
+			return;
 		}
 
 		address rdntToken = rewardMinter.getRdntTokenAddress();
 		uint256 chefReserve = IERC20(rdntToken).balanceOf(address(this));
-		if (_amount > chefReserve) {
-			emit ChefReserveEmpty(chefReserve);
-			// RPS is set to zero
-			// Set to persist to prevent update by _updateEmissions()
-			persistRewardsPerSecond = true;
-			rewardsPerSecond = 0;
-			_pause();
+		if (_amount > chefReserve){
+			revert OutOfRewards();
 		} else {
 			IERC20(rdntToken).safeTransfer(_user, _amount);
 		}
-		return _amount;
 	}
 
 	/********************** RDNT Reserve Management ***********************/
@@ -848,19 +841,5 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		for (uint256 i; i < length; i++) {
 			pending += claimable[i];
 		}
-	}
-
-	/**
-	 * @notice Pause the claim operations.
-	 */
-	function pause() external onlyOwner {
-		_pause();
-	}
-
-	/**
-	 * @notice Unpause the claim operations.
-	 */
-	function unpause() external onlyOwner {
-		_unpause();
 	}
 }
