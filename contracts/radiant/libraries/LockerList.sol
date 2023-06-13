@@ -50,9 +50,9 @@ contract LockerList is Ownable {
 			inserted[user] = true;
 			indexOf[user] = userlist.length;
 			userlist.push(user);
-		}
 
-		emit LockerAdded(user);
+			emit LockerAdded(user);
+		}
 	}
 
 	/**
