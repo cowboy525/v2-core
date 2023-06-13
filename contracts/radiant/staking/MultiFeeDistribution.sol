@@ -835,8 +835,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				}
 				sumEarned = sumEarned.sub(requiredAmount);
 
-				penaltyAmount = penaltyAmount.add(requiredAmount.mul(penaltyFactor).div(WHOLE)); // penalty += amount * penaltyFactor
-				burnAmount = burnAmount.add(penaltyAmount.mul(burn).div(WHOLE)); // burn += penalty * burnFactor
+				uint256 newPenaltyAmount = requiredAmount.mul(penaltyFactor).div(WHOLE);
+				uint256 newBurnAmount = newPenaltyAmount.mul(burn).div(WHOLE);
+				penaltyAmount = penaltyAmount.add(newPenaltyAmount); // penalty += amount * penaltyFactor
+				burnAmount = burnAmount.add(newBurnAmount); // burn += penalty * burnFactor
 
 				if (remaining == 0) {
 					break;
