@@ -16,7 +16,7 @@ interface IPoolHelper {
 
 	function getLpPrice(uint256 rdntPriceInEth) external view returns (uint256 priceInEth);
 
-	function getReserves() external view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply);
+	function getReserves() external view returns (uint256 rdnt, uint256 weth);
 
 	function getPrice() external view returns (uint256 priceInEth);
 

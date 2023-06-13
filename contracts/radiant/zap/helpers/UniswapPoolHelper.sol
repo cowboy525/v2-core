@@ -91,14 +91,12 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		refundDust(rdntAddr, wethAddr, msg.sender);
 	}
 
-	function getReserves() public view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
+	function getReserves() public view returns (uint256 rdnt, uint256 weth) {
 		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
 
 		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
 		weth = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
 		rdnt = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
-
-		lpTokenSupply = lpToken.totalSupply();
 	}
 
 	// UniV2 / SLP LP Token Price
@@ -161,7 +159,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function getPrice() public view returns (uint256 priceInEth) {
-		(uint256 rdnt, uint256 weth, ) = getReserves();
+		(uint256 rdnt, uint256 weth) = getReserves();
 		if (rdnt > 0) {
 			priceInEth = weth.mul(10 ** 8).div(rdnt);
 		}

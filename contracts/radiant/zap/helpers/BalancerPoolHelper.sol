@@ -190,7 +190,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function getLpPrice(uint256 rdntPriceInEth) public view override returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
-		(uint256 rdntBalance, uint256 wethBalance, ) = getReserves();
+		(uint256 rdntBalance, uint256 wethBalance) = getReserves();
 		uint256[] memory weights = pool.getNormalizedWeights();
 
 		uint256 rdntWeight;
@@ -232,15 +232,13 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
-	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
+	function getReserves() public view override returns (uint256 rdnt, uint256 weth) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
 
 		rdnt = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		weth = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
-
-		lpTokenSupply = lpToken.totalSupply().div(1e18);
 	}
 
 	/**
