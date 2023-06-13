@@ -162,47 +162,6 @@ contract Leverager is Ownable {
 		return conf.data % (2 ** 16);
 	}
 
-    uint256 constant LTV_BASE = 10000;
-
-    function math(
-        address asset,
-        uint256 amount,
-        uint256 LtvLimit
-    ) external {
-
-        IERC20(asset).transferFrom(msg.sender, address(this), amount);
-
-        uint256 startGas = gasleft();
-        IERC20(asset).approve(address(lendingPool), ~uint256(0));
-
-        address[] memory assets = new address[](1);
-        uint256[] memory amounts = new uint256[](1);
-        uint256[] memory modes = new uint256[](1);
-
-        assets[0] = asset;
-        amounts[0] = _maxSafeDebt(LtvLimit, amount * LtvLimit / LTV_BASE, ~uint256(0));
-        modes[0] = 2;
-
-        bytes memory params = abi.encode(amount);
-
-        lendingPool.flashLoan(
-            address(this),
-            assets,
-            amounts,
-            modes,
-            address(this),
-            params,
-            0
-        );
-    }
-
-    function _maxSafeDebt(uint256 LTV, uint256 amount, uint256 positionSize) internal pure returns(uint256 maxSafeDebt_) {
-        maxSafeDebt_ = amount * 1e8 / (1e8 * (LTV_BASE - LTV) / LTV_BASE) - amount;
-        if(maxSafeDebt_ > positionSize) {
-            maxSafeDebt_ = positionSize;
-        }
-    }
-
 	/**
 	 * @dev Loop the deposit and borrow of an asset
 	 * @param asset for loop
