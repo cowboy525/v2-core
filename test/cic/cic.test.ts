@@ -106,7 +106,7 @@ describe('Non-Elig CIC', () => {
 			);
 			await chefIncentivesController.setOperator(user1.address, true);
 			await expect(chefIncentivesController.connect(user1).claim(deployer.address, [])).to.be.revertedWith(
-				'Nothing to mint'
+				'NothingToMint'
 			);
 		});
 	});
