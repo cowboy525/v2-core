@@ -1,6 +1,6 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import assert from 'assert';
-import {ethers} from 'hardhat';
+import {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock} from '../../scripts/utils';
 import {
 	ChefIncentivesController,
@@ -80,6 +80,72 @@ describe('Require Locked Value', () => {
 		priceProvider = fixture.priceProvider;
 
 		duration = deployConfig.MFD_VEST_DURATION;
+	});
+
+	it('init of EligibilityDataProvider', async () => {
+		const EligibilityDataProviderFactory = await ethers.getContractFactory('EligibilityDataProvider');
+		await expect(
+			eligibilityDataProvider.initialize(lendingPool.address, user2.address, priceProvider.address)
+		).to.be.revertedWith('Initializable: contract is already initialized');
+		await expect(
+			upgrades.deployProxy(
+				EligibilityDataProviderFactory,
+				[ethers.constants.AddressZero, user2.address, priceProvider.address],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				EligibilityDataProviderFactory,
+				[lendingPool.address, ethers.constants.AddressZero, priceProvider.address],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				EligibilityDataProviderFactory,
+				[lendingPool.address, user2.address, ethers.constants.AddressZero],
+				{initializer: 'initialize'}
+			)
+		).to.be.reverted;
+	});
+
+	it('setChefIncentivesController', async () => {
+		await expect(
+			eligibilityDataProvider.connect(user2).setChefIncentivesController(chef.address)
+		).to.be.revertedWith('Ownable: caller is not the owner');
+		await expect(
+			eligibilityDataProvider.setChefIncentivesController(ethers.constants.AddressZero)
+		).to.be.revertedWith('AddressZero');
+	});
+
+	it('setLPToken', async () => {
+		await expect(eligibilityDataProvider.connect(user2).setLPToken(user2.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(eligibilityDataProvider.setLPToken(ethers.constants.AddressZero)).to.be.revertedWith('LPTokenSet');
+	});
+
+	it('setRequiredDepositRatio', async () => {
+		await expect(eligibilityDataProvider.connect(user2).setRequiredDepositRatio(100)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(eligibilityDataProvider.setRequiredDepositRatio(10001)).to.be.revertedWith('InvalidRatio');
+	});
+
+	it('setPriceToleranceRatio', async () => {
+		await expect(eligibilityDataProvider.connect(user2).setPriceToleranceRatio(100)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(eligibilityDataProvider.setPriceToleranceRatio(10001)).to.be.revertedWith('InvalidRatio');
+		await expect(eligibilityDataProvider.setPriceToleranceRatio(1000)).to.be.revertedWith('InvalidRatio');
+		await eligibilityDataProvider.setPriceToleranceRatio(9000);
+	});
+
+	it('setDqTime', async () => {
+		await expect(eligibilityDataProvider.connect(user2).setDqTime(user2.address, 100)).to.be.revertedWith(
+			'OnlyCIC'
+		);
 	});
 
 	it('Deposit and borrow by User 2 + 3', async () => {
@@ -191,7 +257,7 @@ describe('Require Locked Value', () => {
 	});
 
 	it('User2 can Vest RDNT', async () => {
-		await chef.claim(user2.address, deployData.allTokenAddrs);
+		await chef.connect(user2).claim(user2.address, deployData.allTokenAddrs);
 		await advanceTimeAndBlock(duration);
 
 		const {amount: mfdRewardAmount, penaltyAmount: penalty0} = await multiFeeDistribution.withdrawableBalance(

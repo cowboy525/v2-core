@@ -178,6 +178,16 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	// Info of reward emission end time
 	EndingTime public endingTime;
 
+	// Operators who can claim on behalf of the user
+	mapping(address => mapping(address => bool)) public operators;
+
+	/********************** Modifiers ***********************/
+
+	modifier onlyOperator(address user) {
+		require(msg.sender == user || operators[user][msg.sender], "not allowed");
+		_;
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _poolConfigurator Pool configurator address
@@ -248,6 +258,15 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function setEligibilityEnabled(bool _newVal) external onlyOwner {
 		eligibilityEnabled = _newVal;
+	}
+
+	/**
+	 * @dev Set operator who can claim on behalf of the user
+	 * @param operator User address who can claim on behalf.
+	 * @param allowed True if `operator` is allowed to claim.
+	 */
+	function setOperator(address operator, bool allowed) external {
+		operators[msg.sender][operator] = allowed;
 	}
 
 	/********************** Pool Setup + Admin ***********************/
@@ -463,7 +482,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address for claim
 	 * @param _tokens array of reward-bearing tokens
 	 */
-	function claim(address _user, address[] memory _tokens) public whenNotPaused {
+	function claim(address _user, address[] memory _tokens) public whenNotPaused onlyOperator(_user) {
 		if (eligibilityEnabled) {
 			checkAndProcessEligibility(_user, true, true);
 		}
@@ -510,6 +529,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
+		require(_amount > 0, "Nothing to mint");
 		_amount = _sendRadiant(address(_getMfd()), _amount);
 		_getMfd().mint(_user, _amount, true);
 	}
