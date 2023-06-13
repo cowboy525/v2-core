@@ -205,9 +205,13 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		if (!_execute) {
-			uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
-			fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
-			return fee;
+			if (isAutoCompound) {
+				uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
+				fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
+				return fee;
+			} else {
+				return 0;
+			}
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
@@ -225,8 +229,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 	}
 
-	function selfCompound() external returns (uint256 fee) {
-		fee = claimCompound(msg.sender, true);
+	function selfCompound() external {
+		claimCompound(msg.sender, true);
 	}
 
 	function viewPendingRewards(address _user) public view returns (address[] memory tokens, uint256[] memory amts) {
