@@ -78,11 +78,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_lockZap == address(0)) revert AddressZero();
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		if (_slippageLimit < 8000 || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 
 		uniRouter = _uniRouter;
 		multiFeeDistribution = _mfd;
