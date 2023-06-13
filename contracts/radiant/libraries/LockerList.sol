@@ -27,18 +27,23 @@ contract LockerList is Ownable {
 	constructor() Ownable() {}
 
 	/********************** Lockers list ***********************/
+
 	/**
 	 * @notice Return the number of users.
+	 * @return count The number of users
 	 */
-	function lockersCount() external view returns (uint256) {
-		return userlist.length;
+	function lockersCount() external view returns (uint256 count) {
+			count = userlist.length;
 	}
 
 	/**
 	 * @notice Return the list of users.
+	 * @param page The page number to retrieve
+	 * @param limit The number of entries per page
+	 * @return users A paginated list of users
 	 */
-	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory) {
-		return userlist.paginate(page, limit);
+	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory users) {
+			users = userlist.paginate(page, limit);
 	}
 
 	/**
