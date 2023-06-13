@@ -102,6 +102,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error NotRTokenOrMfd();
 
+	error NothingToMint();
+
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
@@ -529,7 +531,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
-		require(_amount > 0, "Nothing to mint");
+		if(_amount == 0) revert NothingToMint();
 		_amount = _sendRadiant(address(_getMfd()), _amount);
 		_getMfd().mint(_user, _amount, true);
 	}
