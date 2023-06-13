@@ -888,7 +888,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function individualEarlyExit(bool claimRewards, uint256 unlockTime) external {
 		address onBehalfOf = msg.sender;
 		if (unlockTime <= block.timestamp) revert InvalidTime();
-		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalances(
+		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalance(
 			onBehalfOf,
 			unlockTime
 		);
