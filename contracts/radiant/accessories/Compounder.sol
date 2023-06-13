@@ -151,7 +151,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			uint256 amount = lendingPool.withdraw(underlying, type(uint256).max, address(this));
 
 			if (underlying != baseToken) {
-				IERC20(underlying).safeApprove(uniRouter, amount);
+				IERC20(underlying).forceApprove(uniRouter, amount);
 				try
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
