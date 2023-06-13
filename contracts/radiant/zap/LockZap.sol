@@ -87,7 +87,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error InsufficientETH();
 
-	uint256 public ethLPRatio; // paramter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
+	uint256 public ethLPRatio; // parameter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
 
 	/**
 	 * @notice Initializer
@@ -108,7 +108,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (address(_lendingPool) == address(0)) revert AddressZero();
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_rdntAddr == address(0)) revert AddressZero();
-		if (_ethLPRatio > 10_000) revert InvalidRatio();
+		if (_ethLPRatio >= 10_000) revert InvalidRatio();
+		if (_ACCEPTABLE_RATIO > 10_000) revert InvalidRatio();
 
 		__Ownable_init();
 		__Pausable_init();
@@ -366,7 +367,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Updates acceptable slippage ratio.
 	 */
 	function setAcceptableRatio(uint256 _newRatio) external onlyOwner {
-		if (_newRatio > RATIO_DIVISOR) revert InvalidRatio();
+		uint256 minReasonableRatio = 1000;
+		if (_newRatio < minReasonableRatio || _newRatio > RATIO_DIVISOR) revert InvalidRatio();
 		ACCEPTABLE_RATIO = _newRatio;
 		emit SlippageRatioChanged(ACCEPTABLE_RATIO);
 	}

@@ -220,6 +220,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool _execute,
 		uint256 _actionTypeIndex
 	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty, uint256 actionType) {
+		if (_actionTypeIndex > bountyCount) revert("_actionTypeIndex is out of bounds");
 		if (_actionTypeIndex != 0) {
 			// execute bounty w/ given params
 			(incentivizer, totalBounty, issueBaseBounty) = bounties[_actionTypeIndex](_user, _execute);

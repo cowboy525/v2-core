@@ -57,6 +57,10 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		require(_pair != address(0), "pair is 0 address");
 		require(_rdnt != address(0), "rdnt is 0 address");
 		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+
+		uint32 minimalLookbackSecs = 1;
+    require(_lookbackSecs >= minimalLookbackSecs, "Lookback period is too low");
+
 		pool = IUniswapV3Pool(_pair);
 		token0 = IERC20Metadata(pool.token0());
 		token1 = IERC20Metadata(pool.token1());
@@ -85,6 +89,8 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 * @param _secs Loopback period in seconds
 	 */
 	function setTWAPLookbackSec(uint32 _secs) external onlyOwner {
+		uint32 minimalLookbackSecs = 1;
+    require(_secs >= minimalLookbackSecs, "Lookback period is too low");
 		lookbackSecs = _secs;
 		emit TWAPLookbackSecUpdated(_secs);
 	}

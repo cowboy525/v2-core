@@ -187,9 +187,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @return liquidity LP amount
 	 */
 	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256) {
-		IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
-		weth.transferFrom(msg.sender, address(this), _wethAmt);
-		return _addLiquidity(tokenAmount, _wethAmt, to);
+    if (to == address(0)) revert AddressZero();
+    if (tokenAmount == 0 || _wethAmt == 0) revert InvalidETHAmount();
+    IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
+    weth.transferFrom(msg.sender, address(this), _wethAmt);
+    return _addLiquidity(tokenAmount, _wethAmt, to);
 	}
 
 	/**

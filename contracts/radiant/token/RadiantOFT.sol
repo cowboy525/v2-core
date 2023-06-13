@@ -56,9 +56,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _treasury,
 		uint256 _mintAmt
 	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
-		require(_endpoint != address(0), "invalid LZ Endpoint");
-		require(_dao != address(0), "invalid DAO");
-		require(_treasury != address(0), "invalid treasury");
+		require(_endpoint != address(0), "Invalid LZ Endpoint");
+		require(_dao != address(0), "Invalid DAO");
+		require(_treasury != address(0), "Invalid treasury");
 
 		treasury = _treasury;
 
@@ -230,7 +230,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _fee ratio
 	 */
 	function setFee(uint256 _fee) external onlyOwner {
+		uint256 maxReasonableFee = 9000;
 		require(_fee <= 1e4, "Invalid ratio");
+    require(_fee <= maxReasonableFee, "Fee percent too high");
 		feeRatio = _fee;
 		emit FeeUpdated(_fee);
 	}
@@ -240,7 +242,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _priceProvider address
 	 */
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
-		require(address(_priceProvider) != address(0), "invalid PriceProvider");
+		require(address(_priceProvider) != address(0), "Invalid PriceProvider");
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
 	}
@@ -250,7 +252,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _treasury address
 	 */
 	function setTreasury(address _treasury) external onlyOwner {
-		require(_treasury != address(0), "invalid Treasury address");
+		require(_treasury != address(0), "Invalid Treasury address");
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}

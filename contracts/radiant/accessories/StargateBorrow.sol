@@ -145,7 +145,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param percent Fee ratio.
 	 */
 	function setXChainBorrowFeePercent(uint256 percent) external onlyOwner {
+		uint256 maxReasonableFee = 9000;
 		require(percent <= 1e4, "Invalid ratio");
+		require(percent <= maxReasonableFee, "Percent too high");
 		xChainBorrowFeePercent = percent;
 		emit XChainBorrowFeePercentUpdated(percent);
 	}
