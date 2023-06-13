@@ -76,6 +76,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _mfd MFD, to send bounties as vesting RDNT to Hunter (user calling bounty)
 	 * @param _chef CIC, to query bounties for ineligible emissions
 	 * @param _priceProvider PriceProvider service, to get RDNT price for bounty quotes
+	 * @param _eligibilityDataProvider Eligibility data provider
+	 * @param _compounder Compounder address
 	 * @param _hunterShare % of reclaimed rewards to send to Hunter
 	 * @param _baseBountyUsdTarget Base Bounty is paid in RDNT, will scale to match this USD target value
 	 * @param _maxBaseBounty cap the scaling above
@@ -202,7 +204,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	/**
-	 * @notice Given a user and actionType, execute that bounty on either CIC or MFD.
+	 * @notice Given a user and actionType, execute that bounty on either CIC or MFD or Compounder.
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @param _actionTypeIndex, which of the 3 bounty types (above) to run.
@@ -238,7 +240,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFD
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
 	function getMfdBounty(
 		address _user,
@@ -246,6 +248,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IMFDPlus(mfd).claimBounty(_user, _execute);
 		incentivizer = mfd;
+		return (incentivizer, 0, issueBaseBounty);
 	}
 
 	/**
@@ -254,7 +257,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case CIC
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
 	function getChefBounty(
 		address _user,
@@ -262,14 +265,16 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IChefIncentivesController(chef).claimBounty(_user, _execute);
 		incentivizer = chef;
+		return (incentivizer, 0, issueBaseBounty);
 	}
 
 	/**
-	 * @notice call MFDPlus.claimCompound(). compound pending rewards for _user into locked LP
+	 * @notice call Compounder.claimCompound(). compound pending rewards for _user into locked LP
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFDPlus
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
+	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
 	function getAutoCompoundBounty(
 		address _user,

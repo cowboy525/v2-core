@@ -193,14 +193,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Is user DQed due to lock expire or price update
-	 * @param _user's address
-	 */
-	function isMarketDisqualified(address _user) public view returns (bool) {
-		return requiredUsdValue(_user) > 0 && !isEligibleForRewards(_user) && lastEligibleTime(_user) > block.timestamp;
-	}
-
-	/**
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
@@ -272,7 +264,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Internal functions ***********************/
 
 	/**
-	 * @notice Returns locked RDNT and LP token value in eth
+	 * @notice Returns locked RDNT and LP token value in USD
 	 * @param lockedLP is locked lp amount
 	 */
 	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {

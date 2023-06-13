@@ -65,6 +65,7 @@ contract Leverager is Ownable {
 	 * @param _rewardEligibleDataProvider EligibilityProvider address.
 	 * @param _aaveOracle address.
 	 * @param _lockZap address.
+	 * @param _cic address.
 	 * @param _weth WETH address.
 	 * @param _feePercent leveraging fee ratio.
 	 * @param _treasury address.
@@ -160,6 +161,47 @@ contract Leverager is Ownable {
 		DataTypes.ReserveConfigurationMap memory conf = lendingPool.getConfiguration(asset);
 		return conf.data % (2 ** 16);
 	}
+
+    uint256 constant LTV_BASE = 10000;
+
+    function math(
+        address asset,
+        uint256 amount,
+        uint256 LtvLimit
+    ) external {
+
+        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+
+        uint256 startGas = gasleft();
+        IERC20(asset).approve(address(lendingPool), ~uint256(0));
+
+        address[] memory assets = new address[](1);
+        uint256[] memory amounts = new uint256[](1);
+        uint256[] memory modes = new uint256[](1);
+
+        assets[0] = asset;
+        amounts[0] = _maxSafeDebt(LtvLimit, amount * LtvLimit / LTV_BASE, ~uint256(0));
+        modes[0] = 2;
+
+        bytes memory params = abi.encode(amount);
+
+        lendingPool.flashLoan(
+            address(this),
+            assets,
+            amounts,
+            modes,
+            address(this),
+            params,
+            0
+        );
+    }
+
+    function _maxSafeDebt(uint256 LTV, uint256 amount, uint256 positionSize) internal pure returns(uint256 maxSafeDebt_) {
+        maxSafeDebt_ = amount * 1e8 / (1e8 * (LTV_BASE - LTV) / LTV_BASE) - amount;
+        if(maxSafeDebt_ > positionSize) {
+            maxSafeDebt_ = positionSize;
+        }
+    }
 
 	/**
 	 * @dev Loop the deposit and borrow of an asset
@@ -314,6 +356,7 @@ contract Leverager is Ownable {
 	 * @param amount of `asset`
 	 * @param borrowRatio Single ratio of borrow
 	 * @param loopCount Repeat count for loop
+	 * @return WETH amount
 	 **/
 	function wethToZapEstimation(
 		address user,
@@ -354,6 +397,7 @@ contract Leverager is Ownable {
 	/**
 	 * @notice Return estimated zap WETH amount for eligbility.
 	 * @param user for zap
+	 * @return WETH amount
 	 **/
 	function wethToZap(address user) public view returns (uint256) {
 		uint256 required = eligibilityDataProvider.requiredUsdValue(user);
@@ -393,6 +437,7 @@ contract Leverager is Ownable {
 	 * @notice Returns required LP lock amount.
 	 * @param asset underlyig asset
 	 * @param amount of tokens
+	 * @return Required lock value
 	 **/
 	function requiredLocked(address asset, uint256 amount) internal view returns (uint256) {
 		uint256 assetPrice = aaveOracle.getAssetPrice(asset);

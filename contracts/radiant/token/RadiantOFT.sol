@@ -107,7 +107,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	}
 
 	/**
-	 * @notice Returns LZ fee + Bridge fee
+	 * @notice Returns amount after dust
 	 * @dev overrides default OFT _send function to add native fee
 	 * @param _from from addr
 	 * @param _dstChainId dest LZ chain id

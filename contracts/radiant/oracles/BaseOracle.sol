@@ -71,7 +71,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns USD price in ETH
+	 * @notice Returns price in ETH
 	 * @dev supports 18 decimal token
 	 * @return price of token in decimal 8.
 	 */

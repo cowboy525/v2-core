@@ -15,7 +15,7 @@ import {ILeverager} from "../../interfaces/ILeverager.sol";
 import {IOnwardIncentivesController} from "../../interfaces/IOnwardIncentivesController.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 
-/// @title UniV3TwapOracle Contract
+/// @title ChefIncentivesController Contract
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 /// based on the Sushi MasterChef
@@ -106,7 +106,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
 	// Data about the future reward rates. emissionSchedule stored in chronological order,
-	// whenever the number of blocks since the start block exceeds the next block offset a new
+	// whenever the duration since the start timestamp exceeds the next timestamp offset a new
 	// reward rate is applied.
 	EmissionPoint[] public emissionSchedule;
 
@@ -178,6 +178,16 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	// Info of reward emission end time
 	EndingTime public endingTime;
 
+	// Operators who can claim on behalf of the user
+	mapping(address => mapping(address => bool)) public operators;
+
+	/********************** Modifiers ***********************/
+
+	modifier onlyOperator(address user) {
+		require(msg.sender == user || operators[user][msg.sender], "not allowed");
+		_;
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _poolConfigurator Pool configurator address
@@ -248,6 +258,15 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function setEligibilityEnabled(bool _newVal) external onlyOwner {
 		eligibilityEnabled = _newVal;
+	}
+
+	/**
+	 * @dev Set operator who can claim on behalf of the user
+	 * @param operator User address who can claim on behalf.
+	 * @param allowed True if `operator` is allowed to claim.
+	 */
+	function setOperator(address operator, bool allowed) external {
+		operators[msg.sender][operator] = allowed;
 	}
 
 	/********************** Pool Setup + Admin ***********************/
@@ -463,7 +482,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address for claim
 	 * @param _tokens array of reward-bearing tokens
 	 */
-	function claim(address _user, address[] memory _tokens) public whenNotPaused {
+	function claim(address _user, address[] memory _tokens) public whenNotPaused onlyOperator(_user) {
 		if (eligibilityEnabled) {
 			checkAndProcessEligibility(_user, true, true);
 		}
@@ -505,11 +524,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Vest tokens to MFD.
-	 * @dev Can be called by owner or leverager contract.
 	 * @param _user address to receive
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
+		require(_amount > 0, "Nothing to mint");
 		_amount = _sendRadiant(address(_getMfd()), _amount);
 		_getMfd().mint(_user, _amount, true);
 	}

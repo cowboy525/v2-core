@@ -29,6 +29,7 @@ contract LockerList is Ownable {
 	/********************** Lockers list ***********************/
 	/**
 	 * @notice Return the number of users.
+	 * @return Count of lockers
 	 */
 	function lockersCount() external view returns (uint256) {
 		return userlist.length;
@@ -36,6 +37,9 @@ contract LockerList is Ownable {
 
 	/**
 	 * @notice Return the list of users.
+	 * @param page number
+	 * @param limit of one page
+	 * @return Array of user addresses
 	 */
 	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory) {
 		return userlist.paginate(page, limit);
@@ -44,6 +48,7 @@ contract LockerList is Ownable {
 	/**
 	 * @notice Add a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to be added
 	 */
 	function addToList(address user) external onlyOwner {
 		if (inserted[user] == false) {
@@ -58,6 +63,7 @@ contract LockerList is Ownable {
 	/**
 	 * @notice Remove a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to remove
 	 */
 	function removeFromList(address user) external onlyOwner {
 		assert(inserted[user] == true);
