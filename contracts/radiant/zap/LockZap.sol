@@ -212,6 +212,19 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);
 	}
 
+	function zapWETHWithSlippageCheck (uint256 _wethAmount) internal returns(uint256) {
+		uint256 balanceBeforeZap = weth.balanceOf(address(this));
+		uint256 liquidity = poolHelper.zapWETH(_wethAmount);
+		uint256 balanceAfterZap = weth.balanceOf(address(this));
+
+		if (address(priceProvider) != address(0)) {
+			uint256 slippage = _calcSlippage((balanceBeforeZap.sub(balanceAfterZap)), liquidity);
+			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
+		}
+
+		return liquidity;
+	}
+
 	/**
 	 * @notice Zap tokens like USDC, DAI, USDT, WBTC to lp
 	 * @param _asset address of the asset to zap in
@@ -234,12 +247,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = poolHelper.zapWETH(wethGained);
-
-		if (address(priceProvider) != address(0)) {
-			uint256 slippage = _calcSlippage(wethGained, liquidity);
-			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
-		}
+		uint256 liquidity = zapWETHWithSlippageCheck(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
@@ -318,11 +326,15 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			}
 
 			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
-			totalWethValueIn = _wethAmt.mul(RATIO_DIVISOR).div(ethLPRatio);
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = (balanceBeforeZap.sub(balanceAfterZap)).mul(RATIO_DIVISOR).div(ethLPRatio);
 		} else {
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapWETH(_wethAmt);
-			totalWethValueIn = _wethAmt;
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = balanceBeforeZap.sub(balanceAfterZap);
 		}
 
 		if (address(priceProvider) != address(0)) {
