@@ -325,9 +325,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
 		rewardTokens.push(_rewardToken);
 
-		Reward storage rd = rewardData[_rewardToken];
-		rd.lastUpdateTime = block.timestamp;
-		rd.periodFinish = block.timestamp;
+		Reward storage rewardData = rewardData[_rewardToken];
+		rewardData.lastUpdateTime = block.timestamp;
+		rewardData.periodFinish = block.timestamp;
 	}
 
 	/**

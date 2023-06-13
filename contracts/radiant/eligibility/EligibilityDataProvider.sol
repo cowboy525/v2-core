@@ -193,6 +193,14 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	}
 
 	/**
+	 * @notice Is user DQed due to lock expire or price update
+	 * @param _user's address
+	 */
+	function isMarketDisqualified(address _user) public view returns (bool) {
+		return requiredUsdValue(_user) > 0 && !isEligibleForRewards(_user) && lastEligibleTime(_user) > block.timestamp;
+	}
+
+	/**
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
