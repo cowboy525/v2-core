@@ -255,8 +255,9 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount.sub(fee);
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -297,8 +298,9 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount.sub(fee);
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
