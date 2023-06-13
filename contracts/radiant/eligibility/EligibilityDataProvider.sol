@@ -123,6 +123,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Set LP token
 	 */
 	function setLPToken(address _lpToken) external onlyOwner {
+		if (address(_lpToken) == address(0)) revert AddressZero();
 		if (lpToken != address(0)) revert LPTokenSet();
 		lpToken = _lpToken;
 
