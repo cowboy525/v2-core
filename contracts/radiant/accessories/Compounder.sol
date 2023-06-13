@@ -160,9 +160,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						address(this),
 						block.timestamp + 600
 					)
-				{} catch {
-					IERC20(underlying).safeTransfer(_user, amount);
-				}
+				{} catch {}
 			}
 		}
 		return IERC20(baseToken).balanceOf(address(this));
