@@ -170,9 +170,13 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
 		if (asset != address(rdntToken)) {
-			address underlying = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
-			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(underlying);
-			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlying);
+			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() {
+				asset = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
+			} catch {
+				// This is not an rToken
+			}
+			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
+			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
 			uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 			uint8 assetDecimals = IERC20Metadata(asset).decimals();
 			uint256 lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
