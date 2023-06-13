@@ -51,8 +51,6 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		liquidityZap = _liquidityZap;
 	}
 
-	receive() external payable {}
-
 	function initializePool() public {
 		lpTokenAddr = IUniswapV2Factory(router.factory()).createPair(rdntAddr, wethAddr);
 

@@ -359,4 +359,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		ACCEPTABLE_RATIO = _newRatio;
 		emit SlippageRatioChanged(ACCEPTABLE_RATIO);
 	}
+
+	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
+		(bool success, ) = to.call{value: value}(new bytes(0));
+		require(success, "ETH_TRANSFER_FAILED");
+	}
 }
