@@ -214,7 +214,8 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			amount = amount.sub(fee);
+			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
