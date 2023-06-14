@@ -28,15 +28,13 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	}
 
 	function latestAnswer() public view returns (uint256 price) {
-		(, int256 answer, , , ) = tokenChainlinkFeed.latestRoundData();
-		require(answer > 0, "Price must be positive");
+		int256 answer = _getAnswer(tokenChainlinkFeed);
 		price = uint256(answer);
 	}
 
 	function latestAnswerInEth() public view returns (uint256 price) {
-		(, int256 tokenAnswer, , , ) = tokenChainlinkFeed.latestRoundData();
-		(, int256 ethAnswer, , , ) = ethChainlinkFeed.latestRoundData();
-		require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
+		int256 tokenAnswer = _getAnswer(tokenChainlinkFeed);
+		int256 ethAnswer = _getAnswer(ethChainlinkFeed);
 		price = (uint256(tokenAnswer) * (10 ** 8)) / uint256(ethAnswer);
 	}
 
@@ -81,5 +79,13 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
 		return tokenChainlinkFeed.latestRoundData();
+	}
+
+	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
+		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
+		require(updatedAt > 0, "round not complete");
+		require(block.timestamp - updatedAt < 86400, "stale price");
+		require(answer > 0, "negative price");
+		return answer;
 	}
 }
