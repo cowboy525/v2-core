@@ -302,11 +302,26 @@ describe('Zapper', function () {
 					liquidityZap.initLiquidityZap(
 						ethers.constants.AddressZero,
 						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
 						ethers.constants.AddressZero
 					)
 				).to.be.reverted;
 			}
 		});
+
+		it('initLiquidityZap should fail if called by an address other than _helper', async () => {
+			if (liquidityZap) {
+				await expect(
+					liquidityZap.connect(user2).initLiquidityZap(
+						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
+					)
+				).to.be.revertedWith('InsufficientPermision');
+			}
+		});
+
 
 		it('fallback', async () => {
 			if (liquidityZap) {
