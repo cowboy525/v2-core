@@ -762,7 +762,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 		return low;
 	}
-	
+
 	/**
 	 * @notice Add to earnings
 	 * @dev Minted tokens receive rewards normally but incur a 50% penalty when
