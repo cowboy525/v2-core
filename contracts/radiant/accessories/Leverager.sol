@@ -207,6 +207,10 @@ contract Leverager is Ownable {
 		}
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+			
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
@@ -215,8 +219,6 @@ contract Leverager is Ownable {
 
 			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
 
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
