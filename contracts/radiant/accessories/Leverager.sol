@@ -176,7 +176,8 @@ contract Leverager is Ownable {
 		uint256 interestRateMode,
 		uint256 borrowRatio,
 		uint256 loopCount,
-		bool isBorrow
+		bool isBorrow,
+		uint256 _slippage
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
@@ -216,7 +217,7 @@ contract Leverager is Ownable {
 
 			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
 		}
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -225,7 +226,12 @@ contract Leverager is Ownable {
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
 	 **/
-	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
+	function loopETH(
+		uint256 interestRateMode, 
+		uint256 borrowRatio, 
+		uint256 loopCount,
+		uint256 _slippage
+	) external payable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
@@ -260,7 +266,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, false);
 
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -274,7 +280,8 @@ contract Leverager is Ownable {
 		uint256 interestRateMode,
 		uint256 amount,
 		uint256 borrowRatio,
-		uint256 loopCount
+		uint256 loopCount,
+		uint256 _slippage
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
@@ -304,7 +311,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, false);
 
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -376,7 +383,7 @@ contract Leverager is Ownable {
 	 * @param borrower to zap
 	 * @return liquidity amount by zapping
 	 **/
-	function zapWETHWithBorrow(uint256 amount, address borrower) public returns (uint256 liquidity) {
+	function zapWETHWithBorrow(uint256 amount, address borrower, uint256 _slippage) public returns (uint256 liquidity) {
 		require(msg.sender == borrower || msg.sender == address(lendingPool), "!borrower||lendingpool");
 
 		if (amount > 0) {
@@ -385,7 +392,7 @@ contract Leverager is Ownable {
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
 				IERC20(address(weth)).safeApprove(address(lockZap), type(uint256).max);
 			}
-			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower);
+			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower, _slippage);
 		}
 	}
 

@@ -166,11 +166,17 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		return IERC20(baseToken).balanceOf(address(this));
 	}
 
-	function _convertBaseToLPandStake(address _user) internal returns (uint256 liquidity) {
+	/**
+	 * @notice Converts base token to lp token and stake them.
+	 * @param _user User for this action
+	 * @param _slippage Maximum tolerated slippage for any occuring swaps
+	 * @return liquidity LP token amount
+	 */
+	function _convertBaseToLPandStake(address _user, uint256 _slippage) internal returns (uint256 liquidity) {
 		uint256 baseBal = IERC20(baseToken).balanceOf(address(this));
 		if (baseBal != 0) {
 			IERC20(baseToken).safeApprove(lockZap, baseBal);
-			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user);
+			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user, _slippage);
 		}
 	}
 
@@ -190,6 +196,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 noSlippagePendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 
+		uint256 userSlippageLimit = IMultiFeeDistribution(multiFeeDistribution).userSlippage(_user);
+		if (userSlippageLimit == 0){
+			userSlippageLimit = slippageLimit;
+		}
+
 		if (isAutoCompound) {
 			if (msg.sender != bountyManager) revert NotBountyManager();
 			bool eligible = isEligibleForAutoCompound(_user, noSlippagePendingEth);
@@ -205,19 +216,19 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		if (!_execute) {
-			uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
+			uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute, userSlippageLimit);
 			fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
 			return fee;
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
-		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < slippageLimit) revert InvalidSlippage();
+		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit) revert InvalidSlippage();
 
 		if (isAutoCompound) {
-			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute);
+			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute, userSlippageLimit);
 		}
 
-		_convertBaseToLPandStake(_user);
+		_convertBaseToLPandStake(_user, userSlippageLimit);
 
 		if (isAutoCompound) {
 			rdntToken.approve(bountyManager, fee);
@@ -267,7 +278,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 	}
 
-	function _wethToRdnt(uint256 _wethIn, bool _execute) internal returns (uint256 rdntOut) {
+	function _wethToRdnt(uint256 _wethIn, bool _execute, uint256 _slippageLimit) internal returns (uint256 rdntOut) {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {
@@ -289,7 +300,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * _slippageLimit) / 10000) revert InvalidSlippage();
 	}
 
 	function autocompoundThreshold() public view returns (uint256 minStakeAmtEth) {
