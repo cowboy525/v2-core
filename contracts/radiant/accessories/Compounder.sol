@@ -150,8 +150,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 			address tokenToTrade;
 			uint256 amount;
-			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() {
-				tokenToTrade = IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS();
+			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+				tokenToTrade = underlyingAddress;
 				amount = lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this));
 			} catch {
 				tokenToTrade = rewardBaseTokens[i];

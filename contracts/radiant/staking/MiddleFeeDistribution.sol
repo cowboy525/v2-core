@@ -122,8 +122,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
-		// CHECK IF UNDERLYING
-		// IF YES -> CHECK IF PART OF RADIANT RESEREVS
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
 	}
@@ -144,8 +142,11 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				}
 				total = total.sub(opExAmount);
 			}
-			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
+
+			if (_rewardTokens[i] == address(rdntToken)) {
+				multiFeeDistribution.mint(address(multiFeeDistribution), total, false);
+			}
 
 			emit ForwardReward(_rewardTokens[i], total);
 
@@ -172,8 +173,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
 		if (asset != address(rdntToken)) {
-			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() {
-				asset = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
+			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+				asset = underlyingAddress;
 			} catch {
 				// This is not an rToken, so we can use the asset address as is
 			}
