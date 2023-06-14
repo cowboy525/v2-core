@@ -173,7 +173,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() {
 				asset = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
 			} catch {
-				// This is not an rToken
+				// This is not an rToken, so we can use the asset address as is
 			}
 			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
 			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
