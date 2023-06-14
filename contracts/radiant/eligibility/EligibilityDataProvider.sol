@@ -249,11 +249,13 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Operate functions ***********************/
 	/**
 	 * @notice Refresh token amount for eligibility
-	 * @param user's address
+	 * @param user The address of the user
+	 * @return currentEligibility The current eligibility status of the user
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
-		if (msg.sender != address(chef)) revert OnlyCIC();
-		assert(user != address(0));
+		if (msg.sender != address(chef)) revert("Only CIC can call this function");
+
+		require(user != address(0), "User address cannot be zero address");
 
 		currentEligibility = isEligibleForRewards(user);
 		if (currentEligibility && disqualifiedTime[user] != 0) {

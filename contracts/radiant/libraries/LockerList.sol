@@ -60,7 +60,7 @@ contract LockerList is Ownable {
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
 	 */
 	function removeFromList(address user) external onlyOwner {
-		assert(inserted[user] == true);
+		require(inserted[user] == true, "User not in the list");
 
 		delete inserted[user];
 
