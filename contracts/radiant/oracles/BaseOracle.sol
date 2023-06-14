@@ -65,7 +65,11 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		uint256 priceInEth = latestAnswerInEth();
 
 		// returns decimals 8
-		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
+		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
+		require(updatedAt > 0, "round not complete");
+		require(block.timestamp - updatedAt < 86400, "stale price");
+		require(answer > 0, "negative price");
+		uint256 ethPrice = uint256(answer);
 
 		price = priceInEth.mul(ethPrice).div(10 ** 8);
 	}

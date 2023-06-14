@@ -76,7 +76,11 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function getTokenPriceUsd() public view returns (uint256 price) {
 		if (usePool) {
 			// use sparingly, TWAP/CL otherwise
-			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
+			(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
+			require(updatedAt > 0, "round not complete");
+			require(block.timestamp - updatedAt < 86400, "stale price");
+			require(answer > 0, "negative price");
+			uint256 ethPrice = uint256(answer);
 			uint256 priceInEth = poolHelper.getPrice();
 			price = priceInEth.mul(ethPrice).div(10 ** 8);
 		} else {
@@ -100,7 +104,11 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		// decimals 8
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
-		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
+		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
+		require(updatedAt > 0, "round not complete");
+		require(block.timestamp - updatedAt < 86400, "stale price");
+		require(answer > 0, "negative price");
+		uint256 ethPrice = uint256(answer);
 		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
 	}
 
