@@ -122,6 +122,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+		// CHECK IF UNDERLYING
+		// IF YES -> CHECK IF PART OF RADIANT RESEREVS
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
 	}
