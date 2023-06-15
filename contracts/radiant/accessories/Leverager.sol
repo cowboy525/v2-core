@@ -188,10 +188,10 @@ contract Leverager is Ownable {
 			amount = amount.sub(fee);
 		}
 		if (IERC20(asset).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(asset).safeApprove(address(lendingPool), type(uint256).max);
+			IERC20(asset).forceApprove(address(lendingPool), type(uint256).max);
 		}
 		if (IERC20(asset).allowance(address(this), address(treasury)) == 0) {
-			IERC20(asset).safeApprove(treasury, type(uint256).max);
+			IERC20(asset).forceApprove(treasury, type(uint256).max);
 		}
 
 		cic.setEligibilityExempt(msg.sender, true);
@@ -230,10 +230,10 @@ contract Leverager is Ownable {
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
+			IERC20(address(weth)).forceApprove(address(lendingPool), type(uint256).max);
 		}
 		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
-			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
+			IERC20(address(weth)).forceApprove(treasury, type(uint256).max);
 		}
 
 		uint256 fee = amount.mul(feePercent).div(RATIO_DIVISOR);
@@ -279,10 +279,10 @@ contract Leverager is Ownable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
+			IERC20(address(weth)).forceApprove(address(lendingPool), type(uint256).max);
 		}
 		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
-			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
+			IERC20(address(weth)).forceApprove(treasury, type(uint256).max);
 		}
 
 		uint256 fee;
@@ -383,7 +383,7 @@ contract Leverager is Ownable {
 			uint16 referralCode = 0;
 			lendingPool.borrow(address(weth), amount, 2, referralCode, borrower);
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
-				IERC20(address(weth)).safeApprove(address(lockZap), type(uint256).max);
+				IERC20(address(weth)).forceApprove(address(lockZap), type(uint256).max);
 			}
 			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower);
 		}

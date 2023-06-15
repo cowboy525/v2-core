@@ -57,8 +57,8 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		lpTokenAddr = IUniswapV2Factory(router.factory()).createPair(rdntAddr, wethAddr);
 
 		IERC20 rdnt = IERC20(rdntAddr);
-		rdnt.safeApprove(address(router), type(uint256).max);
-		rdnt.safeApprove(address(liquidityZap), type(uint256).max);
+		rdnt.forceApprove(address(router), type(uint256).max);
+		rdnt.forceApprove(address(liquidityZap), type(uint256).max);
 		IERC20(wethAddr).approve(address(liquidityZap), type(uint256).max);
 		IERC20(wethAddr).approve(address(router), type(uint256).max);
 
@@ -175,7 +175,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		address[] memory path = new address[](2);
 		path[0] = _inToken;
 		path[1] = wethAddr;
-		IERC20(_inToken).safeIncreaseAllowance(address(router), _amount);
+		IERC20(_inToken).forceApprove(address(router), _amount);
 		router.swapExactTokensForTokens(_amount, _minAmountOut, path, msg.sender, block.timestamp);
 	}
 }

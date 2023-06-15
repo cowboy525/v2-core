@@ -110,8 +110,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		IERC20 lp = IERC20(lpTokenAddr);
 		IERC20 weth = IERC20(wethAddr);
 
-		outToken.safeApprove(vaultAddr, type(uint256).max);
-		inToken.safeApprove(vaultAddr, type(uint256).max);
+		outToken.forceApprove(vaultAddr, type(uint256).max);
+		inToken.forceApprove(vaultAddr, type(uint256).max);
 		weth.approve(vaultAddr, type(uint256).max);
 
 		IAsset[] memory assets = new IAsset[](2);

@@ -241,7 +241,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
 		}
 
-		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
+		IERC20(poolHelper.lpTokenAddr()).forceApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
 		emit Zapped(false, wethGained, 0, msg.sender, msg.sender, _lockTypeIndex);
 
@@ -317,7 +317,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 				IERC20(rdntAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 			}
 
-			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
+			IERC20(rdntAddr).forceApprove(address(poolHelper), _rdntAmt);
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
 			totalWethValueIn = _wethAmt.mul(RATIO_DIVISOR).div(ethLPRatio);
 		} else {
@@ -330,7 +330,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
 		}
 
-		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
+		IERC20(poolHelper.lpTokenAddr()).forceApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, _onBehalf, _lockTypeIndex);
 		emit Zapped(_borrow, _wethAmt, _rdntAmt, _from, _onBehalf, _lockTypeIndex);
 
