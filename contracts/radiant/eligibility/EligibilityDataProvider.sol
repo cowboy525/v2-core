@@ -226,6 +226,10 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param user's address
 	 */
 	function lastEligibleTime(address user) public view returns (uint256 lastEligibleTimestamp) {
+		if (!isEligibleForRewards(user)){
+			return 0;
+		}
+
 		uint256 requiredValue = requiredUsdValue(user);
 
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
