@@ -22,7 +22,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 	error AddressZero();
 	error PoolExists();
-	error InsufficientPermision();
+	error InsufficientPermission();
 	error IdenticalAddresses();
 	error ZeroAmount();
 
@@ -278,7 +278,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @return liquidity token amount
 	 */
 	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
 		liquidity = joinPool(amount, 0);
 		IERC20 lp = IERC20(lpTokenAddr);
@@ -293,7 +293,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @return liquidity token amount
 	 */
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 
@@ -384,7 +384,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _minAmountOut the minimum WETH amount to accept without reverting
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		if (_inToken == address(0)) revert AddressZero();
 		if (_amount == 0) revert ZeroAmount();
 		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;

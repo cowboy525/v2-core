@@ -78,7 +78,7 @@ describe('Zapper', function () {
 		const unauthorizedSigner = ethers.provider.getSigner(unauthorizedAddress);
 
 		await expect(poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)
-		).to.be.revertedWith("UnauthorizedCaller");
+		).to.be.revertedWith("InsufficientPermission");
 	});
 
 	it('Can zap USDT & DAI - Live Arbitrum', async () => {

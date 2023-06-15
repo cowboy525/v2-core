@@ -26,7 +26,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using HomoraMath for uint256;
 
 	error AddressZero();
-	error InsufficientPermision();
+	error InsufficientPermission();
 
 	address public lpTokenAddr;
 	address public rdntAddr;
@@ -80,7 +80,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(liquidityZap), amount);
 		liquidity = liquidityZap.addLiquidityWETHOnly(amount, payable(address(this)));
@@ -131,7 +131,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public returns (uint256 liquidity) {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(rdntAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
@@ -172,7 +172,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * Will revert if the output is under the {_minAmountOut}
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-		if (msg.sender != lockZap) revert InsufficientPermision();
+		if (msg.sender != lockZap) revert InsufficientPermission();
 		address[] memory path = new address[](2);
 		path[0] = _inToken;
 		path[1] = wethAddr;
