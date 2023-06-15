@@ -192,7 +192,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);
 	}
-;
+
 	/**
 	 * @notice Add liquidity with RDNT and WETH
 	 * @dev use with quote
