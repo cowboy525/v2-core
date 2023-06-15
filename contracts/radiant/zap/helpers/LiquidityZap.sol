@@ -57,6 +57,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	error InvalidETHAmount();
 	error AddressZero();
 	error InsufficientPermision();
+	error TransferFailed();
 
 	address public _token;
 	address public _tokenWETHPair;
@@ -191,7 +192,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);
 	}
-
+;
 	/**
 	 * @notice Add liquidity with RDNT and WETH
 	 * @dev use with quote
@@ -215,7 +216,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 			optimalTokenAmount = tokenAmount;
 		} else optimalWETHAmount = wethAmount;
 
-		require(weth.transfer(_tokenWETHPair, optimalWETHAmount), "WETH transfer failed");
+		bool wethTransferSuccess = weth.transfer(_tokenWETHPair, optimalWETHAmount);
+    if (!wethTransferSuccess) revert TransferFailed();
 		IERC20(_token).safeTransfer(_tokenWETHPair, optimalTokenAmount);
 
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);

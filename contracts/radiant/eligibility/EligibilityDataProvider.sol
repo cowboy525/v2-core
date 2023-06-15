@@ -254,8 +254,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
 		if (msg.sender != address(chef)) revert("Only CIC can call this function");
-
-		require(user != address(0), "User address cannot be zero address");
+		if (user == address(0)) revert AddressZero();
 
 		currentEligibility = isEligibleForRewards(user);
 		if (currentEligibility && disqualifiedTime[user] != 0) {

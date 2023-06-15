@@ -26,6 +26,10 @@ contract LockerList is Ownable {
 	 */
 	constructor() Ownable() {}
 
+	/********************** Events ***********************/
+
+	error Ineligible();
+
 	/********************** Lockers list ***********************/
 	/**
 	 * @notice Return the number of users.
@@ -60,7 +64,7 @@ contract LockerList is Ownable {
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
 	 */
 	function removeFromList(address user) external onlyOwner {
-		require(inserted[user] == true, "User not in the list");
+		if (inserted[user] == false) revert Ineligible();
 
 		delete inserted[user];
 
