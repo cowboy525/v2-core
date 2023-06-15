@@ -218,7 +218,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _amount the amount of asset to zap
 	 * @param _lockTypeIndex lock length index.
 	 */
-	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public {
+	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public whenNotPaused {
 		if (_asset == address(0)) revert AddressZero();
 		if (_amount == 0) revert AmountZero();
 		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
