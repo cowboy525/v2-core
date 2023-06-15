@@ -625,7 +625,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/**
 	 * @notice Claim rewards by converter.
-	 * @dev Rewards are transfered to converter.
+	 * @dev Rewards are transfered to converter. In the Radiant.Capital protocol
+	 * 		the role of the Converter is taken over by Compounder.sol.
 	 * @param onBehalf address to claim.
 	 */
 	function claimFromConverter(address onBehalf) external override whenNotPaused {
