@@ -64,21 +64,21 @@ describe('Zapper', function () {
 	});
 
 	it('Should not allow unauthorized address to call swapToWeth - Live Arbitrum', async () => {
-    const ownerSigner = ethers.provider.getSigner(0);
-    await poolHelper.connect(ownerSigner).setLockZap(lockZapAddress);
+		const ownerSigner = ethers.provider.getSigner(0);
+		await poolHelper.connect(ownerSigner).setLockZap(lockZapAddress);
 
-    const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
+		const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 
-    const unauthorizedAddress = weightedPoolFactory; // Unauthorized address
-    await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [unauthorizedAddress],
-    });
+		const unauthorizedAddress = weightedPoolFactory;
+		await network.provider.request({
+			method: 'hardhat_impersonateAccount',
+			params: [unauthorizedAddress],
+		});
 
-    const unauthorizedSigner = ethers.provider.getSigner(unauthorizedAddress);
-    await expect(
-        poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)
-    ).to.be.revertedWith("UnauthorizedCaller");
+		const unauthorizedSigner = ethers.provider.getSigner(unauthorizedAddress);
+
+		await expect(poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)
+		).to.be.revertedWith("UnauthorizedCaller");
 	});
 
 	it('Can zap USDT & DAI - Live Arbitrum', async () => {
