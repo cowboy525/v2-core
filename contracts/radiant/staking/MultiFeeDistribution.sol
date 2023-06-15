@@ -472,13 +472,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	/**
 	 * @notice Earnings which is locked yet
 	 * @dev Earned balances may be withdrawn immediately for a 50% penalty.
-	 * @return total earnings
+	 * @return totalVesting sum of vesting tokens
 	 * @return unlocked earnings
 	 * @return earningsData which is an array of all infos
 	 */
 	function earnedBalances(
 		address user
-	) public view returns (uint256 total, uint256 unlocked, EarnedBalance[] memory earningsData) {
+	) public view returns (uint256 totalVesting, uint256 unlocked, EarnedBalance[] memory earningsData) {
 		unlocked = balances[user].unlocked;
 		LockedBalance[] storage earnings = userEarnings[user];
 		uint256 idx;
@@ -493,7 +493,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				earningsData[idx].unlockTime = earnings[i].unlockTime;
 				earningsData[idx].penalty = penaltyAmount;
 				idx++;
-				total = total.add(earnings[i].amount);
+				totalVesting = totalVesting.add(earnings[i].amount);
 			} else {
 				unlocked = unlocked.add(earnings[i].amount);
 			}
@@ -501,7 +501,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				i++;
 			}
 		}
-		return (total, unlocked, earningsData);
+		return (totalVesting, unlocked, earningsData);
 	}
 
 	/**
@@ -771,7 +771,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @param amount to vest.
 	 * @param withPenalty does this bear penalty?
 	 */
-	function mint(address user, uint256 amount, bool withPenalty) external override whenNotPaused {
+	function vestTokens(address user, uint256 amount, bool withPenalty) external override whenNotPaused {
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (amount == 0) return;
 
@@ -1181,7 +1181,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		lockedSupply = lockedSupply.sub(amount);
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.sub(amountWithMultiplier);
 
-		if (!isRelockAction && !autoRelockDisabled[_address]) {
+		if (isRelockAction && !autoRelockDisabled[_address]) {
 			_stake(amount, _address, defaultLockIndex[_address], true);
 		} else {
 			if (doTransfer) {
@@ -1206,17 +1206,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Withdraw expired locks with options
 	 * @param _address for withdraw
 	 * @param _limit of lock length for withdraw
-	 * @param _ignoreRelock option to ignore relock
+	 * @param _isRelockAction option to relock
 	 * @return withdraw amount
 	 */
 	function withdrawExpiredLocksForWithOptions(
 		address _address,
 		uint256 _limit,
-		bool _ignoreRelock
+		bool _isRelockAction
 	) external returns (uint256) {
 		if (_limit == 0) _limit = userLocks[_address].length;
 
-		return _withdrawExpiredLocksFor(_address, _ignoreRelock, true, _limit);
+		return _withdrawExpiredLocksFor(_address, _isRelockAction, true, _limit);
 	}
 
 	/**

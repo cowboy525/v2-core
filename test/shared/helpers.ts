@@ -505,5 +505,5 @@ export const toJsNum = (bn: BigNumber) => {
 	return parseFloat(ethers.utils.formatEther(bn));
 };
 export const getUserEarnings = async (mfd: MultiFeeDistribution, user: SignerWithAddress) => {
-	return toJsNum((await mfd.earnedBalances(user.address)).total);
+	return toJsNum((await mfd.earnedBalances(user.address)).totalVesting);
 };
