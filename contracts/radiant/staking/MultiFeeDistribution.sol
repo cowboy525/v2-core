@@ -449,7 +449,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			}
 		}
 		total = balances[user].locked;
-		return (total, unlockable, locked, lockedWithMultiplier, lockData);
 	}
 
 	/**
