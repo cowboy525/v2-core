@@ -23,6 +23,9 @@ contract Leverager is Ownable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
+	/// @notice margin estimation used for zapping eth to dlp 
+	uint256 public immutable ZAP_MARGIN_ESTIMATION;
+
 	/// @notice Ratio Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
@@ -59,6 +62,9 @@ contract Leverager is Ownable {
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);
 
+	/// @notice Thrown when deployer sets the margin too high
+	error MarginTooHigh();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -68,6 +74,7 @@ contract Leverager is Ownable {
 	 * @param _weth WETH address.
 	 * @param _feePercent leveraging fee ratio.
 	 * @param _treasury address.
+	 * @param _zapMargin estimated margin when zapping eth to dlp.
 	 */
 	constructor(
 		ILendingPool _lendingPool,
@@ -77,7 +84,8 @@ contract Leverager is Ownable {
 		IChefIncentivesController _cic,
 		IWETH _weth,
 		uint256 _feePercent,
-		address _treasury
+		address _treasury,
+		uint256 _zapMargin
 	) {
 		require(address(_lendingPool) != (address(0)), "Not a valid address");
 		require(address(_rewardEligibleDataProvider) != (address(0)), "Not a valid address");
@@ -87,6 +95,7 @@ contract Leverager is Ownable {
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
 		require(_feePercent <= 1e4, "Invalid ratio");
+		if(_zapMargin >= 10) revert MarginTooHigh();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -96,6 +105,7 @@ contract Leverager is Ownable {
 		weth = _weth;
 		feePercent = _feePercent;
 		treasury = _treasury;
+		ZAP_MARGIN_ESTIMATION = _zapMargin;
 	}
 
 	/**
@@ -346,7 +356,7 @@ contract Leverager is Ownable {
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
 			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			wethAmount = wethAmount.add(wethAmount.mul(ZAP_MARGIN_ESTIMATION).div(100));
 			return wethAmount;
 		}
 	}
@@ -365,7 +375,7 @@ contract Leverager is Ownable {
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
 			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			wethAmount = wethAmount.add(wethAmount.mul(ZAP_MARGIN_ESTIMATION).div(100));
 			return wethAmount;
 		}
 	}

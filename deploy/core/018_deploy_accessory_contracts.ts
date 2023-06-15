@@ -18,6 +18,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const wethGateway = await deployments.get(`WETHGateway`);
 	const cic = await deployments.get(`ChefIncentivesController`);
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
+	const StargateMaxSlippage = "99";
+	const LeveragerEstimatedMargin = "6";
 
 	await deploy('Multicall', txnOpts);
 
@@ -32,6 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			baseAsset.address,
 			config.FEE_LOOPING,
 			treasury,
+			LeveragerEstimatedMargin
 		],
 	});
 
@@ -53,6 +56,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 						baseAsset.address,
 						treasury,
 						config.FEE_XCHAIN_BORROW,
+						StargateMaxSlippage
 					],
 				},
 			},
