@@ -54,12 +54,15 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		_;
 	}
 
+	event MinStakeAmountUpdated(uint256 indexed _minStakeAmount);
 	event BaseBountyUsdTargetUpdated(uint256 indexed _newVal);
 	event HunterShareUpdated(uint256 indexed _newVal);
 	event MaxBaseBountyUpdated(uint256 indexed _newVal);
 	event BountyBoosterUpdated(uint256 indexed _newVal);
 	event SlippageLimitUpdated(uint256 indexed _newVal);
+	event BountiesSet();
 	event BountyReserveEmpty(uint256 indexed _bal);
+	event WhitelistUpdated(address indexed _user, bool indexed _isActive);
 	event WhitelistActiveChanged(bool indexed isActive);
 
 	error AddressZero();
@@ -333,6 +336,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function setMinStakeAmount(uint256 _minStakeAmount) external onlyOwner {
 		minStakeAmount = _minStakeAmount;
+		emit MinStakeAmountUpdated(_minStakeAmount);
 	}
 
 	/**
@@ -395,6 +399,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bounties[1] = getMfdBounty;
 		bounties[2] = getChefBounty;
 		bounties[3] = getAutoCompoundBounty;
+		emit BountiesSet();
 	}
 
 	/**
@@ -413,6 +418,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function addAddressToWL(address user, bool status) external onlyOwner {
 		whitelist[user] = status;
+		emit WhitelistUpdated(user, status);
 	}
 
 	/**

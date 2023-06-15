@@ -25,7 +25,14 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeMath for uint256;
 	using HomoraMath for uint256;
 
+	/********************** Events ***********************/
+	event LiquidityZapUpdated(address indexed _liquidityZap);
+
+	event LockZapUpdated(address indexed _lockZap);
+
+	/********************** Errors ***********************/
 	error AddressZero();
+
 	error InsufficientPermision();
 
 	address public lpTokenAddr;
@@ -153,11 +160,13 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	function setLiquidityZap(address _liquidityZap) external onlyOwner {
 		if (_liquidityZap == address(0)) revert AddressZero();
 		liquidityZap = ILiquidityZap(_liquidityZap);
+		emit LiquidityZapUpdated(_liquidityZap);
 	}
 
 	function setLockZap(address _lockZap) external onlyOwner {
 		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
+		emit LockZapUpdated(_lockZap);
 	}
 
 	function getPrice() public view returns (uint256 priceInEth) {

@@ -46,6 +46,12 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	/********************** Events ***********************/
+
+	event PeriodUpdated(uint256 indexed _period);
+	event ConsultLeniencyUpdated(uint256 indexed _consultLeniency);
+	event AllowStaleConsultsUpdated(bool indexed _allowStaleConsults);
+
 	/**
 	 * @notice Initializer
 	 * @param _pair Uniswap pair contract
@@ -95,6 +101,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	function setPeriod(uint256 _period) external onlyOwner {
 		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 		period = _period;
+		emit PeriodUpdated(_period);
 	}
 
 	/**
@@ -103,6 +110,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	 */
 	function setConsultLeniency(uint256 _consultLeniency) external onlyOwner {
 		consultLeniency = _consultLeniency;
+		emit ConsultLeniencyUpdated(_consultLeniency);
 	}
 
 	/**
@@ -111,6 +119,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	 */
 	function setAllowStaleConsults(bool _allowStaleConsults) external onlyOwner {
 		allowStaleConsults = _allowStaleConsults;
+		emit AllowStaleConsultsUpdated(_allowStaleConsults);
 	}
 
 	/**

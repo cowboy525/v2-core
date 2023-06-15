@@ -26,6 +26,11 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	/// @notice Oracle to be used as a fallback
 	IBaseOracle public fallbackOracle;
 
+	/********************** Events ***********************/
+
+	event FallbackOracleUpdated(address indexed _fallback);
+	event FallbackOracleEnabled(bool indexed _enabled);
+
 	/**
 	 * @notice Initializer
 	 * @param _token Token address.
@@ -44,6 +49,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	function setFallback(address _fallback) public onlyOwner {
 		require(_fallback != address(0), "invalid address");
 		fallbackOracle = IBaseOracle(_fallback);
+		emit FallbackOracleUpdated(_fallback);
 	}
 
 	/**
@@ -53,6 +59,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	function enableFallback(bool _enabled) public onlyOwner {
 		require(address(fallbackOracle) != (address(0)), "no fallback set");
 		fallbackEnabled = _enabled;
+		emit FallbackOracleEnabled(_enabled);
 	}
 
 	/**

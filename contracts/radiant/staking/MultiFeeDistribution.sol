@@ -157,6 +157,11 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
 	event Recovered(address indexed token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
+	event BountyManagerUpdated(address indexed _bounty);
+	event RewardConverterUpdated(address indexed _rewardConverter);
+	event LockTypeInfoUpdated(uint256[] lockPeriod, uint256[] rewardMultipliers);
+	event AddressesUpdated(IChefIncentivesController _controller, IMiddleFeeDistribution _middleFeeDistribution, address indexed _treasury);
+	event LPTokenUpdated(address indexed _stakingToken);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -253,6 +258,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (_bounty == address(0)) revert AddressZero();
 		bountyManager = _bounty;
 		minters[_bounty] = true;
+		emit BountyManagerUpdated(_bounty);
 	}
 
 	/**
@@ -262,6 +268,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
 		if (_rewardConverter == address(0)) revert AddressZero();
 		rewardConverter = _rewardConverter;
+		emit RewardConverterUpdated(_rewardConverter);
 	}
 
 	/**
@@ -281,6 +288,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				i++;
 			}
 		}
+		emit LockTypeInfoUpdated(lockPeriod, rewardMultipliers);
 	}
 
 	/**
@@ -299,6 +307,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		incentivesController = _controller;
 		middleFeeDistribution = _middleFeeDistribution;
 		startfleetTreasury = _treasury;
+		emit AddressesUpdated(_controller, _middleFeeDistribution, _treasury);
 	}
 
 	/**
@@ -309,6 +318,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (_stakingToken == address(0)) revert AddressZero();
 		if (stakingToken != address(0)) revert AddressZero();
 		stakingToken = _stakingToken;
+		emit LPTokenUpdated(_stakingToken);
 	}
 
 	/**

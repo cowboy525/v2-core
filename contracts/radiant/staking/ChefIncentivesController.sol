@@ -54,6 +54,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 updateCadence;
 	}
 
+	/********************** Errors ***********************/
 	// Emitted when rewardPerSecond is updated
 	event RewardsPerSecondUpdated(uint256 indexed rewardsPerSecond, bool persist);
 
@@ -66,6 +67,20 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	event ChefReserveEmpty(uint256 indexed _balance);
 
 	event Disqualified(address indexed user);
+
+	event OnwardIncentivesUpdated(address indexed _token, IOnwardIncentivesController _incentives);
+
+	event BountyManagerUpdated(address indexed _bountyManager);
+
+	event EligibilityEnabledUpdated(bool indexed _newVal);
+
+	event BatchAllocPointsUpdated(address[] _tokens, uint256[] _allocPoints);
+
+	event LeveragerUpdated(ILeverager _leverager);
+
+	event EndingTimeUpdateCadence(uint256 indexed _lapse);
+
+	event RewardDeposit(uint256 indexed _amount);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -232,6 +247,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		PoolInfo storage pool = poolInfo[_token];
 		if (pool.lastRewardTime == 0) revert UnknownPool();
 		pool.onwardIncentives = _incentives;
+		emit OnwardIncentivesUpdated(_token, _incentives);
 	}
 
 	/**
@@ -240,6 +256,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function setBountyManager(address _bountyManager) external onlyOwner {
 		bountyManager = _bountyManager;
+		emit BountyManagerUpdated(_bountyManager);
 	}
 
 	/**
@@ -248,6 +265,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function setEligibilityEnabled(bool _newVal) external onlyOwner {
 		eligibilityEnabled = _newVal;
+		emit EligibilityEnabledUpdated(_newVal);
 	}
 
 	/********************** Pool Setup + Admin ***********************/
@@ -295,6 +313,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			pool.allocPoint = _allocPoints[i];
 		}
 		totalAllocPoint = _totalAllocPoint;
+		emit BatchAllocPointsUpdated(_tokens, _allocPoints);
 	}
 
 	/**
@@ -531,6 +550,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function setLeverager(ILeverager _leverager) external onlyOwner {
 		leverager = _leverager;
+		emit LeveragerUpdated(_leverager);
 	}
 
 	/********************** Eligibility + Disqualification ***********************/
@@ -803,6 +823,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function setEndingTimeUpdateCadence(uint256 _lapse) external onlyOwner {
 		if (_lapse > 1 weeks) revert CadenceTooLong();
 		endingTime.updateCadence = _lapse;
+		emit EndingTimeUpdateCadence(_lapse);
 	}
 
 	/**
@@ -816,6 +837,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (rewardsPerSecond == 0 && lastRPS > 0) {
 			rewardsPerSecond = lastRPS;
 		}
+		emit RewardDeposit(_amount);
 	}
 
 	/**
