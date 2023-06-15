@@ -47,9 +47,9 @@ describe('Zapper', function () {
 			});
 
 			await network.provider.request({
-        method: 'hardhat_impersonateAccount',
-        params: [lockZapAddress]
-    	});
+				method: 'hardhat_impersonateAccount',
+				params: [lockZapAddress]
+			});
 
 			const ownerSigner = ethers.provider.getSigner(0);
 			await poolHelper.connect(ownerSigner).setLockZap(lockZapAddress);

@@ -27,7 +27,6 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 
 	error AddressZero();
 	error InsufficientPermision();
-	error UnauthorizedCaller();
 
 	address public lpTokenAddr;
 	address public rdntAddr;
@@ -173,7 +172,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * Will revert if the output is under the {_minAmountOut}
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
-		if (msg.sender != lockZap) revert UnauthorizedCaller();
+		if (msg.sender != lockZap) revert InsufficientPermision();
 		address[] memory path = new address[](2);
 		path[0] = _inToken;
 		path[1] = wethAddr;
