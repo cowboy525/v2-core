@@ -60,6 +60,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice FEE ratio DIVISOR
 	uint256 public constant FEE_PERCENT_DIVISOR = 10000;
 
+	// MAX slippage that cannot be exceeded when setting slippage variable
+	uint256 public constant MAX_SLIPPAGE = 80;
+
 	// ETH pool Id
 	uint256 private constant POOL_ID_ETH = 13;
 
@@ -126,7 +129,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
 		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
-		if(_maxSlippage<80) revert SlippageSetToHigh();
+		if(_maxSlippage<MAX_SLIPPAGE) revert SlippageSetToHigh();
 
 		router = _router;
 		routerETH = _routerETH;
@@ -178,7 +181,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param _maxSlippage Max slippage allowed.
 	 */
 	function setMaxSlippage(uint256 _maxSlippage) external onlyOwner {
-		if(_maxSlippage<80) revert SlippageSetToHigh();
+		if(_maxSlippage<MAX_SLIPPAGE) revert SlippageSetToHigh();
 		maxSlippage = _maxSlippage;
 	}
 
