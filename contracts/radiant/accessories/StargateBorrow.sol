@@ -91,7 +91,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	uint256 public xChainBorrowFeePercent;
 
 	/// @notice Max slippage allowed for SG bridge swaps
-	///  		99 = 1%
+	/// 99 = 1%
 	uint256 public maxSlippage;
 
 	/// @notice Emitted when DAO address is updated
