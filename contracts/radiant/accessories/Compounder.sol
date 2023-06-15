@@ -78,11 +78,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_lockZap == address(0)) revert AddressZero();
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		_validateSlippageLimit(_slippageLimit);
 
 		uniRouter = _uniRouter;
 		multiFeeDistribution = _mfd;
@@ -128,11 +124,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		_validateSlippageLimit(_slippageLimit);
 		slippageLimit = _slippageLimit;
 	}
 
@@ -317,14 +309,24 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function userEligibleForCompound(address _user) public view returns (bool eligible) {
+		eligible = _userEligibleForCompound(_user);
+	}
+
+	function selfEligibleCompound() public view returns (bool eligible) {
+		eligible = _userEligibleForCompound(msg.sender);
+	}
+
+	function _userEligibleForCompound(address _user) internal view returns (bool eligible) {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 		eligible = pendingEth >= autocompoundThreshold();
 	}
 
-	function selfEligibleCompound() public view returns (bool eligible) {
-		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(msg.sender);
-		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
-		eligible = pendingEth >= autocompoundThreshold();
+	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
+		if (_slippageLimit < 8000) {
+			if (_slippageLimit >= PERCENT_DIVISOR) {
+				revert InvalidSlippage();
+			}
+		}
 	}
 }

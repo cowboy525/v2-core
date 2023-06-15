@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
@@ -19,7 +20,7 @@ import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 /// @title Fee distributor inside
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
-contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable {
+contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable, RecoverERC20 {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -48,9 +49,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	address internal _aaveOracle;
 
 	/********************** Events ***********************/
-
-	/// @notice Emitted when ERC20 token is recovered
-	event Recovered(address indexed token, uint256 amount);
 
 	/// @notice Emitted when reward token is forwarded
 	event ForwardReward(address indexed token, uint256 amount);
@@ -186,7 +184,6 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
-		emit Recovered(tokenAddress, tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 }

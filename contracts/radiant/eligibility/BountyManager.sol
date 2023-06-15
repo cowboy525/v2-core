@@ -9,6 +9,7 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 import {IMultiFeeDistribution, IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
 import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
@@ -22,7 +23,7 @@ import {ICompounder} from "../../interfaces/ICompounder.sol";
 /// @title BountyManager Contract
 /// @author Radiant Devs
 /// @dev All function calls are currently implemented without side effects
-contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
+contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable, RecoverERC20 {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -403,7 +404,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param tokenAmount Amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 
 	/**
