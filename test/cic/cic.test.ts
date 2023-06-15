@@ -103,7 +103,7 @@ describe('Non-Elig CIC', () => {
 					deployData.middleFeeDistribution,
 					100,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			);
 			await chef.deployed();
 
@@ -288,7 +288,7 @@ describe('Non-Elig CIC', () => {
 					deployer.address, // Mock address
 					100,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			);
 			await chef.deployed();
 

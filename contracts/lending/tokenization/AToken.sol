@@ -49,6 +49,10 @@ contract AToken is VersionedInitializable, IncentivizedERC20("ATOKEN_IMPL", "ATO
 		return ATOKEN_REVISION;
 	}
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @dev Initializes the aToken
 	 * @param pool The address of the lending pool where this aToken will be used

@@ -84,6 +84,10 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	error OnlyCIC();
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.

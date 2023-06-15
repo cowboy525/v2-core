@@ -68,7 +68,7 @@ describe('Stargate Borrow', () => {
 				wrappedEth.address,
 				fixture.treasury.address,
 				deployConfig.FEE_XCHAIN_BORROW,
-			])
+			], {unsafeAllow: ['constructor']})
 		);
 		//stargateBorrow = <StargateBorrow> await ethers.getContractAt("StargateBorrow", deployData.stargateBorrow);
 	});

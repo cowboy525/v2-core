@@ -43,8 +43,8 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
@@ -63,6 +63,10 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	IWETH public weth;
 	bool private initialized;
 	address public poolHelper;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initialize

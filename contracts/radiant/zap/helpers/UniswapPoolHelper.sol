@@ -8,8 +8,8 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../../dependencies/math/HomoraMath.sol";
 
 import "../../../interfaces/uniswap/IUniswapV2Router02.sol";
@@ -35,6 +35,10 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	IUniswapV2Router02 public router;
 	ILiquidityZap public liquidityZap;
 	address public lockZap;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	function initialize(
 		address _rdntAddr,

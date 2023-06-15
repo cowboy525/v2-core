@@ -2,9 +2,8 @@
 pragma solidity 0.8.12;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
@@ -25,6 +24,10 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 
 	/// @notice Oracle to be used as a fallback
 	IBaseOracle public fallbackOracle;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initializer

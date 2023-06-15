@@ -62,6 +62,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	mapping(address => uint256) public lastAutocompound;
 	mapping(address => address[]) public rewardToBaseRoute;
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	function initialize(
 		address _uniRouter,
 		address _mfd,

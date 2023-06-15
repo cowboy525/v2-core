@@ -2,7 +2,7 @@
 pragma solidity 0.8.12;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {BaseOracle, Initializable} from "./BaseOracle.sol";
+import {BaseOracle} from "./BaseOracle.sol";
 import {FixedPoint} from "../../dependencies/uniswap/contracts/FixedPoint.sol";
 import {UniswapV2OracleLibrary, IUniswapV2Pair} from "../../dependencies/uniswap/contracts/UniswapV2OracleLibrary.sol";
 
@@ -10,7 +10,7 @@ import {UniswapV2OracleLibrary, IUniswapV2Pair} from "../../dependencies/uniswap
 /// @author Radiant team
 /// @dev Fixed window oracle that recomputes the average price for the entire period once every period
 /// Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
-contract UniV2TwapOracle is Initializable, BaseOracle {
+contract UniV2TwapOracle is BaseOracle {
 	using FixedPoint for *;
 
 	/// @notice TWAP period
@@ -45,6 +45,10 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initializer

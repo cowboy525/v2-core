@@ -7,12 +7,10 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-
 /// @title UniV3TwapOracle Contract
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
-contract UniV3TwapOracle is Initializable, BaseOracle {
+contract UniV3TwapOracle is BaseOracle {
 	using SafeMath for uint256;
 
 	/// @notice Uniswap V3 pool address
@@ -35,6 +33,10 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 
 	/// @notice Can flip the order of the pricing
 	bool public priceInToken0;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initializer

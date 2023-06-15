@@ -29,6 +29,10 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
 
 	IAaveIncentivesController internal _incentivesController;
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @dev Initializes the debt token.
 	 * @param pool The address of the lending pool where this aToken will be used

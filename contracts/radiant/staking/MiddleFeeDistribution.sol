@@ -6,8 +6,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
@@ -76,6 +76,10 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		require(admin == _msgSender() || owner() == _msgSender(), "caller is not the admin or owner");
 		_;
 	}
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initializer

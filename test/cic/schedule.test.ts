@@ -34,7 +34,7 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 				deployer.address, // Mock address
 				100,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await chef.deployed();
 

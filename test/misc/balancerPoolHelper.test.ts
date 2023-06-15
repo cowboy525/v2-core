@@ -71,7 +71,7 @@ describe('Balancer Pool Helper', function () {
 					deployConfig.BAL_VAULT,
 					deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		);
 		await poolHelper.deployed();
@@ -104,7 +104,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			);
 			await newPoolHelper.deployed();
@@ -139,7 +139,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			);
 			await poolHelper.deployed();
@@ -158,7 +158,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith('AddressZero');
 		});

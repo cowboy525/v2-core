@@ -96,6 +96,10 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @notice Constructor
 	 * @param _router Stargate Router address

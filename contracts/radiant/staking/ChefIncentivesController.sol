@@ -178,6 +178,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	// Info of reward emission end time
 	EndingTime public endingTime;
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @notice Initializer
 	 * @param _poolConfigurator Pool configurator address

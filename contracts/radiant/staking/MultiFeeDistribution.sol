@@ -174,6 +174,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidTime();
 	error InvalidPeriod();
 
+	constructor() {
+        _disableInitializers();
+    }
+
 	/**
 	 * @dev Constructor
 	 *  First reward MUST be the RDNT token or things will break

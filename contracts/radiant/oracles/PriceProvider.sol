@@ -3,13 +3,12 @@ pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
 /// @title PriceProvider Contract
 /// @author Radiant
@@ -30,6 +29,10 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	IBaseOracle public oracle;
 
 	bool private usePool;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	/**
 	 * @notice Initializer

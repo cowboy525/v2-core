@@ -1,5 +1,5 @@
 pragma solidity ^0.8.0;
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
@@ -8,6 +8,10 @@ import "../../interfaces/IBaseOracle.sol";
 contract WSTETHOracle is OwnableUpgradeable {
 	AggregatorV3Interface public stETHUSDOracle;
 	AggregatorV3Interface public stEthPerWstETHOracle;
+
+	constructor() {
+        _disableInitializers();
+    }
 
 	function initialize(address _stETHUSDOracle, address _stEthPerWstETHOracle) public initializer {
 		stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
