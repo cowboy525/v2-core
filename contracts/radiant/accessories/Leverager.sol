@@ -202,7 +202,7 @@ contract Leverager is Ownable {
 			amount = amount.mul(RATIO_DIVISOR).div(borrowRatio);
 		}
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount; ) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -215,6 +215,9 @@ contract Leverager is Ownable {
 			IERC20(asset).safeTransfer(treasury, fee);
 
 			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			unchecked {
+				i++;
+			}
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -246,7 +249,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, true);
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount; ) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
@@ -256,6 +259,9 @@ contract Leverager is Ownable {
 
 			weth.deposit{value: amount.sub(fee)}();
 			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			unchecked {
+				i++;
+			}
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -289,7 +295,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, true);
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount; ) {
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
@@ -300,6 +306,9 @@ contract Leverager is Ownable {
 			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
+			unchecked {
+				i++;
+			}
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -333,10 +342,13 @@ contract Leverager is Ownable {
 
 		required = required.add(requiredLocked(asset, amount));
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount; ) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			unchecked {
+				i++;
+			}
 		}
 
 		if (locked >= required) {

@@ -739,8 +739,11 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 length = locks.length;
 		uint256 i = _binarySearch(locks, length, newLock.unlockTime);
 		locks.push();
-		for (uint256 j = length; j > i; j--) {
+		for (uint256 j = length; j > i; ) {
 			locks[j] = locks[j - 1];
+			unchecked {
+				j--;
+			}
 		}
 		locks[i] = newLock;
 	}
@@ -818,7 +821,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			bal.unlocked = 0;
 			uint256 sumEarned = bal.earned;
 			uint256 i;
-			for (i = 0; ; i++) {
+			for (i = 0; ; ) {
 				uint256 earnedAmount = userEarnings[_address][i].amount;
 				if (earnedAmount == 0) continue;
 				(, uint256 penaltyFactor, , ) = _penaltyInfo(userEarnings[_address][i]);
@@ -843,13 +846,22 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				} else {
 					if (sumEarned == 0) revert InvalidEarned();
 				}
+				unchecked {
+					i++;
+				}
 			}
 			if (i > 0) {
-				for (uint256 j = i; j < userEarnings[_address].length; j++) {
+				for (uint256 j = i; j < userEarnings[_address].length; ) {
 					userEarnings[_address][j - i] = userEarnings[_address][j];
+					unchecked {
+						j++;
+					}
 				}
-				for (uint256 j = 0; j < i; j++) {
+				for (uint256 j = 0; j < i; ) {
 					userEarnings[_address].pop();
+					unchecked {
+						j++;
+					}
 				}
 			}
 			bal.earned = sumEarned;
@@ -1139,11 +1151,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
 				i = i + 1;
 			}
-			for (uint256 j = i; j < locks.length; j = j + 1) {
+			for (uint256 j = i; j < locks.length; ) {
 				locks[j - i] = locks[j];
+				unchecked {
+					j++;
+				}
 			}
-			for (uint256 j = 0; j < i; j = j + 1) {
+			for (uint256 j = 0; j < i; ) {
 				locks.pop();
+				unchecked {
+					j++;
+				}
 			}
 			if (locks.length == 0) {
 				lockAmount = totalLock;
@@ -1230,12 +1248,15 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		_updateReward(_user);
 
 		LockedBalance[] storage earnings = userEarnings[_user];
-		for (uint256 i = earnings.length; i > 0; i -= 1) {
+		for (uint256 i = earnings.length; i > 0; ) {
 			if (earnings[i - 1].unlockTime > block.timestamp) {
 				zapped = zapped.add(earnings[i - 1].amount);
 				earnings.pop();
 			} else {
 				break;
+			}
+			unchecked {
+				i--;
 			}
 		}
 
