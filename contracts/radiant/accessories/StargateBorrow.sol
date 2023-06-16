@@ -78,6 +78,10 @@ contract StargateBorrow is OwnableUpgradeable {
 	// Weth address
 	IWETH internal weth;
 
+	// Referral code
+	uint16 public constant REFERRAL_CODE = 0;
+
+
 	/// @notice asset => poolId; at the moment, pool IDs for USDC and USDT are the same accross all chains
 	mapping(address => uint256) public poolIdPerChain;
 
@@ -117,7 +121,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		require(address(_lendingPool) != (address(0)), "Not a valid address");
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
-		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
+		require(_xChainBorrowFeePercent <= FEE_PERCENT_DIVISOR, "Not a valid number");
 
 		router = _router;
 		routerETH = _routerETH;
@@ -145,7 +149,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param percent Fee ratio.
 	 */
 	function setXChainBorrowFeePercent(uint256 percent) external onlyOwner {
-		require(percent <= 1e4, "Invalid ratio");
+		require(percent <= FEE_PERCENT_DIVISOR, "Invalid ratio");
 		xChainBorrowFeePercent = percent;
 		emit XChainBorrowFeePercentUpdated(percent);
 	}
@@ -197,7 +201,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		if (address(asset) == ETH_ADDRESS && address(routerETH) != address(0)) {
 			borrowETH(amount, interestRateMode, dstChainId);
 		} else {
-			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
+			lendingPool.borrow(asset, amount, interestRateMode, REFERRAL_CODE, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 			IERC20(asset).safeTransfer(daoTreasury, feeAmount);
 			amount = amount.sub(feeAmount);
@@ -224,7 +228,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param dstChainId Destination chain id
 	 **/
 	function borrowETH(uint256 amount, uint256 interestRateMode, uint16 dstChainId) internal {
-		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
+		lendingPool.borrow(address(weth), amount, interestRateMode, REFERRAL_CODE, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 		_safeTransferETH(daoTreasury, feeAmount);

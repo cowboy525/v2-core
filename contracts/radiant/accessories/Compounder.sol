@@ -46,6 +46,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	error ArrayLengthMismatch();
 
 	uint256 public constant PERCENT_DIVISOR = 10000;
+	uint256 public constant MAX_COMPOUND_FEE = 2000;
+	uint256 public constant MIN_SLIPPAGE_LIMIT = 8000;
 	uint256 public compoundFee;
 	uint256 public slippageLimit;
 
@@ -77,8 +79,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_addressProvider == address(0)) revert AddressZero();
 		if (_lockZap == address(0)) revert AddressZero();
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
-		if (_slippageLimit < 8000) {
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
+		if (_slippageLimit < MIN_SLIPPAGE_LIMIT) {
 			if (_slippageLimit >= PERCENT_DIVISOR) {
 				revert InvalidSlippage();
 			}
@@ -123,12 +125,12 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		if (_slippageLimit < 8000) {
+		if (_slippageLimit < MIN_SLIPPAGE_LIMIT) {
 			if (_slippageLimit >= PERCENT_DIVISOR) {
 				revert InvalidSlippage();
 			}
@@ -289,7 +291,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 
 	function autocompoundThreshold() public view returns (uint256 minStakeAmtEth) {
@@ -303,8 +305,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	function isEligibleForAutoCompound(address _user, uint256 _pending) public view returns (bool) {
 		bool delayComplete = true;
+		uint256 MIN_DELAY = 1 days;
 		if (lastAutocompound[_user] != 0) {
-			delayComplete = (block.timestamp - lastAutocompound[_user]) >= 1 days;
+			delayComplete = (block.timestamp - lastAutocompound[_user]) >= MIN_DELAY;
 		}
 		return
 			IMultiFeeDistribution(multiFeeDistribution).autocompoundEnabled(_user) &&

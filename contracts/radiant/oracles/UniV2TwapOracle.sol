@@ -46,6 +46,9 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	/// @notice Event emitted when the period is updated
+	uint256 public constant PERIOD_MIN = 10;
+
 	/**
 	 * @notice Initializer
 	 * @param _pair Uniswap pair contract
@@ -79,7 +82,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 
 		require(reserve0 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
 		require(reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		require(_period >= PERIOD_MIN, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 
 		period = _period;
 		consultLeniency = _consultLeniency;
@@ -93,7 +96,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	 * @param _period TWAP period.
 	 */
 	function setPeriod(uint256 _period) external onlyOwner {
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		require(_period >= PERIOD_MIN, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 		period = _period;
 	}
 

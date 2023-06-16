@@ -34,6 +34,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	bytes32 public poolId;
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
+	uint256 public constant poolWeight = 4;
+	uint256 public constant RDNT_WEIGHT = 800000000000000000;
+	uint256 public constant WETH_WEIGHT = 200000000000000000;
+	uint256 public constant INITIAL_SWAP_FEE_PERCENTAGE = 1000000000000000;
 
 	/**
 	 * @notice Initializer
@@ -81,16 +85,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		rateProviders[0] = 0x0000000000000000000000000000000000000000;
 		rateProviders[1] = 0x0000000000000000000000000000000000000000;
 
-		uint256 swapFeePercentage = 1000000000000000;
-
 		uint256[] memory weights = new uint256[](2);
 
 		if (token0 == outTokenAddr) {
-			weights[0] = 800000000000000000;
-			weights[1] = 200000000000000000;
+			weights[0] = RDNT_WEIGHT;
+			weights[1] = WETH_WEIGHT;
 		} else {
-			weights[0] = 200000000000000000;
-			weights[1] = 800000000000000000;
+			weights[0] = WETH_WEIGHT;
+			weights[1] = RDNT_WEIGHT;
 		}
 
 		lpTokenAddr = poolFactory.create(
@@ -99,7 +101,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 			tokens,
 			weights,
 			rateProviders,
-			swapFeePercentage,
+			INITIAL_SWAP_FEE_PERCENTAGE,
 			address(this)
 		);
 
@@ -227,8 +229,6 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		uint256 poolWeight = 4;
-
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
@@ -322,7 +322,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth.mul(1e10);
 		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
-		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
+		optimalWETHAmount = ethRequiredBeforeWeight.div(poolWeight);
 	}
 
 	/**

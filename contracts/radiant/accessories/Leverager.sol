@@ -53,6 +53,9 @@ contract Leverager is Ownable {
 	/// @notice Treasury address
 	address public treasury;
 
+	/// @notice Margin percent
+	uint256 public MARGIN_PERCENT = 6;
+
 	/// @notice Emitted when fee ratio is updated
 	event FeePercentUpdated(uint256 indexed _feePercent);
 
@@ -86,7 +89,7 @@ contract Leverager is Ownable {
 		require(address(_cic) != (address(0)), "Not a valid address");
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
-		require(_feePercent <= 1e4, "Invalid ratio");
+		require(_feePercent <= RATIO_DIVISOR, "Invalid ratio");
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -117,7 +120,7 @@ contract Leverager is Ownable {
 	 * @param _feePercent fee ratio.
 	 */
 	function setFeePercent(uint256 _feePercent) external onlyOwner {
-		require(_feePercent <= 1e4, "Invalid ratio");
+		require(_feePercent <= RATIO_DIVISOR, "Invalid ratio");
 		feePercent = _feePercent;
 		emit FeePercentUpdated(_feePercent);
 	}
@@ -157,8 +160,9 @@ contract Leverager is Ownable {
 	 * @return ltv of the asset
 	 **/
 	function ltv(address asset) public view returns (uint256) {
+		uint256 twoPow16 = 2 ** 16;
 		DataTypes.ReserveConfigurationMap memory conf = lendingPool.getConfiguration(asset);
-		return conf.data % (2 ** 16);
+		return conf.data % twoPow16;
 	}
 
 	/**
@@ -342,11 +346,11 @@ contract Leverager is Ownable {
 		if (locked >= required) {
 			return 0;
 		} else {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
+			uint256 deltaUsdValue = required.sub(locked); // decimals === 8
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
 			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			wethAmount = wethAmount.add(wethAmount.mul(MARGIN_PERCENT).div(100));
 			return wethAmount;
 		}
 	}
@@ -365,7 +369,7 @@ contract Leverager is Ownable {
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
 			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			wethAmount = wethAmount.add(wethAmount.mul(MARGIN_PERCENT).div(100));
 			return wethAmount;
 		}
 	}
@@ -378,10 +382,11 @@ contract Leverager is Ownable {
 	 **/
 	function zapWETHWithBorrow(uint256 amount, address borrower) public returns (uint256 liquidity) {
 		require(msg.sender == borrower || msg.sender == address(lendingPool), "!borrower||lendingpool");
+		 uint256 INTEREST_RATE_MODE = 2;
 
 		if (amount > 0) {
 			uint16 referralCode = 0;
-			lendingPool.borrow(address(weth), amount, 2, referralCode, borrower);
+			lendingPool.borrow(address(weth), amount, INTEREST_RATE_MODE, referralCode, borrower);
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
 				IERC20(address(weth)).safeApprove(address(lockZap), type(uint256).max);
 			}
