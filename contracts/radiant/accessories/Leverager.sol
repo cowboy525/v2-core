@@ -214,7 +214,7 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			amount = amount.sub(fee);
+			amount = amount - fee;
 			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
@@ -255,7 +255,7 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			amount = amount.sub(fee);
+			amount = amount - fee;
 			weth.deposit{value: amount}();
 			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
@@ -298,7 +298,7 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			amount = amount.sub(fee);
+			amount = amount - fee;
 			weth.deposit{value: amount}();
 			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
