@@ -62,6 +62,9 @@ contract Leverager is Ownable {
 	/// @notice Disallow a loop count of 0
 	error InvalidLoopCount();
 
+	/// @notice Emitted when ratio is invalid
+	error InvalidRatio();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -120,12 +123,12 @@ contract Leverager is Ownable {
 	 * @param _feePercent fee ratio.
 	 */
 	function setFeePercent(uint256 _feePercent) external onlyOwner {
-    uint256 maxReasonableFee = 9000;
-    require(_feePercent <= 1e4, "Invalid ratio");
-    require(_feePercent <= maxReasonableFee, "Fee percent too high");
-    feePercent = _feePercent;
-    emit FeePercentUpdated(_feePercent);
-}
+		uint256 maxReasonableFee = 9000;
+		if (_feePercent >= RATIO_DIVISOR) revert InvalidRatio();
+		if (_feePercent >= maxReasonableFee) revert InvalidRatio();
+		feePercent = _feePercent;
+		emit FeePercentUpdated(_feePercent);
+	}
 
 
 	/**
