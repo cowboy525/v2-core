@@ -10,6 +10,9 @@ import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
 
 contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgradeable {
+	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
+	uint256 public constant UPDATE_PERIOD = 86400;
+
 	AggregatorV3Interface public ethChainlinkFeed;
 	AggregatorV3Interface public tokenChainlinkFeed;
 	address public token;
@@ -84,7 +87,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
 		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
 		if(updatedAt == 0) revert RoundNotComplete();
-		if(block.timestamp - updatedAt >= 86400) revert StalePrice();
+		if(block.timestamp - updatedAt >= UPDATE_PERIOD) revert StalePrice();
 		if(answer < 0) revert NegativePrice();
 		return answer;
 	}
