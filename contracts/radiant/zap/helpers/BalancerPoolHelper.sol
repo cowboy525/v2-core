@@ -460,7 +460,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	/**
 	 * @notice Get swap fee percentage
 	 */
-	function getSwapFeePercentage() public view onlyOwner returns (uint256 fee) {
+	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		fee = pool.getSwapFeePercentage();
 	}
