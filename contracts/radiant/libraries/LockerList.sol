@@ -33,7 +33,7 @@ contract LockerList is Ownable {
 	 * @return count The number of users
 	 */
 	function lockersCount() external view returns (uint256 count) {
-			count = userlist.length;
+		count = userlist.length;
 	}
 
 	/**
@@ -43,7 +43,7 @@ contract LockerList is Ownable {
 	 * @return users A paginated list of users
 	 */
 	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory users) {
-			users = userlist.paginate(page, limit);
+		users = userlist.paginate(page, limit);
 	}
 
 	/**

@@ -171,7 +171,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
 		uint256 rdntInEth = _rdntAmount.mul(priceInEth).div(10 ** priceDecimals).mul(10 ** 18).div(10 ** decimals());
-		bridgeFee = rdntInEth.mul(feeRatio).div(FEE_DIVISOR);
+		bridgeFee = (rdntInEth * feeRatio) / FEE_DIVISOR;
 	}
 
 	/**
