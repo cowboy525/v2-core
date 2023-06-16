@@ -146,7 +146,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/**
 	 * @notice Returns pool helper address
 	 */
-	function getPoolHelper() public view returns (address) {
+	function getPoolHelper() external view returns (address) {
 		return address(poolHelper);
 	}
 
@@ -154,7 +154,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Get Variable debt token address
 	 * @param _asset underlying.
 	 */
-	function getVDebtToken(address _asset) public view returns (address) {
+	function getVDebtToken(address _asset) external view returns (address) {
 		DataTypes.ReserveData memory reserveData = lendingPool.getReserveData(_asset);
 		return reserveData.variableDebtTokenAddress;
 	}

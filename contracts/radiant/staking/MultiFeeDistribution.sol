@@ -1046,7 +1046,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @notice Sets the loopback period
 	 * @param _lookback in seconds
 	 */
-	function setLookback(uint256 _lookback) public onlyOwner {
+	function setLookback(uint256 _lookback) external onlyOwner {
 		rewardsLookback = _lookback;
 	}
 

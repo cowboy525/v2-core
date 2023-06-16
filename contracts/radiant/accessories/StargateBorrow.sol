@@ -112,7 +112,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		IWETH _weth,
 		address _treasury,
 		uint256 _xChainBorrowFeePercent
-	) public initializer {
+	) external initializer {
 		require(address(_router) != (address(0)), "Not a valid address");
 		require(address(_lendingPool) != (address(0)), "Not a valid address");
 		require(address(_weth) != (address(0)), "Not a valid address");

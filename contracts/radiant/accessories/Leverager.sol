@@ -146,7 +146,7 @@ contract Leverager is Ownable {
 	 * @param asset The address of the underlying asset of the reserve
 	 * @return varaiableDebtToken address of the asset
 	 **/
-	function getVDebtToken(address asset) public view returns (address) {
+	function getVDebtToken(address asset) external view returns (address) {
 		DataTypes.ReserveData memory reserveData = lendingPool.getReserveData(asset);
 		return reserveData.variableDebtTokenAddress;
 	}
@@ -156,7 +156,7 @@ contract Leverager is Ownable {
 	 * @param asset The address of the underlying asset of the reserve
 	 * @return ltv of the asset
 	 **/
-	function ltv(address asset) public view returns (uint256) {
+	function ltv(address asset) external view returns (uint256) {
 		DataTypes.ReserveConfigurationMap memory conf = lendingPool.getConfiguration(asset);
 		return conf.data % (2 ** 16);
 	}

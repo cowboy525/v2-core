@@ -70,7 +70,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		address _lockZap,
 		uint256 _compoundFee,
 		uint256 _slippageLimit
-	) public initializer {
+	) external initializer {
 		if (_uniRouter == address(0)) revert AddressZero();
 		if (_mfd == address(0)) revert AddressZero();
 		if (_baseToken == address(0)) revert AddressZero();
@@ -98,11 +98,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		__Pausable_init();
 	}
 
-	function pause() public onlyOwner {
+	function pause() external onlyOwner {
 		_pause();
 	}
 
-	function unpause() public onlyOwner {
+	function unpause() external onlyOwner {
 		_unpause();
 	}
 
@@ -316,13 +316,13 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		eligible = _pending >= autocompoundThreshold();
 	}
 
-	function userEligibleForCompound(address _user) public view returns (bool eligible) {
+	function userEligibleForCompound(address _user) external view returns (bool eligible) {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 		eligible = pendingEth >= autocompoundThreshold();
 	}
 
-	function selfEligibleCompound() public view returns (bool eligible) {
+	function selfEligibleCompound() external view returns (bool eligible) {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(msg.sender);
 		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 		eligible = pendingEth >= autocompoundThreshold();
