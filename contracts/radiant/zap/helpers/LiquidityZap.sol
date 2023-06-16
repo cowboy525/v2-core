@@ -61,7 +61,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	address public _token;
 	address public _tokenWETHPair;
 	IWETH public weth;
-	bool private initializedLiquidity;
+	bool private initializedLiquidityZap;
 	address public poolHelper;
 
 	/**
@@ -79,11 +79,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @param _helper Pool helper contract
 	 */
 	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
-		if (initializedLiquidity) revert ZapExists();
+		if (initializedLiquidityZap) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
 		_tokenWETHPair = tokenWethPair;
-		initializedLiquidity = true;
+		initializedLiquidityZap = true;
 		poolHelper = _helper;
 	}
 
