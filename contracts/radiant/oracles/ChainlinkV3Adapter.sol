@@ -83,9 +83,9 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 
 	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
 		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
-		require(updatedAt > 0, "round not complete");
-		require(block.timestamp - updatedAt < 86400, "stale price");
-		require(answer > 0, "negative price");
+		if(updatedAt == 0) revert RoundNotComplete();
+		if(block.timestamp - updatedAt >= 86400) revert StalePrice();
+		if(answer < 0) revert NegativePrice();
 		return answer;
 	}
 }
