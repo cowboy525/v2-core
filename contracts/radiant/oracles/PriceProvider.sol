@@ -18,6 +18,9 @@ import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability
 contract PriceProvider is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
+	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
+	uint256 public constant UPDATE_PERIOD = 86400;
+
 	/// @notice Chainlink aggregator for USD price of base token
 	IChainlinkAggregator public baseTokenPriceInUsdProxyAggregator;
 
@@ -79,7 +82,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 			// use sparingly, TWAP/CL otherwise
 			(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
 			if (updatedAt == 0) revert Errors.RoundNotComplete();
-			if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+			if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
 			if (answer < 0) revert Errors.NegativePrice();
 			uint256 ethPrice = uint256(answer);
 			uint256 priceInEth = poolHelper.getPrice();
@@ -107,7 +110,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		// decimals 8
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
 		if (updatedAt == 0) revert Errors.RoundNotComplete();
-		if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
 		if (answer < 0) revert Errors.NegativePrice();
 		uint256 ethPrice = uint256(answer);
 		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);

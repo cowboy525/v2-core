@@ -15,6 +15,9 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
+	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
+	uint256 public constant UPDATE_PERIOD = 86400;
+
 	/// @notice Token for price
 	address public token;
 
@@ -68,7 +71,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		// returns decimals 8
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
 		if (updatedAt == 0) revert Errors.RoundNotComplete();
-		if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
 		if (answer < 0) revert Errors.NegativePrice();
 		uint256 ethPrice = uint256(answer);
 
