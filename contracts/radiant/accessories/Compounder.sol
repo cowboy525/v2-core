@@ -45,6 +45,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	error ArrayLengthMismatch();
 
+	error SwapFailed(address asset, uint256 amount);
+
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public compoundFee;
 	uint256 public slippageLimit;
@@ -161,7 +163,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						block.timestamp + 600
 					)
 				{} catch {
-					IERC20(underlying).safeTransfer(_user, amount);
+					revert SwapFailed(underlying, amount);
 				}
 			}
 		}
