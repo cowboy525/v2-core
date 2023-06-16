@@ -413,8 +413,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 
 		(uint256 reward, uint256 newAccRewardPerShare) = _newRewards(pool, _totalAllocPoint);
-		accountedRewards = accountedRewards.add(reward);
-		pool.accRewardPerShare = pool.accRewardPerShare.add(newAccRewardPerShare);
+		accountedRewards = accountedRewards + reward;
+		pool.accRewardPerShare = pool.accRewardPerShare + newAccRewardPerShare;
 		pool.lastRewardTime = timestamp;
 	}
 
@@ -436,9 +436,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			uint256 accRewardPerShare = pool.accRewardPerShare;
 			if (block.timestamp > pool.lastRewardTime) {
 				(, uint256 newAccRewardPerShare) = _newRewards(pool, totalAllocPoint);
-				accRewardPerShare = accRewardPerShare.add(newAccRewardPerShare);
+				accRewardPerShare = accRewardPerShare + newAccRewardPerShare;
 			}
-			claimable[i] = user.amount.mul(accRewardPerShare).div(ACC_REWARD_PRECISION).sub(user.rewardDebt);
+			claimable[i] = user.amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
 		}
 		return claimable;
 	}
@@ -844,15 +844,15 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function _newRewards(PoolInfo memory pool, uint256 _totalAllocPoint) public view returns (uint256 newReward, uint256 newAccRewardPerShare) {
 		uint256 lpSupply = pool.totalSupply;
 		if (lpSupply > 0) {
-			uint256 duration = block.timestamp.sub(pool.lastRewardTime);
-			uint256 rawReward = duration.mul(rewardsPerSecond);
+			uint256 duration = block.timestamp - pool.lastRewardTime;
+			uint256 rawReward = duration * rewardsPerSecond;
 
 			uint256 rewards = availableRewards();
 			if (rewards < rawReward) {
 				rawReward = rewards;
 			}
-			newReward = rawReward.mul(pool.allocPoint).div(_totalAllocPoint);
-			newAccRewardPerShare = newReward.mul(ACC_REWARD_PRECISION).div(lpSupply);
+			newReward = rawReward * pool.allocPoint / _totalAllocPoint;
+			newAccRewardPerShare = newReward * ACC_REWARD_PRECISION / lpSupply;
 		}
 	}
 

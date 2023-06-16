@@ -833,23 +833,22 @@ contract MultiFeeDistribution is
 					uint256 newBurnAmount
 				) = _penaltyInfo(userEarnings[_address][i]);
 
-				// Amount required from this lock, taking into account the penalty
 				uint256 requiredAmount = earnedAmount;
 				if (remaining >= withdrawAmount) {
-					remaining = remaining.sub(withdrawAmount); // remaining -= earned * (1 - pentaltyFactor)
+					remaining = remaining - withdrawAmount;
 					if (remaining == 0) i++;
 				} else {
-					requiredAmount = remaining.mul(WHOLE).div(WHOLE.sub(penaltyFactor));
-					userEarnings[_address][i].amount = earnedAmount.sub(requiredAmount);
+					requiredAmount = remaining * WHOLE / (WHOLE - penaltyFactor);
+					userEarnings[_address][i].amount = earnedAmount - requiredAmount;
 					remaining = 0;
 
-					newPenaltyAmount = requiredAmount.mul(penaltyFactor).div(WHOLE);
-					newBurnAmount = newPenaltyAmount.mul(burn).div(WHOLE);
+					newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
+					newBurnAmount = newPenaltyAmount * burn / WHOLE;
 				}
-				sumEarned = sumEarned.sub(requiredAmount);
+				sumEarned = sumEarned - requiredAmount;
 
-				penaltyAmount = penaltyAmount.add(newPenaltyAmount); // penalty += amount * penaltyFactor
-				burnAmount = burnAmount.add(newBurnAmount); // burn += penalty * burnFactor
+				penaltyAmount = penaltyAmount + newPenaltyAmount;
+				burnAmount = burnAmount + newBurnAmount;
 
 				if (remaining == 0) {
 					break;

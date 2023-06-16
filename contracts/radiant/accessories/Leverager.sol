@@ -397,11 +397,11 @@ contract Leverager is Ownable {
 	 **/
 	function _calcWethAmount(uint256 locked, uint256 required) internal view returns (uint256 wethAmount) {
 		if (locked < required) {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
+			uint256 deltaUsdValue = required - locked; //decimals === 8
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
-			wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			wethAmount = (deltaUsdValue * (10 ** 18) * (10 ** priceDecimal)) / wethPrice / (10 ** 8);
+			wethAmount = wethAmount + ((wethAmount * 6) / 100);
 		}
 	}
 }
