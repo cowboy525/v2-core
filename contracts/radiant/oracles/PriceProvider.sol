@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import {Errors} from "../libraries/Errors.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -77,9 +78,9 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		if (usePool) {
 			// use sparingly, TWAP/CL otherwise
 			(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
-			require(updatedAt > 0, "round not complete");
-			require(block.timestamp - updatedAt < 86400, "stale price");
-			require(answer > 0, "negative price");
+			if (updatedAt == 0) revert Errors.RoundNotComplete();
+			if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+			if (answer < 0) revert Errors.NegativePrice();
 			uint256 ethPrice = uint256(answer);
 			uint256 priceInEth = poolHelper.getPrice();
 			price = priceInEth.mul(ethPrice).div(10 ** 8);
@@ -105,9 +106,9 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
-		require(updatedAt > 0, "round not complete");
-		require(block.timestamp - updatedAt < 86400, "stale price");
-		require(answer > 0, "negative price");
+		if (updatedAt == 0) revert Errors.RoundNotComplete();
+		if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+		if (answer < 0) revert Errors.NegativePrice();
 		uint256 ethPrice = uint256(answer);
 		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
 	}

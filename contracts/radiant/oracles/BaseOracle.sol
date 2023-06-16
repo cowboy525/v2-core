@@ -3,6 +3,7 @@ pragma solidity 0.8.12;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import {Errors} from "../libraries/Errors.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -66,9 +67,9 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 
 		// returns decimals 8
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
-		require(updatedAt > 0, "round not complete");
-		require(block.timestamp - updatedAt < 86400, "stale price");
-		require(answer > 0, "negative price");
+		if (updatedAt == 0) revert Errors.RoundNotComplete();
+		if (block.timestamp - updatedAt >= 86400) revert Errors.StalePrice();
+		if (answer < 0) revert Errors.NegativePrice();
 		uint256 ethPrice = uint256(answer);
 
 		price = priceInEth.mul(ethPrice).div(10 ** 8);
