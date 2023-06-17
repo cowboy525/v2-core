@@ -227,7 +227,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 ethPrice = uint256(ethOracle.latestAnswer());
 		uint256 expectedEthAmount = (_amount * (10 ** (18 - assetDecimals)) * assetPrice) / ethPrice;
 
-		IERC20(_asset).transferFrom(msg.sender, address(poolHelper), _amount);
+		IERC20(_asset).safeTransferFrom(msg.sender, address(poolHelper), _amount);
 		uint256 wethBalanceBefore = weth.balanceOf(address(poolHelper));
 		uint256 minAcceptableWeth = (expectedEthAmount * ACCEPTABLE_RATIO) / RATIO_DIVISOR;
 		poolHelper.swapToWeth(_asset, _amount, minAcceptableWeth);
