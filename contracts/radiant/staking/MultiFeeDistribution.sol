@@ -1182,7 +1182,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		lockedSupply = lockedSupply.sub(amount);
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.sub(amountWithMultiplier);
 
-		if (isRelockAction && !autoRelockDisabled[_address]) {
+		if (!isRelockAction && !autoRelockDisabled[_address]) {
 			_stake(amount, _address, defaultLockIndex[_address], true);
 		} else {
 			if (doTransfer) {

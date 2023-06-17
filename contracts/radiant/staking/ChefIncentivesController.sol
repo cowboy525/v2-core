@@ -486,7 +486,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			user.lastClaimTime = block.timestamp;
 		}
 
-		_mint(_user, pending);
+		_vestTokens(_user, pending);
 
 		eligibleDataProvider.updatePrice();
 
@@ -509,7 +509,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address to receive
 	 * @param _amount to vest
 	 */
-	function _mint(address _user, uint256 _amount) internal {
+	function _vestTokens(address _user, uint256 _amount) internal {
 		_amount = _sendRadiant(address(_getMfd()), _amount);
 		_getMfd().vestTokens(_user, _amount, true);
 	}
