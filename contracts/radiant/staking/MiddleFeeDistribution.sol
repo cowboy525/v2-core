@@ -142,6 +142,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				}
 				total = total.sub(opExAmount);
 			}
+			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
 
 			if (_rewardTokens[i] == address(rdntToken)) {
