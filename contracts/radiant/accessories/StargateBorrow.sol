@@ -199,8 +199,10 @@ contract StargateBorrow is OwnableUpgradeable {
 		} else {
 			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-			IERC20(asset).safeTransfer(daoTreasury, feeAmount);
-			amount = amount.sub(feeAmount);
+			if(feeAmount > 0) {
+				IERC20(asset).safeTransfer(daoTreasury, feeAmount);
+				amount = amount.sub(feeAmount);
+			}
 			IERC20(asset).safeApprove(address(router), 0);
 			IERC20(asset).safeApprove(address(router), amount);
 			router.swap{value: msg.value}(
@@ -227,8 +229,10 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		_safeTransferETH(daoTreasury, feeAmount);
-		amount = amount.sub(feeAmount);
+		if(feeAmount > 0) {
+			_safeTransferETH(daoTreasury, feeAmount);
+			amount = amount.sub(feeAmount);
+		}
 
 		routerETH.swapETH{value: amount.add(msg.value)}(
 			dstChainId, // dest chain id

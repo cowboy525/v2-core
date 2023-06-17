@@ -554,10 +554,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (earning.unlockTime > block.timestamp) {
 			// 90% on day 1, decays to 25% on day 90
 			penaltyFactor = earning.unlockTime.sub(block.timestamp).mul(HALF).div(vestDuration).add(QUART); // 25% + timeLeft/vestDuration * 65%
+			penaltyAmount = earning.amount.mul(penaltyFactor).div(WHOLE);
+			burnAmount = penaltyAmount.mul(burn).div(WHOLE);
+			amount = earning.amount.sub(penaltyAmount);
 		}
-		penaltyAmount = earning.amount.mul(penaltyFactor).div(WHOLE);
-		burnAmount = penaltyAmount.mul(burn).div(WHOLE);
-		amount = earning.amount.sub(penaltyAmount);
 	}
 
 	/********************** Reward functions ***********************/
