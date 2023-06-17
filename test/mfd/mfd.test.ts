@@ -183,7 +183,7 @@ describe('MultiFeeDistribution', () => {
 
 	it('mint & stake vlidation', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		await expect(mfd.connect(user1).mint(user1.address, depositAmount, true)).to.be.reverted;
+		await expect(mfd.connect(user1).vestTokens(user1.address, depositAmount, true)).to.be.reverted;
 		await mfd.vestTokens(user1.address, 0, true);
 		await mfd.vestTokens(user1.address, depositAmount, false);
 	});
