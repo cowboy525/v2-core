@@ -576,6 +576,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	) internal {
 		PoolInfo storage pool = poolInfo[_token];
 		if (pool.lastRewardTime == 0) revert UnknownPool();
+		// Although we would want the pools to be as up to date as possible when users 
+		// transfer rTokens or dTokens, updating all pools on every r-/d-Token interaction would be too gas intensive.
 		// _updateEmissions();
 		_updatePool(pool, totalAllocPoint);
 		UserInfo storage user = userInfo[_token][_user];
