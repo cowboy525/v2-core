@@ -392,7 +392,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function relock() external virtual {
 		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
-		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
 		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
 	}
 
@@ -1182,7 +1181,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		lockedSupply = lockedSupply.sub(amount);
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.sub(amountWithMultiplier);
 
-		if (!isRelockAction && !autoRelockDisabled[_address]) {
+		if (isRelockAction || !autoRelockDisabled[_address]) {
 			_stake(amount, _address, defaultLockIndex[_address], true);
 		} else {
 			if (doTransfer) {
