@@ -173,7 +173,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		Address.sendValue(payable(treasury), fee);
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
-    }
+	}
 
 	/**
 	 * @notice overrides default OFT _debitFrom function to make pauseable
