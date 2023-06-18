@@ -45,6 +45,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	error ArrayLengthMismatch();
 
+	/// @notice The maximum slippage limit that can be set by admins
+	uint256 public constant MAX_SLIPPAGE_LIMIT = 8000; //20%
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public compoundFee;
 	uint256 public slippageLimit;
@@ -128,7 +130,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		if (_slippageLimit < 8000) {
+		if (_slippageLimit < MAX_SLIPPAGE_LIMIT) {
 			if (_slippageLimit >= PERCENT_DIVISOR) {
 				revert InvalidSlippage();
 			}

@@ -35,8 +35,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	uint256 public constant HALF = 65000; //  65%
 	uint256 public constant WHOLE = 100000; // 100%
 
-	uint256 public constant MAX_SLIPPAGE = 8000; //80%
-	uint256 public constant COMPOUNDER_PERCENT_DIVISOR = 10000; //100%
+	// Maximum slippage allowed to be set by users (used for compounding).
+	uint256 public constant MAX_SLIPPAGE = 9500; //5%
+	uint256 public constant PERCENT_DIVISOR = 10000; //100%
 
 	/// @notice Proportion of burn amount
 	uint256 public burn;
@@ -350,7 +351,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function setAutocompound(bool _status, uint256 _slippage) external {
 		autocompoundEnabled[msg.sender] = _status;
-		if (_slippage < MAX_SLIPPAGE || _slippage >= COMPOUNDER_PERCENT_DIVISOR) {
+		if (_slippage < MAX_SLIPPAGE || _slippage >= PERCENT_DIVISOR) {
 			revert InvalidAmount();
 		}
 		userSlippage[msg.sender] = _slippage;

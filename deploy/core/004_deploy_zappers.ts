@@ -157,7 +157,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 						wethAddr,
 						radiantToken.address,
 						ethLpRatio,
-						config.ZAP_SLIPPAGE_LIMIT,
 					],
 				},
 			},

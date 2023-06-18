@@ -253,7 +253,7 @@ runs.forEach(function (run) {
 					vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
 					await vdWETH.connect(hunter).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-					await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
+					await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, 0, {
 						value: ethers.utils.parseEther('1'),
 					});
 				});
@@ -308,7 +308,7 @@ runs.forEach(function (run) {
 					vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
 					await vdWETH.connect(hunter).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-					await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
+					await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, 0, {
 						value: ethers.utils.parseEther('1'),
 					});
 

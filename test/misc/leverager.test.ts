@@ -95,7 +95,7 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false);
+		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 0);
 
 		const initialFee = amt.mul(FEE_LOOPING).div(1e4);
 		const initialDeposit = amt.sub(initialFee);
@@ -164,7 +164,7 @@ describe('Looping/Leverager', () => {
 
 		await usdc.connect(user2).mint(user2.address, amt);
 
-		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false);
+		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 0);
 		await advanceTimeAndBlock(3601);
 		await priceProvider.update();
 		expect(await eligibilityProvider.isEligibleForRewards(user2.address)).to.equal(true);
@@ -197,6 +197,6 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops);
+		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 0);
 	});
 });

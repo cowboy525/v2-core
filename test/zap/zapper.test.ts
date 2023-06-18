@@ -111,7 +111,7 @@ describe('Zapper', function () {
 	});
 
 	it('can zap into locked lp', async function () {
-		await lockZap.connect(user2).zap(false, 0, 0, 0, {
+		await lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 
@@ -122,7 +122,7 @@ describe('Zapper', function () {
 	});
 
 	it('can zap from Vesting', async function () {
-		await lockZap.connect(user2).zap(false, 0, 0, 0, {
+		await lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 
@@ -145,12 +145,12 @@ describe('Zapper', function () {
 		const wethRequired = await lockZap.connect(user2).quoteFromToken(totalVesting);
 
 		await expect(
-			lockZap.connect(user2).zapFromVesting(false, 0, {
+			lockZap.connect(user2).zapFromVesting(false, 0, 0, {
 				value: wethRequired.div(2),
 			})
 		).to.be.revertedWith('InsufficientETH');
 
-		await lockZap.connect(user2).zapFromVesting(false, 0, {
+		await lockZap.connect(user2).zapFromVesting(false, 0, 0, {
 			value: wethRequired,
 		});
 
@@ -171,7 +171,7 @@ describe('Zapper', function () {
 		const lockedLpBal1 = (await mfd.lockedBalances(user3.address)).locked;
 		expect(lockedLpBal1).to.equal(BigNumber.from(0));
 
-		await lockZap.connect(user3).zap(false, depositAmtWeth, 0, 0);
+		await lockZap.connect(user3).zap(false, depositAmtWeth, 0, 0, 0);
 
 		const lockedLpBal2 = (await mfd.lockedBalances(user3.address)).locked;
 		expect(lockedLpBal2).to.not.equal(BigNumber.from(0));
@@ -186,7 +186,7 @@ describe('Zapper', function () {
 
 		expect((await lendingPool.getUserAccountData(user3.address)).totalCollateralETH).to.be.gt(BigNumber.from(0));
 
-		await lockZap.connect(user3).zap(true, depositAmtWeth, 0, 0);
+		await lockZap.connect(user3).zap(true, depositAmtWeth, 0, 0, 0);
 		const lockedLpBal3 = (await mfd.lockedBalances(user3.address)).locked;
 
 		expect(lockedLpBal3).to.be.gt(lockedLpBal2);
@@ -195,7 +195,7 @@ describe('Zapper', function () {
 
 	it('can zap from Vesting w/ Borrow', async function () {
 		// Become eligilble for rewards;
-		await lockZap.connect(user4).zap(false, 0, 0, 0, {
+		await lockZap.connect(user4).zap(false, 0, 0, 0, 0, {
 			value: wethPerAccount,
 		});
 
@@ -229,11 +229,11 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0)).to.be.revertedWith('ExceedsAvailableBorrowsETH');
+		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 0)).to.be.revertedWith('ExceedsAvailableBorrowsETH');
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		await lockZap.connect(user4).zapFromVesting(true, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
@@ -263,7 +263,7 @@ describe('Zapper', function () {
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.equal(BigNumber.from(0));
 
 		// Become eligilble for rewards;
-		await lockZap.connect(user4).zap(false, 0, 0, 0, {
+		await lockZap.connect(user4).zap(false, 0, 0, 0, 0, {
 			value: depositAmtWeth,
 		});
 
@@ -277,7 +277,7 @@ describe('Zapper', function () {
 
 		let totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
-		await lockZap.connect(user4).zapFromVesting(true, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
@@ -346,7 +346,7 @@ describe('Zapper', function () {
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 			await USDC.approve(lockZap.address, zapAmount);
 			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
-			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0);
+			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
 			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
 

@@ -35,7 +35,7 @@ describe('Deposit/AutoZap', () => {
 		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
 		await vdWETH.connect(user1).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		await wethGateway.connect(user1).depositETHWithAutoDLP(lendingPool.address, user1.address, 0, {
+		await wethGateway.connect(user1).depositETHWithAutoDLP(lendingPool.address, user1.address, 0, 0, {
 			value: ethers.utils.parseEther('1000'),
 		});
 

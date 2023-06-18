@@ -26,6 +26,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
+	/// @notice The maximum amount of slippage that a user can set for the execution of Zaps
+	uint256 public constant MAX_SLIPPAGE = 9000; //10%
+
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
