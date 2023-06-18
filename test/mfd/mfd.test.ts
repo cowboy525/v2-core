@@ -982,7 +982,7 @@ describe('MultiFeeDistribution', () => {
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
 
 		await expect(mfd.connect(user2).withdrawExpiredLocksForWithOptions(victim, 1, true)).to.be.reverted; // only withdrawing one lock because it's just a POC
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(victim, 1, true); // only withdrawing one lock because it's just a POC
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(victim, 1, false); // only withdrawing one lock because it's just a POC
 
 		const totalBalanceAfter = await mfd.totalBalance(victim);
 		const lockInfoAfter = await mfd.lockInfo(victim);
