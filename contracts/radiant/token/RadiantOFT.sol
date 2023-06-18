@@ -158,7 +158,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint amount) {
 		uint256 fee = getBridgeFee(_amount);
-		if(msg.value >= fee) revert InsufficientETHForFee();
+		if(msg.value < fee) revert InsufficientETHForFee();
 
         _checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
