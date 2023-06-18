@@ -127,6 +127,14 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
+	 * @notice Remove an existing reward token
+	 */
+	function removeReward(address _rewardsToken) external override onlyAdminOrOwner {
+		multiFeeDistribution.removeReward(_rewardsToken);
+		isRewardToken[_rewardsToken] = false;
+	}
+
+	/**
 	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
 	 */
 	function forwardReward(address[] memory _rewardTokens) external override {

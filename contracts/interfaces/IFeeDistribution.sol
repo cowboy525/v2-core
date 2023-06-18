@@ -12,4 +12,6 @@ interface IFeeDistribution {
 	}
 
 	function addReward(address rewardsToken) external;
+
+	function removeReward(address rewardsToken) external;
 }

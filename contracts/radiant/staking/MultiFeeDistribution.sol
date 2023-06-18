@@ -173,6 +173,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidEarned();
 	error InvalidTime();
 	error InvalidPeriod();
+	error InvalidAddress();
 
 	/**
 	 * @dev Constructor
@@ -324,6 +325,36 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		Reward storage rewardData = rewardData[_rewardToken];
 		rewardData.lastUpdateTime = block.timestamp;
 		rewardData.periodFinish = block.timestamp;
+	}
+
+	/**
+	 * @notice Remove an existing reward token.
+	 * @param _rewardToken address to be removed
+	 */
+	function removeReward(address _rewardToken) external override {
+		if (!minters[msg.sender]) revert InsufficientPermission();
+
+		bool isTokenFound;
+		uint256 indexToRemove;
+
+		for (uint256 i; i < rewardTokens.length; i++) {
+			if (rewardTokens[i] == _rewardToken) {
+				isTokenFound = true;
+				indexToRemove = i;
+				break;
+			}
+		}
+
+		if (!isTokenFound) {
+			revert InvalidAddress();
+		}
+
+		// Reward token order is changed, but that doesn't have an impact
+		if (indexToRemove < rewardTokens.length - 1) {
+			rewardTokens[indexToRemove] = rewardTokens[rewardTokens.length - 1];
+		}
+
+		rewardTokens.pop();
 	}
 
 	/********************** View functions ***********************/
