@@ -146,6 +146,19 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
 
+	/**
+	 * @notice Bridge token and execute calldata on destination chain
+	 * @dev overrides default OFT _sendAndCall function to add native fee
+	 * @param _from from addr
+	 * @param _dstChainId dest LZ chain id
+	 * @param _toAddress to addr on dst chain
+	 * @param _amount amount to bridge
+	 * @param _payload calldata to execute on dst chain
+	 * @param _dstGasForCall amount of gas to use on dst chain
+	 * @param _refundAddress refund addr
+	 * @param _zroPaymentAddress use ZRO token, someday ;)
+	 * @param _adapterParams LZ adapter params
+	 */
 	function _sendAndCall(
 		address _from, 
 		uint16 _dstChainId, 
