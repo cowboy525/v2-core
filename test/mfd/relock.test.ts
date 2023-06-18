@@ -89,7 +89,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(true);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksFor(user2.address);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");
@@ -137,7 +137,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(false);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksFor(user2.address);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(0, "Didn't relock properly");
