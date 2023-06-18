@@ -204,7 +204,12 @@ runs.forEach(function (run) {
 				const expectedEligible = depositAmt === eligibleAmt;
 				expect(isEligible).equal(expectedEligible);
 
-				const expectedLastEligible = (await now()) + DEFAULT_LOCK_TIME;
+				let expectedLastEligible;
+				if (isEligible){
+					expectedLastEligible = (await now()) + DEFAULT_LOCK_TIME;
+				}else{
+					expectedLastEligible = BigNumber.from(0);
+				}
 				expect(lastEligibleTime.toNumber()).closeTo(expectedLastEligible, 10);
 
 				if (depositAmt > 0) {
@@ -241,7 +246,9 @@ runs.forEach(function (run) {
 					await loadZappedUserFixture(run);
 					// await generatePlatformRevenue();
 					const lastEligibleTime = (await eligibilityProvider.lastEligibleTime(user1.address)).toNumber();
-					await advanceTimeAndBlock(lastEligibleTime - (await now()) - 1);
+					if (lastEligibleTime != 0){
+						await advanceTimeAndBlock(lastEligibleTime - (await now()) - 1);
+					}
 					pendingAtEndOfEligibility = await chefIncentivesController.allPendingRewards(user1.address);
 					await advanceTimeAndBlock(DEFAULT_LOCK_TIME);
 					pendingAfterInelig = await chefIncentivesController.allPendingRewards(user1.address);
@@ -294,6 +301,7 @@ runs.forEach(function (run) {
 				before(async () => {
 					await loadZappedUserFixture(run);
 
+					const isEligibleForRewardsPre =  await eligibilityProvider.isEligibleForRewards(user1.address);
 					const lastEligTimePre = await eligibilityProvider.lastEligibleTime(user1.address);
 
 					// skip to earn some RDNT
@@ -336,7 +344,12 @@ runs.forEach(function (run) {
 					if (depositAmt == eligibleAmt) {
 						expect(await eligibilityProvider.isMarketDisqualified(user1.address)).is.true;
 					}
-					expect(lastEligTimePre).equals(lastEligTimePost);
+					
+					if (isEligibleForRewardsPre){
+						expect(lastEligTimePre).gt(lastEligTimePost);
+					}else{
+						expect(lastEligTimePre).eq(lastEligTimePost);
+					}
 				});
 
 				it('bounty quote + claim', async () => {
