@@ -160,19 +160,19 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		uint256 fee = getBridgeFee(_amount);
 		if(msg.value < fee) revert InsufficientETHForFee();
 
-        _checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
+		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
-        (amount,) = _removeDust(_amount);
-        amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
-        require(amount > 0, "OFTCore: amount too small");
+		(amount,) = _removeDust(_amount);
+		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
+		require(amount > 0, "OFTCore: amount too small");
 
-        // encode the msg.sender into the payload instead of _from
-        bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
-        _lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
+		// encode the msg.sender into the payload instead of _from
+		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
 
 		Address.sendValue(payable(treasury), fee);
 
-        emit SendToChain(_dstChainId, _from, _toAddress, amount);
+		emit SendToChain(_dstChainId, _from, _toAddress, amount);
     }
 
 	/**
