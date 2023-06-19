@@ -253,7 +253,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @return currentEligibility The current eligibility status of the user
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
-		if (msg.sender != address(chef)) revert("Only CIC can call this function");
+		if (msg.sender != address(chef)) revert OnlyCIC();
 		if (user == address(0)) revert AddressZero();
 
 		currentEligibility = isEligibleForRewards(user);

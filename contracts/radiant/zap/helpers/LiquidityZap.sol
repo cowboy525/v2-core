@@ -217,7 +217,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		} else optimalWETHAmount = wethAmount;
 
 		bool wethTransferSuccess = weth.transfer(_tokenWETHPair, optimalWETHAmount);
-    if (!wethTransferSuccess) revert TransferFailed();
+		if (!wethTransferSuccess) revert TransferFailed();
 		IERC20(_token).safeTransfer(_tokenWETHPair, optimalTokenAmount);
 
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
