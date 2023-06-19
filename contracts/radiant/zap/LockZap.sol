@@ -27,7 +27,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	using SafeMath for uint256;
 
 	/// @notice The maximum amount of slippage that a user can set for the execution of Zaps
-	uint256 public constant MAX_SLIPPAGE = 9000; //10%
+	uint256 public constant MAX_SLIPPAGE = 9500; //5%
 
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
@@ -71,7 +71,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error AmountZero();
 
-	error InvalidSlippage();
+	error SlippageTooHigh();
+
+	error SpecifiedSlippageExceedLimit();
 
 	error ExceedsAvailableBorrowsETH();
 
@@ -232,6 +234,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _slippage
 	) public {
 		if (_asset == address(0)) revert AddressZero();
+		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
+		if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
 		if (_amount == 0) revert AmountZero();
 		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
 		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
@@ -248,7 +252,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 liquidity = poolHelper.zapWETH(wethGained);
 
 		if (address(priceProvider) != address(0)) {
-			if (_calcSlippage(wethGained, liquidity) < _slippage) revert InvalidSlippage();
+			if (_calcSlippage(wethGained, liquidity) < _slippage) revert SlippageTooHigh();
 		}
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
@@ -306,6 +310,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _slippage
 	) internal returns (uint256 liquidity) {
 		if (_wethAmt == 0 && msg.value == 0) revert AmountZero();
+		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
+		if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
 		if (msg.value != 0) {
 			if (_borrow) revert InvalidZapETHSource();
 			_wethAmt = msg.value;
@@ -338,7 +344,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		}
 
 		if (address(priceProvider) != address(0)) {
-			if (_calcSlippage(totalWethValueIn, liquidity) < _slippage) revert InvalidSlippage();
+			if (_calcSlippage(totalWethValueIn, liquidity) < _slippage) revert SlippageTooHigh();
 		}
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);

@@ -214,4 +214,12 @@ describe(`AutoCompound:`, async () => {
 		let fee = await compounder.connect(user1).selfCompound();
 		await expect(fee.value).to.be.equal(0);
 	});
+
+	it('Compound other user at default slippage value', async () => {
+
+	});
+
+	it('Compound other user at user set slippage value', async () => {
+
+	});
 });

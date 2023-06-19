@@ -381,6 +381,7 @@ contract Leverager is Ownable {
 	 * @notice Zap WETH by borrowing.
 	 * @param amount to zap
 	 * @param borrower to zap
+	 * @param _slippage maximum amount of slippage allowed for any occuring trades
 	 * @return liquidity amount by zapping
 	 **/
 	function zapWETHWithBorrow(uint256 amount, address borrower, uint256 _slippage) public returns (uint256 liquidity) {
