@@ -30,16 +30,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	IMultiFeeDistribution public multiFeeDistribution;
 
 	/// @notice Reward ratio for operation expenses
-	uint256 public override operationExpenseRatio;
+	uint256 public operationExpenseRatio;
 
 	uint256 public constant RATIO_DIVISOR = 10000;
 
 	uint8 public constant DECIMALS = 18;
 
-	mapping(address => bool) public override isRewardToken;
+	mapping(address => bool) public isRewardToken;
 
 	/// @notice Operation Expense account
-	address public override operationExpenses;
+	address public operationExpenses;
 
 	/// @notice Admin address
 	address public admin;
@@ -121,7 +121,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/**
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
-	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+	function addReward(address _rewardsToken) external onlyAdminOrOwner {
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
 	}
@@ -129,7 +129,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/**
 	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
 	 */
-	function forwardReward(address[] memory _rewardTokens) external override {
+	function forwardReward(address[] memory _rewardTokens) external {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
@@ -154,14 +154,14 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/**
 	 * @notice Returns RDNT token address.
 	 */
-	function getRdntTokenAddress() external view override returns (address) {
+	function getRdntTokenAddress() external view returns (address) {
 		return address(rdntToken);
 	}
 
 	/**
 	 * @notice Returns MFD address.
 	 */
-	function getMultiFeeDistributionAddress() external view override returns (address) {
+	function getMultiFeeDistributionAddress() external view returns (address) {
 		return address(multiFeeDistribution);
 	}
 

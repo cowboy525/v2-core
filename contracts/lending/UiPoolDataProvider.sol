@@ -48,7 +48,6 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 	)
 		external
 		view
-		override
 		returns (AggregatedReserveData[] memory, UserReserveData[] memory, uint256, IncentivesControllerData memory)
 	{
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
