@@ -143,7 +143,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	function quoteFromToken(uint256 tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		return liquidityZap.quoteFromToken(tokenAmount);
+		optimalWETHAmount = liquidityZap.quoteFromToken(tokenAmount);
 	}
 
 	function getLiquidityZap() public view returns (address) {

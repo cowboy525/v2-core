@@ -50,7 +50,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	}
 
 	function consult() public view returns (uint256 price) {
-		return latestAnswer();
+		price = latestAnswer();
 	}
 
 	function version() external view returns (uint256) {
@@ -72,7 +72,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		view
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
-		return tokenChainlinkFeed.getRoundData(_roundId);
+		(roundId, answer, startedAt, updatedAt, answeredInRound) = tokenChainlinkFeed.getRoundData(_roundId);
 	}
 
 	function latestRoundData()
@@ -80,6 +80,6 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		view
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
-		return tokenChainlinkFeed.latestRoundData();
+		(roundId, answer, startedAt, updatedAt, answeredInRound) = tokenChainlinkFeed.latestRoundData();
 	}
 }
