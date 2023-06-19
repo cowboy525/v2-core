@@ -339,7 +339,8 @@ contract Leverager is Ownable {
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			amount = amount - fee;
+			required = required.add(requiredLocked(asset, amount));
 		}
 
 		if (locked >= required) {
