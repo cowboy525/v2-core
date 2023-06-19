@@ -56,7 +56,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	error ZapExists();
 	error InvalidETHAmount();
 	error AddressZero();
-	error InsufficientPermision();
+	error InsufficientPermission();
 
 	address public _token;
 	address public _tokenWETHPair;
@@ -110,7 +110,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @return liquidity lp amount
 	 */
 	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256) {
-		if (msg.sender != poolHelper) revert InsufficientPermision();
+		if (msg.sender != poolHelper) revert InsufficientPermission();
 		if (to == address(0)) revert AddressZero();
 		uint256 buyAmount = _amount.div(2);
 		if (buyAmount == 0) revert InvalidETHAmount();
