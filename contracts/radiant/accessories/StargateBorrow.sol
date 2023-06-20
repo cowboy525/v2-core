@@ -2,7 +2,6 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -54,7 +53,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract StargateBorrow is OwnableUpgradeable {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	/// @notice FEE ratio DIVISOR
@@ -168,7 +166,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param amount Fee cost.
 	 */
 	function getXChainBorrowFeeAmount(uint256 amount) public view returns (uint256) {
-		uint256 feeAmount = amount.mul(xChainBorrowFeePercent).div(FEE_PERCENT_DIVISOR);
+		uint256 feeAmount = (amount * (xChainBorrowFeePercent)) / (FEE_PERCENT_DIVISOR);
 		return feeAmount;
 	}
 
@@ -200,7 +198,7 @@ contract StargateBorrow is OwnableUpgradeable {
 			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 			IERC20(asset).safeTransfer(daoTreasury, feeAmount);
-			amount = amount.sub(feeAmount);
+			amount = amount - feeAmount;
 			IERC20(asset).safeApprove(address(router), 0);
 			IERC20(asset).safeApprove(address(router), amount);
 			router.swap{value: msg.value}(
@@ -209,7 +207,7 @@ contract StargateBorrow is OwnableUpgradeable {
 				poolIdPerChain[asset], // dst chain pool id
 				payable(msg.sender), // receive address
 				amount, // transfer amount
-				amount.mul(99).div(100), // max slippage: 1%
+				(amount * 99) / 100, // max slippage: 1%
 				IStargateRouter.lzTxObj(0, 0, "0x"),
 				abi.encodePacked(msg.sender),
 				bytes("")
@@ -228,14 +226,14 @@ contract StargateBorrow is OwnableUpgradeable {
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 		_safeTransferETH(daoTreasury, feeAmount);
-		amount = amount.sub(feeAmount);
+		amount = amount - feeAmount;
 
-		routerETH.swapETH{value: amount.add(msg.value)}(
+		routerETH.swapETH{value: amount + msg.value}(
 			dstChainId, // dest chain id
 			payable(msg.sender), // receive address
 			abi.encodePacked(msg.sender),
 			amount, // transfer amount
-			amount.mul(99).div(100) // max slippage: 1%
+			amount * 99 / 100 // max slippage: 1%
 		);
 	}
 

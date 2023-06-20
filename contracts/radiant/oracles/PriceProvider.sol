@@ -2,8 +2,6 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -15,8 +13,6 @@ import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract PriceProvider is Initializable, OwnableUpgradeable {
-	using SafeMath for uint256;
-
 	/// @notice Chainlink aggregator for USD price of base token
 	IChainlinkAggregator public baseTokenPriceInUsdProxyAggregator;
 
@@ -78,7 +74,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 			// use sparingly, TWAP/CL otherwise
 			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
 			uint256 priceInEth = poolHelper.getPrice();
-			price = priceInEth.mul(ethPrice).div(10 ** 8);
+			price = priceInEth * ethPrice / (10 ** 8);
 		} else {
 			price = oracle.latestAnswer();
 		}
@@ -101,7 +97,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
 		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
-		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
+		price = lpPriceInEth * ethPrice / (10 ** 8);
 	}
 
 	/**

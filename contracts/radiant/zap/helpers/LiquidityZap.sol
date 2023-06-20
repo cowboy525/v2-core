@@ -39,7 +39,6 @@ import {IUniswapV2Pair} from "@uniswap/lib/contracts/interfaces/IUniswapV2Pair.s
 import {UniswapV2Library} from "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IWETH} from "../../../interfaces/IWETH.sol";
@@ -51,7 +50,6 @@ import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeabil
 /// @dev All function calls are currently implemented without side effects
 contract LiquidityZap is Initializable, OwnableUpgradeable {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	error ZapExists();
 	error InvalidETHAmount();
@@ -112,7 +110,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256) {
 		if (msg.sender != poolHelper) revert InsufficientPermision();
 		if (to == address(0)) revert AddressZero();
-		uint256 buyAmount = _amount.div(2);
+		uint256 buyAmount = _amount / 2;
 		if (buyAmount == 0) revert InvalidETHAmount();
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
@@ -138,7 +136,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 */
 	function addLiquidityETHOnly(address payable to) public payable returns (uint256) {
 		if (to == address(0)) revert AddressZero();
-		uint256 buyAmount = msg.value.div(2);
+		uint256 buyAmount = msg.value / 2;
 		if (buyAmount == 0) revert InvalidETHAmount();
 		weth.deposit{value: msg.value}();
 
@@ -221,9 +219,9 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
 
 		//refund dust
-		if (tokenAmount > optimalTokenAmount) IERC20(_token).safeTransfer(to, tokenAmount.sub(optimalTokenAmount));
+		if (tokenAmount > optimalTokenAmount) IERC20(_token).safeTransfer(to, tokenAmount - optimalTokenAmount);
 		if (wethAmount > optimalWETHAmount) {
-			weth.transfer(to, wethAmount.sub(optimalWETHAmount));
+			weth.transfer(to, wethAmount - optimalWETHAmount);
 		}
 	}
 
@@ -234,15 +232,15 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 */
 	function getLPTokenPerEthUnit(uint256 ethAmt) public view returns (uint256 liquidity) {
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
-		uint256 outTokens = UniswapV2Library.getAmountOut(ethAmt.div(2), reserveWeth, reserveTokens);
+		uint256 outTokens = UniswapV2Library.getAmountOut(ethAmt / 2, reserveWeth, reserveTokens);
 		uint256 _totalSupply = IUniswapV2Pair(_tokenWETHPair).totalSupply();
 
 		(address token0, ) = UniswapV2Library.sortTokens(address(weth), _token);
-		(uint256 amount0, uint256 amount1) = token0 == _token ? (outTokens, ethAmt.div(2)) : (ethAmt.div(2), outTokens);
+		(uint256 amount0, uint256 amount1) = token0 == _token ? (outTokens, ethAmt / 2) : (ethAmt / 2, outTokens);
 		(uint256 _reserve0, uint256 _reserve1) = token0 == _token
 			? (reserveTokens, reserveWeth)
 			: (reserveWeth, reserveTokens);
-		liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
+		liquidity = Math.min(amount0 * _totalSupply / _reserve0, amount1 * _totalSupply / _reserve1);
 	}
 
 	/**

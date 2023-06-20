@@ -6,7 +6,6 @@ import {DustRefunder} from "./DustRefunder.sol";
 import {BNum} from "../../../dependencies/math/BNum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
@@ -18,7 +17,6 @@ import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../inte
 /// @author Radiant
 contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgradeable, BNum, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	error AddressZero();
 	error PoolExists();
@@ -219,7 +217,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		);
 		// use fairReserveA and fairReserveB to compute LP token price
 		// LP price = (fairResA * pxA + fairResB * pxB) / totalLPSupply
-		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
+		priceInEth = (fairResA * pxA + fairResB * pxB) / pool.totalSupply();
 	}
 
 	function getPrice() public view returns (uint256) {
@@ -229,7 +227,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 		uint256 poolWeight = 4;
 
-		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
+		return wethBalance * 1e8 / (rdntBalance / poolWeight);
 	}
 
 	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
@@ -240,7 +238,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		rdnt = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		weth = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		lpTokenSupply = lpToken.totalSupply().div(1e18);
+		lpTokenSupply = lpToken.totalSupply() / 1e18;
 	}
 
 	/**
@@ -320,9 +318,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 */
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
-		uint256 p1 = rdntPriceInEth.mul(1e10);
-		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
-		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
+		uint256 p1 = rdntPriceInEth * 1e10;
+		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
+		optimalWETHAmount = ethRequiredBeforeWeight / 4;
 	}
 
 	/**

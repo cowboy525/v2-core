@@ -2,7 +2,6 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -20,7 +19,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract Leverager is Ownable {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	/// @notice Ratio Divisor
@@ -183,9 +181,9 @@ contract Leverager is Ownable {
 		uint256 fee;
 		if (!isBorrow) {
 			IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+			fee = (amount * feePercent) / RATIO_DIVISOR;
 			IERC20(asset).safeTransfer(treasury, fee);
-			amount = amount.sub(fee);
+			amount = amount - fee;
 		}
 		if (IERC20(asset).allowance(address(this), address(lendingPool)) == 0) {
 			IERC20(asset).safeApprove(address(lendingPool), type(uint256).max);
@@ -199,7 +197,7 @@ contract Leverager is Ownable {
 		if (!isBorrow) {
 			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		} else {
-			amount = amount.mul(RATIO_DIVISOR).div(borrowRatio);
+			amount = (amount * RATIO_DIVISOR) / borrowRatio;
 		}
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
@@ -208,13 +206,13 @@ contract Leverager is Ownable {
 				cic.setEligibilityExempt(msg.sender, false);
 			}
 
-			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
+			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
-			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+			fee = (amount * feePercent) / RATIO_DIVISOR;
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			lendingPool.deposit(asset, amount - fee, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -236,10 +234,10 @@ contract Leverager is Ownable {
 			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
 		}
 
-		uint256 fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+		uint256 fee = (amount * feePercent) / RATIO_DIVISOR;
 		_safeTransferETH(treasury, fee);
 
-		amount = amount.sub(fee);
+		amount = amount - fee;
 
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
@@ -247,15 +245,15 @@ contract Leverager is Ownable {
 		cic.setEligibilityExempt(msg.sender, true);
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
-			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
+			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
-			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+			fee = (amount * feePercent) / RATIO_DIVISOR;
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			weth.deposit{value: amount - fee}();
+			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -293,13 +291,13 @@ contract Leverager is Ownable {
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
-			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
+			fee = (amount * feePercent) / RATIO_DIVISOR;
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			weth.deposit{value: amount - fee}();
+			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
 
-			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
+			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -328,25 +326,25 @@ contract Leverager is Ownable {
 		uint256 required = eligibilityDataProvider.requiredUsdValue(user);
 		uint256 locked = eligibilityDataProvider.lockedUsdValue(user);
 
-		uint256 fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-		amount = amount.sub(fee);
+		uint256 fee = (amount * feePercent) / RATIO_DIVISOR;
+		amount = amount - fee;
 
-		required = required.add(requiredLocked(asset, amount));
+		required = required + requiredLocked(asset, amount);
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
-			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
-			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			amount = (amount * borrowRatio) / RATIO_DIVISOR;
+			fee = (amount * feePercent) / RATIO_DIVISOR;
+			required = required + requiredLocked(asset, amount - fee);
 		}
 
 		if (locked >= required) {
 			return 0;
 		} else {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
+			uint256 deltaUsdValue = required - locked; //decimals === 8
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
-			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			uint256 wethAmount = (deltaUsdValue * (10 ** 18) * (10 ** priceDecimal)) / (wethPrice) / (10 ** 8);
+			wethAmount = wethAmount + ((wethAmount * 6) / 100);
 			return wethAmount;
 		}
 	}
@@ -361,11 +359,11 @@ contract Leverager is Ownable {
 		if (locked >= required) {
 			return 0;
 		} else {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
+			uint256 deltaUsdValue = required - locked; //decimals === 8
 			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
 			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
-			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
+			uint256 wethAmount = (deltaUsdValue * (10 ** 18) * (10 ** priceDecimal)) / (wethPrice) / (10 ** 8);
+			wethAmount = wethAmount + ((wethAmount * 6) / 100);
 			return wethAmount;
 		}
 	}
@@ -397,11 +395,8 @@ contract Leverager is Ownable {
 	function requiredLocked(address asset, uint256 amount) internal view returns (uint256) {
 		uint256 assetPrice = aaveOracle.getAssetPrice(asset);
 		uint8 assetDecimal = IERC20Metadata(asset).decimals();
-		uint256 requiredVal = assetPrice
-			.mul(amount)
-			.div(10 ** assetDecimal)
-			.mul(eligibilityDataProvider.requiredDepositRatio())
-			.div(eligibilityDataProvider.RATIO_DIVISOR());
+		uint256 requiredVal = (((assetPrice * amount) / (10 ** assetDecimal)) *
+			eligibilityDataProvider.requiredDepositRatio()) / eligibilityDataProvider.RATIO_DIVISOR();
 		return requiredVal;
 	}
 

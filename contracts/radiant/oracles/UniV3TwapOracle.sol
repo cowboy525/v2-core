@@ -4,7 +4,6 @@ pragma solidity 0.8.12;
 import {BaseOracle} from "./BaseOracle.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
@@ -13,8 +12,6 @@ import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Init
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract UniV3TwapOracle is Initializable, BaseOracle {
-	using SafeMath for uint256;
-
 	/// @notice Uniswap V3 pool address
 	IUniswapV3Pool public pool;
 
@@ -118,21 +115,21 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 			if (decimals0 <= 18) {
 				amountOut = OracleLibrary
 					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
-					.mul(10 ** (18 - decimals0));
+					* (10 ** (18 - decimals0));
 			} else {
 				amountOut = OracleLibrary
 					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
-					.div(10 ** (decimals0 - 18));
+					/ (10 ** (decimals0 - 18));
 			}
 		} else {
 			if (decimals1 <= 18) {
 				amountOut = OracleLibrary
 					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
-					.mul(10 ** (18 - decimals1));
+					* (10 ** (18 - decimals1));
 			} else {
 				amountOut = OracleLibrary
 					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
-					.div(10 ** (decimals1 - 18));
+					/ (10 ** (decimals1 - 18));
 			}
 		}
 	}

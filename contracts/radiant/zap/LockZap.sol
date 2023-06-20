@@ -6,7 +6,6 @@ import {DustRefunder} from "./helpers/DustRefunder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
@@ -24,7 +23,6 @@ import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 /// @dev All function calls are currently implemented without side effects
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
@@ -164,7 +162,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount).mul(100).div(97);
+		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * 100 / 97;
 	}
 
 	/**
@@ -254,7 +252,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
+		uint256 amountInETH = _amount * (10 ** 8)/ (10 ** IERC20Metadata(address(weth)).decimals());
 		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
@@ -268,10 +266,10 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _liquidity) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 ethAmtUsd = _ethAmt.mul(uint256(ethOracle.latestAnswer())).div(1E18);
+		uint256 ethAmtUsd = _ethAmt * (uint256(ethOracle.latestAnswer())) / 1E18;
 		uint256 lpAmtUsd = _liquidity * priceProvider.getLpTokenPriceUsd();
-		ratio = lpAmtUsd.mul(RATIO_DIVISOR).div(ethAmtUsd);
-		ratio = ratio.div(1E18);
+		ratio = lpAmtUsd * RATIO_DIVISOR / ethAmtUsd;
+		ratio = ratio / 1E18;
 	}
 
 	/**
@@ -319,7 +317,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
-			totalWethValueIn = _wethAmt.mul(RATIO_DIVISOR).div(ethLPRatio);
+			totalWethValueIn = _wethAmt * RATIO_DIVISOR / ethLPRatio;
 		} else {
 			liquidity = poolHelper.zapWETH(_wethAmt);
 			totalWethValueIn = _wethAmt;

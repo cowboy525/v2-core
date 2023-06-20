@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
@@ -23,7 +22,6 @@ import {ICompounder} from "../../interfaces/ICompounder.sol";
 /// @author Radiant Devs
 /// @dev All function calls are currently implemented without side effects
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	address public rdnt;
@@ -183,7 +181,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			bounty = bb;
 		} else {
 			if (totalBounty != 0) {
-				bounty = totalBounty.mul(hunterShare).div(10000);
+				bounty = totalBounty * hunterShare / 10000;
 			}
 		}
 
@@ -312,7 +310,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function getBaseBounty() public view whenNotPaused returns (uint256 bounty) {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPriceUsd();
-		bounty = baseBountyUsdTarget.mul(1e8).div(rdntPrice);
+		bounty = baseBountyUsdTarget * 1e8 / rdntPrice;
 		if (bounty > maxBaseBounty) {
 			bounty = maxBaseBounty;
 		}
@@ -323,7 +321,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function minDLPBalance() public view returns (uint256 min) {
 		uint256 lpTokenPrice = IPriceProvider(priceProvider).getLpTokenPriceUsd();
-		min = minStakeAmount.mul(1e8).div(lpTokenPrice);
+		min = minStakeAmount * 1e8 / lpTokenPrice;
 	}
 
 	/**

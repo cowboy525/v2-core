@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -12,8 +10,6 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
-	using SafeMath for uint256;
-
 	/// @notice Token for price
 	address public token;
 
@@ -67,7 +63,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		// returns decimals 8
 		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
 
-		price = priceInEth.mul(ethPrice).div(10 ** 8);
+		price = priceInEth * ethPrice / (10 ** 8);
 	}
 
 	/**
@@ -81,7 +77,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		} else {
 			price = fallbackOracle.consult();
 		}
-		price = price.div(10 ** 10);
+		price = price / (10 ** 10);
 	}
 
 	/**

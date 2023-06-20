@@ -7,7 +7,6 @@ import "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../../../dependencies/math/HomoraMath.sol";
@@ -22,7 +21,6 @@ import "../../../interfaces/IERC20DetailedBytes.sol";
 
 contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 	using HomoraMath for uint256;
 
 	error AddressZero();
@@ -115,19 +113,19 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 
 		uint256 lpSupply = lpToken.totalSupply();
 
-		uint256 sqrtK = HomoraMath.sqrt(rdntReserve.mul(wethReserve)).fdiv(lpSupply); // in 2**112
+		uint256 sqrtK = HomoraMath.sqrt(rdntReserve *wethReserve).fdiv(lpSupply); // in 2**112
 
 		// rdnt in eth, decis 8
-		uint256 px0 = rdntPriceInEth.mul(2 ** 112); // in 2**112
+		uint256 px0 = rdntPriceInEth * (2 ** 112); // in 2**112
 		// eth in eth, decis 8
-		uint256 px1 = uint256(100000000).mul(2 ** 112); // in 2**112
+		uint256 px1 = uint256(100000000) * (2 ** 112); // in 2**112
 
 		// fair token0 amt: sqrtK * sqrt(px1/px0)
 		// fair token1 amt: sqrtK * sqrt(px0/px1)
 		// fair lp price = 2 * sqrt(px0 * px1)
 		// split into 2 sqrts multiplication to prevent uint256 overflow (note the 2**112)
-		uint256 result = sqrtK.mul(2).mul(HomoraMath.sqrt(px0)).div(2 ** 56).mul(HomoraMath.sqrt(px1)).div(2 ** 56);
-		priceInEth = result.div(2 ** 112);
+		uint256 result = sqrtK * 2 * (HomoraMath.sqrt(px0)) / (2 ** 56) * (HomoraMath.sqrt(px1)) / (2 ** 56);
+		priceInEth = result / (2 ** 112);
 	}
 
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public returns (uint256 liquidity) {
@@ -163,7 +161,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	function getPrice() public view returns (uint256 priceInEth) {
 		(uint256 rdnt, uint256 weth, ) = getReserves();
 		if (rdnt > 0) {
-			priceInEth = weth.mul(10 ** 8).div(rdnt);
+			priceInEth = weth * (10 ** 8) / rdnt;
 		}
 	}
 

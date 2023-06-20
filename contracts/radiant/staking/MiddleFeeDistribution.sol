@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
@@ -20,7 +19,6 @@ import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
 contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	/// @notice RDNT token
@@ -136,11 +134,11 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
-				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
+				uint256 opExAmount = total * operationExpenseRatio / RATIO_DIVISOR;
 				if (opExAmount != 0) {
 					IERC20(_rewardTokens[i]).safeTransfer(operationExpenses, opExAmount);
 				}
-				total = total.sub(opExAmount);
+				total = total - opExAmount;
 			}
 			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
@@ -175,7 +173,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlying);
 			uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 			uint8 assetDecimals = IERC20Metadata(asset).decimals();
-			uint256 lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+			uint256 lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
 				10 ** assetDecimals
 			);
 			emit NewTransferAdded(asset, lpUsdValue);
