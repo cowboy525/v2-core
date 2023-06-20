@@ -65,6 +65,8 @@ contract Leverager is Ownable {
 	/// @notice Emitted when ratio is invalid
 	error InvalidRatio();
 
+	error ZeroAddress();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -85,14 +87,14 @@ contract Leverager is Ownable {
 		uint256 _feePercent,
 		address _treasury
 	) {
-		require(address(_lendingPool) != (address(0)), "Not a valid address");
-		require(address(_rewardEligibleDataProvider) != (address(0)), "Not a valid address");
-		require(address(_aaveOracle) != (address(0)), "Not a valid address");
-		require(address(_lockZap) != (address(0)), "Not a valid address");
-		require(address(_cic) != (address(0)), "Not a valid address");
-		require(address(_weth) != (address(0)), "Not a valid address");
-		require(_treasury != address(0), "Not a valid address");
-		require(_feePercent <= 1e4, "Invalid ratio");
+		if (address(_lendingPool) == address(0)) revert ZeroAddress();
+		if (address(_rewardEligibleDataProvider) == address(0)) revert ZeroAddress();
+		if (address(_aaveOracle) == address(0)) revert ZeroAddress();
+		if (address(_lockZap) == address(0)) revert ZeroAddress();
+		if (address(_cic) == address(0)) revert ZeroAddress();
+		if (address(_weth) == address(0)) revert ZeroAddress();
+		if (_treasury == address(0)) revert ZeroAddress();
+		if (_feePercent > RATIO_DIVISOR) revert InvalidRatio();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -123,9 +125,7 @@ contract Leverager is Ownable {
 	 * @param _feePercent fee ratio.
 	 */
 	function setFeePercent(uint256 _feePercent) external onlyOwner {
-		uint256 maxReasonableFee = 9000;
-		if (_feePercent >= RATIO_DIVISOR) revert InvalidRatio();
-		if (_feePercent >= maxReasonableFee) revert InvalidRatio();
+		if (_feePercent > RATIO_DIVISOR) revert InvalidRatio();
 		feePercent = _feePercent;
 		emit FeePercentUpdated(_feePercent);
 	}
@@ -187,7 +187,7 @@ contract Leverager is Ownable {
 		uint256 loopCount,
 		bool isBorrow
 	) external {
-		require(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 fee;
@@ -236,7 +236,7 @@ contract Leverager is Ownable {
 	 * @param loopCount Repeat count for loop
 	 **/
 	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
-		require(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
@@ -290,7 +290,7 @@ contract Leverager is Ownable {
 		uint256 borrowRatio,
 		uint256 loopCount
 	) external {
-		require(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {

@@ -66,6 +66,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	// ETH address
 	address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+	// Max reasonable fee
+	uint256 public constant maxReasonableFee = 100;
+
 	/// @notice Stargate Router
 	IStargateRouter public router;
 
@@ -96,6 +99,10 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
 
+	error InvalidRatio();
+
+	error ZeroAddress();
+
 	/**
 	 * @notice Constructor
 	 * @param _router Stargate Router address
@@ -113,11 +120,11 @@ contract StargateBorrow is OwnableUpgradeable {
 		address _treasury,
 		uint256 _xChainBorrowFeePercent
 	) public initializer {
-		require(address(_router) != (address(0)), "Not a valid address");
-		require(address(_lendingPool) != (address(0)), "Not a valid address");
-		require(address(_weth) != (address(0)), "Not a valid address");
-		require(_treasury != address(0), "Not a valid address");
-		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
+		if (address(_router) == address(0)) revert ZeroAddress();
+		if (address(_lendingPool) == address(0)) revert ZeroAddress();
+		if (address(_weth) == address(0)) revert ZeroAddress();
+		if (_treasury == address(0)) revert ZeroAddress();
+		if (_xChainBorrowFeePercent > uint256(1e4)) revert InvalidRatio();
 
 		router = _router;
 		routerETH = _routerETH;
@@ -145,9 +152,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param percent Fee ratio.
 	 */
 	function setXChainBorrowFeePercent(uint256 percent) external onlyOwner {
-		uint256 maxReasonableFee = 9000;
-		require(percent <= 1e4, "Invalid ratio");
-		require(percent <= maxReasonableFee, "Percent too high");
+		if (percent > FEE_PERCENT_DIVISOR || percent > maxReasonableFee) revert InvalidRatio();
 		xChainBorrowFeePercent = percent;
 		emit XChainBorrowFeePercentUpdated(percent);
 	}

@@ -29,6 +29,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
+	/// @notice Min reasonable ratio
+	uint256 public constant minReasonableRatio = 500;
+
 	/// @notice Acceptable ratio
 	uint256 public ACCEPTABLE_RATIO;
 
@@ -108,8 +111,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (address(_lendingPool) == address(0)) revert AddressZero();
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_rdntAddr == address(0)) revert AddressZero();
-		if (_ethLPRatio >= 10_000) revert InvalidRatio();
-		if (_ACCEPTABLE_RATIO > 10_000) revert InvalidRatio();
+		if (_ethLPRatio >= RATIO_DIVISOR) revert InvalidRatio();
+		if (_ACCEPTABLE_RATIO > RATIO_DIVISOR) revert InvalidRatio();
 
 		__Ownable_init();
 		__Pausable_init();
@@ -367,7 +370,6 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Updates acceptable slippage ratio.
 	 */
 	function setAcceptableRatio(uint256 _newRatio) external onlyOwner {
-		uint256 minReasonableRatio = 1000;
 		if (_newRatio < minReasonableRatio || _newRatio > RATIO_DIVISOR) revert InvalidRatio();
 		ACCEPTABLE_RATIO = _newRatio;
 		emit SlippageRatioChanged(ACCEPTABLE_RATIO);
