@@ -225,12 +225,7 @@ contract Leverager is Ownable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
-		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
-		}
-		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
-			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
-		}
+		_approve(address(weth));
 
 		uint256 fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 		TransferHelper.safeTransferETH(treasury, fee);
