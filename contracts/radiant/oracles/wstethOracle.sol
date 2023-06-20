@@ -1,8 +1,6 @@
 pragma solidity ^0.8.0;
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
-import "../../interfaces/IBaseOracle.sol";
 
 /// @notice Provides wstETH/USD price using stETH/USD Chainlink oracle and wstETH/stETH exchange rate provided by stETH smart contract
 contract WSTETHOracle is OwnableUpgradeable {

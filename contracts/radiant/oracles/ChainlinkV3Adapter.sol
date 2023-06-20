@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
 

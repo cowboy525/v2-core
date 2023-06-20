@@ -14,11 +14,7 @@ import "../../../dependencies/math/HomoraMath.sol";
 
 import "../../../interfaces/uniswap/IUniswapV2Router02.sol";
 import "../../../interfaces/ILiquidityZap.sol";
-import "../../../interfaces/IMultiFeeDistribution.sol";
 import "../../../interfaces/IWETH.sol";
-import "../../../interfaces/ILendingPool.sol";
-import "../../../interfaces/IPoolHelper.sol";
-import "../../../interfaces/IERC20DetailedBytes.sol";
 
 contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
