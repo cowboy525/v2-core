@@ -17,10 +17,14 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	uint256 public ethLatestTimestamp;
 	uint256 public tokenLatestTimestamp;
 
+	error AddressZero();
+
+	error InvalidPrice();
+
 	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
-		require(_token != address(0), "token is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
-		require(_tokenChainlinkFeed != address(0), "tokenChainlinkFeed is 0 address");
+		if (_token == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
+		if (_tokenChainlinkFeed == address(0)) revert AddressZero();
 		ethChainlinkFeed = AggregatorV3Interface(_ethChainlinkFeed);
 		tokenChainlinkFeed = AggregatorV3Interface(_tokenChainlinkFeed);
 		token = _token;
@@ -29,14 +33,14 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 
 	function latestAnswer() public view returns (uint256 price) {
 		(, int256 answer, , , ) = tokenChainlinkFeed.latestRoundData();
-		require(answer > 0, "Price must be positive");
+		if (answer <= 0) revert InvalidPrice();
 		price = uint256(answer);
 	}
 
 	function latestAnswerInEth() public view returns (uint256 price) {
 		(, int256 tokenAnswer, , , ) = tokenChainlinkFeed.latestRoundData();
 		(, int256 ethAnswer, , , ) = ethChainlinkFeed.latestRoundData();
-		require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
+		if (tokenAnswer <= 0 || ethAnswer <= 0) revert InvalidPrice();
 		price = (uint256(tokenAnswer) * (10 ** 8)) / uint256(ethAnswer);
 	}
 

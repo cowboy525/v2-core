@@ -96,6 +96,14 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
 
+	error AddressZero();
+
+	error InvalidRatio();
+
+	error LengthMismatch();
+
+	error EthTransferFailed();
+
 	/**
 	 * @notice Constructor
 	 * @param _router Stargate Router address
@@ -113,11 +121,11 @@ contract StargateBorrow is OwnableUpgradeable {
 		address _treasury,
 		uint256 _xChainBorrowFeePercent
 	) public initializer {
-		require(address(_router) != (address(0)), "Not a valid address");
-		require(address(_lendingPool) != (address(0)), "Not a valid address");
-		require(address(_weth) != (address(0)), "Not a valid address");
-		require(_treasury != address(0), "Not a valid address");
-		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
+		if (address(_router) == (address(0))) revert AddressZero();
+		if (address(_lendingPool) == (address(0))) revert AddressZero();
+		if (address(_weth) == (address(0))) revert AddressZero();
+		if (_treasury == address(0)) revert AddressZero();
+		if (_xChainBorrowFeePercent > uint256(1e4)) revert InvalidRatio();
 
 		router = _router;
 		routerETH = _routerETH;
@@ -135,7 +143,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param _daoTreasury DAO Treasury address.
 	 */
 	function setDAOTreasury(address _daoTreasury) external onlyOwner {
-		require(_daoTreasury != address(0), "daoTreasury is 0 address");
+		if (_daoTreasury == address(0)) revert AddressZero();
 		daoTreasury = _daoTreasury;
 		emit DAOTreasuryUpdated(_daoTreasury);
 	}
@@ -145,7 +153,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param percent Fee ratio.
 	 */
 	function setXChainBorrowFeePercent(uint256 percent) external onlyOwner {
-		require(percent <= 1e4, "Invalid ratio");
+		if (percent > 1e4) revert InvalidRatio();
 		xChainBorrowFeePercent = percent;
 		emit XChainBorrowFeePercentUpdated(percent);
 	}
@@ -156,7 +164,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param poolIDs array.
 	 */
 	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
-		require(assets.length == poolIDs.length, "length mismatch");
+		if (assets.length != poolIDs.length) revert LengthMismatch();
 		for (uint256 i = 0; i < assets.length; i += 1) {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 		}
@@ -246,6 +254,6 @@ contract StargateBorrow is OwnableUpgradeable {
 	 */
 	function _safeTransferETH(address to, uint256 value) internal {
 		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
+		if (!success) revert EthTransferFailed();
 	}
 }

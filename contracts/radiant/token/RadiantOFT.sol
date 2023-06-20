@@ -36,6 +36,14 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Emitted when Treasury is updated
 	event TreasuryUpdated(address indexed treasury);
 
+	error AddressZero();
+
+	error NotEnoughFee();
+
+	error AmountTooSmall();
+
+	error InvalidRatio();
+
 	/**
 	 * @notice Create RadiantOFT
 	 * @param _tokenName token name
@@ -53,9 +61,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _treasury,
 		uint256 _mintAmt
 	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
-		require(_endpoint != address(0), "invalid LZ Endpoint");
-		require(_dao != address(0), "invalid DAO");
-		require(_treasury != address(0), "invalid treasury");
+		if (_endpoint == address(0)) revert AddressZero();
+		if (_dao == address(0)) revert AddressZero();
+		if (_treasury == address(0)) revert AddressZero();
 
 		treasury = _treasury;
 
@@ -127,13 +135,13 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint256 amount) {
 		uint256 fee = getBridgeFee(_amount);
-		require(msg.value >= fee, "ETH sent is not enough for fee");
+		if (msg.value < fee) revert NotEnoughFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
 		(amount, ) = _removeDust(_amount);
 		amount = _debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
-		require(amount > 0, "OFTCore: amount too small");
+		if (amount == 0) revert AmountTooSmall();
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
@@ -178,7 +186,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _fee ratio
 	 */
 	function setFee(uint256 _fee) external onlyOwner {
-		require(_fee <= 1e4, "Invalid ratio");
+		if (_fee > 1e4) revert InvalidRatio();
 		feeRatio = _fee;
 		emit FeeUpdated(_fee);
 	}
@@ -188,7 +196,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _priceProvider address
 	 */
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
-		require(address(_priceProvider) != address(0), "invalid PriceProvider");
+		if (address(_priceProvider) == address(0)) revert AddressZero();
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
 	}
@@ -198,7 +206,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _treasury address
 	 */
 	function setTreasury(address _treasury) external onlyOwner {
-		require(_treasury != address(0), "invalid Treasury address");
+		if (_treasury == address(0)) revert AddressZero();
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}

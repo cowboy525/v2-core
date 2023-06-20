@@ -46,6 +46,10 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	error NoReserves();
+
+	error PeriodBelowMin();
+
 	/**
 	 * @notice Initializer
 	 * @param _pair Uniswap pair contract
@@ -63,9 +67,9 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint256 _consultLeniency,
 		bool _allowStaleConsults
 	) external initializer {
-		require(_pair != address(0), "pair is 0 address");
-		require(_rdnt != address(0), "rdnt is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		if (_pair == address(0)) revert AddressZero();
+		if (_rdnt == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
 
 		pair = IUniswapV2Pair(_pair);
 		token0 = pair.token0();
@@ -77,9 +81,8 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint112 reserve1;
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 
-		require(reserve0 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
-		require(reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		if (reserve0 == 0 || reserve1 == 0) revert NoReserves(); // Ensure that there's liquidity in the pair
+		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
 
 		period = _period;
 		consultLeniency = _consultLeniency;
@@ -93,7 +96,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	 * @param _period TWAP period.
 	 */
 	function setPeriod(uint256 _period) external onlyOwner {
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
 		period = _period;
 	}
 

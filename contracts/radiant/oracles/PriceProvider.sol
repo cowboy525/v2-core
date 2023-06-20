@@ -31,6 +31,10 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 
 	bool private usePool;
 
+	error AddressZero();
+
+	error InvalidOracle();
+
 	/**
 	 * @notice Initializer
 	 * @param _baseTokenPriceInUsdProxyAggregator Chainlink aggregator for USD price of base token
@@ -40,8 +44,8 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		IChainlinkAggregator _baseTokenPriceInUsdProxyAggregator,
 		IPoolHelper _poolHelper
 	) public initializer {
-		require(address(_baseTokenPriceInUsdProxyAggregator) != (address(0)), "Not a valid address");
-		require(address(_poolHelper) != (address(0)), "Not a valid address");
+		if (address(_baseTokenPriceInUsdProxyAggregator) == (address(0))) revert AddressZero();
+		if (address(_poolHelper) == (address(0))) revert AddressZero();
 		__Ownable_init();
 
 		poolHelper = _poolHelper;
@@ -115,7 +119,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 * @notice Sets new oracle.
 	 */
 	function setOracle(address _newOracle) external onlyOwner {
-		require(_newOracle != address(0), "Invalid oracle address");
+		if (_newOracle == address(0)) revert AddressZero();
 		oracle = IBaseOracle(_newOracle);
 	}
 
@@ -124,7 +128,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
-		require(getLpTokenPrice() != 0, "invalid oracle");
+		if (getLpTokenPrice() == 0) revert InvalidOracle();
 	}
 
 	/**
@@ -132,7 +136,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
 		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
-		require(getLpTokenPriceUsd() != 0, "invalid oracle");
+		if (getLpTokenPriceUsd() == 0) revert InvalidOracle();
 	}
 
 	/**
