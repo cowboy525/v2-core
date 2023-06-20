@@ -29,6 +29,15 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
+	/// @notice Base Percent
+	uint256 public constant BASE_PERCENT = 100;
+
+	/// @notice Adjustment factor
+	uint256 public constant ADJUSTMENT_FACTOR = 97;
+
+	/// @notice Borrow rate mode
+	uint256 public constant VARIABLE_INTEREST_RATE_MODE = 2;
+
 	/// @notice Acceptable ratio
 	uint256 public ACCEPTABLE_RATIO;
 
@@ -164,8 +173,6 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		uint256 BASE_PERCENT = 100;
-    uint256 ADJUSTMENT_FACTOR = 97;
 		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount).mul(BASE_PERCENT).div(ADJUSTMENT_FACTOR);
 	}
 
@@ -257,7 +264,6 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
 		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
-		uint256 VARIABLE_INTEREST_RATE_MODE = 2;
 		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;

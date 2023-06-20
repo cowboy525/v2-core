@@ -81,7 +81,6 @@ contract StargateBorrow is OwnableUpgradeable {
 	// Referral code
 	uint16 public constant REFERRAL_CODE = 0;
 
-
 	/// @notice asset => poolId; at the moment, pool IDs for USDC and USDT are the same accross all chains
 	mapping(address => uint256) public poolIdPerChain;
 

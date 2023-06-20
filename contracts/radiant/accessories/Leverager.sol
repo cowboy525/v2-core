@@ -29,6 +29,15 @@ contract Leverager is Ownable {
 	/// @notice Mock ETH address
 	address public constant API_ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+	/// @notice LTV Calculation precision
+	uint256 public constant TWO_POW_16 = 2 ** 16;
+
+	/// @notice Interest rate mode
+	uint256 public constant INTEREST_RATE_MODE = 2;
+
+	/// @notice Margin percent
+	uint256 public constant MARGIN_PERCENT = 6;
+
 	/// @notice Lending Pool address
 	ILendingPool public lendingPool;
 
@@ -52,9 +61,6 @@ contract Leverager is Ownable {
 
 	/// @notice Treasury address
 	address public treasury;
-
-	/// @notice Margin percent
-	uint256 public MARGIN_PERCENT = 6;
 
 	/// @notice Emitted when fee ratio is updated
 	event FeePercentUpdated(uint256 indexed _feePercent);
@@ -160,9 +166,8 @@ contract Leverager is Ownable {
 	 * @return ltv of the asset
 	 **/
 	function ltv(address asset) public view returns (uint256) {
-		uint256 twoPow16 = 2 ** 16;
 		DataTypes.ReserveConfigurationMap memory conf = lendingPool.getConfiguration(asset);
-		return conf.data % twoPow16;
+		return conf.data % TWO_POW_16;
 	}
 
 	/**
@@ -382,8 +387,6 @@ contract Leverager is Ownable {
 	 **/
 	function zapWETHWithBorrow(uint256 amount, address borrower) public returns (uint256 liquidity) {
 		require(msg.sender == borrower || msg.sender == address(lendingPool), "!borrower||lendingpool");
-		 uint256 INTEREST_RATE_MODE = 2;
-
 		if (amount > 0) {
 			uint16 referralCode = 0;
 			lendingPool.borrow(address(weth), amount, INTEREST_RATE_MODE, referralCode, borrower);

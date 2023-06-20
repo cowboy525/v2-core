@@ -34,7 +34,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	bytes32 public poolId;
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
-	uint256 public constant poolWeight = 4;
+	uint256 public constant POOL_WEIGHT = 4;
 	uint256 public constant RDNT_WEIGHT = 800000000000000000;
 	uint256 public constant WETH_WEIGHT = 200000000000000000;
 	uint256 public constant INITIAL_SWAP_FEE_PERCENTAGE = 1000000000000000;
@@ -229,7 +229,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
+		return wethBalance.mul(1e8).div(rdntBalance.div(POOL_WEIGHT));
 	}
 
 	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
@@ -322,7 +322,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth.mul(1e10);
 		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
-		optimalWETHAmount = ethRequiredBeforeWeight.div(poolWeight);
+		optimalWETHAmount = ethRequiredBeforeWeight.div(POOL_WEIGHT);
 	}
 
 	/**
