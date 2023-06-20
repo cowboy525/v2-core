@@ -120,7 +120,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _provider Price provider contract address.
 	 */
 	function setPriceProvider(address _provider) external onlyOwner {
-		if (address(_provider) == address(0)) revert AddressZero();
+		if (_provider == address(0)) revert AddressZero();
 		priceProvider = IPriceProvider(_provider);
 		ethOracle = IChainlinkAggregator(priceProvider.baseTokenPriceInUsdProxyAggregator());
 	}
@@ -130,7 +130,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _mfdAddr New contract address.
 	 */
 	function setMfd(address _mfdAddr) external onlyOwner {
-		if (address(_mfdAddr) == address(0)) revert AddressZero();
+		if (_mfdAddr == address(0)) revert AddressZero();
 		mfd = IMultiFeeDistribution(_mfdAddr);
 	}
 
@@ -139,7 +139,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _poolHelper New PoolHelper contract address.
 	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
-		if (address(_poolHelper) == address(0)) revert AddressZero();
+		if (_poolHelper == address(0)) revert AddressZero();
 		poolHelper = IPoolHelper(_poolHelper);
 	}
 

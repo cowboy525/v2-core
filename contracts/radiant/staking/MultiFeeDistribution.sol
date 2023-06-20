@@ -899,10 +899,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			unlockTime
 		);
 
-		if (index >= userEarnings[onBehalfOf].length) {
-			return;
-		}
-
 		uint256 length = userEarnings[onBehalfOf].length;
 		for (uint256 i = index + 1; i < length; ) {
 			userEarnings[onBehalfOf][i - 1] = userEarnings[onBehalfOf][i];

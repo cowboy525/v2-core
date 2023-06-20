@@ -60,9 +60,6 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice FEE ratio DIVISOR
 	uint256 public constant FEE_PERCENT_DIVISOR = 10000;
 
-	// ETH pool Id
-	uint256 private constant POOL_ID_ETH = 13;
-
 	// ETH address
 	address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 

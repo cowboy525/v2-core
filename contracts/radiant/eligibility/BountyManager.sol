@@ -36,10 +36,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	uint256 public hunterShare;
 	uint256 public baseBountyUsdTarget; // decimals 18
 	uint256 public maxBaseBounty;
-	uint256 public bountyBooster;
 	uint256 public bountyCount;
 	uint256 public minStakeAmount;
-	uint256 public slippageLimit;
 
 	// Array of available Bounty functions to run. See getMfdBounty, getChefBounty, etc.
 	mapping(uint256 => function(address, bool) returns (address, uint256, bool)) private bounties;
@@ -57,8 +55,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	event BaseBountyUsdTargetUpdated(uint256 indexed _newVal);
 	event HunterShareUpdated(uint256 indexed _newVal);
 	event MaxBaseBountyUpdated(uint256 indexed _newVal);
-	event BountyBoosterUpdated(uint256 indexed _newVal);
-	event SlippageLimitUpdated(uint256 indexed _newVal);
 	event BountyReserveEmpty(uint256 indexed _bal);
 	event WhitelistActiveChanged(bool indexed isActive);
 
@@ -79,7 +75,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _hunterShare % of reclaimed rewards to send to Hunter
 	 * @param _baseBountyUsdTarget Base Bounty is paid in RDNT, will scale to match this USD target value
 	 * @param _maxBaseBounty cap the scaling above
-	 * @param _bountyBooster when bounties need boosting to clear queue, add this amount (in RDNT)
 	 */
 	function initialize(
 		address _rdnt,
@@ -91,8 +86,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		address _compounder,
 		uint256 _hunterShare,
 		uint256 _baseBountyUsdTarget,
-		uint256 _maxBaseBounty,
-		uint256 _bountyBooster
+		uint256 _maxBaseBounty
 	) external initializer {
 		if (_rdnt == address(0)) revert AddressZero();
 		if (_weth == address(0)) revert AddressZero();
@@ -115,7 +109,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 		hunterShare = _hunterShare;
 		baseBountyUsdTarget = _baseBountyUsdTarget;
-		bountyBooster = _bountyBooster;
 		maxBaseBounty = _maxBaseBounty;
 
 		bounties[1] = getMfdBounty;
@@ -287,10 +280,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return amt added to vesting
 	 */
 	function _sendBounty(address _to, uint256 _amount) internal returns (uint256) {
-		if (_amount == 0) {
-			return 0;
-		}
-
 		uint256 bountyReserve = IERC20(rdnt).balanceOf(address(this));
 		if (_amount > bountyReserve) {
 			IERC20(rdnt).safeTransfer(address(mfd), bountyReserve);
@@ -364,27 +353,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	function setMaxBaseBounty(uint256 _newVal) external onlyOwner {
 		maxBaseBounty = _newVal;
 		emit MaxBaseBountyUpdated(_newVal);
-	}
-
-	/**
-	 * @notice Updates bounty booster.
-	 * @dev Only owner can call this function.
-	 * @param _newVal New bounty booster
-	 */
-	function setBountyBooster(uint256 _newVal) external onlyOwner {
-		bountyBooster = _newVal;
-		emit BountyBoosterUpdated(_newVal);
-	}
-
-	/**
-	 * @notice Updates slippage limit.
-	 * @dev Only owner can call this function.
-	 * @param _newVal New slippage limit
-	 */
-	function setSlippageLimit(uint256 _newVal) external onlyOwner {
-		if (_newVal > 10000) revert InvalidSlippage();
-		slippageLimit = _newVal;
-		emit SlippageLimitUpdated(_newVal);
 	}
 
 	/**

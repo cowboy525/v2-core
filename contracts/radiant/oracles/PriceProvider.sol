@@ -23,9 +23,6 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	/// @notice Pool helper contract - Uniswap/Balancer
 	IPoolHelper public poolHelper;
 
-	/// @notice Eligibility data provider contract
-	IEligibilityDataProvider public eligibilityProvider;
-
 	/// @notice Base oracle contract
 	IBaseOracle public oracle;
 

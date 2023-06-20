@@ -94,8 +94,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error BountyOnly();
 
-	error UserStillEligible();
-
 	error NotEligible();
 
 	error CadenceTooLong();
@@ -191,7 +189,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		IMiddleFeeDistribution _rewardMinter,
 		uint256 _rewardsPerSecond
 	) public initializer {
-		if (address(_poolConfigurator) == address(0)) revert AddressZero();
+		if (_poolConfigurator == address(0)) revert AddressZero();
 		if (address(_eligibleDataProvider) == address(0)) revert AddressZero();
 		if (address(_rewardMinter) == address(0)) revert AddressZero();
 
@@ -491,16 +489,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		eligibleDataProvider.updatePrice();
 
 		if (endRewardTime() < block.timestamp + 5 days) {
-			_emitReserveLow();
+			address rdntToken = rewardMinter.getRdntTokenAddress();
+			emit ChefReserveLow(IERC20(rdntToken).balanceOf(address(this)));
 		}
-	}
-
-	/**
-	 * @notice Emits ReserveLow event.
-	 */
-	function _emitReserveLow() internal {
-		address rdntToken = rewardMinter.getRdntTokenAddress();
-		emit ChefReserveLow(IERC20(rdntToken).balanceOf(address(this)));
 	}
 
 	/**
@@ -679,7 +670,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			issueBaseBounty = true;
 		}
 		if (_execute && issueBaseBounty) {
-			stopEmissionsFor(_user, _isEligible);
+			stopEmissionsFor(_user);
 			emit Disqualified(_user);
 		}
 	}
@@ -720,12 +711,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @dev Stop RDNT emissions for specific users
 	 * @param _user address of recipient
-	 * @param _isEligible eligible status
 	 */
-	function stopEmissionsFor(address _user, bool _isEligible) internal {
+	function stopEmissionsFor(address _user) internal {
 		if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-		if (_isEligible) revert UserStillEligible();
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ++i) {
 			address token = registeredTokens[i];
@@ -770,7 +759,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @notice Ending reward distribution time.
 	 */
 	function endRewardTime() public returns (uint256) {
-		uint256 unclaimedRewards = depositedRewards - accountedRewards;
+		uint256 unclaimedRewards = availableRewards();
 		uint256 extra = 0;
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ) {

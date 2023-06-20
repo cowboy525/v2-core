@@ -76,7 +76,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_baseToken == address(0)) revert AddressZero();
 		if (_addressProvider == address(0)) revert AddressZero();
 		if (_lockZap == address(0)) revert AddressZero();
-		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
 		if (_slippageLimit < 8000) {
 			if (_slippageLimit >= PERCENT_DIVISOR) {
@@ -122,7 +121,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
-		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 	}
@@ -158,7 +156,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						0,
 						rewardToBaseRoute[underlying],
 						address(this),
-						block.timestamp + 600
+						block.timestamp
 					)
 				{} catch {}
 			}

@@ -21,11 +21,6 @@ contract LockerList is Ownable {
 	event LockerAdded(address indexed locker);
 	event LockerRemoved(address indexed locker);
 
-	/**
-	 * @dev Constructor
-	 */
-	constructor() Ownable() {}
-
 	/********************** Lockers list ***********************/
 	/**
 	 * @notice Return the number of users.

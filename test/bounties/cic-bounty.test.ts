@@ -332,10 +332,6 @@ runs.forEach(function (run) {
 					expect(baseBountyPost).gt(baseBountyPre);
 
 					expect(await eligibilityProvider.isEligibleForRewards(user1.address)).is.false;
-
-					if (depositAmt == eligibleAmt) {
-						expect(await eligibilityProvider.isMarketDisqualified(user1.address)).is.true;
-					}
 					expect(lastEligTimePre).equals(lastEligTimePost);
 				});
 

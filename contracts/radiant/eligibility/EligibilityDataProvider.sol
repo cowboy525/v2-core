@@ -52,12 +52,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/// @notice Disqualified time of the user
 	mapping(address => uint256) public disqualifiedTime;
 
-	// Elgible deposits per rToken
-	mapping(address => uint256) private eligibleDeposits;
-
-	/// @notice User's deposits per rToken; rToken => user => amount
-	mapping(address => mapping(address => uint256)) public userDeposits;
-
 	/********************** Events ***********************/
 
 	/// @notice Emitted when CIC is set
@@ -190,14 +184,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	function requiredUsdValue(address user) public view returns (uint256 required) {
 		(uint256 totalCollateralUSD, , , , , ) = lendingPool.getUserAccountData(user);
 		required = totalCollateralUSD.mul(requiredDepositRatio).div(RATIO_DIVISOR);
-	}
-
-	/**
-	 * @notice Is user DQed due to lock expire or price update
-	 * @param _user's address
-	 */
-	function isMarketDisqualified(address _user) public view returns (bool) {
-		return requiredUsdValue(_user) > 0 && !isEligibleForRewards(_user) && lastEligibleTime(_user) > block.timestamp;
 	}
 
 	/**

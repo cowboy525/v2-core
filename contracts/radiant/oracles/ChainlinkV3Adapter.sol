@@ -7,15 +7,11 @@ import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
-import "../../interfaces/IBaseOracle.sol";
 
-contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgradeable {
+contract ChainlinkV3Adapter is AggregatorV3Interface, OwnableUpgradeable {
 	AggregatorV3Interface public ethChainlinkFeed;
 	AggregatorV3Interface public tokenChainlinkFeed;
 	address public token;
-
-	uint256 public ethLatestTimestamp;
-	uint256 public tokenLatestTimestamp;
 
 	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
 		require(_token != address(0), "token is 0 address");
@@ -38,11 +34,6 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		(, int256 ethAnswer, , , ) = ethChainlinkFeed.latestRoundData();
 		require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
 		price = (uint256(tokenAnswer) * (10 ** 8)) / uint256(ethAnswer);
-	}
-
-	function update() public {
-		(, , , ethLatestTimestamp, ) = ethChainlinkFeed.latestRoundData();
-		(, , , tokenLatestTimestamp, ) = tokenChainlinkFeed.latestRoundData();
 	}
 
 	function canUpdate() public view returns (bool) {
