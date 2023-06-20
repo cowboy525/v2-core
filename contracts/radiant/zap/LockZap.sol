@@ -281,13 +281,13 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = _zapWETHWithSlippageCheck(wethGained);
+		uint256 liquidity = poolHelper.zapWETH(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).forceApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
 		emit Zapped(false, wethGained, 0, msg.sender, msg.sender, _lockTypeIndex);
 
-		refundDust(rdntAddr, address(weth), msg.sender);
+		_refundDust(rdntAddr, address(weth), msg.sender);
 	}
 
 	/**
@@ -381,7 +381,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		mfd.stake(liquidity, _onBehalf, _lockTypeIndex);
 		emit Zapped(_borrow, _wethAmt, _rdntAmt, _from, _onBehalf, _lockTypeIndex);
 
-		refundDust(rdntAddr, address(weth), _refundAddress);
+		_refundDust(rdntAddr, address(weth), _refundAddress);
 	}
 
 	/**

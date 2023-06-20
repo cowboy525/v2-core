@@ -240,7 +240,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 **/
 	function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 dstChainId) external payable {
 		if (address(asset) == ETH_ADDRESS && address(routerETH) != address(0)) {
-			borrowETH(amount, interestRateMode, dstChainId);
+			_borrowETH(amount, interestRateMode, dstChainId);
 		} else {
 			lendingPool.borrow(asset, amount, interestRateMode, REFERRAL_CODE, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
@@ -269,7 +269,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param interestRateMode stable or variable borrow mode
 	 * @param dstChainId Destination chain id
 	 **/
-	function borrowETH(uint256 amount, uint256 interestRateMode, uint16 dstChainId) internal {
+	function _borrowETH(uint256 amount, uint256 interestRateMode, uint16 dstChainId) internal {
 		lendingPool.borrow(address(weth), amount, interestRateMode, REFERRAL_CODE, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);

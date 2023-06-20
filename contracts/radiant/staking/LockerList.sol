@@ -11,7 +11,7 @@ contract LockerList is Ownable {
 	using AddressPagination for address[];
 
 	// Users list
-	address[] internal userlist;
+	address[] internal userList;
 	mapping(address => uint256) internal indexOf;
 	mapping(address => bool) internal inserted;
 
@@ -31,7 +31,7 @@ contract LockerList is Ownable {
 	 * @return count The number of users
 	 */
 	function lockersCount() external view returns (uint256 count) {
-		count = userlist.length;
+		count = userList.length;
 	}
 
 	/**
@@ -41,7 +41,7 @@ contract LockerList is Ownable {
 	 * @return users A paginated list of users
 	 */
 	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory users) {
-		users = userlist.paginate(page, limit);
+		users = userList.paginate(page, limit);
 	}
 
 	/**
@@ -52,8 +52,8 @@ contract LockerList is Ownable {
 	function addToList(address user) external onlyOwner {
 		if (inserted[user] == false) {
 			inserted[user] = true;
-			indexOf[user] = userlist.length;
-			userlist.push(user);
+			indexOf[user] = userList.length;
+			userList.push(user);
 		}
 
 		emit LockerAdded(user);
@@ -70,14 +70,14 @@ contract LockerList is Ownable {
 		delete inserted[user];
 
 		uint256 index = indexOf[user];
-		uint256 lastIndex = userlist.length - 1;
-		address lastUser = userlist[lastIndex];
+		uint256 lastIndex = userList.length - 1;
+		address lastUser = userList[lastIndex];
 
 		indexOf[lastUser] = index;
 		delete indexOf[user];
 
-		userlist[index] = lastUser;
-		userlist.pop();
+		userList[index] = lastUser;
+		userList.pop();
 
 		emit LockerRemoved(user);
 	}

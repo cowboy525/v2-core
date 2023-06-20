@@ -19,7 +19,7 @@ contract DustRefunder {
 	 * @param _weth WETH address
 	 * @param _refundAddress Address for refund
 	 */
-	function refundDust(address _rdnt, address _weth, address _refundAddress) internal {
+	function _refundDust(address _rdnt, address _weth, address _refundAddress) internal {
 		IERC20 rdnt = IERC20(_rdnt);
 		IWETH weth = IWETH(_weth);
 
