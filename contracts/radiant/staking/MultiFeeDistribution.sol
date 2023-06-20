@@ -160,8 +160,13 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	event BountyManagerUpdated(address indexed _bounty);
 	event RewardConverterUpdated(address indexed _rewardConverter);
 	event LockTypeInfoUpdated(uint256[] lockPeriod, uint256[] rewardMultipliers);
-	event AddressesUpdated(IChefIncentivesController _controller, IMiddleFeeDistribution _middleFeeDistribution, address indexed _treasury);
+	event AddressesUpdated(
+		IChefIncentivesController _controller,
+		IMiddleFeeDistribution _middleFeeDistribution,
+		address indexed _treasury
+	);
 	event LPTokenUpdated(address indexed _stakingToken);
+	event RewardAdded(address indexed _rewardToken);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -334,6 +339,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		Reward storage rewardData = rewardData[_rewardToken];
 		rewardData.lastUpdateTime = block.timestamp;
 		rewardData.periodFinish = block.timestamp;
+
+		emit RewardAdded(_rewardToken);
 	}
 
 	/********************** View functions ***********************/
