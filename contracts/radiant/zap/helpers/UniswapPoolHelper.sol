@@ -75,8 +75,6 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 
 		IERC20 lp = IERC20(lpTokenAddr);
 		lp.safeTransfer(msg.sender, lp.balanceOf(address(this)));
-
-		liquidityZap.initLiquidityZap(rdntAddr, wethAddr, lpTokenAddr, address(this));
 	}
 
 	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
