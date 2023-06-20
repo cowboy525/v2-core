@@ -1145,10 +1145,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				locks.pop();
 			}
 			if (locks.length == 0) {
-				lockAmount = totalLock;
-				lockAmountWithMultiplier = totalLockWithMultiplier;
-				delete userLocks[user];
-
 				userlist.removeFromList(user);
 			}
 		}
