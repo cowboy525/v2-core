@@ -7,7 +7,7 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "../../interfaces/IPriceProvider.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs

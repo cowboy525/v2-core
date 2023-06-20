@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {IUniswapV2Router} from "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/ILendingPoolAddressesProvider.sol";
-import "../../interfaces/IAaveOracle.sol";
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/ILockZap.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IFeeDistribution.sol";
-import "../../interfaces/IERC20DetailedBytes.sol";
-import "../../interfaces/IMintableToken.sol";
-import "../../interfaces/IBountyManager.sol";
+import {IAToken} from "../../interfaces/IAToken.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
+import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
+import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IFeeDistribution} from "../../interfaces/IFeeDistribution.sol";
+import {IERC20DetailedBytes} from "../../interfaces/IERC20DetailedBytes.sol";
+import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {IBountyManager} from "../../interfaces/IBountyManager.sol";
 
 contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	using SafeERC20 for IERC20;
@@ -272,7 +272,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_wethIn != 0) {
 			if (_execute) {
 				IERC20(baseToken).safeApprove(uniRouter, _wethIn);
-				uint256[] memory amounts = IUniswapV2Router01(uniRouter).swapExactTokensForTokens(
+				uint256[] memory amounts = IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 					_wethIn,
 					0,
 					wethToRadiant,
@@ -281,7 +281,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 				);
 				rdntOut = amounts[amounts.length - 1];
 			} else {
-				uint256[] memory amounts = IUniswapV2Router01(uniRouter).getAmountsOut(
+				uint256[] memory amounts = IUniswapV2Router(uniRouter).getAmountsOut(
 					_wethIn, //amt in
 					wethToRadiant
 				);
