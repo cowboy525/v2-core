@@ -39,6 +39,8 @@ describe('Zapper', function () {
 	const wethPerAccount = ethers.utils.parseUnits('100', 18);
 	const depositAmt = ethers.utils.parseUnits('1', 6);
 	const depositAmtWeth = ethers.utils.parseUnits('1', 18);
+	const SLIPPAGE_DIVISOR = BigNumber.from('10000');
+	const MAX_SLIPPAGE = SLIPPAGE_DIVISOR.mul(950).div(1000);
 	let USDC: MockToken;
 	let usdcAddress = '';
 	let rUSDCAddress = '';
@@ -360,6 +362,30 @@ describe('Zapper', function () {
 				.div(bpsUnit);
 
 			expect(lpValueGained).to.be.gt(minAcceptedLpValue);
+		});
+
+		it('slippage limits are not breached', async () => {
+			const reserves = await poolHelper.getReserves();
+			const lpTokens = reserves.lpTokenSupply;
+			const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
+			const poolValueInUSD = lpTokens.mul(lpTokenPriceUsd).div(ethers.utils.parseUnits('1', 18));
+			console.log("poolValueInUSD: ", poolValueInUSD.toString());
+			
+			// We trade 0.001% of the pool value
+			const zapAmount = poolValueInUSD.div(1000000); // div 1000000 instead of 100000 to account for USDC 6 decimals
+			
+			await USDC.approve(lockZap.address, zapAmount);
+			const tooTightSlippageLimit = SLIPPAGE_DIVISOR.mul(999).div(1000); // 0.1% slippage
+			await expect(
+				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooTightSlippageLimit)
+			).to.be.revertedWith('UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+			
+			const tooLooseSlippageLimit = (SLIPPAGE_DIVISOR.mul(95).div(100)).sub(1); // >5% slippage
+			await expect(
+				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooLooseSlippageLimit)
+			).to.be.revertedWith('SpecifiedSlippageExceedLimit');
+
+			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 		});
 	});
 });

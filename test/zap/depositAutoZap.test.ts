@@ -49,7 +49,7 @@ describe('Deposit/AutoZap', () => {
 	});
 
 	it('slippage limits are not breached', async () => {
-		const {lendingPool, leverager, lockZap, wethGateway, user1, weth, priceProvider}: FixtureDeploy =
+		const {lendingPool, leverager, lockZap, wethGateway, user1, weth}: FixtureDeploy =
 			await setupTest();
 		
 		let vdWETHAddress = await leverager.getVDebtToken(weth.address);
@@ -75,9 +75,9 @@ describe('Deposit/AutoZap', () => {
 		});
 
 		// Specified slippage limit is higher then the protocol allows
-		const tooLoosSlippageLimit = SLIPPAGE_DIVISOR.mul(95).div(100); // 5% slippage
+		const tooLooseSlippageLimit = (SLIPPAGE_DIVISOR.mul(95).div(100)).sub(1); // >5% slippage
 		await expect(
-			wethGateway.connect(user1).depositETHWithAutoDLP(lendingPool.address, user1.address, 0, tooLoosSlippageLimit.sub(1), {
+			wethGateway.connect(user1).depositETHWithAutoDLP(lendingPool.address, user1.address, 0, tooLooseSlippageLimit, {
 				value: tradeAmount,
 			})
 		).to.be.revertedWith('SpecifiedSlippageExceedLimit');
@@ -88,4 +88,5 @@ describe('Deposit/AutoZap', () => {
 			value: tradeAmount,
 		});
 	});
+	
 });
