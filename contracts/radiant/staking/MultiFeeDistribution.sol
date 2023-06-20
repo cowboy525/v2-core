@@ -786,10 +786,23 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (withPenalty) {
 			bal.earned = bal.earned.add(amount);
 			LockedBalance[] storage earnings = userEarnings[user];
-			uint256 unlockTime = block.timestamp.add(vestDuration);
-			earnings.push(
-				LockedBalance({amount: amount, unlockTime: unlockTime, multiplier: 1, duration: vestDuration})
-			);
+			
+			uint256 currentDay = block.timestamp / 1 days;
+			uint256 lastIndex = earnings.length > 0 ? earnings.length - 1 : 0;
+
+			// We check if an entry for the current day already exists. If yes, add new amount to that entry
+			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay) {
+				earnings[lastIndex].amount = earnings[lastIndex].amount.add(amount);
+			} else {
+				// If there is no entry for the current day, create a new one
+				uint256 unlockTime = block.timestamp.add(vestDuration);
+				earnings.push(LockedBalance({
+					amount: amount,
+					unlockTime: unlockTime,
+					multiplier: 1,
+					duration: vestDuration
+				}));
+			}
 		} else {
 			bal.unlocked = bal.unlocked.add(amount);
 		}
