@@ -36,8 +36,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	IWeightedPoolFactory public poolFactory;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

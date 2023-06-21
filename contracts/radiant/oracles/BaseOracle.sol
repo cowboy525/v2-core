@@ -26,8 +26,8 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	IBaseOracle public fallbackOracle;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

@@ -47,8 +47,8 @@ contract UniV2TwapOracle is BaseOracle {
 	FixedPoint.uq112x112 public price1Average;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

@@ -85,8 +85,8 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	error OnlyCIC();
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Constructor

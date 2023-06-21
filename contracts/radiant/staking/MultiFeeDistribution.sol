@@ -175,8 +175,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidPeriod();
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @dev Constructor

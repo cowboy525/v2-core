@@ -69,8 +69,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	error InvalidSlippage();
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initialize

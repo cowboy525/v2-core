@@ -35,8 +35,8 @@ contract UniV3TwapOracle is BaseOracle {
 	bool public priceInToken0;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

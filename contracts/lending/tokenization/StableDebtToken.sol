@@ -30,8 +30,8 @@ contract StableDebtToken is IStableDebtToken, DebtTokenBase {
 	IAaveIncentivesController internal _incentivesController;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @dev Initializes the debt token.

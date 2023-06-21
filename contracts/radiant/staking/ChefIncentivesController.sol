@@ -179,8 +179,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	EndingTime public endingTime;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

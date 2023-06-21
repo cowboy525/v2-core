@@ -17,8 +17,8 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	uint256 public tokenLatestTimestamp;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
 		require(_token != address(0), "token is 0 address");

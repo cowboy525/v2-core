@@ -24,8 +24,8 @@ contract VariableDebtToken is DebtTokenBase, IVariableDebtToken {
 	IAaveIncentivesController internal _incentivesController;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @dev Initializes the debt token.

@@ -97,8 +97,8 @@ contract StargateBorrow is OwnableUpgradeable {
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Constructor

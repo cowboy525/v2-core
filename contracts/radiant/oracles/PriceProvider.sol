@@ -31,8 +31,8 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	bool private usePool;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

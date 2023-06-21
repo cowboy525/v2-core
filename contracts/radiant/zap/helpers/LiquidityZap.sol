@@ -65,8 +65,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	address public poolHelper;
 
 	constructor() {
-        _disableInitializers();
-    }
+			_disableInitializers();
+		}
 
 	/**
 	 * @notice Initialize

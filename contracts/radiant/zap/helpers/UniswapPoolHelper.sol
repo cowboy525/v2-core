@@ -37,8 +37,8 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	address public lockZap;
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	function initialize(
 		address _rdntAddr,
