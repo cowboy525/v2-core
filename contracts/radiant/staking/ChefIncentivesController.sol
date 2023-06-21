@@ -329,7 +329,12 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		}
 	}
 
-	function checkDuplicateSchedule (uint256 _startTimeOffset) internal returns(bool) {
+	/**
+	 * @notice Ensure that the specified time offset hasn't been registered already.
+	 * @param _startTimeOffset time offset
+	 * @return true if the specified time offset is already registered
+	 */
+	function _checkDuplicateSchedule (uint256 _startTimeOffset) internal returns(bool) {
 		for (uint256 i = 0; i < emissionSchedule.length; i++) {
 			if(emissionSchedule[i].startTimeOffset == _startTimeOffset) {
 				return true;
@@ -357,7 +362,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			}
 			if (_startTimeOffsets[i] > type(uint128).max) revert ExceedsMaxInt();
 			if (_rewardsPerSecond[i] > type(uint128).max) revert ExceedsMaxInt();
-			if (checkDuplicateSchedule(_startTimeOffsets[i])) revert DuplicateSchedule();
+			if (_checkDuplicateSchedule(_startTimeOffsets[i])) revert DuplicateSchedule();
 
 			if (startTime > 0) {
 				if (_startTimeOffsets[i] < block.timestamp.sub(startTime)) revert InvalidStart();
