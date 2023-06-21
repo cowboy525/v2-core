@@ -49,8 +49,8 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 	}
 
 	constructor() {
-        _disableInitializers();
-    }
+		_disableInitializers();
+	}
 
 	function initialize(ILendingPoolAddressesProvider provider) public initializer {
 		addressesProvider = provider;
