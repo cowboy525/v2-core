@@ -202,7 +202,7 @@ describe('MultiFeeDistribution', () => {
 
 		const balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).setRelock(false);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
@@ -272,7 +272,7 @@ describe('MultiFeeDistribution', () => {
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		const balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).setRelock(false);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
@@ -292,7 +292,7 @@ describe('MultiFeeDistribution', () => {
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		const lockedBal2 = (await mfd.lockedBalances(user2.address)).locked;
 
@@ -327,30 +327,30 @@ describe('MultiFeeDistribution', () => {
 
 		// x1 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x3 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x6 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x12 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// withdraw all left
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		await expectSorted();
 	});
@@ -376,7 +376,7 @@ describe('MultiFeeDistribution', () => {
 		// x1 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		let balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		let balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
@@ -387,7 +387,7 @@ describe('MultiFeeDistribution', () => {
 		// x3 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
@@ -398,7 +398,7 @@ describe('MultiFeeDistribution', () => {
 		// x6 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
@@ -409,7 +409,7 @@ describe('MultiFeeDistribution', () => {
 		// x12 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
@@ -435,7 +435,7 @@ describe('MultiFeeDistribution', () => {
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		const balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(50));
 

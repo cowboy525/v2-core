@@ -36,8 +36,6 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function zapVestingToLp(address _address) external returns (uint256);
 
-	function withdrawExpiredLocksFor(address _address) external returns (uint256);
-
 	function claimableRewards(address account) external view returns (IFeeDistribution.RewardData[] memory rewards);
 
 	function setDefaultRelockTypeIndex(uint256 _index) external;

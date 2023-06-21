@@ -1194,15 +1194,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	/**
-	 * @notice Withdraw all currently locked tokens where the unlock time has passed.
-	 * @param _address of the user
-	 * @return withdraw amount
-	 */
-	function withdrawExpiredLocksFor(address _address) external override returns (uint256) {
-		return _withdrawExpiredLocksFor(_address, false, true, userLocks[_address].length);
-	}
-
-	/**
 	 * @notice Withdraw expired locks with options
 	 * @param _address for withdraw
 	 * @param _limit of lock length for withdraw

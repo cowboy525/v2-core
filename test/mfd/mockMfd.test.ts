@@ -120,7 +120,7 @@ describe('MultiFeeDistribution', () => {
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 
 		const lockedBal = (await mfd.lockedBalances(user1.address)).locked;
 
