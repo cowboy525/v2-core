@@ -79,6 +79,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error InsufficientETH();
 
+	error EthTransferFailed();
+
 	uint256 public ethLPRatio; // paramter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
 
 	/**
@@ -362,6 +364,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
 		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
+		if (!success) {
+			revert EthTransferFailed();
+		}
 	}
 }
