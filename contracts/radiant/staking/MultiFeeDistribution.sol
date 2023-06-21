@@ -1067,7 +1067,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				rewardData[token].balance = rewardData[token].balance.sub(reward);
 
 				IERC20(token).safeTransfer(_user, reward);
-				// TODO: ask if bulk event is possible. Roughly 50% cheaper
 				emit RewardPaid(_user, token, reward);
 			}
 			unchecked {

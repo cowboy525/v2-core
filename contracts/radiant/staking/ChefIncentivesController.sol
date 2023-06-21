@@ -844,7 +844,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		pending = userBaseClaimable[_user];
 		uint256[] memory claimable = pendingRewards(_user, registeredTokens);
 		uint256 length = claimable.length;
-		// TODO: potentially replace with inline assembly loop if this is called in a transaction
 		for (uint256 i; i < length; i++) {
 			pending += claimable[i];
 		}
