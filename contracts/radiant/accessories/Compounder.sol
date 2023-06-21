@@ -3,6 +3,7 @@ pragma solidity 0.8.12;
 
 import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -15,7 +16,6 @@ import "../../interfaces/ILendingPool.sol";
 import "../../interfaces/ILockZap.sol";
 import "../../interfaces/IPriceProvider.sol";
 import "../../interfaces/IFeeDistribution.sol";
-import "../../interfaces/IERC20DetailedBytes.sol";
 import "../../interfaces/IMintableToken.sol";
 import "../../interfaces/IBountyManager.sol";
 
@@ -250,8 +250,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		IAaveOracle oracle = IAaveOracle(ILendingPoolAddressesProvider(addressProvider).getPriceOracle());
 		uint256 priceInAsset = oracle.getAssetPrice(_in); //USDC: 100000000
 		uint256 priceOutAsset = oracle.getAssetPrice(_out); //WETH: 153359950000
-		uint256 decimalsIn = IERC20DetailedBytes(_in).decimals();
-		uint256 decimalsOut = IERC20DetailedBytes(_out).decimals();
+		uint256 decimalsIn = IERC20Metadata(_in).decimals();
+		uint256 decimalsOut = IERC20Metadata(_out).decimals();
 		tokensOut = (_amtIn * priceInAsset * (10 ** decimalsOut)) / (priceOutAsset * (10 ** decimalsIn));
 	}
 
