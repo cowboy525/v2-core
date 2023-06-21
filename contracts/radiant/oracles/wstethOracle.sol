@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
 import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
