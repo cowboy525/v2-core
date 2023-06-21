@@ -439,7 +439,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		(bool success, bytes memory result) = collateralManager.delegatecall(
 			abi.encodeCall(
 				ILendingPoolCollateralManager.liquidationCall,
-				(collateralAsset, debtAsset, user, debtToCover, receiveAToken, liquidationFeeTo)
+				(
+					collateralAsset,
+					debtAsset,
+					user,
+					debtToCover,
+					receiveAToken,
+					liquidationFeeTo
+				)
 			)
 		);
 
