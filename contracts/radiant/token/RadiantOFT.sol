@@ -11,7 +11,6 @@ import "../../interfaces/IPriceProvider.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
 contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	using SafeMath for uint256;
 

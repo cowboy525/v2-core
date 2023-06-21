@@ -17,7 +17,6 @@ import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.so
 
 /// @title ChefIncentivesController Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 /// based on the Sushi MasterChef
 ///	https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
 contract ChefIncentivesController is Initializable, PausableUpgradeable, OwnableUpgradeable {

@@ -21,7 +21,6 @@ import "../../interfaces/IBountyManager.sol";
 
 /// @title Compounder Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	using SafeERC20 for IERC20;
 

@@ -11,7 +11,6 @@ import "../../interfaces/IBaseOracle.sol";
 
 /// @title ChainlinkV3Adapter Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgradeable {
 	/// @notice Eth price feed
 	AggregatorV3Interface public ethChainlinkFeed;
@@ -107,15 +106,15 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		return tokenChainlinkFeed.description();
 	}
 
-  /**
-   * @notice Get data about a round
-   * @param _roundId the requested round ID
-   * @return roundId is the round ID from the aggregator for which the data was retrieved.
-   * @return answer is the answer for the given round
-   * @return startedAt is the timestamp when the round was started.
-   * @return updatedAt is the timestamp when the round last was updated.
-   * @return answeredInRound is the round ID of the round in which the answer was computed.
-   */
+	/**
+	 * @notice Get data about a round
+	 * @param _roundId the requested round ID
+	 * @return roundId is the round ID from the aggregator for which the data was retrieved.
+	 * @return answer is the answer for the given round
+	 * @return startedAt is the timestamp when the round was started.
+	 * @return updatedAt is the timestamp when the round last was updated.
+	 * @return answeredInRound is the round ID of the round in which the answer was computed.
+	 */
 	function getRoundData(
 		uint80 _roundId
 	)
@@ -126,14 +125,14 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		return tokenChainlinkFeed.getRoundData(_roundId);
 	}
 
-   /**
-   * @notice Returns data of latest round
-   * @return roundId is the round ID from the aggregator for which the data was retrieved.
-   * @return answer is the answer for the given round
-   * @return startedAt is the timestamp when the round was started.
-   * @return updatedAt is the timestamp when the round last was updated.
-   * @return answeredInRound is the round ID of the round in which the answer was computed.
-   */
+	/**
+	 * @notice Returns data of latest round
+	 * @return roundId is the round ID from the aggregator for which the data was retrieved.
+	 * @return answer is the answer for the given round
+	 * @return startedAt is the timestamp when the round was started.
+	 * @return updatedAt is the timestamp when the round last was updated.
+	 * @return answeredInRound is the round ID of the round in which the answer was computed.
+	 */
 	function latestRoundData()
 		public
 		view

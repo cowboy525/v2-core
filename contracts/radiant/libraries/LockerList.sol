@@ -7,7 +7,6 @@ import {AddressPagination} from "./AddressPagination.sol";
 
 /// @title Locker List Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockerList is Ownable {
 	using AddressPagination for address[];
 

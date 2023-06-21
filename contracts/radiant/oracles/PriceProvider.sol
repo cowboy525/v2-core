@@ -13,7 +13,6 @@ import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability
 
 /// @title PriceProvider Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract PriceProvider is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 

@@ -14,7 +14,6 @@ import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
-/// @dev All function calls are currently implemented without side effects
 contract EligibilityDataProvider is OwnableUpgradeable {
 	using SafeMath for uint256;
 

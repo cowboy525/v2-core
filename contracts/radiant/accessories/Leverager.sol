@@ -18,7 +18,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 
 /// @title Leverager Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract Leverager is Ownable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;

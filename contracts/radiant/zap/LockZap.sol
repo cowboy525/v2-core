@@ -21,7 +21,6 @@ import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 
 /// @title LockZap contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;

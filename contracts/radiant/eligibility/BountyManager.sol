@@ -21,7 +21,6 @@ import {ICompounder} from "../../interfaces/ICompounder.sol";
 
 /// @title BountyManager Contract
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
 contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;

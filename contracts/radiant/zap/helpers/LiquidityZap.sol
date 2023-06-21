@@ -48,7 +48,6 @@ import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeabil
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
 contract LiquidityZap is Initializable, OwnableUpgradeable {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;

@@ -21,7 +21,6 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableUpgradeable, OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;

@@ -52,7 +52,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract StargateBorrow is OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;

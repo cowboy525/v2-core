@@ -18,7 +18,6 @@ import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 
 /// @title Fee distributor inside
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
