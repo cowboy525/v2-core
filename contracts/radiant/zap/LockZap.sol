@@ -162,7 +162,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * 100 / 97;
+		optimalWETHAmount = (poolHelper.quoteFromToken(_tokenAmount) * 100) / 97;
 	}
 
 	/**
@@ -252,7 +252,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount * (10 ** 8)/ (10 ** IERC20Metadata(address(weth)).decimals());
+		uint256 amountInETH = (_amount * (10 ** 8)) / (10 ** IERC20Metadata(address(weth)).decimals());
 		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
@@ -266,9 +266,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _liquidity) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 ethAmtUsd = _ethAmt * (uint256(ethOracle.latestAnswer())) / 1E18;
+		uint256 ethAmtUsd = (_ethAmt * (uint256(ethOracle.latestAnswer()))) / 1E18;
 		uint256 lpAmtUsd = _liquidity * priceProvider.getLpTokenPriceUsd();
-		ratio = lpAmtUsd * RATIO_DIVISOR / ethAmtUsd;
+		ratio = (lpAmtUsd * RATIO_DIVISOR) / ethAmtUsd;
 		ratio = ratio / 1E18;
 	}
 
@@ -317,7 +317,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
-			totalWethValueIn = _wethAmt * RATIO_DIVISOR / ethLPRatio;
+			totalWethValueIn = (_wethAmt * RATIO_DIVISOR) / ethLPRatio;
 		} else {
 			liquidity = poolHelper.zapWETH(_wethAmt);
 			totalWethValueIn = _wethAmt;

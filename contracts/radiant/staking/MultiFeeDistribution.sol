@@ -1012,7 +1012,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 
 		r.lastUpdateTime = block.timestamp;
-		r.periodFinish = block.timestamp - rewardsDuration;
+		r.periodFinish = block.timestamp + rewardsDuration;
 		r.balance = r.balance + reward;
 	}
 
