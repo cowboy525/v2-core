@@ -92,25 +92,6 @@ describe('Non-Elig CIC', () => {
 		period = (await multiFeeDistribution.defaultLockDuration()).div(10).toNumber();
 	});
 
-	describe('claim by operators', () => {
-		it('setOperator', async () => {
-			await chefIncentivesController.connect(user1).setOperator(deployer.address, true);
-			expect(await chefIncentivesController.operators(user1.address, deployer.address)).to.be.equal(true);
-			await chefIncentivesController.connect(user1).setOperator(deployer.address, false);
-			expect(await chefIncentivesController.operators(user1.address, deployer.address)).to.be.equal(false);
-		});
-
-		it('only operators claim', async () => {
-			await expect(chefIncentivesController.connect(user1).claim(deployer.address, [])).to.be.revertedWith(
-				'not allowed'
-			);
-			await chefIncentivesController.setOperator(user1.address, true);
-			await expect(chefIncentivesController.connect(user1).claim(deployer.address, [])).to.be.revertedWith(
-				'NothingToMint'
-			);
-		});
-	});
-
 	describe('addPool requires', () => {
 		it('should be callable by only pool configurator', async () => {
 			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
@@ -255,6 +236,11 @@ describe('Non-Elig CIC', () => {
 			);
 		});
 
+		it('claim for middlefeedistribution', async () => {
+			await expect(chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)).to
+				.be.not.reverted;
+		});
+
 		it('should claim rewards', async () => {
 			// mine 100 seconds
 			await advanceTimeAndBlock(period);
@@ -278,6 +264,12 @@ describe('Non-Elig CIC', () => {
 			const balanceAfter = (await multiFeeDistribution.earnedBalances(user1.address)).total;
 
 			expect(balanceAfter.sub(balanceBefore)).to.be.gt(claimableRewards[0]);
+		});
+
+		it('withdraw all', async () => {
+			const amount = await rUSDC.balanceOf(user1.address);
+			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
+			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
 		});
 	});
 
@@ -334,13 +326,13 @@ describe('Non-Elig CIC', () => {
 
 			await advanceTimeAndBlock(100);
 
-			await chefIncentivesController.connect(user1).claim(user1.address, [rUSDCAddress]);
+			await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
 			assert.equal(
 				(await chefIncentivesController.emissionScheduleIndex()).toString(),
 				'1',
 				`get rps from schedule`
 			);
-			await chefIncentivesController.connect(user1).claim(user1.address, [rUSDCAddress]);
+			await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
 			assert.equal(
 				(await chefIncentivesController.rewardsPerSecond()).toString(),
 				cicRewardsPerSecond[0].toString(),
@@ -351,7 +343,7 @@ describe('Non-Elig CIC', () => {
 
 			await chefIncentivesController.connect(deployer).setRewardsPerSecond(100, false);
 
-			await chefIncentivesController.connect(user1).claimAll(user1.address);
+			await chefIncentivesController.claimAll(user1.address);
 			assert.equal(
 				(await chefIncentivesController.emissionScheduleIndex()).toString(),
 				'2',
@@ -365,7 +357,7 @@ describe('Non-Elig CIC', () => {
 
 			await advanceTimeAndBlock(500);
 
-			await chefIncentivesController.connect(user1).claim(user1.address, [rUSDCAddress]);
+			await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
 			assert.equal(
 				(await chefIncentivesController.emissionScheduleIndex()).toString(),
 				'3',

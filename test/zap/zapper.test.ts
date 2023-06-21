@@ -138,7 +138,7 @@ describe('Zapper', function () {
 
 		await advanceTimeAndBlock(100000);
 
-		await chefIncentivesController.connect(user2).claim(user2.address, [rUSDCAddress]);
+		await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
 
 		let totalVesting = (await mfd.earnedBalances(user2.address)).total;
 
@@ -223,7 +223,7 @@ describe('Zapper', function () {
 
 		await advanceTimeAndBlock(100000);
 
-		await chefIncentivesController.connect(user4).claim(user4.address, [rWETHAddress]);
+		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
 		let totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
@@ -273,7 +273,7 @@ describe('Zapper', function () {
 
 		await advanceTimeAndBlock(100000);
 
-		await chefIncentivesController.connect(user4).claim(user4.address, [rWETHAddress]);
+		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
 		let totalVesting = (await mfd.earnedBalances(user4.address)).total;
 
@@ -286,7 +286,7 @@ describe('Zapper', function () {
 		expect(totalVesting).to.be.equal(0);
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.be.gt(BigNumber.from(0));
 
-		await chefIncentivesController.connect(user4).claim(user4.address, [rWETHAddress]);
+		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 		expect((await mfd.earnedBalances(user4.address)).total).to.be.gt(BigNumber.from(0));
 
 		const rdntBal1 = await radiant.balanceOf(user4.address);

@@ -74,7 +74,7 @@ describe('Individual Early Exits', () => {
 		const userBal0 = await radiant.balanceOf(user1.address);
 		const daoBal0 = await radiant.balanceOf(dao.address);
 
-		await chefIncentivesController.connect(user1).claim(user1.address, [rWETHAddress]);
+		await chefIncentivesController.claim(user1.address, [rWETHAddress]);
 
 		const blockTimestamp = await getLatestBlockTimestamp();
 		const unlockTime = blockTimestamp + VEST_DURATION.toNumber();

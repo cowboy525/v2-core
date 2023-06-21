@@ -117,7 +117,7 @@ describe('MFDs split Platform Revenue', () => {
 	});
 
 	it('User2 can Vest RDNT', async () => {
-		await chef.connect(user2).claim(user2.address, deployData.allTokenAddrs);
+		await chef.claim(user2.address, deployData.allTokenAddrs);
 		await advanceTimeAndBlock(deployConfig.MFD_VEST_DURATION);
 
 		const {amount: mfdRewardAmount, penaltyAmount: penalty0} = await multiFeeDistribution.withdrawableBalance(

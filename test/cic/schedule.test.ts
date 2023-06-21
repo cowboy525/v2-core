@@ -3,57 +3,25 @@ import chai from 'chai';
 import assert from 'assert';
 import {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock} from '../shared/helpers';
-import {AToken, ChefIncentivesController, LendingPool, MockOnwardIncentivesController, MockToken} from '../../typechain';
+import {ChefIncentivesController} from '../../typechain';
 import {getLatestBlockTimestamp} from '../../scripts/utils';
 import {BigNumber} from 'ethers';
 import {setupTest} from '../setup';
 import {solidity} from 'ethereum-waffle';
-import { DeployData } from '../../scripts/deploy/types';
 
 chai.use(solidity);
 const {expect} = chai;
 
-
 describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', () => {
 	let deployer: SignerWithAddress;
 	let chefIncentivesController: ChefIncentivesController;
-	let deployData: DeployData;
-	let lendingPool: LendingPool;
-	let USDC: MockToken;
-	let rUSDC: AToken;
-	let onwardIncentiveController: MockOnwardIncentivesController;
-
-	let usdcAddress = '';
-	let rUSDCAddress = '';
-	
-	const rewardsPerSecond = ethers.utils.parseUnits('1', 18);
-	const usdcPerAccount = ethers.utils.parseUnits('1000000000', 6);
-	const depositAmt = ethers.utils.parseUnits('10000', 6);
 
 	before(async () => {
 		const fixture = await setupTest();
 
 		deployer = fixture.deployer;
 
-		deployData = fixture.deployData;
-
-		usdcAddress = fixture.usdc.address;
-		rUSDCAddress = deployData.allTokens.rUSDC;
-
-		const onwardIncentiveControllerFactory = await ethers.getContractFactory('MockOnwardIncentivesController');
-		onwardIncentiveController = await onwardIncentiveControllerFactory.deploy();
-		await onwardIncentiveController.deployed();
 		chefIncentivesController = fixture.chefIncentivesController;
-		lendingPool = fixture.lendingPool;
-
-		USDC = <MockToken>await ethers.getContractAt('MockToken', usdcAddress);
-		rUSDC = <AToken>await ethers.getContractAt('AToken', rUSDCAddress);
-
-		await chefIncentivesController.setEligibilityEnabled(false);
-		await chefIncentivesController.setOnwardIncentives(rUSDCAddress, onwardIncentiveController.address);
-		await USDC.mint(deployer.address, usdcPerAccount);
-		await USDC.approve(lendingPool.address, ethers.constants.MaxUint256);
-		await lendingPool.deposit(usdcAddress, depositAmt, deployer.address, 0);
 	});
 
 	it('setEmissionSchedule before start', async () => {
@@ -105,7 +73,6 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 
 		await chefIncentivesController.claimAll(deployer.address);
 		assert.equal((await chefIncentivesController.emissionScheduleIndex()).toString(), '1', `get rps from schedule`);
-		await advanceTimeAndBlock(100);
 		await chefIncentivesController.claimAll(deployer.address);
 		assert.equal(
 			(await chefIncentivesController.rewardsPerSecond()).toString(),
