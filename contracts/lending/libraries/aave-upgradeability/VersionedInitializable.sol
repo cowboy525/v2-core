@@ -63,11 +63,11 @@ abstract contract VersionedInitializable {
 	function getRevision() internal pure virtual returns (uint256);
 
 	function _disableInitializers() internal virtual {
-        require(!initializing, "Initializable: contract is initializing");
-        if (!initialized) {
-            initialized = true;
-        }
-    }
+		require(!initializing, "Initializable: contract is initializing");
+		if (!initialized) {
+			initialized = true;
+		}
+	}
 
 	// Reserved storage space to allow for layout changes in the future.
 	uint256[50] private ______gap;
