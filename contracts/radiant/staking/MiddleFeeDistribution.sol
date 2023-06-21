@@ -173,19 +173,21 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Emit event for new asset reward
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
+		uint256 lpUsdValue;
 		if (asset != address(rdntToken)) {
 			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
-				asset = underlyingAddress;
+				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(underlyingAddress);
+				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
+				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
+				uint8 assetDecimals = IERC20Metadata(asset).decimals();
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(10 ** assetDecimals);
 			} catch {
-				// This is not an rToken, so we can use the asset address as is
-			}
-			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
-			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
-			uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
-			uint8 assetDecimals = IERC20Metadata(asset).decimals();
-			uint256 lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
-				10 ** assetDecimals
-			);
+				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
+				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
+				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
+				uint8 assetDecimals = IERC20Metadata(asset).decimals();
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(10 ** assetDecimals);
+			}			
 			emit NewTransferAdded(asset, lpUsdValue);
 		}
 	}

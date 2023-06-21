@@ -247,7 +247,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 length = pending.length;
 		for (uint256 i; i < length; i++) {
 			if (pending[i].token != address(rdntToken)) {
-				tokens[index] = pending[i].token;
+				try IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+					tokens[index] = underlyingAddress;
+				}catch{
+					tokens[index] = pending[i].token;
+				}
 				amts[index] = pending[i].amount;
 				index++;
 			}
