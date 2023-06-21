@@ -175,7 +175,13 @@ interface ILendingPool {
 	 **/
 	function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
 
-	function depositWithAutoDLP(address asset, uint256 amount, address onBehalfOf, uint16 referralCode, uint256 slippage) external;
+	function depositWithAutoDLP(
+		address asset,
+		uint256 amount,
+		address onBehalfOf,
+		uint16 referralCode,
+		uint256 slippage
+	) external;
 
 	/**
 	 * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned

@@ -43,7 +43,12 @@ contract WETHGateway is IWETHGateway, Ownable {
 		ILendingPool(lendingPool).deposit(address(WETH), msg.value, onBehalfOf, referralCode);
 	}
 
-	function depositETHWithAutoDLP(address lendingPool, address onBehalfOf, uint16 referralCode, uint256 slippage) external payable {
+	function depositETHWithAutoDLP(
+		address lendingPool,
+		address onBehalfOf,
+		uint16 referralCode,
+		uint256 slippage
+	) external payable {
 		WETH.deposit{value: msg.value}();
 		ILendingPool(lendingPool).depositWithAutoDLP(address(WETH), msg.value, onBehalfOf, referralCode, slippage);
 	}

@@ -212,7 +212,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _slippage maximum amount of slippage allowed for any occuring trades
 	 */
 	function zapFromVesting(
-		bool _borrow, 
+		bool _borrow,
 		uint256 _lockTypeIndex,
 		uint256 _slippage
 	) public payable whenNotPaused returns (uint256) {
@@ -227,12 +227,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _amount the amount of asset to zap
 	 * @param _lockTypeIndex lock length index.
 	 */
-	function zapAlternateAsset(
-		address _asset, 
-		uint256 _amount, 
-		uint256 _lockTypeIndex,
-		uint256 _slippage
-	) public {
+	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex, uint256 _slippage) public {
 		if (_asset == address(0)) revert AddressZero();
 		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
 		if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();

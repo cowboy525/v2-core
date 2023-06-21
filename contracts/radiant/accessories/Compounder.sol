@@ -199,7 +199,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 noSlippagePendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 
 		uint256 userSlippageLimit = IMultiFeeDistribution(multiFeeDistribution).userSlippage(_user);
-		if (userSlippageLimit == 0){
+		if (userSlippageLimit == 0) {
 			userSlippageLimit = slippageLimit;
 		}
 
@@ -224,7 +224,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
-		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit) revert InvalidSlippage();
+		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit)
+			revert InvalidSlippage();
 
 		if (isAutoCompound) {
 			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute, userSlippageLimit);

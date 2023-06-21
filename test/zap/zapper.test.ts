@@ -231,7 +231,9 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 0)).to.be.revertedWith('ExceedsAvailableBorrowsETH');
+		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 0)).to.be.revertedWith(
+			'ExceedsAvailableBorrowsETH'
+		);
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
@@ -369,18 +371,18 @@ describe('Zapper', function () {
 			const lpTokens = reserves.lpTokenSupply;
 			const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
 			const poolValueInUSD = lpTokens.mul(lpTokenPriceUsd).div(ethers.utils.parseUnits('1', 18));
-			console.log("poolValueInUSD: ", poolValueInUSD.toString());
-			
+			console.log('poolValueInUSD: ', poolValueInUSD.toString());
+
 			// We trade 0.001% of the pool value
 			const zapAmount = poolValueInUSD.div(1000000); // div 1000000 instead of 100000 to account for USDC 6 decimals
-			
+
 			await USDC.approve(lockZap.address, zapAmount);
 			const tooTightSlippageLimit = SLIPPAGE_DIVISOR.mul(999).div(1000); // 0.1% slippage
 			await expect(
 				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooTightSlippageLimit)
 			).to.be.revertedWith('UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
-			
-			const tooLooseSlippageLimit = (SLIPPAGE_DIVISOR.mul(95).div(100)).sub(1); // >5% slippage
+
+			const tooLooseSlippageLimit = SLIPPAGE_DIVISOR.mul(95).div(100).sub(1); // >5% slippage
 			await expect(
 				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooLooseSlippageLimit)
 			).to.be.revertedWith('SpecifiedSlippageExceedLimit');

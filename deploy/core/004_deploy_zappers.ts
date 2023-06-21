@@ -151,13 +151,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			execute: {
 				init: {
 					methodName: 'initialize',
-					args: [
-						poolHelper.address,
-						lendingPool,
-						wethAddr,
-						radiantToken.address,
-						ethLpRatio,
-					],
+					args: [poolHelper.address, lendingPool, wethAddr, radiantToken.address, ethLpRatio],
 				},
 			},
 		},

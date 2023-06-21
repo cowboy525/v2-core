@@ -48,7 +48,7 @@ let bountyManager: BountyManager;
 let lpToken: ERC20;
 
 const eligibleAmt = 1000000;
-const acceptableUserSlippage = 9500; 
+const acceptableUserSlippage = 9500;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await deposit('rWETH', '20000', deployer, lendingPool, deployData);
@@ -215,11 +215,7 @@ describe(`AutoCompound:`, async () => {
 		await expect(fee.value).to.be.equal(0);
 	});
 
-	it('Compound other user at default slippage value', async () => {
+	it('Compound other user at default slippage value', async () => {});
 
-	});
-
-	it('Compound other user at user set slippage value', async () => {
-
-	});
+	it('Compound other user at user set slippage value', async () => {});
 });

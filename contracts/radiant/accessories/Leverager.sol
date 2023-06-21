@@ -227,8 +227,8 @@ contract Leverager is Ownable {
 	 * @param loopCount Repeat count for loop
 	 **/
 	function loopETH(
-		uint256 interestRateMode, 
-		uint256 borrowRatio, 
+		uint256 interestRateMode,
+		uint256 borrowRatio,
 		uint256 loopCount,
 		uint256 _slippage
 	) external payable {

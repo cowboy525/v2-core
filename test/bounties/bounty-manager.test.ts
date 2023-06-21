@@ -45,7 +45,7 @@ let bountyManager: BountyManager;
 let lpToken: ERC20;
 
 const eligibleAmt = 1000000;
-const acceptableUserSlippage = 9500; 
+const acceptableUserSlippage = 9500;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await doBorrow('rWETH', '1000', deployer, lendingPool, deployData);
