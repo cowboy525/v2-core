@@ -46,7 +46,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
-	/// @notice Event emitted when the period is updated
+	/// @notice Minimum TWAP time period
 	uint256 public constant PERIOD_MIN = 10;
 
 	/**
