@@ -83,7 +83,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 			(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
 			if (updatedAt == 0) revert Errors.RoundNotComplete();
 			if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-			if (answer < 0) revert Errors.NegativePrice();
+			if (answer <= 0) revert Errors.InvalidPrice();
 			uint256 ethPrice = uint256(answer);
 			uint256 priceInEth = poolHelper.getPrice();
 			price = priceInEth.mul(ethPrice).div(10 ** 8);
@@ -111,7 +111,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
 		if (updatedAt == 0) revert Errors.RoundNotComplete();
 		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-		if (answer < 0) revert Errors.NegativePrice();
+		if (answer <= 0) revert Errors.InvalidPrice();
 		uint256 ethPrice = uint256(answer);
 		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
 	}

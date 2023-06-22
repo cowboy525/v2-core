@@ -72,7 +72,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
 		if (updatedAt == 0) revert Errors.RoundNotComplete();
 		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-		if (answer < 0) revert Errors.NegativePrice();
+		if (answer <= 0) revert Errors.InvalidPrice();
 		uint256 ethPrice = uint256(answer);
 
 		price = priceInEth.mul(ethPrice).div(10 ** 8);
