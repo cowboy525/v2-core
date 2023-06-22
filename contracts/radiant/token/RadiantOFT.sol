@@ -170,12 +170,12 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _zroPaymentAddress, 
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint amount) {
-		uint256 fee = getBridgeFee(_amount);
+		(amount,) = _removeDust(_amount);
+		uint256 fee = getBridgeFee(amount);
 		if(msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
-		(amount,) = _removeDust(_amount);
 		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
 		require(amount > 0, "OFTCore: amount too small");
 
