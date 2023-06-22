@@ -16,7 +16,7 @@ contract WSTETHOracle is OwnableUpgradeable {
 
 	error StalePrice();
 
-	error NegativePrice();
+	error InvalidPrice();
 
 	function initialize(address _stETHUSDOracle, address _stEthPerWstETHOracle) public initializer {
 		stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
