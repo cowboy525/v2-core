@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
 // helper methods from uniswap, for sending ETH that do not consistently return true/false

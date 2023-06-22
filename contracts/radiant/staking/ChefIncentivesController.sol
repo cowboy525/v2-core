@@ -837,11 +837,25 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	}
 
 	/**
-	 * @dev Update reward variables of the given pool to be up-to-date.
+	 * @notice Pause the claim operations.
+	 */
+	function pause() external onlyOwner {
+		_pause();
+	}
+
+	/**
+	 * @notice Unpause the claim operations.
+	 */
+	function unpause() external onlyOwner {
+		_unpause();
+	}
+
+	/**
+	 * @dev Returns new rewards since last reward time.
 	 * @param pool pool info
 	 * @param _totalAllocPoint allocation point of the pool
 	 */
-	function _newRewards(PoolInfo memory pool, uint256 _totalAllocPoint) public view returns (uint256 newReward, uint256 newAccRewardPerShare) {
+	function _newRewards(PoolInfo memory pool, uint256 _totalAllocPoint) internal view returns (uint256 newReward, uint256 newAccRewardPerShare) {
 		uint256 lpSupply = pool.totalSupply;
 		if (lpSupply > 0) {
 			uint256 duration = block.timestamp - pool.lastRewardTime;
@@ -854,19 +868,5 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			newReward = rawReward * pool.allocPoint / _totalAllocPoint;
 			newAccRewardPerShare = newReward * ACC_REWARD_PRECISION / lpSupply;
 		}
-	}
-
-	/**
-	 * @notice Pause the claim operations.
-	 */
-	function pause() external onlyOwner {
-		_pause();
-	}
-
-	/**
-	 * @notice Unpause the claim operations.
-	 */
-	function unpause() external onlyOwner {
-		_unpause();
 	}
 }
