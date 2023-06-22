@@ -268,7 +268,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function _wethToRdnt(uint256 _wethIn, bool _execute) internal returns (uint256 rdntOut) {
-		IPriceProvider(priceProvider).update();
+		if (_execute) {
+			IPriceProvider(priceProvider).update();
+		}
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {
