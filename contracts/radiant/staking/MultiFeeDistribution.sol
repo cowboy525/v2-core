@@ -355,6 +355,11 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 
 		rewardTokens.pop();
+
+		// Scrub historical reward token data
+		Reward storage rd = rewardData[_rewardToken];
+		rd.lastUpdateTime = 0;
+		rd.periodFinish = 0;
 	}
 
 	/********************** View functions ***********************/

@@ -44,10 +44,6 @@ describe('MiddleFeeDistribution', () => {
 			const previouslyLastRewardToken = await mfd.rewardTokens(1);
 			expect(previouslyLastRewardToken).to.not.be.eq(rewardToken1);
 		});
-
-		it('rewards are still available', async () => {
-			
-		});
 	});
 });
 
