@@ -220,7 +220,6 @@ describe('Non-Elig CIC', () => {
 			await chefIncentivesController.connect(deployer).setRewardsPerSecond(rewardsPerSecond2, true);
 
 			const claimableRewards2 = await chefIncentivesController.pendingRewards(user1.address, [rUSDCAddress]);
-
 			// mine 100 seconds again
 			await advanceTimeAndBlock(period);
 
@@ -238,7 +237,7 @@ describe('Non-Elig CIC', () => {
 
 		it('claim for middlefeedistribution', async () => {
 			await expect(chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)).to
-				.be.not.reverted;
+				.be.revertedWith('NothingToMint');
 		});
 
 		it('should claim rewards', async () => {
@@ -265,12 +264,6 @@ describe('Non-Elig CIC', () => {
 
 			expect(balanceAfter.sub(balanceBefore)).to.be.gt(claimableRewards[0]);
 		});
-
-		it('withdraw all', async () => {
-			const amount = await rUSDC.balanceOf(user1.address);
-			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
-			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
-		});
 	});
 
 	it("can't start again", async () => {
@@ -278,6 +271,7 @@ describe('Non-Elig CIC', () => {
 	});
 
 	describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', () => {
+
 		it('setEmissionSchedule before start', async () => {
 			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
 			const chef = await upgrades.deployProxy(
@@ -326,6 +320,7 @@ describe('Non-Elig CIC', () => {
 
 			await advanceTimeAndBlock(100);
 
+			// snapshot increased claimable rewards
 			await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
 			assert.equal(
 				(await chefIncentivesController.emissionScheduleIndex()).toString(),
@@ -368,6 +363,12 @@ describe('Non-Elig CIC', () => {
 				cicRewardsPerSecond[2].toString(),
 				`get rps from schedule`
 			);
+		});
+
+		it('withdraw all', async () => {
+			const amount = await rUSDC.balanceOf(user1.address);
+			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
+			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
 		});
 	});
 
