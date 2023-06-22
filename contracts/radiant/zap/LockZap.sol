@@ -20,7 +20,6 @@ import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 /// @title Borrow gate via stargate
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
-/// @dev No use of SafeMath while it's using 0.8.0^
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 
@@ -214,7 +213,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Check slippage for WETH Zap
 	 * @param _wethAmount WETH amount to zap
 	 */
-	function zapWETHWithSlippageCheck (uint256 _wethAmount) internal returns(uint256) {
+	function _zapWETHWithSlippageCheck (uint256 _wethAmount) internal returns(uint256) {
 		uint256 balanceBeforeZap = weth.balanceOf(address(this));
 		uint256 liquidity = poolHelper.zapWETH(_wethAmount);
 		uint256 balanceAfterZap = weth.balanceOf(address(this));
@@ -249,7 +248,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = zapWETHWithSlippageCheck(wethGained);
+		uint256 liquidity = _zapWETHWithSlippageCheck(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
