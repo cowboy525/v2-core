@@ -10,6 +10,7 @@ import {IStargateRouter} from "../../interfaces/IStargateRouter.sol";
 import {IRouterETH} from "../../interfaces/IRouterETH.sol";
 import {ILendingPool} from "../../interfaces/ILendingPool.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
+import {TransferHelper} from "../../test/uniswap/periphery/libraries/TransferHelper.sol";
 
 /*
     Chain Ids
@@ -227,7 +228,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		_safeTransferETH(daoTreasury, feeAmount);
+		TransferHelper.safeTransferETH(daoTreasury, feeAmount);
 		amount = amount.sub(feeAmount);
 
 		routerETH.swapETH{value: amount.add(msg.value)}(
@@ -239,18 +240,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		);
 	}
 
-	/**
-	 * @dev transfer ETH to an address, revert if it fails.
-	 * @param to recipient of the transfer
-	 * @param value the amount to send
-	 */
-	function _safeTransferETH(address to, uint256 value) internal {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
-	}
-
 	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
+		TransferHelper.safeTransferETH(to, value);
 	}
 }

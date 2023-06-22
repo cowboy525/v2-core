@@ -18,6 +18,7 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
+import {TransferHelper} from "../../test/uniswap/periphery/libraries/TransferHelper.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
@@ -363,9 +364,6 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		if (!success) {
-			revert EthTransferFailed();
-		}
+		TransferHelper.safeTransferETH(to, value);
 	}
 }
