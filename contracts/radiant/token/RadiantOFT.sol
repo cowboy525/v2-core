@@ -188,8 +188,4 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}
-
-	function _sendAndCall(address _from, uint16 _dstChainId, bytes32 _toAddress, uint _amount, bytes memory _payload, uint64 _dstGasForCall, address payable _refundAddress, address _zroPaymentAddress, bytes memory _adapterParams) internal virtual override whenNotPaused returns (uint amount) {
-        return super._sendAndCall(_from, _dstChainId, _toAddress, _amount, _payload, _dstGasForCall, _refundAddress, _zroPaymentAddress, _adapterParams);
-    }
 }
