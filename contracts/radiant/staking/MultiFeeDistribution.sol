@@ -348,12 +348,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		if (!isTokenFound) revert InvalidAddress();
 
+
 		// Reward token order is changed, but that doesn't have an impact
 		if (indexToRemove < length - 1) {
 			rewardTokens[indexToRemove] = rewardTokens[length - 1];
 		}
 
 		rewardTokens.pop();
+
+		Reward storage rd = rewardData[_rewardToken];
+		rd[_rewardToken].lastUpdateTime = 0;
 	}
 
 	/********************** View functions ***********************/
