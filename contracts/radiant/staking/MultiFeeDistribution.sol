@@ -337,7 +337,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isTokenFound;
 		uint256 indexToRemove;
 
-		for (uint256 i; i < rewardTokens.length; i++) {
+		uint256 length = rewardTokens.length;
+		for (uint256 i; i < length; i++) {
 			if (rewardTokens[i] == _rewardToken) {
 				isTokenFound = true;
 				indexToRemove = i;
@@ -350,8 +351,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 
 		// Reward token order is changed, but that doesn't have an impact
-		if (indexToRemove < rewardTokens.length - 1) {
-			rewardTokens[indexToRemove] = rewardTokens[rewardTokens.length - 1];
+		if (indexToRemove < length - 1) {
+			rewardTokens[indexToRemove] = rewardTokens[length - 1];
 		}
 
 		rewardTokens.pop();
