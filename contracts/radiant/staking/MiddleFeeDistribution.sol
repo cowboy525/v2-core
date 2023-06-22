@@ -15,6 +15,7 @@ import {IMintableToken} from "../../interfaces/IMintableToken.sol";
 import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IAaveProtocolDataProvider} from "../../interfaces/IAaveProtocolDataProvider.sol";
 
 /// @title Fee distributor inside
 /// @author Radiant
@@ -47,6 +48,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	// AAVE Oracle address
 	address internal _aaveOracle;
 
+	// AAVE Protocol Data Provider address
+	IAaveProtocolDataProvider public aaveProtocolDataProvider;
+
 	/********************** Events ***********************/
 
 	/// @notice Emitted when ERC20 token is recovered
@@ -62,6 +66,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/********************** Errors ***********************/
 	error ZeroAddress();
+
+	error IncompatibleToken();
 
 	error InvalidRatio();
 
@@ -86,7 +92,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function initialize(
 		address _rdntToken,
 		address aaveOracle,
-		IMultiFeeDistribution _multiFeeDistribution
+		IMultiFeeDistribution _multiFeeDistribution,
+		IAaveProtocolDataProvider _aaveProtocolDataProvider
 	) public initializer {
 		if (_rdntToken == address(0)) revert ZeroAddress();
 		if (aaveOracle == address(0)) revert ZeroAddress();
@@ -95,6 +102,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		rdntToken = IMintableToken(_rdntToken);
 		_aaveOracle = aaveOracle;
 		multiFeeDistribution = _multiFeeDistribution;
+		aaveProtocolDataProvider = _aaveProtocolDataProvider;
 
 		admin = msg.sender;
 	}
@@ -119,9 +127,25 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
+	 * @notice Set the Protocol Data Provider address
+	 * @param _providerAddress The address of the protocol data provider contract
+	 */
+	function setProtocolDataProvider(address _providerAddress)  external onlyOwner {
+		if (_providerAddress == address(0)) revert ZeroAddress();
+		aaveProtocolDataProvider = IAaveProtocolDataProvider(_providerAddress);
+	}
+
+	/**
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+		try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
+			(address aTokenAddress,,) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
+			if (aTokenAddress == address(0)) revert IncompatibleToken();
+		}catch{
+			// _rewardsToken is not an rToken
+			// do Nothing
+		}
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
 	}
