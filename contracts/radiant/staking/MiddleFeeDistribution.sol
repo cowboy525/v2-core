@@ -130,7 +130,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Set the Protocol Data Provider address
 	 * @param _providerAddress The address of the protocol data provider contract
 	 */
-	function setProtocolDataProvider(address _providerAddress)  external onlyOwner {
+	function setProtocolDataProvider(address _providerAddress) external onlyOwner {
 		if (_providerAddress == address(0)) revert ZeroAddress();
 		aaveProtocolDataProvider = IAaveProtocolDataProvider(_providerAddress);
 	}
@@ -139,13 +139,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
-		if (msg.sender != admin){
+		if (msg.sender != admin) {
 			try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
-				(address aTokenAddress,,) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
+				(address aTokenAddress, , ) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
 				if (aTokenAddress == address(0)) revert IncompatibleToken();
-			}catch{
-				// _rewardsToken is not an rToken
-				// do Nothing
+			} catch {
+				// _rewardsToken is not an rToken, do nothing
 			}
 		}
 		multiFeeDistribution.addReward(_rewardsToken);
@@ -158,26 +157,28 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function forwardReward(address[] memory _rewardTokens) external override {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
-		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
-			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
+		uint256 length = _rewardTokens.length;
+		for (uint256 i = 0; i < length; i += 1) {
+			address rewardToken = _rewardTokens[i];
+			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
 				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
 				if (opExAmount != 0) {
-					IERC20(_rewardTokens[i]).safeTransfer(operationExpenses, opExAmount);
+					IERC20(rewardToken).safeTransfer(operationExpenses, opExAmount);
 				}
-				total = total.sub(opExAmount);
 			}
-			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
-			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
 
-			if (_rewardTokens[i] == address(rdntToken)) {
+			total = IERC20(rewardToken).balanceOf(address(this));
+			IERC20(rewardToken).safeTransfer(address(multiFeeDistribution), total);
+
+			if (rewardToken == address(rdntToken)) {
 				multiFeeDistribution.mint(address(multiFeeDistribution), total, false);
 			}
 
-			emit ForwardReward(_rewardTokens[i], total);
+			emit ForwardReward(rewardToken, total);
 
-			emitNewTransferAdded(_rewardTokens[i], total);
+			emitNewTransferAdded(rewardToken, total);
 		}
 	}
 
@@ -206,14 +207,18 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(10 ** assetDecimals);
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+					10 ** assetDecimals
+				);
 			} catch {
 				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(10 ** assetDecimals);
-			}			
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+					10 ** assetDecimals
+				);
+			}
 			emit NewTransferAdded(asset, lpUsdValue);
 		}
 	}
