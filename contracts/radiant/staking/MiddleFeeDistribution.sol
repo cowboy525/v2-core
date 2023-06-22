@@ -139,12 +139,14 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
-		try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
-			(address aTokenAddress,,) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
-			if (aTokenAddress == address(0)) revert IncompatibleToken();
-		}catch{
-			// _rewardsToken is not an rToken
-			// do Nothing
+		if (msg.sender != admin){
+			try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
+				(address aTokenAddress,,) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
+				if (aTokenAddress == address(0)) revert IncompatibleToken();
+			}catch{
+				// _rewardsToken is not an rToken
+				// do Nothing
+			}
 		}
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
