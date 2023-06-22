@@ -301,11 +301,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	/**
 	 * @notice Calculates slippage ratio from weth to RDNT
 	 * @param _ethAmt ETH amount
-	 * @param _tokens LP token amount
+	 * @param _tokens RDNT token amount
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _tokens) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 tokenAmtEth = _tokens * priceProvider.getTokenPrice() * 1e10; // price decimal is 8
+		uint256 tokenAmtEth = _tokens * priceProvider.getTokenPrice() * 1e18 / (10 ** priceProvider.decimals()); // price decimal is 8
 		ratio = tokenAmtEth.mul(RATIO_DIVISOR).div(_ethAmt);
 		ratio = ratio.div(1E18);
 	}
