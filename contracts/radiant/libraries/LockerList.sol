@@ -26,7 +26,7 @@ contract LockerList is Ownable {
 	 */
 	constructor() Ownable() {}
 
-	/********************** Events ***********************/
+	/********************** Errors ***********************/
 
 	error Ineligible();
 
