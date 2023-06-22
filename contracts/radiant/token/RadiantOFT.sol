@@ -106,7 +106,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		nativeFee = nativeFee.add(getBridgeFee(_amount));
 	}
 
-	function updatePrice () internal {
+	function _updatePrice() internal {
 		if(address(priceProvider) != address(0)) {
 			priceProvider.update();
 		}
@@ -132,7 +132,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint256 amount) {
-		updatePrice();
+		_updatePrice();
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
 
