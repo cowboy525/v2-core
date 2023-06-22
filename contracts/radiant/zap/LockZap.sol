@@ -305,8 +305,11 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 _slippage
 	) internal returns (uint256 liquidity) {
 		if (_wethAmt == 0 && msg.value == 0) revert AmountZero();
-		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
-		if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
+		if (_slippage == 0){
+			_slippage = MAX_SLIPPAGE;
+		} else{
+			if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
+		}
 		if (msg.value != 0) {
 			if (_borrow) revert InvalidZapETHSource();
 			_wethAmt = msg.value;
