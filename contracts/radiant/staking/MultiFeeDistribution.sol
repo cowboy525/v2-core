@@ -355,9 +355,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 
 		rewardTokens.pop();
-
-		Reward storage rd = rewardData[_rewardToken];
-		rd[_rewardToken].lastUpdateTime = 0;
 	}
 
 	/********************** View functions ***********************/
