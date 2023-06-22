@@ -62,8 +62,6 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 
 	event ChefReserveLow(uint256 indexed _balance);
 
-	event ChefReserveEmpty(uint256 indexed _balance);
-
 	event Disqualified(address indexed user);
 
 	/********************** Errors ***********************/
@@ -510,7 +508,7 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 	 */
 	function _mint(address _user, uint256 _amount) internal {
 		_sendRadiant(address(_getMfd()), _amount);
-		_getMfd().mint(_user, _amount, true);	
+		_getMfd().mint(_user, _amount, true);
 	}
 
 	/**
@@ -750,7 +748,7 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 
 		address rdntToken = rewardMinter.getRdntTokenAddress();
 		uint256 chefReserve = IERC20(rdntToken).balanceOf(address(this));
-		if (_amount > chefReserve){
+		if (_amount > chefReserve) {
 			revert OutOfRewards();
 		} else {
 			IERC20(rdntToken).safeTransfer(_user, _amount);
