@@ -256,7 +256,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case CIC
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty will be true
 	 */
 	function getChefBounty(
 		address _user,
@@ -273,7 +273,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFDPlus
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
-	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty will be false, will vary based on autocompound fee
 	 */
 	function getAutoCompoundBounty(
 		address _user,

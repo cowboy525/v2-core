@@ -180,6 +180,8 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param _toAddress address
 	 * @param _transferAndCallPayload payload to call after transfer
 	 * @param _lzTxParams transaction params
+	 * @return Message Fee
+	 * @return amount of wei in source gas token
 	 */
 	function quoteLayerZeroSwapFee(
 		uint16 _dstChainId,

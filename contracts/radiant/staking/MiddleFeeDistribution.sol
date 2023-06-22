@@ -130,7 +130,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 * @notice Run by MFD to pull pending platform revenue
 	 * @param _rewardTokens an array of reward token addresses
 	 */
 	function forwardReward(address[] memory _rewardTokens) external override {
