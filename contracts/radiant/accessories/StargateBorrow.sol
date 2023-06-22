@@ -129,7 +129,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
 		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
-		if(_maxSlippage<MAX_SLIPPAGE) revert SlippageSetToHigh();
+		if (_maxSlippage < MAX_SLIPPAGE) revert SlippageSetToHigh();
 
 		router = _router;
 		routerETH = _routerETH;
@@ -181,7 +181,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param _maxSlippage Max slippage allowed.
 	 */
 	function setMaxSlippage(uint256 _maxSlippage) external onlyOwner {
-		if(_maxSlippage<MAX_SLIPPAGE) revert SlippageSetToHigh();
+		if (_maxSlippage < MAX_SLIPPAGE) revert SlippageSetToHigh();
 		maxSlippage = _maxSlippage;
 	}
 
@@ -257,7 +257,7 @@ contract StargateBorrow is OwnableUpgradeable {
 			payable(msg.sender), // receive address
 			abi.encodePacked(msg.sender),
 			amount, // transfer amount
-			amount.mul(99).div(100) // max slippage: 1%
+			amount.mul(maxSlippage).div(100) // max slippage
 		);
 	}
 
