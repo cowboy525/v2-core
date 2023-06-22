@@ -510,8 +510,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
-		_amount = _sendRadiant(address(_getMfd()), _amount);
-		_getMfd().mint(_user, _amount, true);
+		IMultiFeeDistribution mfd = _getMfd();
+		_amount = _sendRadiant(address(mfd), _amount);
+		mfd.mint(_user, _amount, true);
 	}
 
 	/**

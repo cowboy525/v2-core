@@ -845,7 +845,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				}
 			}
 			if (i > 0) {
-				for (uint256 j = i; j < userEarnings[_address].length; j++) {
+				uint256 length = userEarnings[_address].length;
+				for (uint256 j = i; j < length; j++) {
 					userEarnings[_address][j - i] = userEarnings[_address][j];
 				}
 				for (uint256 j = 0; j < i; j++) {
@@ -1139,7 +1140,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
 				i = i + 1;
 			}
-			for (uint256 j = i; j < locks.length; j = j + 1) {
+			uint256 locksLength = locks.length;
+			for (uint256 j = i; j < locksLength; j = j + 1) {
 				locks[j - i] = locks[j];
 			}
 			for (uint256 j = 0; j < i; j = j + 1) {

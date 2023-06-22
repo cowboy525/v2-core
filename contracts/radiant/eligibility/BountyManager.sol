@@ -135,7 +135,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return actionType which of the 3 bounty types (above) to run.
 	 * getBestBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
 	 */
-	function quote(address _user) public view whenNotPaused returns (uint256 bounty, uint256 actionType) {
+	function quote(address _user) public view returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
 			abi.encodeWithSignature("executeBounty(address,bool,uint256)", _user, false, 0)
 		);
@@ -152,7 +152,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return bounty in RDNT to be paid to Hunter (via vesting)
 	 * @return actionType which bounty ran
 	 */
-	function claim(address _user, uint256 _actionType) public whenNotPaused isWhitelisted returns (uint256, uint256) {
+	function claim(address _user, uint256 _actionType) public returns (uint256, uint256) {
 		return executeBounty(_user, true, _actionType);
 	}
 
@@ -176,11 +176,10 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		uint256 totalBounty;
 		bool issueBaseBounty;
 		address incentivizer;
-		uint256 bb = getBaseBounty();
 
 		(incentivizer, totalBounty, issueBaseBounty, actionType) = getBestBounty(_user, _execute, _actionType);
 		if (issueBaseBounty) {
-			bounty = bb;
+			bounty = getBaseBounty();
 		} else {
 			if (totalBounty != 0) {
 				bounty = totalBounty.mul(hunterShare).div(10000);

@@ -157,7 +157,8 @@ contract StargateBorrow is OwnableUpgradeable {
 	 */
 	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
 		require(assets.length == poolIDs.length, "length mismatch");
-		for (uint256 i = 0; i < assets.length; i += 1) {
+		uint256 length = assets.length;
+		for (uint256 i = 0; i < length; i += 1) {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 		}
 		emit PoolIDsUpdated(assets, poolIDs);

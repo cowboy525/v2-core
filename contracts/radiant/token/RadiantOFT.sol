@@ -125,38 +125,24 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override nonReentrant returns (uint256 amount) {
+	) internal override nonReentrant whenNotPaused returns (uint256 amount) {
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
 		(amount, ) = _removeDust(_amount);
-		amount = _debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
 		require(amount > 0, "OFTCore: amount too small");
+		_debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
 
-		Address.sendValue(payable(treasury), fee);
+		if (fee > 0) {
+			Address.sendValue(payable(treasury), fee);
+		}
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
-	}
-
-	/**
-	 * @notice overrides default OFT _debitFrom function to make pauseable
-	 * @param _from from addr
-	 * @param _dstChainId dest LZ chain id
-	 * @param _toAddress to addr on dst chain
-	 * @param _amount amount to bridge
-	 */
-	function _debitFrom(
-		address _from,
-		uint16 _dstChainId,
-		bytes32 _toAddress,
-		uint256 _amount
-	) internal override whenNotPaused returns (uint256) {
-		return super._debitFrom(_from, _dstChainId, _toAddress, _amount);
 	}
 
 	/**
@@ -202,4 +188,8 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}
+
+	function _sendAndCall(address _from, uint16 _dstChainId, bytes32 _toAddress, uint _amount, bytes memory _payload, uint64 _dstGasForCall, address payable _refundAddress, address _zroPaymentAddress, bytes memory _adapterParams) internal virtual override whenNotPaused returns (uint amount) {
+        return super._sendAndCall(_from, _dstChainId, _toAddress, _amount, _payload, _dstGasForCall, _refundAddress, _zroPaymentAddress, _adapterParams);
+    }
 }

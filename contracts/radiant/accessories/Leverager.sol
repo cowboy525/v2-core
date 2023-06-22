@@ -297,14 +297,13 @@ contract Leverager is Ownable {
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
-			weth.withdraw(amount);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			if(fee > 0) {
+				weth.withdraw(fee);
 				_safeTransferETH(treasury, fee);
 			}
 
-			weth.deposit{value: amount.sub(fee)}();
 			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);

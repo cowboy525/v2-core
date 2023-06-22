@@ -132,7 +132,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function forwardReward(address[] memory _rewardTokens) external override {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
-		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
+		uint256 length = _rewardTokens.length;
+		for (uint256 i = 0; i < length; i += 1) {
 			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
