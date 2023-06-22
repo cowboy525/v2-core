@@ -635,14 +635,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 length = rewardTokens.length;
 		for (uint256 i; i < length; ) {
 			address token = rewardTokens[i];
-			_notifyUnseenReward(token);
-			uint256 reward = rewards[onBehalf][token].div(1e12);
-			if (reward > 0) {
-				rewards[onBehalf][token] = 0;
-				rewardData[token].balance = rewardData[token].balance.sub(reward);
+			if (token != address(rdntToken)) {
+				_notifyUnseenReward(token);
+				uint256 reward = rewards[onBehalf][token].div(1e12);
+				if (reward > 0) {
+					rewards[onBehalf][token] = 0;
+					rewardData[token].balance = rewardData[token].balance.sub(reward);
 
-				IERC20(token).safeTransfer(rewardConverter, reward);
-				emit RewardPaid(onBehalf, token, reward);
+					IERC20(token).safeTransfer(rewardConverter, reward);
+					emit RewardPaid(onBehalf, token, reward);
+				}
 			}
 			unchecked {
 				i++;
