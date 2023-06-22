@@ -146,6 +146,22 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	}
 
 	/**
+	 * @notice overrides default OFT _debitFrom function to make pauseable
+	 * @param _from from addr
+	 * @param _dstChainId dest LZ chain id
+	 * @param _toAddress to addr on dst chain
+	 * @param _amount amount to bridge
+	 */
+	function _debitFrom(
+		address _from,
+		uint16 _dstChainId,
+		bytes32 _toAddress,
+		uint256 _amount
+	) internal override whenNotPaused returns (uint256) {
+		return super._debitFrom(_from, _dstChainId, _toAddress, _amount);
+	}
+
+	/**
 	 * @notice Bridge fee amount
 	 * @param _rdntAmount amount for bridge
 	 */
