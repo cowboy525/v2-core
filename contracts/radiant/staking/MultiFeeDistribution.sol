@@ -346,9 +346,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			}
 		}
 
-		if (!isTokenFound) {
-			revert InvalidAddress();
-		}
+		if (!isTokenFound) revert InvalidAddress();
 
 		// Reward token order is changed, but that doesn't have an impact
 		if (indexToRemove < length - 1) {
