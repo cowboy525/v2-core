@@ -7,7 +7,7 @@ interface IBaseOracle {
 
 	error StalePrice();
 
-	error NegativePrice();
+	error InvalidPrice();
 
 	function latestAnswer() external view returns (uint256 price);
 
