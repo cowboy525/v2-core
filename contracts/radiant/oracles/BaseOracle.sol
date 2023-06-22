@@ -96,6 +96,6 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 */
 	function consult() public view virtual returns (uint256) {}
 
-	// Allowing for storage vars to be added/shifted above without effecting any inhereting contracts/proxies
+	// Allowing for storage vars to be added/shifted above without effecting any inheriting contracts/proxies
 	uint256[50] private __gap;
 }
