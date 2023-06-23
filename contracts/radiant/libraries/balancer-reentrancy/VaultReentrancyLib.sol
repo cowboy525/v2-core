@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Modiefied by Radiant Capital to accommodate different interface files
+// Modified by Radiant Capital to accommodate different interface files
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@balancer-labs/v2-interfaces/contracts/solidity-utils/helpers/BalancerErrors.sol";
