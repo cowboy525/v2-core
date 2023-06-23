@@ -708,17 +708,37 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bal.lockedWithMultiplier = bal.lockedWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
 
-		_insertLock(
-			onBehalfOf,
-			LockedBalance({
-				amount: amount,
-				unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
-				multiplier: rewardMultipliers[typeIndex],
-				duration: lockPeriod[typeIndex]
-			})
-		);
-
-		userlist.addToList(onBehalfOf);
+		uint256 userLocksLength = userLocks[onBehalfOf].length;
+		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
+		if (lastIndex > 0){
+			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
+			uint256 currentDay = block.timestamp / 1 days;
+			if (lastUserLock.unlockTime / 1 days == currentDay && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
+				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount.add(amount);
+			} else {
+				_insertLock(
+					onBehalfOf,
+					LockedBalance({
+						amount: amount,
+						unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+						multiplier: rewardMultipliers[typeIndex],
+						duration: lockPeriod[typeIndex]
+					})
+				);
+				userlist.addToList(onBehalfOf);
+			}
+		} else {
+			_insertLock(
+				onBehalfOf,
+				LockedBalance({
+					amount: amount,
+					unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+					multiplier: rewardMultipliers[typeIndex],
+					duration: lockPeriod[typeIndex]
+				})
+			);
+			userlist.addToList(onBehalfOf);
+		}
 
 		if (!isRelock) {
 			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), transferAmount);
