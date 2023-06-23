@@ -365,7 +365,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 			singleSwapRequest,
 			fundManagementRequest,
 			limit,
-			(block.timestamp + 3 minutes)
+			block.timestamp
 		);
 	}
 

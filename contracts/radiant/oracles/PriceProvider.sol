@@ -7,7 +7,6 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
-import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
