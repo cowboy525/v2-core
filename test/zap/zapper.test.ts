@@ -142,7 +142,7 @@ describe('Zapper', function () {
 
 		let totalVesting = (await mfd.earnedBalances(user2.address)).total;
 
-		const wethRequired = await lockZap.connect(user2).quoteFromToken(totalVesting);
+		const wethRequired = await poolHelper.connect(user2).quoteFromToken(totalVesting);
 
 		await expect(
 			lockZap.connect(user2).zapFromVesting(false, 0, {
