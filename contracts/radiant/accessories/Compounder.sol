@@ -323,10 +323,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		if (_slippageLimit < 8000 || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 }
