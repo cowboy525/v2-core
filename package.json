@@ -62,6 +62,7 @@
     "skip": "npx hardhat run scripts/skip.ts --network localhost"
   },
   "dependencies": {
+    "@balancer-labs/v2-pool-utils": "^4.1.1",
     "@gnosis.pm/safe-core-sdk": "^3.2.0",
     "@gnosis.pm/safe-ethers-lib": "^1.7.0",
     "@gnosis.pm/safe-service-client": "^1.4.0",
