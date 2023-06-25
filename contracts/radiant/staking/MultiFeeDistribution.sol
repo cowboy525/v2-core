@@ -710,7 +710,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 		uint256 userLocksLength = userLocks[onBehalfOf].length;
 		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
-		if (lastIndex > 0){
+		if (userLocksLength > 0){
 			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
 			uint256 unlockDay = (block.timestamp + lockPeriod[typeIndex]) / 1 days;
 			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
