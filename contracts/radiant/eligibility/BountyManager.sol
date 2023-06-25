@@ -271,7 +271,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @notice call Compounder.claimCompound(). compound pending rewards for _user into locked LP
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
-	 * @return incentivizer in this case MFDPlus
+	 * @return incentivizer is the Compounder
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
 	 * @return issueBaseBounty will be false, will vary based on autocompound fee
 	 */
