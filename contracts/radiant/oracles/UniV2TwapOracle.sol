@@ -159,7 +159,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
 
 		// Ensure that the price is not stale
-		if ((timeElapsed >= (period + consultLeniency)) && !allowStaleConsults) PriceIsStale();
+		if ((timeElapsed >= (period + consultLeniency)) && !allowStaleConsults) revert PriceIsStale();
 
 		if (_token == token0) {
 			amountOut = price0Average.mul(_amountIn).decode144();
