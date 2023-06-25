@@ -46,9 +46,15 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	error InvalidToken();
+
 	error NoReserves();
 
 	error PeriodBelowMin();
+
+	error PeriodNotElapsed();
+
+	error PriceIsStale();
 
 	/**
 	 * @notice Initializer
@@ -134,7 +140,7 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
 
 		// Ensure that at least one full period has passed since the last update
-		require(timeElapsed >= period, "PERIOD_NOT_ELAPSED");
+		if (timeElapsed < period) revert PeriodNotElapsed();
 
 		// Overflow is desired, casting never truncates
 		// Cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
@@ -153,12 +159,12 @@ contract UniV2TwapOracle is Initializable, BaseOracle {
 		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
 
 		// Ensure that the price is not stale
-		require((timeElapsed < (period + consultLeniency)) || allowStaleConsults, "PRICE_IS_STALE_CALL_UPDATE");
+		if ((timeElapsed >= (period + consultLeniency)) && !allowStaleConsults) PriceIsStale();
 
 		if (_token == token0) {
 			amountOut = price0Average.mul(_amountIn).decode144();
 		} else {
-			require(_token == token1, "UniswapPairOracle: INVALID_TOKEN");
+			if (_token != token1) revert InvalidToken();
 			amountOut = price1Average.mul(_amountIn).decode144();
 		}
 	}
