@@ -369,7 +369,7 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
-		await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+		await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12 // This gets aggregated
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
 
@@ -382,7 +382,7 @@ describe('MultiFeeDistribution', () => {
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(7));
-		expect(lockInfo.lockData.length).to.be.equal(7);
+		expect(lockInfo.lockData.length).to.be.equal(6); // 6 because of the one aggregation
 
 		// x3 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
@@ -393,7 +393,7 @@ describe('MultiFeeDistribution', () => {
 
 		lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(4));
-		expect(lockInfo.lockData.length).to.be.equal(4);
+		expect(lockInfo.lockData.length).to.be.equal(3);
 
 		// x6 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
@@ -404,9 +404,9 @@ describe('MultiFeeDistribution', () => {
 
 		lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(2));
-		expect(lockInfo.lockData.length).to.be.equal(2);
+		expect(lockInfo.lockData.length).to.be.equal(1);
 
-		// x12 was locked 2 times
+		// x12 was locked 1 time (due to aggregation)
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
@@ -425,13 +425,17 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount.mul(10));
 
-		for (let i = 0; i < 50; i += 1) {
+		let LockLength = 50
+		let counter = LockLength+1;
+		for (let i = 0; i < LockLength; i += 1) {
+			// The max locks get aggregated (With the exception of the first one)
+			counter -= (i % 4 == 3)? 1 : 0;
 			await mfd.connect(user1).stake(depositAmount, user1.address, i % 4);
 		}
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.locked).to.be.equal(depositAmount.mul(50));
-		expect(lockInfo.lockData.length).to.be.equal(50);
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(LockLength));
+		expect(lockInfo.lockData.length).to.be.equal(counter);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		const balance0 = await radiant.balanceOf(user1.address);
