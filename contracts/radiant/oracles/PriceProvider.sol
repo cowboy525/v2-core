@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import {Errors} from "../libraries/Errors.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -17,9 +16,6 @@ import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability
 /// @dev All function calls are currently implemented without side effects
 contract PriceProvider is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
-
-	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
-	uint256 public constant UPDATE_PERIOD = 86400;
 
 	/// @notice Chainlink aggregator for USD price of base token
 	IChainlinkAggregator public baseTokenPriceInUsdProxyAggregator;
@@ -80,11 +76,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function getTokenPriceUsd() public view returns (uint256 price) {
 		if (usePool) {
 			// use sparingly, TWAP/CL otherwise
-			(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
-			if (updatedAt == 0) revert Errors.RoundNotComplete();
-			if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-			if (answer <= 0) revert Errors.InvalidPrice();
-			uint256 ethPrice = uint256(answer);
+			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
 			uint256 priceInEth = poolHelper.getPrice();
 			price = priceInEth.mul(ethPrice).div(10 ** 8);
 		} else {
@@ -108,11 +100,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		// decimals 8
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
-		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
-		if (updatedAt == 0) revert Errors.RoundNotComplete();
-		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-		if (answer <= 0) revert Errors.InvalidPrice();
-		uint256 ethPrice = uint256(answer);
+		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
 		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
 	}
 

@@ -26,9 +26,9 @@ contract MockChainlinkAggregator {
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
 		roundId = 18446744073709552278;
-		answer = price;
+		answer = 33364970;
 		startedAt = 1681179848;
-		updatedAt = block.timestamp;
+		updatedAt = 1681179848;
 		answeredInRound = 18446744073709552278;
 	}
 }
