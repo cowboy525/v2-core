@@ -3,6 +3,7 @@ pragma solidity 0.8.12;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+import {Errors} from "../libraries/Errors.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -13,6 +14,9 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 /// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
+
+	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
+	uint256 public constant UPDATE_PERIOD = 86400;
 
 	/// @notice Token for price
 	address public token;
@@ -65,7 +69,11 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		uint256 priceInEth = latestAnswerInEth();
 
 		// returns decimals 8
-		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
+		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
+		if (updatedAt == 0) revert Errors.RoundNotComplete();
+		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
+		if (answer <= 0) revert Errors.InvalidPrice();
+		uint256 ethPrice = uint256(answer);
 
 		price = priceInEth.mul(ethPrice).div(10 ** 8);
 	}
