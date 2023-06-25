@@ -713,7 +713,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (lastIndex > 0){
 			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
 			uint256 currentDay = block.timestamp / 1 days;
-			if (lastUserLock.unlockTime / 1 days == currentDay && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
+			if (lastUserLock.unlockTime / 1 days == currentDay + lockPeriod[typeIndex] && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
 				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount.add(amount);
 			} else {
 				_insertLock(
@@ -811,7 +811,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			uint256 lastIndex = earnings.length > 0 ? earnings.length - 1 : 0;
 
 			// We check if an entry for the current day already exists. If yes, add new amount to that entry
-			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay) {
+			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestDuration) {
 				earnings[lastIndex].amount = earnings[lastIndex].amount.add(amount);
 			} else {
 				// If there is no entry for the current day, create a new one
