@@ -442,7 +442,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 		uint256 currentAllowance = IERC20(_inToken).allowance(address(this), vaultAddr);
 		if (_amount > currentAllowance) {
-			IERC20(_inToken).forceApprove(vaultAddr, _amount - currentAllowance);
+			IERC20(_inToken).forceApprove(vaultAddr, _amount);
 		}
 		IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
 	}
