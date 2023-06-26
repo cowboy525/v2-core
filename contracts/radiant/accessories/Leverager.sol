@@ -246,12 +246,17 @@ contract Leverager is Ownable {
 
 		amount = amount.sub(fee);
 
+		cic.setEligibilityExempt(msg.sender, true);
+
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
-		cic.setEligibilityExempt(msg.sender, true);
-
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
@@ -263,9 +268,6 @@ contract Leverager is Ownable {
 			weth.deposit{value: amount}();
 			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
@@ -297,6 +299,11 @@ contract Leverager is Ownable {
 		cic.setEligibilityExempt(msg.sender, true);
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
@@ -309,9 +316,6 @@ contract Leverager is Ownable {
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
