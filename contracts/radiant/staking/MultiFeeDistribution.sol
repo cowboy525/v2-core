@@ -809,9 +809,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			
 			uint256 currentDay = block.timestamp / 1 days;
 			uint256 lastIndex = earnings.length > 0 ? earnings.length - 1 : 0;
+			uint256 vestingDurationDays = vestDuration / 1 days;
 
 			// We check if an entry for the current day already exists. If yes, add new amount to that entry
-			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestDuration) {
+			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestingDurationDays) {
 				earnings[lastIndex].amount = earnings[lastIndex].amount.add(amount);
 			} else {
 				// If there is no entry for the current day, create a new one

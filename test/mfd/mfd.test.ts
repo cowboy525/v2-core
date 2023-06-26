@@ -810,7 +810,7 @@ describe('MultiFeeDistribution', () => {
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
 		const withdrawable = await mfd.withdrawableBalance(user1.address);
-		expect(withdrawable.amount).to.be.equal(depositAmount.div(5).mul(4));
+		expect(withdrawable.amount).to.be.equal(depositAmount.div(5).mul(5));
 	});
 
 	it('Individual early exit; zero amount', async () => {
