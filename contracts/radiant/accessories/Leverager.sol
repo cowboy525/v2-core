@@ -59,6 +59,9 @@ contract Leverager is Ownable {
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);
 
+	/// @notice Disallow a loop count of 0
+	error InvalidLoopCount();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -179,6 +182,7 @@ contract Leverager is Ownable {
 		bool isBorrow
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 fee;
 		if (!isBorrow) {
@@ -207,7 +211,6 @@ contract Leverager is Ownable {
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
 			}
-
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
@@ -227,6 +230,7 @@ contract Leverager is Ownable {
 	 **/
 	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
@@ -277,6 +281,7 @@ contract Leverager is Ownable {
 		uint256 loopCount
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
 			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
