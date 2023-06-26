@@ -217,7 +217,8 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -258,8 +259,9 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
 
 		cic.setEligibilityExempt(msg.sender, false);
@@ -301,8 +303,9 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			_safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
@@ -341,7 +344,8 @@ contract Leverager is Ownable {
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			amount = amount - fee;
+			required = required.add(requiredLocked(asset, amount));
 		}
 
 		if (locked >= required) {
