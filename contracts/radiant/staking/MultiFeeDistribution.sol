@@ -360,6 +360,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		Reward storage rd = rewardData[_rewardToken];
 		rd.lastUpdateTime = 0;
 		rd.periodFinish = 0;
+		rd.balance = 0;
+		rd.rewardPerSecond = 0;
+		rd.rewardPerTokenStored = 0;
 	}
 
 	/********************** View functions ***********************/
