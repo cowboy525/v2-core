@@ -62,6 +62,20 @@ const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await advanceTimeAndBlock(duration);
 };
 
+const generateGiganticPlatformRevenue = async (duration: number = SKIP_DURATION) => {
+	await deposit('rUSDT', '200000000000000000', deployer, lendingPool, deployData);
+
+	await doBorrow('rUSDT', '100000000000000000', deployer, lendingPool, deployData);
+
+	await advanceTimeAndBlock(duration);
+
+	await doBorrow('rUSDT', '10000000000000000', deployer, lendingPool, deployData);
+
+
+	await multiFeeDistribution.connect(deployer).getAllRewards();
+	await advanceTimeAndBlock(duration);
+};
+
 const zapAndDeposit = async (defaultLockTime: number, depositAmt: number) => {
 	// await multiFeeDistribution.connect(user1).setRelock(relock);
 	await multiFeeDistribution.connect(user1).setDefaultRelockTypeIndex(defaultLockTime);
@@ -170,9 +184,10 @@ describe(`AutoCompound:`, async () => {
 	it('can claim bounty', async () => {
 		const lockInfo0 = await multiFeeDistribution.lockedBalances(user1.address);
 		expect(lockInfo0.lockData.length).to.be.equal(1);
-
+		
 		const expectedFee = await getPendingInRdnt();
 		const quote = await bountyManager.connect(hunter).quote(user1.address);
+		await generateGiganticPlatformRevenue();
 
 		await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
 
