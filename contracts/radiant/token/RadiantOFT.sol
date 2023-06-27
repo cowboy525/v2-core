@@ -25,7 +25,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	uint256 public constant FEE_DIVISOR = 10000;
 
 	/// @notice Max reasonable fee, 1%
-	uint256 public constant maxReasonableFee = 100;
+	uint256 public constant MAX_REASONABLE_FEE = 100;
 
 	/// @notice PriceProvider, for RDNT price in native fee calc
 	IPriceProvider public priceProvider;
@@ -239,7 +239,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _fee ratio
 	 */
 	function setFee(uint256 _fee) external onlyOwner {
-		if (_fee > maxReasonableFee) revert InvalidRatio();
+		if (_fee > MAX_REASONABLE_FEE) revert InvalidRatio();
 		feeRatio = _fee;
 		emit FeeUpdated(_fee);
 	}
