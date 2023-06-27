@@ -157,6 +157,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
 	event Recovered(address indexed token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
+	event BountyManagerUpdated(address indexed _bounty);
+	event RewardConverterUpdated(address indexed _rewardConverter);
+	event LockTypeInfoUpdated(uint256[] lockPeriod, uint256[] rewardMultipliers);
+	event AddressesUpdated(
+		IChefIncentivesController _controller,
+		IMiddleFeeDistribution _middleFeeDistribution,
+		address indexed _treasury
+	);
+	event LPTokenUpdated(address indexed _stakingToken);
+	event RewardAdded(address indexed _rewardToken);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -173,6 +183,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidEarned();
 	error InvalidTime();
 	error InvalidPeriod();
+	error UnlockTimeNotFound();
 
 	/**
 	 * @dev Constructor
@@ -253,6 +264,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (_bounty == address(0)) revert AddressZero();
 		bountyManager = _bounty;
 		minters[_bounty] = true;
+		emit BountyManagerUpdated(_bounty);
 	}
 
 	/**
@@ -262,6 +274,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
 		if (_rewardConverter == address(0)) revert AddressZero();
 		rewardConverter = _rewardConverter;
+		emit RewardConverterUpdated(_rewardConverter);
 	}
 
 	/**
@@ -281,6 +294,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				i++;
 			}
 		}
+		emit LockTypeInfoUpdated(lockPeriod, rewardMultipliers);
 	}
 
 	/**
@@ -299,6 +313,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		incentivesController = _controller;
 		middleFeeDistribution = _middleFeeDistribution;
 		startfleetTreasury = _treasury;
+		emit AddressesUpdated(_controller, _middleFeeDistribution, _treasury);
 	}
 
 	/**
@@ -309,6 +324,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (_stakingToken == address(0)) revert AddressZero();
 		if (stakingToken != address(0)) revert AddressZero();
 		stakingToken = _stakingToken;
+		emit LPTokenUpdated(_stakingToken);
 	}
 
 	/**
@@ -324,6 +340,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		Reward storage rewardData = rewardData[_rewardToken];
 		rewardData.lastUpdateTime = block.timestamp;
 		rewardData.periodFinish = block.timestamp;
+
+		emit RewardAdded(_rewardToken);
 	}
 
 	/********************** View functions ***********************/
@@ -635,14 +653,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 length = rewardTokens.length;
 		for (uint256 i; i < length; ) {
 			address token = rewardTokens[i];
-			_notifyUnseenReward(token);
-			uint256 reward = rewards[onBehalf][token].div(1e12);
-			if (reward > 0) {
-				rewards[onBehalf][token] = 0;
-				rewardData[token].balance = rewardData[token].balance.sub(reward);
+			if (token != address(rdntToken)) {
+				_notifyUnseenReward(token);
+				uint256 reward = rewards[onBehalf][token].div(1e12);
+				if (reward > 0) {
+					rewards[onBehalf][token] = 0;
+					rewardData[token].balance = rewardData[token].balance.sub(reward);
 
-				IERC20(token).safeTransfer(rewardConverter, reward);
-				emit RewardPaid(onBehalf, token, reward);
+					IERC20(token).safeTransfer(rewardConverter, reward);
+					emit RewardPaid(onBehalf, token, reward);
+				}
 			}
 			unchecked {
 				i++;
@@ -869,8 +889,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				}
 				sumEarned = sumEarned.sub(requiredAmount);
 
-				penaltyAmount = penaltyAmount.add(requiredAmount.mul(penaltyFactor).div(WHOLE)); // penalty += amount * penaltyFactor
-				burnAmount = burnAmount.add(penaltyAmount.mul(burn).div(WHOLE)); // burn += penalty * burnFactor
+				uint256 newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
+				uint256 newBurnAmount = newPenaltyAmount * burn / WHOLE;
+				penaltyAmount = penaltyAmount + newPenaltyAmount; // penalty += amount * penaltyFactor
+				burnAmount = burnAmount + newBurnAmount; // burn += penalty * burnFactor
 
 				if (remaining == 0) {
 					break;
@@ -909,16 +931,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
 		uint256 length = userEarnings[user].length;
-		for (uint256 i; i < length; ) {
-			if (userEarnings[user][i].unlockTime == unlockTime) {
-				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][i]);
-				index = i;
-				break;
+		for (index; index < length; ) {
+			if (userEarnings[user][index].unlockTime == unlockTime) {
+				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][index]);
+				return (amount, penaltyAmount, burnAmount, index);
 			}
 			unchecked {
-				i++;
+				index++;
 			}
 		}
+		revert UnlockTimeNotFound();
 	}
 
 	/**
@@ -933,10 +955,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			onBehalfOf,
 			unlockTime
 		);
-
-		if (index >= userEarnings[onBehalfOf].length) {
-			return;
-		}
 
 		uint256 length = userEarnings[onBehalfOf].length;
 		for (uint256 i = index + 1; i < length; ) {

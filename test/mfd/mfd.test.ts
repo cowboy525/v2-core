@@ -1,6 +1,6 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import hre, {ethers, upgrades} from 'hardhat';
-import {advanceTimeAndBlock, getLatestBlockTimestamp} from '../../scripts/utils';
+import {advanceTimeAndBlock, getLatestBlockTimestamp, setNextBlockTimestamp} from '../../scripts/utils';
 import {CustomERC20, LockerList, MultiFeeDistribution} from '../../typechain';
 import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
@@ -813,16 +813,22 @@ describe('MultiFeeDistribution', () => {
 		expect(withdrawable.amount).to.be.equal(depositAmount.div(5).mul(5));
 	});
 
-	it('Individual early exit; zero amount', async () => {
+	it('Individual early exit; unlock time not found', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		const LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.mint(user1.address, depositAmount.div(5), true);
 
 		const timestamp = await getLatestBlockTimestamp();
-		await mfd.connect(user1).individualEarlyExit(true, timestamp + 10);
+		await expect(
+			mfd.connect(user1).individualEarlyExit(true, timestamp + MFD_VEST_DURATION + 1)
+		).to.be.revertedWith('UnlockTimeNotFound');
 	});
+
 
 	it('cleanExpiredLocksAndEarnings; it should work fine', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
