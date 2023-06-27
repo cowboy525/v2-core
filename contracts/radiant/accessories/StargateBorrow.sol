@@ -124,6 +124,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		if (address(_lendingPool) == address(0)) revert ZeroAddress();
 		if (address(_weth) == address(0)) revert ZeroAddress();
 		if (_treasury == address(0)) revert ZeroAddress();
+		if (_xChainBorrowFeePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
 
 		router = _router;
 		routerETH = _routerETH;
