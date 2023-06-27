@@ -425,11 +425,11 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount.mul(10));
 
-		let LockLength = 50
-		let counter = LockLength+1;
+		let LockLength = 50;
+		let counter = LockLength + 1;
 		for (let i = 0; i < LockLength; i += 1) {
 			// The max locks get aggregated (With the exception of the first one)
-			counter -= (i % 4 == 3)? 1 : 0;
+			counter -= i % 4 == 3 ? 1 : 0;
 			await mfd.connect(user1).stake(depositAmount, user1.address, i % 4);
 		}
 
@@ -798,19 +798,26 @@ describe('MultiFeeDistribution', () => {
 	it('Individual early exit; with penalty', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+
 		await radiant.mint(mfd.address, depositAmount);
+
+		// these will be aggregated into current day
 		await mfd.mint(user1.address, depositAmount.div(5), true);
+		const timestamp = await getLatestBlockTimestamp();
+
+		const unlockTime = timestamp + MFD_VEST_DURATION;
+
 		await mfd.mint(user1.address, depositAmount.div(5), true);
 		await mfd.mint(user1.address, depositAmount.div(5), true);
 		await mfd.mint(user1.address, depositAmount.div(5), true);
 		await mfd.mint(user1.address, depositAmount.div(5), true);
 
-		const timestamp = await getLatestBlockTimestamp();
-		await mfd.connect(user1).individualEarlyExit(true, timestamp + MFD_VEST_DURATION);
+		await mfd.connect(user1).individualEarlyExit(true, unlockTime);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
 		const withdrawable = await mfd.withdrawableBalance(user1.address);
-		expect(withdrawable.amount).to.be.equal(depositAmount.div(5).mul(5));
+		// 0 because all was IEE above
+		expect(withdrawable.amount).to.be.equal(0);
 	});
 
 	it('Individual early exit; unlock time not found', async () => {
@@ -828,7 +835,6 @@ describe('MultiFeeDistribution', () => {
 			mfd.connect(user1).individualEarlyExit(true, timestamp + MFD_VEST_DURATION + 1)
 		).to.be.revertedWith('UnlockTimeNotFound');
 	});
-
 
 	it('cleanExpiredLocksAndEarnings; it should work fine', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
