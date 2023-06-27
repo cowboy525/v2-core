@@ -27,6 +27,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	using SafeMath for uint256;
 
 	/// @notice The maximum amount of slippage that a user can set for the execution of Zaps
+	/// @dev If the slippage limit of the LockZap contract is lower then that of the Compounder, transactions might fail unexpectedly.
+	///      Therefore ensure that this slippage limit is equal to that of the Compounder contract.
 	uint256 public constant MAX_SLIPPAGE = 9500; //5%
 
 	/// @notice RAITO Divisor
