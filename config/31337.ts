@@ -8,7 +8,6 @@ const chainConfig = {
 	CHAIN_ID: 31337,
 
 	// tests overrides
-	ZAP_SLIPPAGE_LIMIT: 7000,
 	TWAP_PERIOD: 10,
 	MIN_STAKE_AMT: ethers.utils.parseUnits('.1', 18),
 	DQ_TARGET_BASE_BOUNTY_USD: ethers.utils.parseUnits('.1', 18),
