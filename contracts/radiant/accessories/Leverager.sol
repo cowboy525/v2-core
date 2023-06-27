@@ -94,7 +94,6 @@ contract Leverager is Ownable {
 		if (address(_cic) == address(0)) revert ZeroAddress();
 		if (address(_weth) == address(0)) revert ZeroAddress();
 		if (_treasury == address(0)) revert ZeroAddress();
-		if (_feePercent > RATIO_DIVISOR) revert InvalidRatio();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
