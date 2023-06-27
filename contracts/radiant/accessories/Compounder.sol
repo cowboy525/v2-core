@@ -46,7 +46,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	error ArrayLengthMismatch();
 
 	/// @notice The maximum slippage limit that can be set by admins
-	uint256 public constant MAX_SLIPPAGE_LIMIT = 8000; //20%
+	/// @dev The max slippage should be equal to the max slippage of the ZapLock, otherwise transactions could revert
+	uint256 public constant MAX_SLIPPAGE_LIMIT = 9500; //5%
+	
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public compoundFee;
 	uint256 public slippageLimit;

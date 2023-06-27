@@ -230,7 +230,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex, uint256 _slippage) public {
 		if (_asset == address(0)) revert AddressZero();
 		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
-		if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
+		if (MAX_SLIPPAGE > _slippage || _slippage > RATIO_DIVISOR) revert SpecifiedSlippageExceedLimit();
 		if (_amount == 0) revert AmountZero();
 		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
 		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
@@ -308,7 +308,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (_slippage == 0){
 			_slippage = MAX_SLIPPAGE;
 		} else{
-			if (MAX_SLIPPAGE > _slippage) revert SpecifiedSlippageExceedLimit();
+			if (MAX_SLIPPAGE > _slippage || _slippage > RATIO_DIVISOR ) revert SpecifiedSlippageExceedLimit();
 		}
 		if (msg.value != 0) {
 			if (_borrow) revert InvalidZapETHSource();
