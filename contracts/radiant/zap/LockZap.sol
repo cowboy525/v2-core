@@ -111,7 +111,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (address(_lendingPool) == address(0)) revert AddressZero();
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_rdntAddr == address(0)) revert AddressZero();
-		if (_ethLPRatio >= RATIO_DIVISOR) revert InvalidRatio();
+		if (_ethLPRatio == 0 || _ethLPRatio >= RATIO_DIVISOR) revert InvalidRatio();
 
 		__Ownable_init();
 		__Pausable_init();
