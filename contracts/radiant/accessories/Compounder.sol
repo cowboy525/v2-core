@@ -158,9 +158,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 				amount = balance;
 			}
 
-
-			if (underlying != baseToken) {
-				IERC20(underlying).forceApprove(uniRouter, amount);
+			if (tokenToTrade != baseToken) {
+				IERC20(tokenToTrade).forceApprove(uniRouter, amount);
 				try
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
@@ -250,7 +249,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			if (pending[i].token != address(rdntToken)) {
 				try IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
 					tokens[index] = underlyingAddress;
-				}catch{
+				} catch {
 					tokens[index] = pending[i].token;
 				}
 				amts[index] = pending[i].amount;
