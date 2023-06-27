@@ -171,7 +171,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/**
 	 * @notice Converts base token to lp token and stake them.
 	 * @param _user User for this action
-	 * @param _slippage Maximum tolerated slippage for any occuring swaps
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 * @return liquidity LP token amount
 	 */
 	function _convertBaseToLPandStake(address _user, uint256 _slippage) internal returns (uint256 liquidity) {

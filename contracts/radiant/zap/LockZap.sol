@@ -192,7 +192,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _onBehalf user address to be zapped.
-	 * @param _slippage maximum amount of slippage allowed for any occuring trades
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
 	 */
 	function zapOnBehalf(
 		bool _borrow,
@@ -209,7 +209,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Zap tokens from vesting
 	 * @param _borrow option to borrow ETH
 	 * @param _lockTypeIndex lock length index.
-	 * @param _slippage maximum amount of slippage allowed for any occuring trades
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
 	 */
 	function zapFromVesting(
 		bool _borrow,
@@ -292,7 +292,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _onBehalf of the user.
 	 * @param _lockTypeIndex lock length index.
 	 * @param _refundAddress dust is refunded to this address.
-	 * @param _slippage maximum amount of slippage allowed for any occuring trades
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
 	 */
 	function _zap(
 		bool _borrow,

@@ -169,7 +169,7 @@ contract Leverager is Ownable {
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
 	 * @param isBorrow true when the loop without deposit tokens
-	 * @param _slippage Maximum tolerated slippage for any occurring swaps
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
 	function loop(
 		address asset,
@@ -226,7 +226,7 @@ contract Leverager is Ownable {
 	 * @param interestRateMode stable or variable borrow mode
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
-	 * @param _slippage Maximum tolerated slippage for any occurring swaps
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
 	function loopETH(
 		uint256 interestRateMode,
@@ -277,7 +277,7 @@ contract Leverager is Ownable {
 	 * @param amount initial amount to borrow
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
-	 * @param _slippage Maximum tolerated slippage for any occurring swaps
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
 	function loopETHFromBorrow(
 		uint256 interestRateMode,
