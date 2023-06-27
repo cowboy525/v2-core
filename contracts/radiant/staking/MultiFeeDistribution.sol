@@ -728,17 +728,37 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bal.lockedWithMultiplier = bal.lockedWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
 
-		_insertLock(
-			onBehalfOf,
-			LockedBalance({
-				amount: amount,
-				unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
-				multiplier: rewardMultipliers[typeIndex],
-				duration: lockPeriod[typeIndex]
-			})
-		);
-
-		userlist.addToList(onBehalfOf);
+		uint256 userLocksLength = userLocks[onBehalfOf].length;
+		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
+		if (userLocksLength > 0){
+			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
+			uint256 unlockDay = (block.timestamp + lockPeriod[typeIndex]) / 1 days;
+			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
+				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount.add(amount);
+			} else {
+				_insertLock(
+					onBehalfOf,
+					LockedBalance({
+						amount: amount,
+						unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+						multiplier: rewardMultipliers[typeIndex],
+						duration: lockPeriod[typeIndex]
+					})
+				);
+				userlist.addToList(onBehalfOf);
+			}
+		} else {
+			_insertLock(
+				onBehalfOf,
+				LockedBalance({
+					amount: amount,
+					unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+					multiplier: rewardMultipliers[typeIndex],
+					duration: lockPeriod[typeIndex]
+				})
+			);
+			userlist.addToList(onBehalfOf);
+		}
 
 		if (!isRelock) {
 			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), transferAmount);
@@ -806,10 +826,24 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (withPenalty) {
 			bal.earned = bal.earned.add(amount);
 			LockedBalance[] storage earnings = userEarnings[user];
-			uint256 unlockTime = block.timestamp.add(vestDuration);
-			earnings.push(
-				LockedBalance({amount: amount, unlockTime: unlockTime, multiplier: 1, duration: vestDuration})
-			);
+			
+			uint256 currentDay = block.timestamp / 1 days;
+			uint256 lastIndex = earnings.length > 0 ? earnings.length - 1 : 0;
+			uint256 vestingDurationDays = vestDuration / 1 days;
+
+			// We check if an entry for the current day already exists. If yes, add new amount to that entry
+			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestingDurationDays) {
+				earnings[lastIndex].amount = earnings[lastIndex].amount.add(amount);
+			} else {
+				// If there is no entry for the current day, create a new one
+				uint256 unlockTime = block.timestamp.add(vestDuration);
+				earnings.push(LockedBalance({
+					amount: amount,
+					unlockTime: unlockTime,
+					multiplier: 1,
+					duration: vestDuration
+				}));
+			}
 		} else {
 			bal.unlocked = bal.unlocked.add(amount);
 		}

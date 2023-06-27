@@ -116,6 +116,8 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 
 	error OutOfRewards();
 
+	error NothingToMint();
+
 	// multiplier for reward calc
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
@@ -526,6 +528,7 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 	 * @param _amount to vest
 	 */
 	function _mint(address _user, uint256 _amount) internal {
+		if (_amount == 0) revert NothingToMint();
 		_sendRadiant(address(_getMfd()), _amount);
 		_getMfd().mint(_user, _amount, true);
 	}
