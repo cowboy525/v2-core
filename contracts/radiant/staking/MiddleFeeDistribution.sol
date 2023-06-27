@@ -64,7 +64,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 
+	event AdminUpdated(address indexed _configurator);
+
+	event RewardsUpdated(address indexed _rewardsToken);
+
 	/********************** Errors ***********************/
+
 	error ZeroAddress();
 
 	error IncompatibleToken();
@@ -124,6 +129,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function setAdmin(address _configurator) external onlyOwner {
 		if (_configurator == address(0)) revert ZeroAddress();
 		admin = _configurator;
+		emit AdminUpdated(_configurator);
 	}
 
 	/**
@@ -149,6 +155,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		}
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
+		emit RewardsUpdated(_rewardsToken);
 	}
 
 	/**

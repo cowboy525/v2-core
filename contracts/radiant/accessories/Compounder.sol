@@ -28,10 +28,18 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 amount;
 	}
 
+	/********************** Events ***********************/
 	event RewardBaseTokensUpdated(address[] _tokens);
 
 	event RoutesUpdated(address _token, address[] _routes);
 
+	event BountyManagerUpdated(address indexed _manager);
+
+	event CompoundFeeUpdated(uint256 indexed _compoundFee);
+
+	event SlippageLimitUpdated(uint256 indexed _slippageLimit);
+
+	/********************** Errors ***********************/
 	error AddressZero();
 
 	error InvalidCompoundFee();
@@ -120,12 +128,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function setBountyManager(address _manager) external onlyOwner {
 		if (_manager == address(0)) revert AddressZero();
 		bountyManager = _manager;
+		emit BountyManagerUpdated(_manager);
 	}
 
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
+		emit CompoundFeeUpdated(_compoundFee);
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
@@ -135,6 +145,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		slippageLimit = _slippageLimit;
+		emit SlippageLimitUpdated(_slippageLimit);
 	}
 
 	function _claimAndSwapToBase(address _user) internal returns (uint256) {
