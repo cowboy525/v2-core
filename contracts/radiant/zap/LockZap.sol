@@ -173,7 +173,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _lockTypeIndex lock length index.
-	 * @param _slippage maximum amount of slippage allowed for any occuring trades
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
 	 */
 	function zap(
 		bool _borrow,

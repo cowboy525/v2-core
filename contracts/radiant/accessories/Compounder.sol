@@ -132,10 +132,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		if (_slippageLimit < MAX_SLIPPAGE_LIMIT) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
+		if (_slippageLimit < MAX_SLIPPAGE_LIMIT || _slippageLimit >= PERCENT_DIVISOR) {
+			revert InvalidSlippage();
 		}
 		slippageLimit = _slippageLimit;
 	}
