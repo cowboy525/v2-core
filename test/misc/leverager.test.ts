@@ -232,10 +232,10 @@ describe('Looping/Leverager', () => {
 
 	it('fail when loopCount is 0', async () => {
 		const {leverager}: FixtureDeploy = await setupTest();
-		await expect(leverager.loop(usdcAddress, 0, 2, 0, 0, false)).to.be.revertedWith('InvalidLoopCount');
+		await expect(leverager.loop(usdcAddress, 0, 2, 10, 0, false)).to.be.revertedWith('InvalidLoopCount');
 
-		await expect(leverager.loopETHFromBorrow(2, 0, 0, 0)).to.be.revertedWith('InvalidLoopCount');
+		await expect(leverager.loopETHFromBorrow(2, 0, 10, 0)).to.be.revertedWith('InvalidLoopCount');
 
-		await expect(leverager.loopETH(0, 0, 0)).to.be.revertedWith('InvalidLoopCount');
+		await expect(leverager.loopETH(0, 10, 0)).to.be.revertedWith('InvalidLoopCount');
 	});
 });
