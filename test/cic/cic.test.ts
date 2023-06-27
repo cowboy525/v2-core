@@ -11,6 +11,7 @@ import {
 	AToken,
 	ChefIncentivesController,
 	CustomERC20,
+	ERC20,
 	LendingPool,
 	MockToken,
 	MultiFeeDistribution,
@@ -42,6 +43,7 @@ describe('Non-Elig CIC', () => {
 	let chefIncentivesController: ChefIncentivesController;
 	let lendingPool: LendingPool;
 	let multiFeeDistribution: MultiFeeDistribution;
+	let rdntToken: ERC20;
 
 	let usdcAddress = '';
 	let rUSDCAddress = '';
@@ -77,6 +79,7 @@ describe('Non-Elig CIC', () => {
 		usdcAddress = fixture.usdc.address;
 		rUSDCAddress = deployData.allTokens.rUSDC;
 
+		rdntToken = fixture.rdntToken;
 		chefIncentivesController = fixture.chefIncentivesController;
 		multiFeeDistribution = fixture.multiFeeDistribution;
 		lendingPool = fixture.lendingPool;
@@ -145,6 +148,36 @@ describe('Non-Elig CIC', () => {
 			)
 		).to.be.reverted;
 		await chefIncentivesController.setOnwardIncentives(rUSDCAddress, onwardIncentiveController.address);
+	});
+
+	describe('Fail States', () => {
+		let transferAmount: BigNumberish;
+
+		it('Create Rewards for User 1', async () => {
+			await zapIntoEligibility(user1, deployData, '100');
+
+			await lendingPool.connect(user1).deposit(usdcAddress, depositAmt.div(2), user1.address, 0);
+			await lendingPool.connect(user1).deposit(usdcAddress, depositAmt.div(2), user1.address, 0);
+
+			await chefIncentivesController.connect(deployer).setRewardsPerSecond(rewardsPerSecond, false);
+		});
+
+		it('CIC reverts when out of rewards', async () => {
+			await hre.network.provider.request({
+				method: 'hardhat_impersonateAccount',
+				params: [chefIncentivesController.address],
+			});
+			const cicSigner =  await ethers.getSigner(chefIncentivesController.address);
+			transferAmount = await rdntToken.balanceOf(chefIncentivesController.address);
+			await rdntToken.connect(cicSigner).transfer(user1.address,transferAmount);
+			await advanceTimeAndBlock(100);
+			await expect(chefIncentivesController.connect(user1).claimAll(user1.address)).to.be.revertedWith('OutOfRewards');
+		});
+
+		it('CIC continues when rewards filled up', async () => {
+			await rdntToken.connect(user1).transfer(chefIncentivesController.address,transferAmount);
+			await chefIncentivesController.connect(user1).claimAll(user1.address);
+		});
 	});
 
 	describe('setRewardsPerSecond callable', () => {

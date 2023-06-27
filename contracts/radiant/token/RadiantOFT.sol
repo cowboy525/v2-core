@@ -36,6 +36,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Emitted when Treasury is updated
 	event TreasuryUpdated(address indexed treasury);
 
+	/// @notice Error message emitted when the provided ETH does not cover the bridge fee
+	error InsufficientETHForFee();
+
 	/**
 	 * @notice Create RadiantOFT
 	 * @param _tokenName token name
@@ -106,6 +109,12 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		nativeFee = nativeFee.add(getBridgeFee(_amount));
 	}
 
+	function _updatePrice() internal {
+		if(address(priceProvider) != address(0)) {
+			priceProvider.update();
+		}
+	}
+
 	/**
 	 * @notice Returns LZ fee + Bridge fee
 	 * @dev overrides default OFT _send function to add native fee
@@ -126,6 +135,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint256 amount) {
+		_updatePrice();
 		uint256 fee = getBridgeFee(_amount);
 		require(msg.value >= fee, "ETH sent is not enough for fee");
 
@@ -137,6 +147,48 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
+
+		Address.sendValue(payable(treasury), fee);
+
+		emit SendToChain(_dstChainId, _from, _toAddress, amount);
+	}
+
+	/**
+	 * @notice Bridge token and execute calldata on destination chain
+	 * @dev overrides default OFT _sendAndCall function to add native fee
+	 * @param _from from addr
+	 * @param _dstChainId dest LZ chain id
+	 * @param _toAddress to addr on dst chain
+	 * @param _amount amount to bridge
+	 * @param _payload calldata to execute on dst chain
+	 * @param _dstGasForCall amount of gas to use on dst chain
+	 * @param _refundAddress refund addr
+	 * @param _zroPaymentAddress use ZRO token, someday ;)
+	 * @param _adapterParams LZ adapter params
+	 */
+	function _sendAndCall(
+		address _from, 
+		uint16 _dstChainId, 
+		bytes32 _toAddress, 
+		uint _amount, 
+		bytes memory _payload, 
+		uint64 _dstGasForCall, 
+		address payable _refundAddress, 
+		address _zroPaymentAddress, 
+		bytes memory _adapterParams
+	) internal override nonReentrant returns (uint amount) {
+		(amount,) = _removeDust(_amount);
+		uint256 fee = getBridgeFee(amount);
+		if(msg.value < fee) revert InsufficientETHForFee();
+
+		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
+
+		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
+		require(amount > 0, "OFTCore: amount too small");
+
+		// encode the msg.sender into the payload instead of _from
+		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
 
 		Address.sendValue(payable(treasury), fee);
 

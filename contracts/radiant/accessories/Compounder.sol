@@ -3,6 +3,7 @@ pragma solidity 0.8.12;
 
 import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -147,8 +148,16 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			if (balance == 0) {
 				continue;
 			}
-			address underlying = IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS();
-			uint256 amount = lendingPool.withdraw(underlying, type(uint256).max, address(this));
+			address tokenToTrade;
+			uint256 amount;
+			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+				tokenToTrade = underlyingAddress;
+				amount = lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this));
+			} catch {
+				tokenToTrade = rewardBaseTokens[i];
+				amount = balance;
+			}
+
 
 			if (underlying != baseToken) {
 				IERC20(underlying).forceApprove(uniRouter, amount);
@@ -156,7 +165,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
 						0,
-						rewardToBaseRoute[underlying],
+						rewardToBaseRoute[tokenToTrade],
 						address(this),
 						block.timestamp + 600
 					)
@@ -239,7 +248,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 length = pending.length;
 		for (uint256 i; i < length; i++) {
 			if (pending[i].token != address(rdntToken)) {
-				tokens[index] = IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS();
+				try IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+					tokens[index] = underlyingAddress;
+				}catch{
+					tokens[index] = pending[i].token;
+				}
 				amts[index] = pending[i].amount;
 				index++;
 			}
@@ -268,6 +281,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	function _wethToRdnt(uint256 _wethIn, bool _execute) internal returns (uint256 rdntOut) {
+		if (_execute) {
+			IPriceProvider(priceProvider).update();
+		}
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {

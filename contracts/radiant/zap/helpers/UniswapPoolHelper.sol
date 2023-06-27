@@ -53,7 +53,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 
 	receive() external payable {}
 
-	function initializePool() public {
+	function initializePool() public onlyOwner {
 		lpTokenAddr = IUniswapV2Factory(router.factory()).createPair(rdntAddr, wethAddr);
 
 		IERC20 rdnt = IERC20(rdntAddr);

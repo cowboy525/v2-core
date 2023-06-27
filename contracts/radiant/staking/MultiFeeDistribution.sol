@@ -173,6 +173,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidEarned();
 	error InvalidTime();
 	error InvalidPeriod();
+	error UnlockTimeNotFound();
 
 	/**
 	 * @dev Constructor
@@ -635,14 +636,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 length = rewardTokens.length;
 		for (uint256 i; i < length; ) {
 			address token = rewardTokens[i];
-			_notifyUnseenReward(token);
-			uint256 reward = rewards[onBehalf][token].div(1e12);
-			if (reward > 0) {
-				rewards[onBehalf][token] = 0;
-				rewardData[token].balance = rewardData[token].balance.sub(reward);
+			if (token != address(rdntToken)) {
+				_notifyUnseenReward(token);
+				uint256 reward = rewards[onBehalf][token].div(1e12);
+				if (reward > 0) {
+					rewards[onBehalf][token] = 0;
+					rewardData[token].balance = rewardData[token].balance.sub(reward);
 
-				IERC20(token).safeTransfer(rewardConverter, reward);
-				emit RewardPaid(onBehalf, token, reward);
+					IERC20(token).safeTransfer(rewardConverter, reward);
+					emit RewardPaid(onBehalf, token, reward);
+				}
 			}
 			unchecked {
 				i++;
@@ -835,8 +838,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				}
 				sumEarned = sumEarned.sub(requiredAmount);
 
-				penaltyAmount = penaltyAmount.add(requiredAmount.mul(penaltyFactor).div(WHOLE)); // penalty += amount * penaltyFactor
-				burnAmount = burnAmount.add(penaltyAmount.mul(burn).div(WHOLE)); // burn += penalty * burnFactor
+				uint256 newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
+				uint256 newBurnAmount = newPenaltyAmount * burn / WHOLE;
+				penaltyAmount = penaltyAmount + newPenaltyAmount; // penalty += amount * penaltyFactor
+				burnAmount = burnAmount + newBurnAmount; // burn += penalty * burnFactor
 
 				if (remaining == 0) {
 					break;
@@ -875,16 +880,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
 		uint256 length = userEarnings[user].length;
-		for (uint256 i; i < length; ) {
-			if (userEarnings[user][i].unlockTime == unlockTime) {
-				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][i]);
-				index = i;
-				break;
+		for (index; index < length; ) {
+			if (userEarnings[user][index].unlockTime == unlockTime) {
+				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][index]);
+				return (amount, penaltyAmount, burnAmount, index);
 			}
 			unchecked {
-				i++;
+				index++;
 			}
 		}
+		revert UnlockTimeNotFound();
 	}
 
 	/**
@@ -899,10 +904,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			onBehalfOf,
 			unlockTime
 		);
-
-		if (index >= userEarnings[onBehalfOf].length) {
-			return;
-		}
 
 		uint256 length = userEarnings[onBehalfOf].length;
 		for (uint256 i = index + 1; i < length; ) {
