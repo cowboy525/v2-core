@@ -29,8 +29,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
-	/// @notice Min reasonable ratio
-	uint256 public constant minReasonableRatio = 500;
+	/// @notice Min reasonable ratio, 5%
+	uint256 public constant minReasonableRatio = 9500;
 
 	/// @notice Acceptable ratio
 	uint256 public ACCEPTABLE_RATIO;

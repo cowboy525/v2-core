@@ -24,7 +24,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Divisor for fee ratio, 100%
 	uint256 public constant FEE_DIVISOR = 10000;
 
-	/// @notice Max reasonable fee
+	/// @notice Max reasonable fee, 1%
 	uint256 public constant maxReasonableFee = 100;
 
 	/// @notice PriceProvider, for RDNT price in native fee calc
@@ -239,7 +239,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _fee ratio
 	 */
 	function setFee(uint256 _fee) external onlyOwner {
-		if (_fee > FEE_DIVISOR || _fee > maxReasonableFee) revert InvalidRatio();
+		if (_fee > maxReasonableFee) revert InvalidRatio();
 		feeRatio = _fee;
 		emit FeeUpdated(_fee);
 	}
@@ -249,7 +249,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _priceProvider address
 	 */
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
-		require(address(_priceProvider) != address(0), "Invalid PriceProvider");
+		require(address(_priceProvider) != address(0), "invalid PriceProvider");
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
 	}
@@ -259,7 +259,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _treasury address
 	 */
 	function setTreasury(address _treasury) external onlyOwner {
-		require(_treasury != address(0), "Invalid Treasury address");
+		require(_treasury != address(0), "invalid Treasury address");
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}

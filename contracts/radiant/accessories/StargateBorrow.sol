@@ -66,8 +66,8 @@ contract StargateBorrow is OwnableUpgradeable {
 	// ETH address
 	address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-	// Max reasonable fee
-	uint256 public constant maxReasonableFee = 100;
+	// Max reasonable fee, 1%
+	uint256 public constant MAX_REASONABLE_FEE = 100;
 
 	/// @notice Stargate Router
 	IStargateRouter public router;
@@ -151,7 +151,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param percent Fee ratio.
 	 */
 	function setXChainBorrowFeePercent(uint256 percent) external onlyOwner {
-		if (percent > FEE_PERCENT_DIVISOR || percent > maxReasonableFee) revert InvalidRatio();
+		if (percent > MAX_REASONABLE_FEE) revert InvalidRatio();
 		xChainBorrowFeePercent = percent;
 		emit XChainBorrowFeePercentUpdated(percent);
 	}
