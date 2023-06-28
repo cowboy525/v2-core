@@ -60,6 +60,9 @@ contract Leverager is Ownable {
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);
 
+	/// @notice Disallow a loop count of 0
+	error InvalidLoopCount();
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -180,6 +183,7 @@ contract Leverager is Ownable {
 		bool isBorrow
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 fee;
 		if (!isBorrow) {
@@ -203,14 +207,14 @@ contract Leverager is Ownable {
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
 			}
-
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -223,6 +227,7 @@ contract Leverager is Ownable {
 	 **/
 	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
 		_approve(address(weth));
@@ -232,12 +237,17 @@ contract Leverager is Ownable {
 
 		amount = amount.sub(fee);
 
+		cic.setEligibilityExempt(msg.sender, true);
+
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
-		cic.setEligibilityExempt(msg.sender, true);
-
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
@@ -245,12 +255,10 @@ contract Leverager is Ownable {
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			TransferHelper.safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
@@ -268,6 +276,7 @@ contract Leverager is Ownable {
 		uint256 loopCount
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		_approve(address(weth));
 
@@ -276,20 +285,23 @@ contract Leverager is Ownable {
 		cic.setEligibilityExempt(msg.sender, true);
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			TransferHelper.safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
@@ -322,7 +334,8 @@ contract Leverager is Ownable {
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			amount = amount - fee;
+			required = required.add(requiredLocked(asset, amount));
 		}
 		return _calcWethAmount(locked, required);
 	}

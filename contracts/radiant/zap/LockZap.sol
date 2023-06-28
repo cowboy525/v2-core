@@ -53,6 +53,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice ETH oracle contract
 	IChainlinkAggregator public ethOracle;
 
+	/********************** Events ***********************/
 	/// @notice Emitted when zap is done
 	event Zapped(
 		bool _borrow,
@@ -65,6 +66,13 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	event SlippageRatioChanged(uint256 indexed newRatio);
 
+	event PriceProviderUpdated(address indexed _provider);
+
+	event MfdUpdated(address indexed _mfdAddr);
+
+	event PoolHelperUpdated(address indexed _poolHelper);
+
+	/********************** Errors ***********************/
 	error AddressZero();
 
 	error InvalidRatio();
@@ -123,6 +131,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (address(_provider) == address(0)) revert AddressZero();
 		priceProvider = IPriceProvider(_provider);
 		ethOracle = IChainlinkAggregator(priceProvider.baseTokenPriceInUsdProxyAggregator());
+		emit PriceProviderUpdated(_provider);
 	}
 
 	/**
@@ -132,6 +141,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function setMfd(address _mfdAddr) external onlyOwner {
 		if (address(_mfdAddr) == address(0)) revert AddressZero();
 		mfd = IMultiFeeDistribution(_mfdAddr);
+		emit MfdUpdated(_mfdAddr);
 	}
 
 	/**
@@ -141,6 +151,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		if (address(_poolHelper) == address(0)) revert AddressZero();
 		poolHelper = IPoolHelper(_poolHelper);
+		emit PoolHelperUpdated(_poolHelper);
 	}
 
 	/**
@@ -218,7 +229,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _amount the amount of asset to zap
 	 * @param _lockTypeIndex lock length index.
 	 */
-	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public {
+	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public whenNotPaused {
 		if (_asset == address(0)) revert AddressZero();
 		if (_amount == 0) revert AmountZero();
 		uint256 assetDecimals = IERC20Metadata(_asset).decimals();

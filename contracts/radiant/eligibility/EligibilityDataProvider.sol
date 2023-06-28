@@ -255,6 +255,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		if (msg.sender != address(chef)) revert OnlyCIC();
 		assert(user != address(0));
 
+		updatePrice();
 		currentEligibility = isEligibleForRewards(user);
 		if (currentEligibility && disqualifiedTime[user] != 0) {
 			disqualifiedTime[user] = 0;
