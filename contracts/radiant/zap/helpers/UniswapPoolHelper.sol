@@ -125,7 +125,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
 		weth = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
 		rdnt = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
-		
+
 		lpTokenSupply = lpToken.totalSupply();
 	}
 
