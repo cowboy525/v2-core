@@ -69,7 +69,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _tokenName Token name of lp token
 	 * @param _tokenSymbol Token symbol of lp token
 	 */
-	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
+	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public onlyOwner {
 		if (lpTokenAddr != address(0)) revert PoolExists();
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
@@ -191,7 +191,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function getLpPrice(uint256 rdntPriceInEth) public view override returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
-		(uint256 rdntBalance, uint256 wethBalance) = getReserves();
+		(uint256 rdntBalance, uint256 wethBalance, ) = getReserves();
 		uint256[] memory weights = pool.getNormalizedWeights();
 
 		uint256 rdntWeight;
@@ -223,6 +223,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
+	/**
+	 * @notice Returns RDNT price in WETH
+	 * @return RDNT price
+	 */
 	function getPrice() public view returns (uint256) {
 		address vaultAddress = vaultAddr;
 		VaultReentrancyLib.ensureNotInVaultContext(IVault(vaultAddress));
@@ -235,7 +239,13 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
-	function getReserves() public view override returns (uint256 rdnt, uint256 weth) {
+	/**
+	 * @notice Returns reserve information.
+	 * @return rdnt RDNT amount
+	 * @return weth WETH amount
+	 * @return lpTokenSupply LP token supply
+	 */
+	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
 		address vaultAddress = vaultAddr;
@@ -244,6 +254,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 		rdnt = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		weth = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
+
+		lpTokenSupply = lpToken.totalSupply();
 	}
 
 	/**
