@@ -238,4 +238,18 @@ describe('Looping/Leverager', () => {
 
 		await expect(leverager.loopETH(0, 10, 0)).to.be.revertedWith('InvalidLoopCount');
 	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		const {leverager}: FixtureDeploy = await setupTest();
+		await expect(leverager.setFeePercent('10001')).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loop(usdcAddress, 0, 2, 0, 0, false)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loop(usdcAddress, 0, 2, 10001, 0, false)).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loopETH(0, 0, 0)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loopETH(0, 10001, 0)).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loopETHFromBorrow(2, 0, 0, 0)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loopETHFromBorrow(2, 0, 10001, 0)).to.be.revertedWith('InvalidRatio');
+	});
 });

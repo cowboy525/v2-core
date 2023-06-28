@@ -266,4 +266,10 @@ describe('Radiant OFT: ', function () {
 			'Ownable: caller is not the owner'
 		);
 	});
+
+	it('fails when invalid input', async function () {
+		await expect(execute('RadiantOFT', {from: admin}, 'setFee', 101)).to.be.revertedWith(
+			'InvalidRatio'
+		);
+	});
 });
