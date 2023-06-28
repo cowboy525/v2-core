@@ -26,6 +26,9 @@ contract Leverager is Ownable {
 	/// @notice Ratio Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
+	// Max reasonable fee, 1%
+	uint256 public constant MAX_REASONABLE_FEE = 100;
+
 	/// @notice Mock ETH address
 	address public constant API_ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -94,6 +97,7 @@ contract Leverager is Ownable {
 		if (address(_cic) == address(0)) revert ZeroAddress();
 		if (address(_weth) == address(0)) revert ZeroAddress();
 		if (_treasury == address(0)) revert ZeroAddress();
+		if (_feePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -124,7 +128,7 @@ contract Leverager is Ownable {
 	 * @param _feePercent fee ratio.
 	 */
 	function setFeePercent(uint256 _feePercent) external onlyOwner {
-		if (_feePercent > RATIO_DIVISOR) revert InvalidRatio();
+		if (_feePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
 		feePercent = _feePercent;
 		emit FeePercentUpdated(_feePercent);
 	}
