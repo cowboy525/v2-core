@@ -238,7 +238,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
 		uint256 assetPrice = priceOracle.getAssetPrice(_asset);
 		uint256 ethPrice = uint256(ethOracle.latestAnswer());
-		uint256 expectedEthAmount = (_amount * (10 ** (18 - assetDecimals)) * assetPrice) / ethPrice;
+		uint256 expectedEthAmount = ((_amount * (10 ** 18) * assetPrice) / (10 ** assetDecimals)) / ethPrice;
 
 		IERC20(_asset).safeTransferFrom(msg.sender, address(poolHelper), _amount);
 		uint256 wethBalanceBefore = weth.balanceOf(address(poolHelper));
