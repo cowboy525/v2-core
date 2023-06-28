@@ -1231,7 +1231,7 @@ contract MultiFeeDistribution is
 		bool doTransfer,
 		uint256 limit
 	) internal whenNotPaused returns (uint256 amount) {
-		require(isRelockAction == false || _address == msg.sender || lockZap == msg.sender);
+		if (isRelockAction && _address != msg.sender && lockZap != msg.sender) revert InsufficientPermission();
 		_updateReward(_address);
 
 		uint256 amountWithMultiplier;
