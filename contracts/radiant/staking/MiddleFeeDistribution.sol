@@ -158,6 +158,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		isRewardToken[_rewardsToken] = true;
 		emit RewardsUpdated(_rewardsToken);
 	}
+	
+	/**
+	 * @notice Remove an existing reward token
+	 */
+	function removeReward(address _rewardsToken) external override onlyAdminOrOwner {
+		if (_rewardsToken == address(0)) revert ZeroAddress();
+		multiFeeDistribution.removeReward(_rewardsToken);
+		isRewardToken[_rewardsToken] = false;
+		emit RewardsUpdated(_rewardsToken);
+	}
 
 	/**
 	 * @notice Run by MFD to pull pending platform revenue

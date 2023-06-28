@@ -153,6 +153,10 @@ describe('MultiFeeDistribution', () => {
 		await expect(mfd.addReward(radiant.address)).to.be.reverted;
 	});
 
+	it('removing rewards fail conditions', async () => {
+		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith("InsufficientPermission");
+	});
+
 	// it("delegateExit", async () => {
 	//   await expect(mfd.delegateExit(user1.address)).to.be.not.reverted;
 	// });

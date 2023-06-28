@@ -187,6 +187,7 @@ contract MultiFeeDistribution is
 	error InvalidTime();
 	error InvalidPeriod();
 	error UnlockTimeNotFound();
+	error InvalidAddress();
 
 	/**
 	 * @dev Initializer
@@ -352,6 +353,46 @@ contract MultiFeeDistribution is
 
 		emit RewardAdded(_rewardToken);
 	}
+
+	/**
+	 * @notice Remove an existing reward token.
+	 * @param _rewardToken address to be removed
+	 */
+	function removeReward(address _rewardToken) external override {
+		if (!minters[msg.sender]) revert InsufficientPermission();
+
+		bool isTokenFound;
+		uint256 indexToRemove;
+
+		uint256 length = rewardTokens.length;
+		for (uint256 i; i < length; i++) {
+			if (rewardTokens[i] == _rewardToken) {
+				isTokenFound = true;
+				indexToRemove = i;
+				break;
+			}
+		}
+
+		if (!isTokenFound) revert InvalidAddress();
+
+
+		// Reward token order is changed, but that doesn't have an impact
+		if (indexToRemove < length - 1) {
+			rewardTokens[indexToRemove] = rewardTokens[length - 1];
+		}
+
+		rewardTokens.pop();
+
+		// Scrub historical reward token data
+		Reward storage rd = rewardData[_rewardToken];
+		rd.lastUpdateTime = 0;
+		rd.periodFinish = 0;
+		rd.balance = 0;
+		rd.rewardPerSecond = 0;
+		rd.rewardPerTokenStored = 0;
+	}
+
+	/********************** View functions ***********************/
 
 	/**
 	 * @notice Set default lock type index for user relock.
