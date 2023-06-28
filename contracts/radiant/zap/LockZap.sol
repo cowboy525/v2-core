@@ -18,6 +18,7 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
+import {TransferHelper} from "../libraries/TransferHelper.sol";
 
 /// @title LockZap contract
 /// @author Radiant
@@ -85,6 +86,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	error InvalidZapETHSource();
 
 	error InsufficientETH();
+
+	error EthTransferFailed();
 
 	uint256 public ethLPRatio; // paramter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
 
@@ -372,5 +375,9 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (_newRatio > RATIO_DIVISOR) revert InvalidRatio();
 		ACCEPTABLE_RATIO = _newRatio;
 		emit SlippageRatioChanged(ACCEPTABLE_RATIO);
+	}
+
+	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
+		TransferHelper.safeTransferETH(to, value);
 	}
 }

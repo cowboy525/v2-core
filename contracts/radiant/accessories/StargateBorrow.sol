@@ -246,4 +246,8 @@ contract StargateBorrow is OwnableUpgradeable {
 			amount.mul(99).div(100) // max slippage: 1%
 		);
 	}
+
+	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
+		TransferHelper.safeTransferETH(to, value);
+	}
 }

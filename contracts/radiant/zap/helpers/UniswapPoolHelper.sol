@@ -68,11 +68,6 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	/**
-	 * @notice To receive ETH
-	 */
-	receive() external payable {}
-
-	/**
 	 * @notice Initialize RDNT/WETH pool and liquidity zap
 	 */
 	function initializePool() public onlyOwner {
