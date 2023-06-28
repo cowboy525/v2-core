@@ -42,6 +42,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {DustRefunder} from "./DustRefunder.sol";
+
 import {IWETH} from "../../../interfaces/IWETH.sol";
 import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
@@ -49,7 +51,7 @@ import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeabil
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
 /// @dev All function calls are currently implemented without side effects
-contract LiquidityZap is Initializable, OwnableUpgradeable {
+contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
@@ -205,13 +207,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		uint256 wethAmount,
 		address payable to
 	) internal returns (uint256 liquidity) {
-		(uint256 wethReserve, uint256 tokenReserve) = getPairReserves();
-
-		uint256 optimalTokenAmount = UniswapV2Library.quote(wethAmount, wethReserve, tokenReserve);
+		uint256 optimalTokenAmount = quote(wethAmount);
 
 		uint256 optimalWETHAmount;
 		if (optimalTokenAmount > tokenAmount) {
-			optimalWETHAmount = UniswapV2Library.quote(tokenAmount, tokenReserve, wethReserve);
+			optimalWETHAmount = quoteFromToken(tokenAmount);
 			optimalTokenAmount = tokenAmount;
 		} else optimalWETHAmount = wethAmount;
 
@@ -221,10 +221,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
 
 		//refund dust
-		if (tokenAmount > optimalTokenAmount) IERC20(_token).safeTransfer(to, tokenAmount.sub(optimalTokenAmount));
-		if (wethAmount > optimalWETHAmount) {
-			weth.transfer(to, wethAmount.sub(optimalWETHAmount));
-		}
+		refundDust(_token, address(weth), to);
 	}
 
 	/**

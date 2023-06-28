@@ -10,6 +10,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 import {IBountyManager} from "../../interfaces/IBountyManager.sol";
@@ -22,7 +23,13 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 /// @title Multi Fee Distribution Contract
 /// @author Radiant
 /// @dev All function calls are currently implemented without side effects
-contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableUpgradeable, OwnableUpgradeable {
+contract MultiFeeDistribution is
+	IMultiFeeDistribution,
+	Initializable,
+	PausableUpgradeable,
+	OwnableUpgradeable,
+	RecoverERC20
+{
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 	using SafeERC20 for IMintableToken;
@@ -155,7 +162,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isLP
 	);
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
-	event Recovered(address indexed token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
 	event BountyManagerUpdated(address indexed _bounty);
 	event RewardConverterUpdated(address indexed _rewardConverter);
@@ -401,8 +407,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
 		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
-		emit Recovered(tokenAddress, tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 
 	/**
@@ -875,24 +880,29 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			for (i = 0; ; i++) {
 				uint256 earnedAmount = userEarnings[_address][i].amount;
 				if (earnedAmount == 0) continue;
-				(, uint256 penaltyFactor, , ) = _penaltyInfo(userEarnings[_address][i]);
+				(
+					uint256 withdrawAmount,
+					uint256 penaltyFactor,
+					uint256 newPenaltyAmount,
+					uint256 newBurnAmount
+				) = _penaltyInfo(userEarnings[_address][i]);
 
-				// Amount required from this lock, taking into account the penalty
-				uint256 requiredAmount = remaining.mul(WHOLE).div(WHOLE.sub(penaltyFactor));
-				if (requiredAmount >= earnedAmount) {
-					requiredAmount = earnedAmount;
-					remaining = remaining.sub(earnedAmount.mul(WHOLE.sub(penaltyFactor)).div(WHOLE)); // remaining -= earned * (1 - pentaltyFactor)
+				uint256 requiredAmount = earnedAmount;
+				if (remaining >= withdrawAmount) {
+					remaining = remaining - withdrawAmount;
 					if (remaining == 0) i++;
 				} else {
-					userEarnings[_address][i].amount = earnedAmount.sub(requiredAmount);
+					requiredAmount = remaining * WHOLE / (WHOLE - penaltyFactor);
+					userEarnings[_address][i].amount = earnedAmount - requiredAmount;
 					remaining = 0;
-				}
-				sumEarned = sumEarned.sub(requiredAmount);
 
-				uint256 newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
-				uint256 newBurnAmount = newPenaltyAmount * burn / WHOLE;
-				penaltyAmount = penaltyAmount + newPenaltyAmount; // penalty += amount * penaltyFactor
-				burnAmount = burnAmount + newBurnAmount; // burn += penalty * burnFactor
+					newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
+					newBurnAmount = newPenaltyAmount * burn / WHOLE;
+				}
+				sumEarned = sumEarned - requiredAmount;
+
+				penaltyAmount = penaltyAmount + newPenaltyAmount;
+				burnAmount = burnAmount + newBurnAmount;
 
 				if (remaining == 0) {
 					break;

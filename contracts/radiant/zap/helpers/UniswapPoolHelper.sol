@@ -114,13 +114,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	// https://blog.alphafinance.io/fair-lp-token-pricing/
 	// https://github.com/AlphaFinanceLab/alpha-homora-v2-contract/blob/master/contracts/oracle/UniswapV2Oracle.sol
 	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
-		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
-
-		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
-		uint256 wethReserve = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
-		uint256 rdntReserve = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
-
-		uint256 lpSupply = lpToken.totalSupply();
+		(uint256 rdntReserve, uint256 wethReserve, uint256 lpSupply) = getReserves();
 
 		uint256 sqrtK = HomoraMath.sqrt(rdntReserve.mul(wethReserve)).fdiv(lpSupply); // in 2**112
 

@@ -7,7 +7,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {ILeverager} from "../../interfaces/ILeverager.sol";
@@ -19,7 +21,7 @@ import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.so
 /// @dev All function calls are currently implemented without side effects
 /// based on the Sushi MasterChef
 ///	https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
-contract ChefIncentivesController is Initializable, OwnableUpgradeable {
+contract ChefIncentivesController is Initializable, PausableUpgradeable, OwnableUpgradeable, RecoverERC20 {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -385,7 +387,7 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 	 * @param tokenAmount Amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 
 	/********************** Pool State Changers ***********************/
@@ -430,22 +432,9 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 			return;
 		}
 
-		uint256 lpSupply = pool.totalSupply;
-		if (lpSupply == 0) {
-			pool.lastRewardTime = timestamp;
-			return;
-		}
-
-		uint256 duration = timestamp.sub(pool.lastRewardTime);
-		uint256 rawReward = duration.mul(rewardsPerSecond);
-
-		uint256 rewards = availableRewards();
-		if (rewards < rawReward) {
-			rawReward = rewards;
-		}
-		uint256 reward = rawReward.mul(pool.allocPoint).div(_totalAllocPoint);
-		accountedRewards = accountedRewards.add(reward);
-		pool.accRewardPerShare = pool.accRewardPerShare.add(reward.mul(ACC_REWARD_PRECISION).div(lpSupply));
+		(uint256 reward, uint256 newAccRewardPerShare) = _newRewards(pool, _totalAllocPoint);
+		accountedRewards = accountedRewards + reward;
+		pool.accRewardPerShare = pool.accRewardPerShare + newAccRewardPerShare;
 		pool.lastRewardTime = timestamp;
 	}
 
@@ -465,13 +454,11 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 			PoolInfo storage pool = poolInfo[token];
 			UserInfo storage user = userInfo[token][_user];
 			uint256 accRewardPerShare = pool.accRewardPerShare;
-			uint256 lpSupply = pool.totalSupply;
-			if (block.timestamp > pool.lastRewardTime && lpSupply != 0) {
-				uint256 duration = block.timestamp.sub(pool.lastRewardTime);
-				uint256 reward = duration.mul(rewardsPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
-				accRewardPerShare = accRewardPerShare.add(reward.mul(ACC_REWARD_PRECISION).div(lpSupply));
+			if (block.timestamp > pool.lastRewardTime) {
+				(, uint256 newAccRewardPerShare) = _newRewards(pool, totalAllocPoint);
+				accRewardPerShare = accRewardPerShare + newAccRewardPerShare;
 			}
-			claimable[i] = user.amount.mul(accRewardPerShare).div(ACC_REWARD_PRECISION).sub(user.rewardDebt);
+			claimable[i] = user.amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
 		}
 		return claimable;
 	}
@@ -863,6 +850,40 @@ contract ChefIncentivesController is Initializable, OwnableUpgradeable {
 		// TODO: potentially replace with inline assembly loop if this is called in a transaction
 		for (uint256 i; i < length; i++) {
 			pending += claimable[i];
+		}
+	}
+
+	/**
+	 * @notice Pause the claim operations.
+	 */
+	function pause() external onlyOwner {
+		_pause();
+	}
+
+	/**
+	 * @notice Unpause the claim operations.
+	 */
+	function unpause() external onlyOwner {
+		_unpause();
+	}
+
+	/**
+	 * @dev Returns new rewards since last reward time.
+	 * @param pool pool info
+	 * @param _totalAllocPoint allocation point of the pool
+	 */
+	function _newRewards(PoolInfo memory pool, uint256 _totalAllocPoint) internal view returns (uint256 newReward, uint256 newAccRewardPerShare) {
+		uint256 lpSupply = pool.totalSupply;
+		if (lpSupply > 0) {
+			uint256 duration = block.timestamp - pool.lastRewardTime;
+			uint256 rawReward = duration * rewardsPerSecond;
+
+			uint256 rewards = availableRewards();
+			if (rewards < rawReward) {
+				rawReward = rewards;
+			}
+			newReward = rawReward * pool.allocPoint / _totalAllocPoint;
+			newAccRewardPerShare = newReward * ACC_REWARD_PRECISION / lpSupply;
 		}
 	}
 }
