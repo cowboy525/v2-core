@@ -216,7 +216,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @return priceInEth price of RDNT
 	 */
 	function getPrice() public view returns (uint256 priceInEth) {
-		(uint256 rdnt, uint256 weth, ) = getReserves();
+		(uint256 rdnt, uint256 weth,) = getReserves();
 		if (rdnt > 0) {
 			priceInEth = weth.mul(10 ** 8).div(rdnt);
 		}
