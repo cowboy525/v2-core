@@ -8,6 +8,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
@@ -57,6 +58,9 @@ contract Leverager is Ownable {
 
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);
+
+	/// @notice Disallow a loop count of 0
+	error InvalidLoopCount();
 
 	/**
 	 * @notice Constructor
@@ -137,7 +141,7 @@ contract Leverager is Ownable {
 	 * @param asset The address of the underlying asset of the reserve
 	 * @return The configuration of the reserve
 	 **/
-	function getConfiguration(address asset) external view returns (DataTypes.ReserveConfigurationMap memory) {
+	function getConfiguration(address asset) public view returns (DataTypes.ReserveConfigurationMap memory) {
 		return lendingPool.getConfiguration(asset);
 	}
 
@@ -157,7 +161,7 @@ contract Leverager is Ownable {
 	 * @return ltv of the asset
 	 **/
 	function ltv(address asset) public view returns (uint256) {
-		DataTypes.ReserveConfigurationMap memory conf = lendingPool.getConfiguration(asset);
+		DataTypes.ReserveConfigurationMap memory conf = getConfiguration(asset);
 		return conf.data % (2 ** 16);
 	}
 
@@ -179,6 +183,7 @@ contract Leverager is Ownable {
 		bool isBorrow
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 fee;
 		if (!isBorrow) {
@@ -187,12 +192,7 @@ contract Leverager is Ownable {
 			IERC20(asset).safeTransfer(treasury, fee);
 			amount = amount.sub(fee);
 		}
-		if (IERC20(asset).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(asset).safeApprove(address(lendingPool), type(uint256).max);
-		}
-		if (IERC20(asset).allowance(address(this), address(treasury)) == 0) {
-			IERC20(asset).safeApprove(treasury, type(uint256).max);
-		}
+		_approve(asset);
 
 		cic.setEligibilityExempt(msg.sender, true);
 
@@ -207,14 +207,14 @@ contract Leverager is Ownable {
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
 			}
-
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
 			IERC20(asset).safeTransfer(treasury, fee);
 
-			lendingPool.deposit(asset, amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -227,39 +227,38 @@ contract Leverager is Ownable {
 	 **/
 	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
-		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
-		}
-		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
-			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
-		}
+		_approve(address(weth));
 
 		uint256 fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-		_safeTransferETH(treasury, fee);
+		TransferHelper.safeTransferETH(treasury, fee);
 
 		amount = amount.sub(fee);
+
+		cic.setEligibilityExempt(msg.sender, true);
 
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
-		cic.setEligibilityExempt(msg.sender, true);
-
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			_safeTransferETH(treasury, fee);
+			TransferHelper.safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
@@ -277,33 +276,32 @@ contract Leverager is Ownable {
 		uint256 loopCount
 	) external {
 		require(borrowRatio <= RATIO_DIVISOR, "Invalid ratio");
+		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
-		if (IERC20(address(weth)).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(address(weth)).safeApprove(address(lendingPool), type(uint256).max);
-		}
-		if (IERC20(address(weth)).allowance(address(this), address(treasury)) == 0) {
-			IERC20(address(weth)).safeApprove(treasury, type(uint256).max);
-		}
+		_approve(address(weth));
 
 		uint256 fee;
 
 		cic.setEligibilityExempt(msg.sender, true);
 
 		for (uint256 i = 0; i < loopCount; i += 1) {
+			// Reenable on last deposit
+			if (i == (loopCount - 1)) {
+				cic.setEligibilityExempt(msg.sender, false);
+			}
+
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 			weth.withdraw(amount);
 
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			_safeTransferETH(treasury, fee);
+			TransferHelper.safeTransferETH(treasury, fee);
 
-			weth.deposit{value: amount.sub(fee)}();
-			lendingPool.deposit(address(weth), amount.sub(fee), msg.sender, referralCode);
+			amount = amount - fee;
+			weth.deposit{value: amount}();
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 		}
-
-		cic.setEligibilityExempt(msg.sender, false);
-
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
 
@@ -337,19 +335,10 @@ contract Leverager is Ownable {
 		for (uint256 i = 0; i < loopCount; i += 1) {
 			amount = amount.mul(borrowRatio).div(RATIO_DIVISOR);
 			fee = amount.mul(feePercent).div(RATIO_DIVISOR);
-			required = required.add(requiredLocked(asset, amount.sub(fee)));
+			amount = amount - fee;
+			required = required.add(requiredLocked(asset, amount));
 		}
-
-		if (locked >= required) {
-			return 0;
-		} else {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
-			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
-			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
-			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
-			return wethAmount;
-		}
+		return _calcWethAmount(locked, required);
 	}
 
 	/**
@@ -360,16 +349,7 @@ contract Leverager is Ownable {
 	function wethToZap(address user) public view returns (uint256) {
 		uint256 required = eligibilityDataProvider.requiredUsdValue(user);
 		uint256 locked = eligibilityDataProvider.lockedUsdValue(user);
-		if (locked >= required) {
-			return 0;
-		} else {
-			uint256 deltaUsdValue = required.sub(locked); //decimals === 8
-			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
-			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
-			uint256 wethAmount = deltaUsdValue.mul(10 ** 18).mul(10 ** priceDecimal).div(wethPrice).div(10 ** 8);
-			wethAmount = wethAmount.add(wethAmount.mul(6).div(100));
-			return wethAmount;
-		}
+		return _calcWethAmount(locked, required);
 	}
 
 	/**
@@ -409,12 +389,30 @@ contract Leverager is Ownable {
 	}
 
 	/**
-	 * @dev transfer ETH to an address, revert if it fails.
-	 * @param to recipient of the transfer
-	 * @param value the amount to send
-	 */
-	function _safeTransferETH(address to, uint256 value) internal {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
+	 * @notice Approves token allowance of `lendingPool` and `treasury`.
+	 * @param asset underlyig asset
+	 **/
+	function _approve(address asset) internal {
+		if (IERC20(asset).allowance(address(this), address(lendingPool)) == 0) {
+			IERC20(asset).safeApprove(address(lendingPool), type(uint256).max);
+		}
+		if (IERC20(asset).allowance(address(this), address(treasury)) == 0) {
+			IERC20(asset).safeApprove(treasury, type(uint256).max);
+		}
+	}
+
+	/**
+	 * @notice Calculated needed WETH amount to be eligible.
+	 * @param locked usd value
+	 * @param required usd value
+	 **/
+	function _calcWethAmount(uint256 locked, uint256 required) internal view returns (uint256 wethAmount) {
+		if (locked < required) {
+			uint256 deltaUsdValue = required - locked; //decimals === 8
+			uint256 wethPrice = aaveOracle.getAssetPrice(address(weth));
+			uint8 priceDecimal = IChainlinkAggregator(aaveOracle.getSourceOfAsset(address(weth))).decimals();
+			wethAmount = (deltaUsdValue * (10 ** 18) * (10 ** priceDecimal)) / wethPrice / (10 ** 8);
+			wethAmount = wethAmount + ((wethAmount * 6) / 100);
+		}
 	}
 }

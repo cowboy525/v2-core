@@ -160,6 +160,6 @@ describe('Stargate Borrow', () => {
 		await stargateBorrow.setDAOTreasury(wethAddress);
 		await expect(
 			stargateBorrow.connect(user2).borrow('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', borrowAmt, 2, 10143)
-		).to.be.revertedWith('ETH_TRANSFER_FAILED');
+		).to.be.revertedWith('ETHTransferFailed');
 	});
 });

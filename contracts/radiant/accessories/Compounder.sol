@@ -3,6 +3,7 @@ pragma solidity 0.8.12;
 
 import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -30,12 +31,21 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 amount;
 	}
 
+	/********************** Events ***********************/
+
 	/// @notice Emitted when reward base tokens are updated
 	event RewardBaseTokensUpdated(address[] _tokens);
 
 	/// @notice Emitted when routes are updated
 	event RoutesUpdated(address _token, address[] _routes);
 
+	event BountyManagerUpdated(address indexed _manager);
+
+	event CompoundFeeUpdated(uint256 indexed _compoundFee);
+
+	event SlippageLimitUpdated(uint256 indexed _slippageLimit);
+
+	/********************** Errors ***********************/
 	error AddressZero();
 
 	error InvalidCompoundFee();
@@ -108,11 +118,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_lockZap == address(0)) revert AddressZero();
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		_validateSlippageLimit(_slippageLimit);
 
 		uniRouter = _uniRouter;
 		multiFeeDistribution = _mfd;
@@ -168,6 +174,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function setBountyManager(address _manager) external onlyOwner {
 		if (_manager == address(0)) revert AddressZero();
 		bountyManager = _manager;
+		emit BountyManagerUpdated(_manager);
 	}
 
 	/**
@@ -178,6 +185,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
 		if (_compoundFee > 2000) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
+		emit CompoundFeeUpdated(_compoundFee);
 	}
 
 	/**
@@ -185,12 +193,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @param _slippageLimit Sets new slippage limit
 	 */
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
-		if (_slippageLimit < 8000) {
-			if (_slippageLimit >= PERCENT_DIVISOR) {
-				revert InvalidSlippage();
-			}
-		}
+		_validateSlippageLimit(_slippageLimit);
 		slippageLimit = _slippageLimit;
+		emit SlippageLimitUpdated(_slippageLimit);
 	}
 
 	/**
@@ -209,16 +214,23 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			if (balance == 0) {
 				continue;
 			}
-			address underlying = IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS();
-			uint256 amount = lendingPool.withdraw(underlying, type(uint256).max, address(this));
+			address tokenToTrade;
+			uint256 amount;
+			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+				tokenToTrade = underlyingAddress;
+				amount = lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this));
+			} catch {
+				tokenToTrade = rewardBaseTokens[i];
+				amount = balance;
+			}
 
-			if (underlying != baseToken) {
-				IERC20(underlying).safeApprove(uniRouter, amount);
+			if (tokenToTrade != baseToken) {
+				IERC20(tokenToTrade).forceApprove(uniRouter, amount);
 				try
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
 						0,
-						rewardToBaseRoute[underlying],
+						rewardToBaseRoute[tokenToTrade],
 						address(this),
 						block.timestamp + 600
 					)
@@ -317,7 +329,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 length = pending.length;
 		for (uint256 i; i < length; i++) {
 			if (pending[i].token != address(rdntToken)) {
-				tokens[index] = IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS();
+				try IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+					tokens[index] = underlyingAddress;
+				} catch {
+					tokens[index] = pending[i].token;
+				}
 				amts[index] = pending[i].amount;
 				index++;
 			}
@@ -365,6 +381,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @return rdntOut Output RDNT amount
 	 */
 	function _wethToRdnt(uint256 _wethIn, bool _execute) internal returns (uint256 rdntOut) {
+		if (_execute) {
+			IPriceProvider(priceProvider).update();
+		}
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {
@@ -434,9 +453,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @return eligible `true` or `false`
 	 */
 	function userEligibleForCompound(address _user) public view returns (bool eligible) {
-		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
-		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
-		eligible = pendingEth >= autocompoundThreshold();
+		eligible = _userEligibleForCompound(_user);
 	}
 
 	/**
@@ -444,8 +461,25 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @return eligible `true` or `false`
 	 */
 	function selfEligibleCompound() public view returns (bool eligible) {
-		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(msg.sender);
+		eligible = _userEligibleForCompound(msg.sender);
+	}
+
+	/**
+	* @notice Returns if the user is eligible for auto compound
+	* @param _user address the be checked
+	* @return eligible `true` if eligible or `false` if not
+	*/
+	function _userEligibleForCompound(address _user) internal view returns (bool eligible) {
+		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 		eligible = pendingEth >= autocompoundThreshold();
+	}
+
+	/**
+	* @notice Validate if the slippage limit is within the boundaries
+	* @param _slippageLimit slippage limit to be validated
+	*/
+	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
+		if (_slippageLimit < 8000 || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 }

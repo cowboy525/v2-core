@@ -12,6 +12,9 @@ import "../../interfaces/IBaseOracle.sol";
 /// @title ChainlinkV3Adapter Contract
 /// @author Radiant
 contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgradeable {
+	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
+	uint256 public constant UPDATE_PERIOD = 86400;
+	
 	/// @notice Eth price feed
 	AggregatorV3Interface public ethChainlinkFeed;
 	/// @notice Token price feed
@@ -46,8 +49,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	 * @return price of token in decimal 8
 	 */
 	function latestAnswer() public view returns (uint256 price) {
-		(, int256 answer, , , ) = tokenChainlinkFeed.latestRoundData();
-		require(answer > 0, "Price must be positive");
+		int256 answer = _getAnswer(tokenChainlinkFeed);
 		price = uint256(answer);
 	}
 
@@ -57,9 +59,8 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	 * @return price of token in decimal 8.
 	 */
 	function latestAnswerInEth() public view returns (uint256 price) {
-		(, int256 tokenAnswer, , , ) = tokenChainlinkFeed.latestRoundData();
-		(, int256 ethAnswer, , , ) = ethChainlinkFeed.latestRoundData();
-		require(tokenAnswer > 0 && ethAnswer > 0, "Price must be positive");
+		int256 tokenAnswer = _getAnswer(tokenChainlinkFeed);
+		int256 ethAnswer = _getAnswer(ethChainlinkFeed);
 		price = (uint256(tokenAnswer) * (10 ** 8)) / uint256(ethAnswer);
 	}
 
@@ -139,5 +140,13 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
 		return tokenChainlinkFeed.latestRoundData();
+	}
+
+	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
+		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
+		if(updatedAt == 0) revert RoundNotComplete();
+		if(block.timestamp - updatedAt >= UPDATE_PERIOD) revert StalePrice();
+		if(answer <= 0) revert InvalidPrice();
+		return answer;
 	}
 }

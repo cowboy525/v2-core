@@ -6,6 +6,7 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {IStargateRouter} from "../../interfaces/IStargateRouter.sol";
 import {IRouterETH} from "../../interfaces/IRouterETH.sol";
 import {ILendingPool} from "../../interfaces/ILendingPool.sol";
@@ -234,7 +235,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		_safeTransferETH(daoTreasury, feeAmount);
+		TransferHelper.safeTransferETH(daoTreasury, feeAmount);
 		amount = amount.sub(feeAmount);
 
 		routerETH.swapETH{value: amount.add(msg.value)}(
@@ -244,15 +245,5 @@ contract StargateBorrow is OwnableUpgradeable {
 			amount, // transfer amount
 			amount.mul(99).div(100) // max slippage: 1%
 		);
-	}
-
-	/**
-	 * @dev transfer ETH to an address, revert if it fails.
-	 * @param to recipient of the transfer
-	 * @param value the amount to send
-	 */
-	function _safeTransferETH(address to, uint256 value) internal {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
 	}
 }

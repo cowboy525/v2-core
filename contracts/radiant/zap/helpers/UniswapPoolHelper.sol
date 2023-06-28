@@ -27,7 +27,14 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeMath for uint256;
 	using HomoraMath for uint256;
 
+	/********************** Events ***********************/
+	event LiquidityZapUpdated(address indexed _liquidityZap);
+
+	event LockZapUpdated(address indexed _lockZap);
+
+	/********************** Errors ***********************/
 	error AddressZero();
+
 	error InsufficientPermision();
 
 	address public lpTokenAddr;
@@ -68,7 +75,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	/**
 	 * @notice Initialize RDNT/WETH pool and liquidity zap
 	 */
-	function initializePool() public {
+	function initializePool() public onlyOwner {
 		lpTokenAddr = IUniswapV2Factory(router.factory()).createPair(rdntAddr, wethAddr);
 
 		IERC20 rdnt = IERC20(rdntAddr);
@@ -138,13 +145,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @return priceInEth LP price in ETH
 	 */
 	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
-		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
-
-		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
-		uint256 wethReserve = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
-		uint256 rdntReserve = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
-
-		uint256 lpSupply = lpToken.totalSupply();
+		(uint256 rdntReserve, uint256 wethReserve, uint256 lpSupply) = getReserves();
 
 		uint256 sqrtK = HomoraMath.sqrt(rdntReserve.mul(wethReserve)).fdiv(lpSupply); // in 2**112
 
@@ -202,6 +203,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	function setLiquidityZap(address _liquidityZap) external onlyOwner {
 		if (_liquidityZap == address(0)) revert AddressZero();
 		liquidityZap = ILiquidityZap(_liquidityZap);
+		emit LiquidityZapUpdated(_liquidityZap);
 	}
 
 	/**
@@ -211,6 +213,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	function setLockZap(address _lockZap) external onlyOwner {
 		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
+		emit LockZapUpdated(_lockZap);
 	}
 
 	/**

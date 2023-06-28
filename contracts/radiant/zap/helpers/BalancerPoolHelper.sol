@@ -68,7 +68,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _tokenName Token name of lp token
 	 * @param _tokenSymbol Token symbol of lp token
 	 */
-	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
+	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public onlyOwner {
 		if (lpTokenAddr != address(0)) revert PoolExists();
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);

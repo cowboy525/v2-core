@@ -35,6 +35,12 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	/// @notice Can flip the order of the pricing
 	bool public priceInToken0;
 
+	/********************** Events ***********************/
+
+	event ObservationCardinalityIncreased(uint16 indexed numCardinals);
+	event TWAPLookbackSecUpdated(uint32 indexed _secs);
+	event TokenForPricingToggled();
+
 	/**
 	 * @notice Initializer
 	 * @param _pair Uniswap pair contract
@@ -70,6 +76,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 */
 	function increaseObservationCardinality(uint16 numCardinals) external onlyOwner {
 		pool.increaseObservationCardinalityNext(numCardinals);
+		emit ObservationCardinalityIncreased(numCardinals);
 	}
 
 	/**
@@ -78,6 +85,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 */
 	function setTWAPLookbackSec(uint32 _secs) external onlyOwner {
 		lookbackSecs = _secs;
+		emit TWAPLookbackSecUpdated(_secs);
 	}
 
 	/**
@@ -85,6 +93,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 */
 	function toggleTokenForPricing() external onlyOwner {
 		priceInToken0 = !priceInToken0;
+		emit TokenForPricingToggled();
 	}
 
 	/* ========== VIEWS ========== */
