@@ -6,6 +6,7 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {TransferHelper} from "../libraries/TransferHelper.sol";
 import {IStargateRouter} from "../../interfaces/IStargateRouter.sol";
 import {IRouterETH} from "../../interfaces/IRouterETH.sol";
 import {ILendingPool} from "../../interfaces/ILendingPool.sol";
@@ -52,7 +53,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 
 /// @title Borrow gate via stargate
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract StargateBorrow is OwnableUpgradeable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -166,6 +166,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	/**
 	 * @notice Get Cross Chain Borrow Fee amount.
 	 * @param amount Fee cost.
+	 * @return Fee amount for cross chain borrow
 	 */
 	function getXChainBorrowFeeAmount(uint256 amount) public view returns (uint256) {
 		uint256 feeAmount = amount.mul(xChainBorrowFeePercent).div(FEE_PERCENT_DIVISOR);
@@ -175,6 +176,13 @@ contract StargateBorrow is OwnableUpgradeable {
 	/**
 	 * @notice Quote LZ swap fee
 	 * @dev Call Router.sol method to get the value for swap()
+	 * @param _dstChainId dest LZ chain id
+	 * @param _functionType function type
+	 * @param _toAddress address
+	 * @param _transferAndCallPayload payload to call after transfer
+	 * @param _lzTxParams transaction params
+	 * @return Message Fee
+	 * @return amount of wei in source gas token
 	 */
 	function quoteLayerZeroSwapFee(
 		uint16 _dstChainId,
@@ -187,7 +195,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	}
 
 	/**
-	 * @dev Loop the deposit and borrow of an asset
+	 * @dev Borrow asset for another chain
 	 * @param asset for loop
 	 * @param amount for the initial deposit
 	 * @param interestRateMode stable or variable borrow mode
@@ -227,7 +235,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		_safeTransferETH(daoTreasury, feeAmount);
+		TransferHelper.safeTransferETH(daoTreasury, feeAmount);
 		amount = amount.sub(feeAmount);
 
 		routerETH.swapETH{value: amount.add(msg.value)}(
@@ -237,15 +245,5 @@ contract StargateBorrow is OwnableUpgradeable {
 			amount, // transfer amount
 			amount.mul(99).div(100) // max slippage: 1%
 		);
-	}
-
-	/**
-	 * @dev transfer ETH to an address, revert if it fails.
-	 * @param to recipient of the transfer
-	 * @param value the amount to send
-	 */
-	function _safeTransferETH(address to, uint256 value) internal {
-		(bool success, ) = to.call{value: value}(new bytes(0));
-		require(success, "ETH_TRANSFER_FAILED");
 	}
 }
