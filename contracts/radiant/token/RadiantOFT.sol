@@ -11,7 +11,6 @@ import "../../interfaces/IPriceProvider.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
 contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	using SafeMath for uint256;
 
@@ -116,7 +115,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	}
 
 	/**
-	 * @notice Returns LZ fee + Bridge fee
+	 * @notice Returns amount after dust
 	 * @dev overrides default OFT _send function to add native fee
 	 * @param _from from addr
 	 * @param _dstChainId dest LZ chain id

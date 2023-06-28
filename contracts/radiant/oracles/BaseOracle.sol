@@ -11,7 +11,6 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -86,7 +85,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns USD price in ETH
+	 * @notice Returns price in ETH
 	 * @dev supports 18 decimal token
 	 * @return price of token in decimal 8.
 	 */

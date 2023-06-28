@@ -16,9 +16,8 @@ import {ILeverager} from "../../interfaces/ILeverager.sol";
 import {IOnwardIncentivesController} from "../../interfaces/IOnwardIncentivesController.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 
-/// @title UniV3TwapOracle Contract
+/// @title ChefIncentivesController Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 /// based on the Sushi MasterChef
 ///	https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
 contract ChefIncentivesController is Initializable, PausableUpgradeable, OwnableUpgradeable, RecoverERC20 {
@@ -124,7 +123,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	uint256 private constant ACC_REWARD_PRECISION = 1e12;
 
 	// Data about the future reward rates. emissionSchedule stored in chronological order,
-	// whenever the number of blocks since the start block exceeds the next block offset a new
+	// whenever the duration since the start timestamp exceeds the next timestamp offset a new
 	// reward rate is applied.
 	EmissionPoint[] public emissionSchedule;
 
@@ -510,7 +509,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Vest tokens to MFD.
-	 * @dev Can be called by owner or leverager contract.
 	 * @param _user address to receive
 	 * @param _amount to vest
 	 */

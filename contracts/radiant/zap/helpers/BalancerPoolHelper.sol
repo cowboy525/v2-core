@@ -222,6 +222,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
+	/**
+	 * @notice Returns RDNT price in WETH
+	 * @return RDNT price
+	 */
 	function getPrice() public view returns (uint256) {
 		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
@@ -232,6 +236,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
+	/**
+	 * @notice Returns reserve information.
+	 * @return rdnt RDNT amount
+	 * @return weth WETH amount
+	 * @return lpTokenSupply LP token supply
+	 */
 	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 

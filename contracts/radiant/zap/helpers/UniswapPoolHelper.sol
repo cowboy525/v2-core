@@ -20,6 +20,8 @@ import "../../../interfaces/ILendingPool.sol";
 import "../../../interfaces/IPoolHelper.sol";
 import "../../../interfaces/IERC20DetailedBytes.sol";
 
+/// @title Uniswap Pool Helper Contract
+/// @author Radiant
 contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
@@ -43,6 +45,13 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	ILiquidityZap public liquidityZap;
 	address public lockZap;
 
+	/**
+	 * @notice Initializer
+	 * @param _rdntAddr RDNT address
+	 * @param _wethAddr WETH address
+	 * @param _routerAddr Uniswap router address
+	 * @param _liquidityZap LiquidityZap addrress
+	 */
 	function initialize(
 		address _rdntAddr,
 		address _wethAddr,
@@ -58,8 +67,14 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		liquidityZap = _liquidityZap;
 	}
 
+	/**
+	 * @notice To receive ETH
+	 */
 	receive() external payable {}
 
+	/**
+	 * @notice Initialize RDNT/WETH pool and liquidity zap
+	 */
 	function initializePool() public onlyOwner {
 		lpTokenAddr = IUniswapV2Factory(router.factory()).createPair(rdntAddr, wethAddr);
 
@@ -86,6 +101,11 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		liquidityZap.initLiquidityZap(rdntAddr, wethAddr, lpTokenAddr, address(this));
 	}
 
+	/**
+	 * @notice Zap WETH into LP
+	 * @param amount of WETH
+	 * @return liquidity LP token amount
+	 */
 	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH weth = IWETH(wethAddr);
@@ -98,6 +118,12 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		refundDust(rdntAddr, wethAddr, msg.sender);
 	}
 
+	/**
+	 * @notice Returns reserve information.
+	 * @return rdnt RDNT amount
+	 * @return weth WETH amount
+	 * @return lpTokenSupply LP token supply
+	 */
 	function getReserves() public view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
 
@@ -113,6 +139,11 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	// https://cmichel.io/pricing-lp-tokens/
 	// https://blog.alphafinance.io/fair-lp-token-pricing/
 	// https://github.com/AlphaFinanceLab/alpha-homora-v2-contract/blob/master/contracts/oracle/UniswapV2Oracle.sol
+	/**
+	 * @notice Returns LP price
+	 * @param rdntPriceInEth price of RDNT in ETH
+	 * @return priceInEth LP price in ETH
+	 */
 	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
 		(uint256 rdntReserve, uint256 wethReserve, uint256 lpSupply) = getReserves();
 
@@ -131,6 +162,12 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		priceInEth = result.div(2 ** 112);
 	}
 
+	/**
+	 * @notice Zap WETH and RDNt into LP
+	 * @param _wethAmt amount of WETH
+	 * @param _rdntAmt amount of RDNT
+	 * @return liquidity LP token amount
+	 */
 	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermision();
 		IWETH weth = IWETH(wethAddr);
@@ -143,26 +180,46 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		refundDust(rdntAddr, wethAddr, msg.sender);
 	}
 
+	/**
+	 * @notice Returns `quote` of RDNT in WETH
+	 * @param tokenAmount amount of RDNT
+	 * @return optimalWETHAmount WETH amount
+	 */
 	function quoteFromToken(uint256 tokenAmount) public view returns (uint256 optimalWETHAmount) {
 		return liquidityZap.quoteFromToken(tokenAmount);
 	}
 
+	/**
+	 * @notice Returns LiquidityZap address
+	 */
 	function getLiquidityZap() public view returns (address) {
 		return address(liquidityZap);
 	}
 
+	/**
+	 * @notice Sets new LiquidityZap address
+	 * @param _liquidityZap LiquidityZap address
+	 */
 	function setLiquidityZap(address _liquidityZap) external onlyOwner {
 		if (_liquidityZap == address(0)) revert AddressZero();
 		liquidityZap = ILiquidityZap(_liquidityZap);
 		emit LiquidityZapUpdated(_liquidityZap);
 	}
 
+	/**
+	 * @notice Sets new LockZap address
+	 * @param _lockZap LockZap address
+	 */
 	function setLockZap(address _lockZap) external onlyOwner {
 		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
 		emit LockZapUpdated(_lockZap);
 	}
 
+	/**
+	 * @notice Returns RDNT price in ETH
+	 * @return priceInEth price of RDNT
+	 */
 	function getPrice() public view returns (uint256 priceInEth) {
 		(uint256 rdnt, uint256 weth, ) = getReserves();
 		if (rdnt > 0) {
@@ -173,6 +230,9 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	/**
 	 * @dev Helper function to swap a token to weth given an {_inToken} and swap {_amount}.
 	 * Will revert if the output is under the {_minAmountOut}
+	 * @param _inToken Input token for swap
+	 * @param _amount Amount of input tokens
+	 * @param _minAmountOut Minimum output amount
 	 */
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
 		address[] memory path = new address[](2);

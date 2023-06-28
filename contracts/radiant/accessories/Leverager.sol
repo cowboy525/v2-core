@@ -19,7 +19,6 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 
 /// @title Leverager Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract Leverager is Ownable {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -69,6 +68,7 @@ contract Leverager is Ownable {
 	 * @param _rewardEligibleDataProvider EligibilityProvider address.
 	 * @param _aaveOracle address.
 	 * @param _lockZap address.
+	 * @param _cic address.
 	 * @param _weth WETH address.
 	 * @param _feePercent leveraging fee ratio.
 	 * @param _treasury address.
@@ -312,6 +312,7 @@ contract Leverager is Ownable {
 	 * @param amount of `asset`
 	 * @param borrowRatio Single ratio of borrow
 	 * @param loopCount Repeat count for loop
+	 * @return WETH amount
 	 **/
 	function wethToZapEstimation(
 		address user,
@@ -343,6 +344,7 @@ contract Leverager is Ownable {
 	/**
 	 * @notice Return estimated zap WETH amount for eligbility.
 	 * @param user for zap
+	 * @return WETH amount
 	 **/
 	function wethToZap(address user) public view returns (uint256) {
 		uint256 required = eligibilityDataProvider.requiredUsdValue(user);
@@ -373,6 +375,7 @@ contract Leverager is Ownable {
 	 * @notice Returns required LP lock amount.
 	 * @param asset underlyig asset
 	 * @param amount of tokens
+	 * @return Required lock value
 	 **/
 	function requiredLocked(address asset, uint256 amount) internal view returns (uint256) {
 		uint256 assetPrice = aaveOracle.getAssetPrice(asset);

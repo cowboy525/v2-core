@@ -11,7 +11,6 @@ import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Init
 
 /// @title UniV3TwapOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract UniV3TwapOracle is Initializable, BaseOracle {
 	using SafeMath for uint256;
 

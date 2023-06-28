@@ -20,7 +20,6 @@ import {IAaveProtocolDataProvider} from "../../interfaces/IAaveProtocolDataProvi
 
 /// @title Fee distributor inside
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable, RecoverERC20 {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
@@ -112,6 +111,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Set operation expenses account
+	 * @param _operationExpenses Address to receive operation expenses
+	 * @param _operationExpenseRatio Proportion of operation expense
 	 */
 	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
 		if (_operationExpenseRatio > RATIO_DIVISOR) revert InvalidRatio();
@@ -123,6 +124,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Sets pool configurator as admin.
+	 * @param _configurator Configurator address
 	 */
 	function setAdmin(address _configurator) external onlyOwner {
 		if (_configurator == address(0)) revert ZeroAddress();
@@ -141,6 +143,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Add a new reward token to be distributed to stakers
+	 * @param _rewardsToken address of the reward token
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
 		if (msg.sender != admin) {
@@ -157,7 +160,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 * @notice Run by MFD to pull pending platform revenue
+	 * @param _rewardTokens an array of reward token addresses
 	 */
 	function forwardReward(address[] memory _rewardTokens) external override {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
@@ -189,6 +193,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Returns RDNT token address.
+	 * @return RDNT token address
 	 */
 	function getRdntTokenAddress() external view override returns (address) {
 		return address(rdntToken);
@@ -196,6 +201,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Returns MFD address.
+	 * @return MFD address
 	 */
 	function getMultiFeeDistributionAddress() external view override returns (address) {
 		return address(multiFeeDistribution);
@@ -203,6 +209,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Emit event for new asset reward
+	 * @param asset address of transfer assset
+	 * @param lpReward amount of rewards
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
 		uint256 lpUsdValue;
@@ -229,7 +237,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	}
 
 	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 * @notice Added to support recovering any ERC20 tokens inside the contract
+	 * @param tokenAddress address of erc20 token to recover
+	 * @param tokenAmount amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
 		_recoverERC20(tokenAddress, tokenAmount);

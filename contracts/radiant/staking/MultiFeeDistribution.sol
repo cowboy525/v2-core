@@ -22,7 +22,6 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract MultiFeeDistribution is
 	IMultiFeeDistribution,
 	Initializable,
@@ -147,8 +146,6 @@ contract MultiFeeDistribution is
 	/// @notice Bounty manager contract
 	address public bountyManager;
 
-	// to prevent unbounded lock length iteration during withdraw/clean
-
 	/********************** Events ***********************/
 
 	// event Staked(address indexed user, uint256 amount, bool locked);
@@ -192,13 +189,19 @@ contract MultiFeeDistribution is
 	error UnlockTimeNotFound();
 
 	/**
-	 * @dev Constructor
+	 * @dev Initializer
 	 *  First reward MUST be the RDNT token or things will break
 	 *  related to the 50% penalty and distribution to locked balances.
-	 * @param _rdntToken RDNT token address.
-	 * @param _rewardsDuration set reward stream time.
-	 * @param _rewardsLookback reward lookback
+	 * @param _rdntToken RDNT token address
+	 * @param _lockZap LockZap contract address
+	 * @param _dao DAO address
+	 * @param _userlist UserList contract address
+	 * @param priceProvider PriceProvider contract address
+	 * @param _rewardsDuration Duration that rewards are streamed over
+	 * @param _rewardsLookback Duration that rewards loop back
 	 * @param _lockDuration lock duration
+	 * @param _burnRatio Proportion of burn amount
+	 * @param _vestDuration vest duration
 	 */
 	function initialize(
 		address _rdntToken,
@@ -284,7 +287,7 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Add a new reward token to be distributed to stakers.
+	 * @notice Sets lock period and reward multipliers.
 	 * @param _lockPeriod lock period array
 	 * @param _rewardMultipliers multipliers per lock period
 	 */
@@ -350,8 +353,6 @@ contract MultiFeeDistribution is
 		emit RewardAdded(_rewardToken);
 	}
 
-	/********************** View functions ***********************/
-
 	/**
 	 * @notice Set default lock type index for user relock.
 	 * @param _index of default lock length
@@ -370,6 +371,16 @@ contract MultiFeeDistribution is
 	}
 
 	/**
+	 * @notice Set relock status
+	 * @param _status true if auto relock is enabled.
+	 */
+	function setRelock(bool _status) external virtual {
+		autoRelockDisabled[msg.sender] = !_status;
+	}
+
+	/********************** View functions ***********************/
+
+	/**
 	 * @notice Return lock duration.
 	 */
 	function getLockDurations() external view returns (uint256[] memory) {
@@ -384,39 +395,12 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Set relock status
-	 * @param _status true if auto relock is enabled.
-	 */
-	function setRelock(bool _status) external virtual {
-		autoRelockDisabled[msg.sender] = !_status;
-	}
-
-	/**
 	 * @notice Returns all locks of a user.
 	 * @param user address.
 	 * @return lockInfo of the user.
 	 */
 	function lockInfo(address user) external view override returns (LockedBalance[] memory) {
 		return userLocks[user];
-	}
-
-	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders.
-	 * @param tokenAddress to recover.
-	 * @param tokenAmount to recover.
-	 */
-	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
-		_recoverERC20(tokenAddress, tokenAmount);
-	}
-
-	/**
-	 * @notice Withdraw and restake assets.
-	 */
-	function relock() external virtual {
-		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
-		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
-		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
 	}
 
 	/**
@@ -494,7 +478,7 @@ contract MultiFeeDistribution is
 
 	/**
 	 * @notice Earnings which is locked yet
-	 * @dev Earned balances may be withdrawn immediately for a 50% penalty.
+	 * @dev Earned balances may be withdrawn immediately for an appropriate penalty.
 	 * @return total earnings
 	 * @return unlocked earnings
 	 * @return earningsData which is an array of all infos
@@ -511,7 +495,7 @@ contract MultiFeeDistribution is
 				if (idx == 0) {
 					earningsData = new EarnedBalance[](earnings.length - i);
 				}
-				(, uint256 penaltyAmount, , ) = ieeWithdrawableBalances(user, earnings[i].unlockTime);
+				(, uint256 penaltyAmount, , ) = ieeWithdrawableBalance(user, earnings[i].unlockTime);
 				earningsData[idx].amount = earnings[i].amount;
 				earningsData[idx].unlockTime = earnings[i].unlockTime;
 				earningsData[idx].penalty = penaltyAmount;
@@ -678,6 +662,15 @@ contract MultiFeeDistribution is
 	}
 
 	/********************** Operate functions ***********************/
+
+	/**
+	 * @notice Withdraw and restake assets.
+	 */
+	function relock() external virtual {
+		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
+		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
+		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
+	}
 
 	/**
 	 * @notice Stake tokens to receive rewards.
@@ -928,7 +921,7 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Returns withdrawable balances at exact unlock time
+	 * @notice Returns withdrawable balance at exact unlock time
 	 * @param user address for withdraw
 	 * @param unlockTime exact unlock time
 	 * @return amount total withdrawable amount
@@ -936,7 +929,7 @@ contract MultiFeeDistribution is
 	 * @return burnAmount amount to burn
 	 * @return index of earning
 	 */
-	function ieeWithdrawableBalances(
+	function ieeWithdrawableBalance(
 		address user,
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
@@ -961,7 +954,7 @@ contract MultiFeeDistribution is
 	function individualEarlyExit(bool claimRewards, uint256 unlockTime) external {
 		address onBehalfOf = msg.sender;
 		if (unlockTime <= block.timestamp) revert InvalidTime();
-		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalances(
+		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalance(
 			onBehalfOf,
 			unlockTime
 		);
@@ -1082,7 +1075,7 @@ contract MultiFeeDistribution is
 
 	/**
 	 * @notice Notify unseen rewards.
-	 * @dev for rewards other than stakingToken, every 24 hours we check if new
+	 * @dev for rewards other than RDNT token, every 24 hours we check if new
 	 *  rewards were sent to the contract or accrued via aToken interest.
 	 * @param token address
 	 */
@@ -1102,6 +1095,9 @@ contract MultiFeeDistribution is
 		}
 	}
 
+	/**
+	 * @notice Hook to be called on upgrade.
+	 */
 	function onUpgrade() public {}
 
 	/**
@@ -1370,5 +1366,16 @@ contract MultiFeeDistribution is
 	 */
 	function requalify() external {
 		requalifyFor(msg.sender);
+	}
+
+	/**
+	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders.
+	 * @param tokenAddress to recover.
+	 * @param tokenAmount to recover.
+	 */
+	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
+		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
+		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+		emit Recovered(tokenAddress, tokenAmount);
 	}
 }

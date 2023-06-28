@@ -9,7 +9,6 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @title Migration contract from V1 to V2
 /// @author Radiant team
-/// @dev All function calls are currently implemented without side effects
 contract Migration is Ownable, Pausable {
 	using SafeMath for uint256;
 	using SafeERC20 for ERC20;
