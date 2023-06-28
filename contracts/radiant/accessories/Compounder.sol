@@ -38,10 +38,13 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Emitted when routes are updated
 	event RoutesUpdated(address _token, address[] _routes);
 
+	/// @notice Emitted when bounty manager is updated
 	event BountyManagerUpdated(address indexed _manager);
 
+	/// @notice Emitted when compounding fee is updated
 	event CompoundFeeUpdated(uint256 indexed _compoundFee);
 
+	/// @notice Emitted when slippage limit is updated
 	event SlippageLimitUpdated(uint256 indexed _slippageLimit);
 
 	/********************** Errors ***********************/
@@ -68,45 +71,53 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	uint256 public constant MIN_DELAY = 1 days;
 	/// @notice Fee of compounding
 	uint256 public compoundFee;
-	/// @notice Slippage limit
+
+	/// @notice Slippage limit for swap
 	uint256 public slippageLimit;
 
-	/// @notice RDNT token
+	/// @notice RDNT token address
 	IMintableToken public rdntToken;
-	/// @notice Token that rdnt is paired with in LP
+
+	/// @notice Token that RDNT is paired with in LP
 	address public baseToken;
-	/// @notice Lending pool address provider contract
+
+	/// @notice Lending Pool Addresses Provider contract address
 	address public addressProvider;
-	/// @notice Price provider contract
+
+	/// @notice Price provider contract address
 	address public priceProvider;
-	/// @notice Array of reward base tokens
+
+	/// @notice Reward tokens
 	address[] public rewardBaseTokens;
-	/// @notice Swap route for WETH to RDNT
+
+	/// @notice Swap route WETH -> RDNT
 	address[] public wethToRadiant;
-	/// @notice Uniswap router address
+
+	/// @notice Swap router
 	address public uniRouter;
+
 	/// @notice MFD address
 	address public multiFeeDistribution;
-	/// @notice LockZap address
-	address public lockZap;
-	/// @notice Bounty Manager address
-	address public bountyManager;
-	/// @notice Last auto compound timestamp
-	mapping(address => uint256) public lastAutocompound;
-	/// @notice Reward to base swap route
-	mapping(address => address[]) public rewardToBaseRoute;
 
-	constructor() {
-		_disableInitializers();
-	}
+	/// @notice Lockzap address
+	address public lockZap;
+
+	/// @notice BountyManager address
+	address public bountyManager;
+
+	/// @notice Timestamp of last auto compounding
+	mapping(address => uint256) public lastAutocompound;
+
+	/// @notice Swap route from rewardToken to baseToken
+	mapping(address => address[]) public rewardToBaseRoute;
 
 	/**
 	 * @notice Initializer
-	 * @param _uniRouter Uniswap router address
-	 * @param _mfd MFD address
-	 * @param _baseToken Base token address
-	 * @param _addressProvider Lending pool address provider
-	 * @param _lockZap Lockzap contract
+	 * @param _uniRouter Address of swap router
+	 * @param _mfd Address of MFD
+	 * @param _baseToken Address of pair asset of RDNT LP
+	 * @param _addressProvider Address of LendingPoolAddressesProvider
+	 * @param _lockZap Address of LockZap contract
 	 * @param _compoundFee Compounding fee
 	 * @param _slippageLimit Slippage limit
 	 */
@@ -186,8 +197,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Set compound fee
-	 * @param _compoundFee Sets new compounding fee
+	 * @notice Sets the fee for compounding.
+	 * @param _compoundFee fee ratio for compounding
 	 */
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
 		if (_compoundFee == 0) revert InvalidCompoundFee();
@@ -197,8 +208,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Set slippage limit
-	 * @param _slippageLimit Sets new slippage limit
+	 * @notice Sets slippage limit.
+	 * @param _slippageLimit new slippage limit
 	 */
 	function setSlippageLimit(uint256 _slippageLimit) external onlyOwner {
 		_validateSlippageLimit(_slippageLimit);
@@ -320,17 +331,18 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice User compounds their own rewards
+	 * @notice Compound `msg.sender`'s rewards.
+	 * @return fee applied to compound
 	 */
-	function selfCompound() external {
-		claimCompound(msg.sender, true);
+	function selfCompound() external returns (uint256 fee) {
+		fee = claimCompound(msg.sender, true);
 	}
 
 	/**
-	 * @notice Gets pending reward amount of the `_user`.
-	 * @param _user address
-	 * @return tokens address array
-	 * @return amts array
+	 * @notice Returns the pending rewards of the `_user`
+	 * @param _user owner of rewards
+	 * @return tokens array of reward token addresses
+	 * @return amts array of reward amounts
 	 */
 	function viewPendingRewards(address _user) public view returns (address[] memory tokens, uint256[] memory amts) {
 		IFeeDistribution.RewardData[] memory pending = IMultiFeeDistribution(multiFeeDistribution).claimableRewards(
@@ -435,10 +447,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns if the user is eligible for auto compound
-	 * @param _user to check eligibility
+	 * @notice Gets if user is eligbile for auto compounding
+	 * @param _user address
 	 * @param _pending amount
-	 * @return minStakeAmtEth Minimum stake amount in ETH
+	 * @return True or False
 	 */
 	function isEligibleForAutoCompound(address _user, uint256 _pending) public view returns (bool) {
 		bool delayComplete = true;
@@ -452,9 +464,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns if the user is eligible for auto compound
+	 * @notice Gets if pending amount is elgible for auto compounding
 	 * @param _pending amount
-	 * @return eligible `true` or `false`
+	 * @return eligible True or False
 	 */
 	function isEligibleForCompound(uint256 _pending) public view returns (bool eligible) {
 		eligible = _pending >= autocompoundThreshold();
