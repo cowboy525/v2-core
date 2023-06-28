@@ -248,11 +248,12 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Operate functions ***********************/
 	/**
 	 * @notice Refresh token amount for eligibility
-	 * @param user's address
+	 * @param user The address of the user
+	 * @return currentEligibility The current eligibility status of the user
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
 		if (msg.sender != address(chef)) revert OnlyCIC();
-		assert(user != address(0));
+		if (user == address(0)) revert AddressZero();
 
 		updatePrice();
 		currentEligibility = isEligibleForRewards(user);

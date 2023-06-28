@@ -25,6 +25,10 @@ contract LockerList is Ownable {
 	 */
 	constructor() Ownable() {}
 
+	/********************** Errors ***********************/
+
+	error Ineligible();
+
 	/********************** Lockers list ***********************/
 	/**
 	 * @notice Return the number of users.
@@ -65,7 +69,7 @@ contract LockerList is Ownable {
 	 * @param user address to remove
 	 */
 	function removeFromList(address user) external onlyOwner {
-		assert(inserted[user] == true);
+		if (inserted[user] == false) revert Ineligible();
 
 		delete inserted[user];
 

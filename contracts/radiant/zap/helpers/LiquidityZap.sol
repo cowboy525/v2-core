@@ -58,6 +58,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	error InvalidETHAmount();
 	error AddressZero();
 	error InsufficientPermision();
+	error TransferFailed();
 
 	address public _token;
 	address public _tokenWETHPair;
@@ -214,7 +215,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 			optimalTokenAmount = tokenAmount;
 		} else optimalWETHAmount = wethAmount;
 
-		assert(weth.transfer(_tokenWETHPair, optimalWETHAmount));
+		bool wethTransferSuccess = weth.transfer(_tokenWETHPair, optimalWETHAmount);
+		if (!wethTransferSuccess) revert TransferFailed();
 		IERC20(_token).safeTransfer(_tokenWETHPair, optimalTokenAmount);
 
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
