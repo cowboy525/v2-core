@@ -19,6 +19,7 @@ import {IChefIncentivesController} from "../../interfaces/IChefIncentivesControl
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {ICompounder} from "../../interfaces/ICompounder.sol";
+import {IBountyManager} from "../../interfaces/IBountyManager.sol";
 
 /// @title BountyManager Contract
 /// @author Radiant Devs
@@ -142,7 +143,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function quote(address _user) public view whenNotPaused returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
-			abi.encodeWithSignature("executeBounty(address,bool,uint256)", _user, false, 0)
+			abi.encodeCall(IBountyManager.executeBounty, (_user, false, 0))
 		);
 		if (!success) revert QuoteFail();
 
