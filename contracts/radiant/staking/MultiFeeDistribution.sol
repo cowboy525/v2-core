@@ -50,9 +50,6 @@ contract MultiFeeDistribution is
 	/// @notice Duration that rewards loop back
 	uint256 public rewardsLookback;
 
-	/// @notice Multiplier for earnings, fixed to 1
-	// uint256 public constant DEFAULT_MUTLIPLIER = 1;
-
 	/// @notice Default lock index
 	uint256 public constant DEFAULT_LOCK_INDEX = 1;
 
@@ -148,7 +145,6 @@ contract MultiFeeDistribution is
 
 	/********************** Events ***********************/
 
-	// event Staked(address indexed user, uint256 amount, bool locked);
 	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, bool isLP);
 	event Withdrawn(
 		address indexed user,
@@ -886,7 +882,6 @@ contract MultiFeeDistribution is
 		} else {
 			bal.unlocked = bal.unlocked.add(amount);
 		}
-		//emit Staked(user, amount, false);
 	}
 
 	/**
