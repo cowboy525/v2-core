@@ -63,7 +63,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	address public _token;
 	address public _tokenWETHPair;
 	IWETH public weth;
-	bool private initialized;
+	bool private initializedLiquidityZap;
 	address public poolHelper;
 
 	/**
@@ -81,11 +81,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @param _helper Pool helper contract
 	 */
 	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
-		if (initialized) revert ZapExists();
+		if (initializedLiquidityZap) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
 		_tokenWETHPair = tokenWethPair;
-		initialized = true;
+		initializedLiquidityZap = true;
 		poolHelper = _helper;
 	}
 
