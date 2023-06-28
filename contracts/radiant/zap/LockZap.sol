@@ -19,9 +19,8 @@ import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 
-/// @title Borrow gate via stargate
+/// @title LockZap contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
@@ -53,6 +52,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice ETH oracle contract
 	IChainlinkAggregator public ethOracle;
 
+	/********************** Events ***********************/
 	/// @notice Emitted when zap is done
 	event Zapped(
 		bool _borrow,
@@ -65,6 +65,13 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	event SlippageRatioChanged(uint256 indexed newRatio);
 
+	event PriceProviderUpdated(address indexed _provider);
+
+	event MfdUpdated(address indexed _mfdAddr);
+
+	event PoolHelperUpdated(address indexed _poolHelper);
+
+	/********************** Errors ***********************/
 	error AddressZero();
 
 	error InvalidRatio();
@@ -123,6 +130,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (address(_provider) == address(0)) revert AddressZero();
 		priceProvider = IPriceProvider(_provider);
 		ethOracle = IChainlinkAggregator(priceProvider.baseTokenPriceInUsdProxyAggregator());
+		emit PriceProviderUpdated(_provider);
 	}
 
 	/**
@@ -132,6 +140,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function setMfd(address _mfdAddr) external onlyOwner {
 		if (address(_mfdAddr) == address(0)) revert AddressZero();
 		mfd = IMultiFeeDistribution(_mfdAddr);
+		emit MfdUpdated(_mfdAddr);
 	}
 
 	/**
@@ -141,6 +150,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		if (address(_poolHelper) == address(0)) revert AddressZero();
 		poolHelper = IPoolHelper(_poolHelper);
+		emit PoolHelperUpdated(_poolHelper);
 	}
 
 	/**
@@ -173,6 +183,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _lockTypeIndex lock length index.
+	 * @return LP amount
 	 */
 	function zap(
 		bool _borrow,
@@ -190,6 +201,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _onBehalf user address to be zapped.
+	 * @return LP amount
 	 */
 	function zapOnBehalf(
 		bool _borrow,
@@ -204,7 +216,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/**
 	 * @notice Zap tokens from vesting
 	 * @param _borrow option to borrow ETH
-	 * @param _lockTypeIndex lock length index.
+	 * @param _lockTypeIndex lock length index. cannot be shortest option (index 0)
+	 * @return LP amount
 	 */
 	function zapFromVesting(bool _borrow, uint256 _lockTypeIndex) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
@@ -218,7 +231,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _amount the amount of asset to zap
 	 * @param _lockTypeIndex lock length index.
 	 */
-	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public {
+	function zapAlternateAsset(address _asset, uint256 _amount, uint256 _lockTypeIndex) public whenNotPaused {
 		if (_asset == address(0)) revert AddressZero();
 		if (_amount == 0) revert AmountZero();
 		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
@@ -283,6 +296,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _onBehalf of the user.
 	 * @param _lockTypeIndex lock length index.
 	 * @param _refundAddress dust is refunded to this address.
+	 * @return liquidity LP amount
 	 */
 	function _zap(
 		bool _borrow,

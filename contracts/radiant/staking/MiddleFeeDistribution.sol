@@ -9,17 +9,18 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
 import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {IAaveProtocolDataProvider} from "../../interfaces/IAaveProtocolDataProvider.sol";
 
 /// @title Fee distributor inside
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
-contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable {
+contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable, RecoverERC20 {
 	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
@@ -47,10 +48,10 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	// AAVE Oracle address
 	address internal _aaveOracle;
 
-	/********************** Events ***********************/
+	// AAVE Protocol Data Provider address
+	IAaveProtocolDataProvider public aaveProtocolDataProvider;
 
-	/// @notice Emitted when ERC20 token is recovered
-	event Recovered(address indexed token, uint256 amount);
+	/********************** Events ***********************/
 
 	/// @notice Emitted when reward token is forwarded
 	event ForwardReward(address indexed token, uint256 amount);
@@ -60,8 +61,15 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	event NewTransferAdded(address indexed asset, uint256 lpUsdValue);
 
+	event AdminUpdated(address indexed _configurator);
+
+	event RewardsUpdated(address indexed _rewardsToken);
+
 	/********************** Errors ***********************/
+
 	error ZeroAddress();
+
+	error IncompatibleToken();
 
 	error InvalidRatio();
 
@@ -86,7 +94,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function initialize(
 		address _rdntToken,
 		address aaveOracle,
-		IMultiFeeDistribution _multiFeeDistribution
+		IMultiFeeDistribution _multiFeeDistribution,
+		IAaveProtocolDataProvider _aaveProtocolDataProvider
 	) public initializer {
 		if (_rdntToken == address(0)) revert ZeroAddress();
 		if (aaveOracle == address(0)) revert ZeroAddress();
@@ -95,12 +104,15 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		rdntToken = IMintableToken(_rdntToken);
 		_aaveOracle = aaveOracle;
 		multiFeeDistribution = _multiFeeDistribution;
+		aaveProtocolDataProvider = _aaveProtocolDataProvider;
 
 		admin = msg.sender;
 	}
 
 	/**
 	 * @notice Set operation expenses account
+	 * @param _operationExpenses Address to receive operation expenses
+	 * @param _operationExpenseRatio Proportion of operation expense
 	 */
 	function setOperationExpenses(address _operationExpenses, uint256 _operationExpenseRatio) external onlyOwner {
 		if (_operationExpenseRatio > RATIO_DIVISOR) revert InvalidRatio();
@@ -112,20 +124,41 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Sets pool configurator as admin.
+	 * @param _configurator Configurator address
 	 */
 	function setAdmin(address _configurator) external onlyOwner {
 		if (_configurator == address(0)) revert ZeroAddress();
 		admin = _configurator;
+		emit AdminUpdated(_configurator);
+	}
+
+	/**
+	 * @notice Set the Protocol Data Provider address
+	 * @param _providerAddress The address of the protocol data provider contract
+	 */
+	function setProtocolDataProvider(address _providerAddress) external onlyOwner {
+		if (_providerAddress == address(0)) revert ZeroAddress();
+		aaveProtocolDataProvider = IAaveProtocolDataProvider(_providerAddress);
 	}
 
 	/**
 	 * @notice Add a new reward token to be distributed to stakers
+	 * @param _rewardsToken address of the reward token
 	 */
 	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+		if (msg.sender != admin) {
+			try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
+				(address aTokenAddress, , ) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
+				if (aTokenAddress == address(0)) revert IncompatibleToken();
+			} catch {
+				// _rewardsToken is not an rToken, do nothing
+			}
+		}
 		multiFeeDistribution.addReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = true;
+		emit RewardsUpdated(_rewardsToken);
 	}
-
+	
 	/**
 	 * @notice Remove an existing reward token
 	 */
@@ -133,35 +166,44 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		if (_rewardsToken == address(0)) revert ZeroAddress();
 		multiFeeDistribution.removeReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = false;
+		emit RewardsUpdated(_rewardsToken);
 	}
 
 	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 * @notice Run by MFD to pull pending platform revenue
+	 * @param _rewardTokens an array of reward token addresses
 	 */
 	function forwardReward(address[] memory _rewardTokens) external override {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
-		for (uint256 i = 0; i < _rewardTokens.length; i += 1) {
-			uint256 total = IERC20(_rewardTokens[i]).balanceOf(address(this));
+		uint256 length = _rewardTokens.length;
+		for (uint256 i = 0; i < length; i += 1) {
+			address rewardToken = _rewardTokens[i];
+			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
 				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
 				if (opExAmount != 0) {
-					IERC20(_rewardTokens[i]).safeTransfer(operationExpenses, opExAmount);
+					IERC20(rewardToken).safeTransfer(operationExpenses, opExAmount);
 				}
-				total = total.sub(opExAmount);
 			}
-			total = IERC20(_rewardTokens[i]).balanceOf(address(this));
-			IERC20(_rewardTokens[i]).safeTransfer(address(multiFeeDistribution), total);
 
-			emit ForwardReward(_rewardTokens[i], total);
+			total = IERC20(rewardToken).balanceOf(address(this));
+			IERC20(rewardToken).safeTransfer(address(multiFeeDistribution), total);
 
-			emitNewTransferAdded(_rewardTokens[i], total);
+			if (rewardToken == address(rdntToken)) {
+				multiFeeDistribution.mint(address(multiFeeDistribution), total, false);
+			}
+
+			emit ForwardReward(rewardToken, total);
+
+			emitNewTransferAdded(rewardToken, total);
 		}
 	}
 
 	/**
 	 * @notice Returns RDNT token address.
+	 * @return RDNT token address
 	 */
 	function getRdntTokenAddress() external view override returns (address) {
 		return address(rdntToken);
@@ -169,6 +211,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Returns MFD address.
+	 * @return MFD address
 	 */
 	function getMultiFeeDistributionAddress() external view override returns (address) {
 		return address(multiFeeDistribution);
@@ -176,26 +219,39 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Emit event for new asset reward
+	 * @param asset address of transfer assset
+	 * @param lpReward amount of rewards
 	 */
 	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
+		uint256 lpUsdValue;
 		if (asset != address(rdntToken)) {
-			address underlying = IAToken(asset).UNDERLYING_ASSET_ADDRESS();
-			uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(underlying);
-			address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlying);
-			uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
-			uint8 assetDecimals = IERC20Metadata(asset).decimals();
-			uint256 lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
-				10 ** assetDecimals
-			);
+			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
+				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(underlyingAddress);
+				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
+				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
+				uint8 assetDecimals = IERC20Metadata(asset).decimals();
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+					10 ** assetDecimals
+				);
+			} catch {
+				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
+				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
+				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
+				uint8 assetDecimals = IERC20Metadata(asset).decimals();
+				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+					10 ** assetDecimals
+				);
+			}
 			emit NewTransferAdded(asset, lpUsdValue);
 		}
 	}
 
 	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+	 * @notice Added to support recovering any ERC20 tokens inside the contract
+	 * @param tokenAddress address of erc20 token to recover
+	 * @param tokenAmount amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
-		emit Recovered(tokenAddress, tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 }
