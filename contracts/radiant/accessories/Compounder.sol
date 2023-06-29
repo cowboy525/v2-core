@@ -237,7 +237,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						block.timestamp + 600
 					)
 				{} catch {
-					revert SwapFailed(underlying, amount);
+					revert SwapFailed(tokenToTrade, amount);
 				}
 			}
 		}
