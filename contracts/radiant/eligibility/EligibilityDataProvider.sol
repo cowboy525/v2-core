@@ -14,7 +14,6 @@ import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
-/// @dev All function calls are currently implemented without side effects
 contract EligibilityDataProvider is OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -245,12 +244,14 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Operate functions ***********************/
 	/**
 	 * @notice Refresh token amount for eligibility
-	 * @param user's address
+	 * @param user The address of the user
+	 * @return currentEligibility The current eligibility status of the user
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
 		if (msg.sender != address(chef)) revert OnlyCIC();
-		assert(user != address(0));
+		if (user == address(0)) revert AddressZero();
 
+		updatePrice();
 		currentEligibility = isEligibleForRewards(user);
 		if (currentEligibility && disqualifiedTime[user] != 0) {
 			disqualifiedTime[user] = 0;
@@ -268,7 +269,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Internal functions ***********************/
 
 	/**
-	 * @notice Returns locked RDNT and LP token value in eth
+	 * @notice Returns locked RDNT and LP token value in USD
 	 * @param lockedLP is locked lp amount
 	 */
 	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {
