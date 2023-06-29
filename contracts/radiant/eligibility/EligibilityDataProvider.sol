@@ -144,11 +144,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-		if (_priceToleranceRatio < 8000) {
-			if (_priceToleranceRatio > RATIO_DIVISOR) {
-				revert InvalidRatio();
-			}
-		}
+		if (_priceToleranceRatio < 8000 || _priceToleranceRatio > RATIO_DIVISOR) revert InvalidRatio();
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
