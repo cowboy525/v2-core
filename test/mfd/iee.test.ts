@@ -128,7 +128,7 @@ describe('Individual Early Exits', () => {
 		const blockTimestamp = await getLatestBlockTimestamp();
 		const unlockTime = blockTimestamp + VEST_DURATION.toNumber();
 
-		const totalVesting = (await mfd.earnedBalances(user1.address)).total;
+		const totalVesting = (await mfd.earnedBalances(user1.address)).totalVesting;
 
 		await setNextBlockTimestamp(blockTimestamp + 1000);
 
