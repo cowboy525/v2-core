@@ -60,6 +60,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice FEE ratio DIVISOR
 	uint256 public constant FEE_PERCENT_DIVISOR = 10000;
 
+	// MAX slippage that cannot be exceeded when setting slippage variable
+	uint256 public constant MAX_SLIPPAGE = 80;
+
 	// ETH pool Id
 	uint256 private constant POOL_ID_ETH = 13;
 
@@ -87,6 +90,10 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice Cross chain borrow fee ratio
 	uint256 public xChainBorrowFeePercent;
 
+	/// @notice Max slippage allowed for SG bridge swaps
+	/// 99 = 1%
+	uint256 public maxSlippage;
+
 	/// @notice Emitted when DAO address is updated
 	event DAOTreasuryUpdated(address indexed _daoTreasury);
 
@@ -95,6 +102,9 @@ contract StargateBorrow is OwnableUpgradeable {
 
 	/// @notice Emited when pool ids of assets are updated
 	event PoolIDsUpdated(address[] assets, uint256[] poolIDs);
+
+	/// @notice Emitted when new slippage is set too high
+	error SlippageSetToHigh();
 
 	/**
 	 * @notice Constructor
@@ -111,13 +121,15 @@ contract StargateBorrow is OwnableUpgradeable {
 		ILendingPool _lendingPool,
 		IWETH _weth,
 		address _treasury,
-		uint256 _xChainBorrowFeePercent
+		uint256 _xChainBorrowFeePercent,
+		uint256 _maxSlippage
 	) public initializer {
 		require(address(_router) != (address(0)), "Not a valid address");
 		require(address(_lendingPool) != (address(0)), "Not a valid address");
 		require(address(_weth) != (address(0)), "Not a valid address");
 		require(_treasury != address(0), "Not a valid address");
 		require(_xChainBorrowFeePercent <= uint256(1e4), "Not a valid number");
+		if (_maxSlippage < MAX_SLIPPAGE) revert SlippageSetToHigh();
 
 		router = _router;
 		routerETH = _routerETH;
@@ -125,6 +137,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		daoTreasury = _treasury;
 		xChainBorrowFeePercent = _xChainBorrowFeePercent;
 		weth = _weth;
+		maxSlippage = _maxSlippage;
 		__Ownable_init();
 	}
 
@@ -161,6 +174,15 @@ contract StargateBorrow is OwnableUpgradeable {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 		}
 		emit PoolIDsUpdated(assets, poolIDs);
+	}
+
+	/**
+	 * @notice Set max slippage allowed for StarGate bridge Swaps.
+	 * @param _maxSlippage Max slippage allowed.
+	 */
+	function setMaxSlippage(uint256 _maxSlippage) external onlyOwner {
+		if (_maxSlippage < MAX_SLIPPAGE) revert SlippageSetToHigh();
+		maxSlippage = _maxSlippage;
 	}
 
 	/**
@@ -217,7 +239,7 @@ contract StargateBorrow is OwnableUpgradeable {
 				poolIdPerChain[asset], // dst chain pool id
 				payable(msg.sender), // receive address
 				amount, // transfer amount
-				amount.mul(99).div(100), // max slippage: 1%
+				amount.mul(maxSlippage).div(100),
 				IStargateRouter.lzTxObj(0, 0, "0x"),
 				abi.encodePacked(msg.sender),
 				bytes("")
@@ -243,7 +265,7 @@ contract StargateBorrow is OwnableUpgradeable {
 			payable(msg.sender), // receive address
 			abi.encodePacked(msg.sender),
 			amount, // transfer amount
-			amount.mul(99).div(100) // max slippage: 1%
+			amount.mul(maxSlippage).div(100) // max slippage
 		);
 	}
 

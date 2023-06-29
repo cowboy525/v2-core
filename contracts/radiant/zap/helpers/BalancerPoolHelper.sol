@@ -36,6 +36,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
 
+	bytes32 public constant WBTC_WETH_USDC_POOL_ID = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
+	bytes32 public constant DAI_USDT_USDC_POOL_ID = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
+	address public constant REAL_WETH_ADDR = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+
+	address public constant USDT_ADDRESS = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
+	address public constant DAI_ADDRESS = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
+	address public constant USDC_ADDRESS = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
+
 	/**
 	 * @notice Initializer
 	 * @param _inTokenAddr input token of the pool
@@ -401,27 +409,20 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
 		if (_inToken == address(0)) revert AddressZero();
 		if (_amount == 0) revert ZeroAmount();
-		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
-		bytes32 daiUsdtUsdcPoolId = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
-		address realWethAddr = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
-
-		address usdtAddress = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
-		address daiAddress = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
-		address usdcAddress = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
 		bool isSingleSwap = true;
-		if (_inToken == usdtAddress || _inToken == daiAddress) {
+		if (_inToken == USDT_ADDRESS || _inToken == DAI_ADDRESS) {
 			isSingleSwap = false;
 		}
 
 		if (!isSingleSwap) {
-			uint256 usdcBalanceBefore = IERC20(usdcAddress).balanceOf(address(this));
-			_swap(_inToken, usdcAddress, _amount, 0, daiUsdtUsdcPoolId, address(this));
-			uint256 usdcBalanceAfter = IERC20(usdcAddress).balanceOf(address(this));
-			_inToken = usdcAddress;
+			uint256 usdcBalanceBefore = IERC20(USDC_ADDRESS).balanceOf(address(this));
+			_swap(_inToken, USDC_ADDRESS, _amount, 0, DAI_USDT_USDC_POOL_ID, address(this));
+			uint256 usdcBalanceAfter = IERC20(USDC_ADDRESS).balanceOf(address(this));
+			_inToken = USDC_ADDRESS;
 			_amount = usdcBalanceAfter - usdcBalanceBefore;
 		}
 
-		_swap(_inToken, realWethAddr, _amount, _minAmountOut, wbtcWethUsdcPoolId, msg.sender);
+		_swap(_inToken, REAL_WETH_ADDR, _amount, _minAmountOut, WBTC_WETH_USDC_POOL_ID, msg.sender);
 	}
 
 	/**
