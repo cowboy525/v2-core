@@ -170,6 +170,7 @@ describe('Radiant OFT: ', function () {
 		let feeVal = 1000;
 		await execute('RadiantOFT', {from: admin}, 'setFeeRatio', feeVal);
 		await execute('RadiantOFT', {from: admin}, 'setPriceProvider', priceProvider.address);
+		await execute('RadiantOFTDst', {from: admin}, 'setPriceProvider', priceProvider.address);
 		// await advanceTimeAndBlock(3601);
 		// await priceProvider.update();
 
