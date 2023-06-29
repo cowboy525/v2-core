@@ -184,7 +184,7 @@ describe(`AutoCompound:`, async () => {
 	it('can claim bounty', async () => {
 		const lockInfo0 = await multiFeeDistribution.lockedBalances(user1.address);
 		expect(lockInfo0.lockData.length).to.be.equal(1);
-		
+
 		const expectedFee = await getPendingInRdnt();
 		const quote = await bountyManager.connect(hunter).quote(user1.address);
 
