@@ -3,7 +3,6 @@ pragma solidity 0.8.12;
 
 /// @title Library for pagination of address array
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
 library AddressPagination {
 	/**
 	 * @notice Paginate address array.

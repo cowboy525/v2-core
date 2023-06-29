@@ -7,7 +7,6 @@ import {AddressPagination} from "./AddressPagination.sol";
 
 /// @title Locker List Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockerList is Ownable {
 	using AddressPagination for address[];
 
@@ -25,6 +24,10 @@ contract LockerList is Ownable {
 	 * @dev Constructor
 	 */
 	constructor() Ownable() {}
+
+	/********************** Errors ***********************/
+
+	error Ineligible();
 
 	/********************** Lockers list ***********************/
 
@@ -49,6 +52,7 @@ contract LockerList is Ownable {
 	/**
 	 * @notice Add a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to be added
 	 */
 	function addToList(address user) external onlyOwner {
 		if (inserted[user] == false) {
@@ -63,9 +67,10 @@ contract LockerList is Ownable {
 	/**
 	 * @notice Remove a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to remove
 	 */
 	function removeFromList(address user) external onlyOwner {
-		assert(inserted[user] == true);
+		if (inserted[user] == false) revert Ineligible();
 
 		delete inserted[user];
 
