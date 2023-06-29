@@ -270,8 +270,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
-		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
+		uint256 ethAmtUsd = (_amount * (uint256(ethOracle.latestAnswer()))) / (1E18);
+		if (availableBorrowsETH < ethAmtUsd) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
 		lendingPool.borrow(address(weth), _amount, 2, referralCode, msg.sender);
