@@ -3,7 +3,7 @@ import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
 import {ethers, upgrades} from 'hardhat';
 import {DeployConfig} from '../../scripts/deploy/types';
-import {CustomERC20, MiddleFeeDistribution, MultiFeeDistribution} from '../../typechain';
+import {AaveProtocolDataProvider, CustomERC20, MiddleFeeDistribution, MultiFeeDistribution} from '../../typechain';
 import {setupTest} from '../setup';
 
 chai.use(solidity);
@@ -34,6 +34,16 @@ describe('MiddleFeeDistribution', () => {
 		config = fixture.deployConfig;
 
 		lp = await ethers.getContractAt('CustomERC20', await mfd.stakingToken());
+	});
+	describe('remove rewards with mock deployment', () => {
+		it('reward token arrays are adjusted accordingly', async () => {
+			const rewardToken1 = await mfd.rewardTokens(1);
+			expect(await middle.isRewardToken(rewardToken1)).to.be.eq(true);
+			await middle.removeReward(rewardToken1);
+			expect(await middle.isRewardToken(rewardToken1)).to.be.eq(false);
+			const previouslyLastRewardToken = await mfd.rewardTokens(1);
+			expect(previouslyLastRewardToken).to.not.be.eq(rewardToken1);
+		});
 	});
 });
 
@@ -76,7 +86,7 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 		const middleFactory = await ethers.getContractFactory('MiddleFeeDistribution');
 		middle = await upgrades.deployProxy(
 			middleFactory,
-			[radiant.address, mfd.address, mfd.address], //middle should be aaveoracle
+			[radiant.address, mfd.address, mfd.address, mfd.address], //middle should be aaveoracle
 			{initializer: 'initialize'}
 		);
 		await middle.deployed();

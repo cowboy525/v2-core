@@ -13,6 +13,7 @@ import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeabil
 import {IBalancerPoolHelper} from "../../../interfaces/IPoolHelper.sol";
 import {IWETH} from "../../../interfaces/IWETH.sol";
 import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
+import {VaultReentrancyLib} from "../../libraries/balancer-reentrancy/VaultReentrancyLib.sol";
 
 /// @title Balance Pool Helper Contract
 /// @author Radiant
@@ -76,7 +77,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _tokenName Token name of lp token
 	 * @param _tokenSymbol Token symbol of lp token
 	 */
-	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public {
+	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public onlyOwner {
 		if (lpTokenAddr != address(0)) revert PoolExists();
 
 		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
@@ -230,8 +231,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
+	/**
+	 * @notice Returns RDNT price in WETH
+	 * @return RDNT price
+	 */
 	function getPrice() public view returns (uint256) {
-		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
+		address vaultAddress = vaultAddr;
+		VaultReentrancyLib.ensureNotInVaultContext(IVault(vaultAddress));
+		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddress).getPoolTokens(poolId);
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
@@ -240,15 +247,23 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
+	/**
+	 * @notice Returns reserve information.
+	 * @return rdnt RDNT amount
+	 * @return weth WETH amount
+	 * @return lpTokenSupply LP token supply
+	 */
 	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
-		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
+		address vaultAddress = vaultAddr;
+		VaultReentrancyLib.ensureNotInVaultContext(IVault(vaultAddress));
+		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddress).getPoolTokens(poolId);
 
 		rdnt = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		weth = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		lpTokenSupply = lpToken.totalSupply().div(1e18);
+		lpTokenSupply = lpToken.totalSupply();
 	}
 
 	/**
@@ -451,7 +466,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	/**
 	 * @notice Get swap fee percentage
 	 */
-	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
+	function getSwapFeePercentage() public view returns (uint256 fee) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		fee = pool.getSwapFeePercentage();
 	}

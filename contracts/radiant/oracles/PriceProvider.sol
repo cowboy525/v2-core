@@ -13,7 +13,6 @@ import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability
 
 /// @title PriceProvider Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract PriceProvider is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -30,6 +29,13 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	IBaseOracle public oracle;
 
 	bool private usePool;
+
+	/********************** Events ***********************/
+
+	event OracleUpdated(address indexed _newOracle);
+	event PoolHelperUpdated(address indexed _poolHelper);
+	event AggregatorUpdated(address indexed _baseTokenPriceInUsdProxyAggregator);
+	event UsePoolUpdated(bool indexed _usePool);
 
 	/**
 	 * @notice Initializer
@@ -117,6 +123,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setOracle(address _newOracle) external onlyOwner {
 		require(_newOracle != address(0), "Invalid oracle address");
 		oracle = IBaseOracle(_newOracle);
+		emit OracleUpdated(_newOracle);
 	}
 
 	/**
@@ -125,6 +132,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
 		require(getLpTokenPrice() != 0, "invalid oracle");
+		emit PoolHelperUpdated(_poolHelper);
 	}
 
 	/**
@@ -133,6 +141,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
 		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
 		require(getLpTokenPriceUsd() != 0, "invalid oracle");
+		emit AggregatorUpdated(_baseTokenPriceInUsdProxyAggregator);
 	}
 
 	/**
@@ -140,6 +149,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function setUsePool(bool _usePool) external onlyOwner {
 		usePool = _usePool;
+		emit UsePoolUpdated(_usePool);
 	}
 
 	/**
