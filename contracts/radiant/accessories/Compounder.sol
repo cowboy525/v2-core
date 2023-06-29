@@ -60,6 +60,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	error ArrayLengthMismatch();
 
+	error SwapFailed(address asset, uint256 amount);
+
 	/// @notice Percent divisor which is equal to 100%
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	/// @notice Fee of compounding
@@ -234,7 +236,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						address(this),
 						block.timestamp + 600
 					)
-				{} catch {}
+				{} catch {
+					revert SwapFailed(tokenToTrade, amount);
+				}
 			}
 		}
 		return IERC20(baseToken).balanceOf(address(this));
