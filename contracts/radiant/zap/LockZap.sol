@@ -6,11 +6,9 @@ import {DustRefunder} from "./helpers/DustRefunder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
-
 import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
@@ -24,7 +22,6 @@ import {TransferHelper} from "../libraries/TransferHelper.sol";
 /// @author Radiant
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
@@ -177,7 +174,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount).mul(100).div(97);
+		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * 100 / 97;
 	}
 
 	/**
@@ -229,6 +226,23 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	/**
+	 * @notice Check slippage for WETH Zap
+	 * @param _wethAmount WETH amount to zap
+	 */
+	function _zapWETHWithSlippageCheck (uint256 _wethAmount) internal returns(uint256) {
+		uint256 balanceBeforeZap = weth.balanceOf(address(this));
+		uint256 liquidity = poolHelper.zapWETH(_wethAmount);
+		uint256 balanceAfterZap = weth.balanceOf(address(this));
+
+		if (address(priceProvider) != address(0)) {
+			uint256 slippage = _calcSlippage((balanceBeforeZap - balanceAfterZap), liquidity);
+			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
+		}
+
+		return liquidity;
+	}
+
+	/**
 	 * @notice Zap tokens like USDC, DAI, USDT, WBTC to lp
 	 * @param _asset address of the asset to zap in
 	 * @param _amount the amount of asset to zap
@@ -250,12 +264,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = poolHelper.zapWETH(wethGained);
-
-		if (address(priceProvider) != address(0)) {
-			uint256 slippage = _calcSlippage(wethGained, liquidity);
-			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
-		}
+		uint256 liquidity = _zapWETHWithSlippageCheck(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
@@ -284,10 +293,10 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _liquidity) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 ethAmtUsd = _ethAmt.mul(uint256(ethOracle.latestAnswer())).div(1E18);
+		uint256 ethAmtUsd = _ethAmt * (uint256(ethOracle.latestAnswer())) / (1E18);
 		uint256 lpAmtUsd = _liquidity * priceProvider.getLpTokenPriceUsd();
-		ratio = lpAmtUsd.mul(RATIO_DIVISOR).div(ethAmtUsd);
-		ratio = ratio.div(1E18);
+		ratio = lpAmtUsd * (RATIO_DIVISOR) / (ethAmtUsd);
+		ratio = ratio / (1E18);
 	}
 
 	/**
@@ -335,11 +344,15 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			}
 
 			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
-			totalWethValueIn = _wethAmt.mul(RATIO_DIVISOR).div(ethLPRatio);
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = (balanceBeforeZap - balanceAfterZap) * RATIO_DIVISOR / ethLPRatio;
 		} else {
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapWETH(_wethAmt);
-			totalWethValueIn = _wethAmt;
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = balanceBeforeZap - balanceAfterZap;
 		}
 
 		if (address(priceProvider) != address(0)) {
