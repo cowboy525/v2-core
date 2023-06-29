@@ -386,7 +386,7 @@ runs.forEach(function (run) {
 
 			describe('run w/ 0 funded bounties, doesnt work, v1', async function () {
 				before(async function () {
-					console.log('           reset to zap fixture');
+					// console.log('           reset to zap fixture');
 				});
 				it('dq test', function () {
 					expect(1).equals(1);

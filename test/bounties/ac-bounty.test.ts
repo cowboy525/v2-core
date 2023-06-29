@@ -62,6 +62,20 @@ const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await advanceTimeAndBlock(duration);
 };
 
+const generateGiganticPlatformRevenue = async (duration: number = SKIP_DURATION) => {
+	await deposit('rWBTC', '90000000000000000000000000000000000', deployer, lendingPool, deployData);
+
+	await doBorrow('rWBTC', '20000000000000000000000000000000000', deployer, lendingPool, deployData);
+
+	await advanceTimeAndBlock(duration);
+
+	await doBorrow('rWBTC', '100000', deployer, lendingPool, deployData);
+
+
+	await multiFeeDistribution.connect(deployer).getAllRewards();
+	await advanceTimeAndBlock(duration);
+};
+
 const zapAndDeposit = async (defaultLockTime: number, depositAmt: number) => {
 	// await multiFeeDistribution.connect(user1).setRelock(relock);
 	await multiFeeDistribution.connect(user1).setDefaultRelockTypeIndex(defaultLockTime);
@@ -222,5 +236,12 @@ describe(`AutoCompound:`, async () => {
 		await generatePlatformRevenue(1 * HOUR);
 		fee = await compounder.connect(user1).claimCompound(user1.address, true);
 		await expect(fee.value).to.be.equal(0);
+	});
+
+	it('swap failed', async () => {
+		const quote = await bountyManager.connect(hunter).quote(user1.address);
+		await generateGiganticPlatformRevenue();
+
+		await expect(bountyManager.connect(hunter).claim(user1.address, quote.actionType)).to.be.revertedWith('SwapFailed');
 	});
 });
