@@ -466,7 +466,7 @@ contract MultiFeeDistribution is
 		view
 		override
 		returns (
-			uint256,
+			uint256 total,
 			uint256 unlockable,
 			uint256 locked,
 			uint256 lockedWithMultiplier,
@@ -492,7 +492,7 @@ contract MultiFeeDistribution is
 				i++;
 			}
 		}
-		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
+		total = balances[user].locked;
 	}
 
 	/**

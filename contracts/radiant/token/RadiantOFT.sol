@@ -213,15 +213,16 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/**
 	 * @notice Bridge fee amount
 	 * @param _rdntAmount amount for bridge
+	 * @return bridgeFee calculated bridge fee
 	 */
-	function getBridgeFee(uint256 _rdntAmount) public view returns (uint256) {
+	function getBridgeFee(uint256 _rdntAmount) public view returns (uint256 bridgeFee) {
 		if (address(priceProvider) == address(0)) {
 			return 0;
 		}
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
 		uint256 rdntInEth = _rdntAmount.mul(priceInEth).div(10 ** priceDecimals).mul(10 ** 18).div(10 ** decimals());
-		return rdntInEth.mul(feeRatio).div(FEE_DIVISOR);
+		bridgeFee = (rdntInEth * feeRatio) / FEE_DIVISOR;
 	}
 
 	/**
