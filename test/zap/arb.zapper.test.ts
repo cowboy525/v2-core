@@ -26,7 +26,7 @@ describe('Zapper', function () {
 			const poolHelper = await hre.upgrades.deployProxy(
 				BalancerPoolHelper,
 				[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
-				{kind: 'transparent'}
+				{kind: 'transparent', unsafeAllow: ['constructor']}
 			);
 			await poolHelper.deployed();
 
@@ -62,7 +62,7 @@ describe('Zapper', function () {
 				balancerVault,
 				weightedPoolFactory,
 			],
-			{kind: 'transparent'}
+			{kind: 'transparent', unsafeAllow: ['constructor']}
 		);
 		await poolHelper.deployed();
 

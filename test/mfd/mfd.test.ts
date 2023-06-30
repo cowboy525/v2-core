@@ -55,7 +55,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -78,7 +78,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
@@ -151,6 +151,10 @@ describe('MultiFeeDistribution', () => {
 	it('addReward', async () => {
 		await expect(mfd.connect(user1).addReward(user1.address)).to.be.reverted;
 		await expect(mfd.addReward(radiant.address)).to.be.reverted;
+	});
+
+	it('removing rewards fail conditions', async () => {
+		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith("InsufficientPermission");
 	});
 
 	// it("delegateExit", async () => {
@@ -934,7 +938,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -953,7 +957,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 

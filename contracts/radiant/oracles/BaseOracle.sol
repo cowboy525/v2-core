@@ -2,21 +2,15 @@
 pragma solidity 0.8.12;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import {Errors} from "../libraries/Errors.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
-
-	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
-	uint256 public constant UPDATE_PERIOD = 86400;
 
 	/// @notice Token for price
 	address public token;
@@ -31,9 +25,13 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	IBaseOracle public fallbackOracle;
 
 	/********************** Events ***********************/
-
 	event FallbackOracleUpdated(address indexed _fallback);
+
 	event FallbackOracleEnabled(bool indexed _enabled);
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -76,17 +74,13 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 		uint256 priceInEth = latestAnswerInEth();
 
 		// returns decimals 8
-		(, int256 answer,, uint256 updatedAt,) = IChainlinkAggregator(ethChainlinkFeed).latestRoundData();
-		if (updatedAt == 0) revert Errors.RoundNotComplete();
-		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert Errors.StalePrice();
-		if (answer <= 0) revert Errors.InvalidPrice();
-		uint256 ethPrice = uint256(answer);
+		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
 
 		price = priceInEth.mul(ethPrice).div(10 ** 8);
 	}
 
 	/**
-	 * @notice Returns USD price in ETH
+	 * @notice Returns price in ETH
 	 * @dev supports 18 decimal token
 	 * @return price of token in decimal 8.
 	 */
@@ -110,4 +104,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @dev implement in child contract
 	 */
 	function consult() public view virtual returns (uint256) {}
+
+	// Allowing for storage vars to be added/shifted above without effecting any inheriting contracts/proxies
+	uint256[50] private __gap;
 }

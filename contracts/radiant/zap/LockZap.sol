@@ -6,11 +6,9 @@ import {DustRefunder} from "./helpers/DustRefunder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
-
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {ILendingPool, DataTypes} from "../../interfaces/ILendingPool.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
@@ -18,13 +16,12 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IWETH} from "../../interfaces/IWETH.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
+import {TransferHelper} from "../libraries/TransferHelper.sol";
 
-/// @title Borrow gate via stargate
+/// @title LockZap contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
@@ -90,7 +87,13 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error InsufficientETH();
 
+	error EthTransferFailed();
+
 	uint256 public ethLPRatio; // parameter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -179,7 +182,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount).mul(100).div(97);
+		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * 100 / 97;
 	}
 
 	/**
@@ -188,6 +191,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _lockTypeIndex lock length index.
+	 * @return LP amount
 	 */
 	function zap(
 		bool _borrow,
@@ -205,6 +209,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
 	 * @param _onBehalf user address to be zapped.
+	 * @return LP amount
 	 */
 	function zapOnBehalf(
 		bool _borrow,
@@ -219,12 +224,30 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/**
 	 * @notice Zap tokens from vesting
 	 * @param _borrow option to borrow ETH
-	 * @param _lockTypeIndex lock length index.
+	 * @param _lockTypeIndex lock length index. cannot be shortest option (index 0)
+	 * @return LP amount
 	 */
 	function zapFromVesting(bool _borrow, uint256 _lockTypeIndex) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
 		uint256 wethAmt = quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);
+	}
+
+	/**
+	 * @notice Check slippage for WETH Zap
+	 * @param _wethAmount WETH amount to zap
+	 */
+	function _zapWETHWithSlippageCheck (uint256 _wethAmount) internal returns(uint256) {
+		uint256 balanceBeforeZap = weth.balanceOf(address(this));
+		uint256 liquidity = poolHelper.zapWETH(_wethAmount);
+		uint256 balanceAfterZap = weth.balanceOf(address(this));
+
+		if (address(priceProvider) != address(0)) {
+			uint256 slippage = _calcSlippage((balanceBeforeZap - balanceAfterZap), liquidity);
+			if (slippage < acceptableSlippageRatio) revert InvalidSlippage();
+		}
+
+		return liquidity;
 	}
 
 	/**
@@ -240,21 +263,16 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
 		uint256 assetPrice = priceOracle.getAssetPrice(_asset);
 		uint256 ethPrice = uint256(ethOracle.latestAnswer());
-		uint256 expectedEthAmount = (_amount * (10 ** (18 - assetDecimals)) * assetPrice) / ethPrice;
+		uint256 expectedEthAmount = ((_amount * (10 ** 18) * assetPrice) / (10 ** assetDecimals)) / ethPrice;
 
-		IERC20(_asset).transferFrom(msg.sender, address(poolHelper), _amount);
+		IERC20(_asset).safeTransferFrom(msg.sender, address(poolHelper), _amount);
 		uint256 wethBalanceBefore = weth.balanceOf(address(poolHelper));
 		uint256 minAcceptableWeth = (expectedEthAmount * acceptableSlippageRatio) / RATIO_DIVISOR;
 		poolHelper.swapToWeth(_asset, _amount, minAcceptableWeth);
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = poolHelper.zapWETH(wethGained);
-
-		if (address(priceProvider) != address(0)) {
-			uint256 slippage = _calcSlippage(wethGained, liquidity);
-			if (slippage < acceptableSlippageRatio) revert InvalidSlippage();
-		}
+		uint256 liquidity = _zapWETHWithSlippageCheck(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
@@ -269,8 +287,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _executeBorrow(uint256 _amount) internal {
 		(, , uint256 availableBorrowsETH, , , ) = lendingPool.getUserAccountData(msg.sender);
-		uint256 amountInETH = _amount.mul(10 ** 8).div(10 ** IERC20Metadata(address(weth)).decimals());
-		if (availableBorrowsETH < amountInETH) revert ExceedsAvailableBorrowsETH();
+		uint256 ethAmtUsd = (_amount * (uint256(ethOracle.latestAnswer()))) / (1E18);
+		if (availableBorrowsETH < ethAmtUsd) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
 		lendingPool.borrow(address(weth), _amount, 2, referralCode, msg.sender);
@@ -283,10 +301,10 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _liquidity) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 ethAmtUsd = _ethAmt.mul(uint256(ethOracle.latestAnswer())).div(1E18);
+		uint256 ethAmtUsd = _ethAmt * (uint256(ethOracle.latestAnswer())) / (1E18);
 		uint256 lpAmtUsd = _liquidity * priceProvider.getLpTokenPriceUsd();
-		ratio = lpAmtUsd.mul(RATIO_DIVISOR).div(ethAmtUsd);
-		ratio = ratio.div(1E18);
+		ratio = lpAmtUsd * (RATIO_DIVISOR) / (ethAmtUsd);
+		ratio = ratio / (1E18);
 	}
 
 	/**
@@ -298,6 +316,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _onBehalf of the user.
 	 * @param _lockTypeIndex lock length index.
 	 * @param _refundAddress dust is refunded to this address.
+	 * @return liquidity LP amount
 	 */
 	function _zap(
 		bool _borrow,
@@ -333,11 +352,15 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			}
 
 			IERC20(rdntAddr).safeApprove(address(poolHelper), _rdntAmt);
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapTokens(_wethAmt, _rdntAmt);
-			totalWethValueIn = _wethAmt.mul(RATIO_DIVISOR).div(ethLPRatio);
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = (balanceBeforeZap - balanceAfterZap) * RATIO_DIVISOR / ethLPRatio;
 		} else {
+			uint256 balanceBeforeZap = weth.balanceOf(address(this));
 			liquidity = poolHelper.zapWETH(_wethAmt);
-			totalWethValueIn = _wethAmt;
+			uint256 balanceAfterZap = weth.balanceOf(address(this));
+			totalWethValueIn = balanceBeforeZap - balanceAfterZap;
 		}
 
 		if (address(priceProvider) != address(0)) {
@@ -373,5 +396,14 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (_newRatio < MIN_REASONABLE_RATIO || _newRatio > RATIO_DIVISOR) revert InvalidRatio();
 		acceptableSlippageRatio = _newRatio;
 		emit SlippageRatioChanged(acceptableSlippageRatio);
+	}
+
+	/**
+	 * @notice Allows owner to recover ETH locked in this contract.
+	 * @param to ETH receiver
+	 * @param value ETH amount
+	 */
+	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
+		TransferHelper.safeTransferETH(to, value);
 	}
 }

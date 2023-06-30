@@ -72,7 +72,7 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 				deployData.middleFeeDistribution,
 				100,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await chef.deployed();
 		await chef.addPool(deployData.allTokens['rUSDC'], 10);

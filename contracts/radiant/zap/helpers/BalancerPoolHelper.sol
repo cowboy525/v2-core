@@ -7,12 +7,13 @@ import {BNum} from "../../../dependencies/math/BNum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IBalancerPoolHelper} from "../../../interfaces/IPoolHelper.sol";
 import {IWETH} from "../../../interfaces/IWETH.sol";
 import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
+import {VaultReentrancyLib} from "../../libraries/balancer-reentrancy/VaultReentrancyLib.sol";
 
 /// @title Balance Pool Helper Contract
 /// @author Radiant
@@ -34,6 +35,18 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	bytes32 public poolId;
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
+
+	bytes32 public constant WBTC_WETH_USDC_POOL_ID = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
+	bytes32 public constant DAI_USDT_USDC_POOL_ID = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
+	address public constant REAL_WETH_ADDR = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+
+	address public constant USDT_ADDRESS = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
+	address public constant DAI_ADDRESS = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
+	address public constant USDC_ADDRESS = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
+	
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -222,8 +235,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
 	}
 
+	/**
+	 * @notice Returns RDNT price in WETH
+	 * @return RDNT price
+	 */
 	function getPrice() public view returns (uint256) {
-		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
+		address vaultAddress = vaultAddr;
+		VaultReentrancyLib.ensureNotInVaultContext(IVault(vaultAddress));
+		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddress).getPoolTokens(poolId);
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
@@ -232,15 +251,23 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
 	}
 
+	/**
+	 * @notice Returns reserve information.
+	 * @return rdnt RDNT amount
+	 * @return weth WETH amount
+	 * @return lpTokenSupply LP token supply
+	 */
 	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
-		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddr).getPoolTokens(poolId);
+		address vaultAddress = vaultAddr;
+		VaultReentrancyLib.ensureNotInVaultContext(IVault(vaultAddress));
+		(IERC20[] memory tokens, uint256[] memory balances, ) = IVault(vaultAddress).getPoolTokens(poolId);
 
 		rdnt = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		weth = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		lpTokenSupply = lpToken.totalSupply().div(1e18);
+		lpTokenSupply = lpToken.totalSupply();
 	}
 
 	/**
@@ -386,27 +413,20 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external {
 		if (_inToken == address(0)) revert AddressZero();
 		if (_amount == 0) revert ZeroAmount();
-		bytes32 wbtcWethUsdcPoolId = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
-		bytes32 daiUsdtUsdcPoolId = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
-		address realWethAddr = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
-
-		address usdtAddress = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
-		address daiAddress = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
-		address usdcAddress = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
 		bool isSingleSwap = true;
-		if (_inToken == usdtAddress || _inToken == daiAddress) {
+		if (_inToken == USDT_ADDRESS || _inToken == DAI_ADDRESS) {
 			isSingleSwap = false;
 		}
 
 		if (!isSingleSwap) {
-			uint256 usdcBalanceBefore = IERC20(usdcAddress).balanceOf(address(this));
-			_swap(_inToken, usdcAddress, _amount, 0, daiUsdtUsdcPoolId, address(this));
-			uint256 usdcBalanceAfter = IERC20(usdcAddress).balanceOf(address(this));
-			_inToken = usdcAddress;
+			uint256 usdcBalanceBefore = IERC20(USDC_ADDRESS).balanceOf(address(this));
+			_swap(_inToken, USDC_ADDRESS, _amount, 0, DAI_USDT_USDC_POOL_ID, address(this));
+			uint256 usdcBalanceAfter = IERC20(USDC_ADDRESS).balanceOf(address(this));
+			_inToken = USDC_ADDRESS;
 			_amount = usdcBalanceAfter - usdcBalanceBefore;
 		}
 
-		_swap(_inToken, realWethAddr, _amount, _minAmountOut, wbtcWethUsdcPoolId, msg.sender);
+		_swap(_inToken, REAL_WETH_ADDR, _amount, _minAmountOut, WBTC_WETH_USDC_POOL_ID, msg.sender);
 	}
 
 	/**
@@ -450,7 +470,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	/**
 	 * @notice Get swap fee percentage
 	 */
-	function getSwapFeePercentage() public onlyOwner returns (uint256 fee) {
+	function getSwapFeePercentage() public view returns (uint256 fee) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		fee = pool.getSwapFeePercentage();
 	}
