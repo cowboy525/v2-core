@@ -30,7 +30,7 @@ describe('Looping/Leverager', () => {
 	let wethAddress = '';
 	const usdcAmt = 1000;
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 
 	const usdcPerAccount = ethers.utils.parseUnits(usdcAmt.toString(), 6);
 
@@ -185,14 +185,14 @@ describe('Looping/Leverager', () => {
 
 		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		const ethBalance = await ethers.provider.getBalance(user2.address);
+		const ethBalance = await (await ethers.provider.getBalance(user2.address)).div(2);
 
 		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
 			value: ethBalance,
 		});
 
 		const ethBalance2 = await ethers.provider.getBalance(user2.address);
-		expect(ethBalance2).to.equal(BigNumber.from(0));
+		expect(ethBalance2).to.equal(ethBalance);
 
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;

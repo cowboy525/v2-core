@@ -79,7 +79,7 @@ describe('LockZap: 2-token zap', function () {
 	});
 
 	it('fail when invalid input', async function () {
-		await expect(lockZap.connect(deployer).setAcceptableRatio(9459)).to.be.revertedWith('InvalidRatio');
-		await expect(lockZap.connect(deployer).setAcceptableRatio(10001)).to.be.revertedWith('InvalidRatio');
+		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(9459)).to.be.revertedWith('InvalidRatio');
+		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(10001)).to.be.revertedWith('InvalidRatio');
 	});
 });
