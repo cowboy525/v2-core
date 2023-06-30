@@ -176,6 +176,7 @@ contract MultiFeeDistribution is
 	error InvalidLockPeriod();
 	error InsufficientPermission();
 	error AlreadyAdded();
+	error AlreadySet();
 	error InvalidType();
 	error ActiveReward();
 	error InvalidAmount();
@@ -332,7 +333,7 @@ contract MultiFeeDistribution is
 	 */
 	function setLPToken(address _stakingToken) external onlyOwner {
 		if (_stakingToken == address(0)) revert AddressZero();
-		if (stakingToken != address(0)) revert AddressZero();
+		if (stakingToken != address(0)) revert AlreadySet();
 		stakingToken = _stakingToken;
 		emit LPTokenUpdated(_stakingToken);
 	}
@@ -342,7 +343,7 @@ contract MultiFeeDistribution is
 	 * @param _rewardToken address
 	 */
 	function addReward(address _rewardToken) external override {
-		if (_rewardToken == address(0)) revert InvalidBurn();
+		if (_rewardToken == address(0)) revert AddressZero();
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
 		rewardTokens.push(_rewardToken);
@@ -737,7 +738,7 @@ contract MultiFeeDistribution is
 		if (bountyManager != address(0)) {
 			if (amount < IBountyManager(bountyManager).minDLPBalance()) revert InvalidAmount();
 		}
-		if (typeIndex >= lockPeriod.length) revert InvalidAmount();
+		if (typeIndex >= lockPeriod.length) revert InvalidType();
 
 		_updateReward(onBehalfOf);
 
@@ -896,7 +897,7 @@ contract MultiFeeDistribution is
 	 */
 	function withdraw(uint256 amount) external {
 		address _address = msg.sender;
-		if (amount == 0) revert InvalidAmount();
+		if (amount == 0) revert AmountZero();
 
 		uint256 penaltyAmount;
 		uint256 burnAmount;

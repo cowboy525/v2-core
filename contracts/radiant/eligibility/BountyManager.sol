@@ -111,7 +111,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		if (_priceProvider == address(0)) revert AddressZero();
 		if (_eligibilityDataProvider == address(0)) revert AddressZero();
 		if (_compounder == address(0)) revert AddressZero();
-		if (_hunterShare > 10000) revert InvalidNumber();
+		if (_hunterShare > 10000) revert Override();
 		if (_baseBountyUsdTarget == 0) revert InvalidNumber();
 		if (_maxBaseBounty == 0) revert InvalidNumber();
 
