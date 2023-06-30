@@ -197,7 +197,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			if (!issueBaseBounty) {
 				IERC20(rdnt).safeTransferFrom(incentivizer, address(this), totalBounty);
 			}
-			_sendBounty(msg.sender, bounty);
+			bounty = _sendBounty(msg.sender, bounty);
 		}
 	}
 
