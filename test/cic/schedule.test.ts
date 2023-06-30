@@ -2,26 +2,64 @@ import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import assert from 'assert';
 import {ethers, upgrades} from 'hardhat';
-import {advanceTimeAndBlock} from '../shared/helpers';
-import {ChefIncentivesController} from '../../typechain';
+import {advanceTimeAndBlock, zapIntoEligibility} from '../shared/helpers';
+import {AToken, ChefIncentivesController, LendingPool, MockOnwardIncentivesController, MockToken, MultiFeeDistribution} from '../../typechain';
 import {getLatestBlockTimestamp} from '../../scripts/utils';
 import {BigNumber} from 'ethers';
 import {setupTest} from '../setup';
 import {solidity} from 'ethereum-waffle';
+import { DeployConfig, DeployData } from '../../scripts/deploy/types';
 
 chai.use(solidity);
 const {expect} = chai;
 
 describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', () => {
 	let deployer: SignerWithAddress;
+	let user1: SignerWithAddress;
+	let deployData: DeployData;
+	let deployConfig: DeployConfig;
+	let USDC: MockToken;
+	let rUSDC: AToken;
+	let onwardIncentiveController: MockOnwardIncentivesController;
+
 	let chefIncentivesController: ChefIncentivesController;
+	let lendingPool: LendingPool;
+	let multiFeeDistribution: MultiFeeDistribution;
+
+	let usdcAddress = '';
+	let rUSDCAddress = '';
+
+	const usdcPerAccount = ethers.utils.parseUnits('1000000000', 6);
+	const depositAmt = ethers.utils.parseUnits('10000', 6);
 
 	before(async () => {
 		const fixture = await setupTest();
 
 		deployer = fixture.deployer;
+		const onwardIncentiveControllerFactory = await ethers.getContractFactory('MockOnwardIncentivesController');
+		onwardIncentiveController = await onwardIncentiveControllerFactory.deploy();
+		await onwardIncentiveController.deployed();
+
+		deployData = fixture.deployData;
+		deployConfig = fixture.deployConfig;
+
+		user1 = fixture.user1;
+		deployer = fixture.deployer;
+
+		usdcAddress = fixture.usdc.address;
+		rUSDCAddress = deployData.allTokens.rUSDC;
 
 		chefIncentivesController = fixture.chefIncentivesController;
+		multiFeeDistribution = fixture.multiFeeDistribution;
+		lendingPool = fixture.lendingPool;
+
+		USDC = <MockToken>await ethers.getContractAt('MockToken', usdcAddress);
+		rUSDC = <AToken>await ethers.getContractAt('AToken', rUSDCAddress);
+
+		await chefIncentivesController.setEligibilityEnabled(false);
+		await chefIncentivesController.setOnwardIncentives(rUSDCAddress, onwardIncentiveController.address);
+		await USDC.mint(user1.address, usdcPerAccount);
+		await USDC.connect(user1).approve(lendingPool.address, ethers.constants.MaxUint256);
 	});
 
 	it('setEmissionSchedule before start', async () => {
@@ -29,18 +67,27 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 		const chef = await upgrades.deployProxy(
 			chefFactory,
 			[
+				deployer.address,
 				deployer.address, // Mock address
-				deployer.address, // Mock address
-				deployer.address, // Mock address
+				deployData.middleFeeDistribution,
 				100,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await chef.deployed();
+		await chef.addPool(deployData.allTokens['rUSDC'], 10);
+			
 
 		const cicStartTimeOffSets = [100, 500, 1000];
 		const cicRewardsPerSecond = [100, 200, 300];
 		await chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets, cicRewardsPerSecond);
+	});
+
+	it('Deposit by User 1', async () => {
+		await zapIntoEligibility(deployer, deployData, '100');
+
+		await lendingPool.deposit(usdcAddress, depositAmt.div(2), deployer.address, 0);
+		await lendingPool.deposit(usdcAddress, depositAmt.div(2), deployer.address, 0);
 	});
 
 	it('manually set rewards', async () => {
@@ -73,6 +120,7 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 
 		await chefIncentivesController.claimAll(deployer.address);
 		assert.equal((await chefIncentivesController.emissionScheduleIndex()).toString(), '1', `get rps from schedule`);
+		await advanceTimeAndBlock(100);
 		await chefIncentivesController.claimAll(deployer.address);
 		assert.equal(
 			(await chefIncentivesController.rewardsPerSecond()).toString(),

@@ -19,8 +19,6 @@ interface IEligibilityDataProvider {
 
 	function lastEligibleStatus(address user) external view returns (bool);
 
-	function isMarketDisqualified(address user) external view returns (bool);
-
 	function rewardEligibleAmount(address token) external view returns (uint256);
 
 	function setDqTime(address _user, uint256 _time) external;
