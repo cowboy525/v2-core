@@ -166,6 +166,83 @@ describe('Radiant OFT: ', function () {
 		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty));
 	});
 
+	it('sendAndCall()', async function () {
+		// ensure they're both starting with correct amounts
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
+
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+
+		const dstGasForCall = ethers.utils.parseEther("1").div(10);
+		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
+
+		await execute(
+			'RadiantOFT',
+			{from: dao, value: fees[0]},
+			'sendAndCall',
+			dao,
+			chainIdDst,
+			toAddressBytes32,
+			sendQty,
+			'0x',
+			dstGasForCall,
+			{
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			}
+		);
+
+		// verify tokens burned on source chain and minted on destination chain
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty));
+	});
+
+	it('sendAndCall() with very few amount', async function () {
+		// ensure they're both starting with correct amounts
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
+
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+
+		const sendQty = BigNumber.from("19900000000"); // amount to be sent across
+		const dust = BigNumber.from("9900000000"); // amount to be sent across
+
+		const dstGasForCall = ethers.utils.parseEther("1").div(10);
+		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
+
+		const treasuryEth0 = await ethers.provider.getBalance(treasury);
+
+		await execute(
+			'RadiantOFT',
+			{from: dao, value: fees[0]},
+			'sendAndCall',
+			dao,
+			chainIdDst,
+			toAddressBytes32,
+			sendQty,
+			'0x',
+			dstGasForCall,
+			{
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			}
+		);
+
+		const treasuryEth1 = await ethers.provider.getBalance(treasury);
+
+		expect(treasuryEth1.sub(treasuryEth0)).to.be.equal(fees[0]);
+
+		// verify tokens burned on source chain and minted on destination chain
+		console.log((await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).toString());
+		console.log(srcSupply.sub(sendQty).add(dust).toString());
+		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty).add(dust));
+		console.log((await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).toString());
+		console.log(dstSupply.add(sendQty).sub(dust).toString());
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty).sub(dust));
+	});
+
 	it('full Bridge flow', async function () {
 		let feeVal = 90;
 		await execute('RadiantOFT', {from: admin}, 'setFeeRatio', feeVal);
