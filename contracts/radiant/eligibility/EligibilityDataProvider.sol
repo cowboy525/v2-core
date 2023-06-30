@@ -13,7 +13,6 @@ import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
-/// @dev All function calls are currently implemented without side effects
 contract EligibilityDataProvider is OwnableUpgradeable {
 
 	/********************** Common Info ***********************/
@@ -82,6 +81,10 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	error OnlyCIC();
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Constructor
 	 * @param _lendingPool Address of lending pool.
@@ -121,6 +124,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @notice Set LP token
 	 */
 	function setLPToken(address _lpToken) external onlyOwner {
+		if (_lpToken == address(0)) revert AddressZero();
 		if (lpToken != address(0)) revert LPTokenSet();
 		lpToken = _lpToken;
 
@@ -143,11 +147,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-		if (_priceToleranceRatio < 8000) {
-			if (_priceToleranceRatio > RATIO_DIVISOR) {
-				revert InvalidRatio();
-			}
-		}
+		if (_priceToleranceRatio < 8000 || _priceToleranceRatio > RATIO_DIVISOR) revert InvalidRatio();
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
@@ -191,14 +191,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Is user DQed due to lock expire or price update
-	 * @param _user's address
-	 */
-	function isMarketDisqualified(address _user) public view returns (bool) {
-		return requiredUsdValue(_user) > 0 && !isEligibleForRewards(_user) && lastEligibleTime(_user) > block.timestamp;
-	}
-
-	/**
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
@@ -222,8 +214,13 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 *  CAUTION: this function only works perfect when the array
 	 *  is ordered by lock time. This is assured when _stake happens.
 	 * @param user's address
+	 * @return lastEligibleTimestamp of the user. Returns 0 if user is not eligible.
 	 */
 	function lastEligibleTime(address user) public view returns (uint256 lastEligibleTimestamp) {
+		if (!isEligibleForRewards(user)) {
+			return 0;
+		}
+
 		uint256 requiredValue = requiredUsdValue(user);
 
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
@@ -247,12 +244,14 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Operate functions ***********************/
 	/**
 	 * @notice Refresh token amount for eligibility
-	 * @param user's address
+	 * @param user The address of the user
+	 * @return currentEligibility The current eligibility status of the user
 	 */
 	function refresh(address user) external returns (bool currentEligibility) {
 		if (msg.sender != address(chef)) revert OnlyCIC();
-		assert(user != address(0));
+		if (user == address(0)) revert AddressZero();
 
+		updatePrice();
 		currentEligibility = isEligibleForRewards(user);
 		if (currentEligibility && disqualifiedTime[user] != 0) {
 			disqualifiedTime[user] = 0;
@@ -270,7 +269,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/********************** Internal functions ***********************/
 
 	/**
-	 * @notice Returns locked RDNT and LP token value in eth
+	 * @notice Returns locked RDNT and LP token value in USD
 	 * @param lockedLP is locked lp amount
 	 */
 	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {

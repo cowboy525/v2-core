@@ -14,7 +14,7 @@ describe('Looping/Leverager', () => {
 	let vdWETH: VariableDebtToken;
 	let wethAddress = '';
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 
 	const loopingLeverageToLtv = (leverage: number) => {
 		return 1 - 1 / leverage;

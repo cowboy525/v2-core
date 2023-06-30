@@ -9,6 +9,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
 import {IBountyManager} from "../../interfaces/IBountyManager.sol";
@@ -20,8 +21,13 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Multi Fee Distribution Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
-contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableUpgradeable, OwnableUpgradeable {
+contract MultiFeeDistribution is
+	IMultiFeeDistribution,
+	Initializable,
+	PausableUpgradeable,
+	OwnableUpgradeable,
+	RecoverERC20
+{
 	using SafeERC20 for IERC20;
 	using SafeERC20 for IMintableToken;
 
@@ -41,9 +47,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/// @notice Duration that rewards loop back
 	uint256 public rewardsLookback;
-
-	/// @notice Multiplier for earnings, fixed to 1
-	// uint256 public constant DEFAULT_MUTLIPLIER = 1;
 
 	/// @notice Default lock index
 	uint256 public constant DEFAULT_LOCK_INDEX = 1;
@@ -138,11 +141,8 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	/// @notice Bounty manager contract
 	address public bountyManager;
 
-	// to prevent unbounded lock length iteration during withdraw/clean
-
 	/********************** Events ***********************/
 
-	// event Staked(address indexed user, uint256 amount, bool locked);
 	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, bool isLP);
 	event Withdrawn(
 		address indexed user,
@@ -153,8 +153,17 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool isLP
 	);
 	event RewardPaid(address indexed user, address indexed rewardToken, uint256 reward);
-	event Recovered(address indexed token, uint256 amount);
 	event Relocked(address indexed user, uint256 amount, uint256 lockIndex);
+	event BountyManagerUpdated(address indexed _bounty);
+	event RewardConverterUpdated(address indexed _rewardConverter);
+	event LockTypeInfoUpdated(uint256[] lockPeriod, uint256[] rewardMultipliers);
+	event AddressesUpdated(
+		IChefIncentivesController _controller,
+		IMiddleFeeDistribution _middleFeeDistribution,
+		address indexed _treasury
+	);
+	event LPTokenUpdated(address indexed _stakingToken);
+	event RewardAdded(address indexed _rewardToken);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -165,21 +174,34 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	error InvalidLockPeriod();
 	error InsufficientPermission();
 	error AlreadyAdded();
+	error AlreadySet();
 	error InvalidType();
 	error ActiveReward();
 	error InvalidAmount();
 	error InvalidEarned();
 	error InvalidTime();
 	error InvalidPeriod();
+	error UnlockTimeNotFound();
+	error InvalidAddress();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
-	 * @dev Constructor
+	 * @dev Initializer
 	 *  First reward MUST be the RDNT token or things will break
 	 *  related to the 50% penalty and distribution to locked balances.
-	 * @param _rdntToken RDNT token address.
-	 * @param _rewardsDuration set reward stream time.
-	 * @param _rewardsLookback reward lookback
+	 * @param _rdntToken RDNT token address
+	 * @param _lockZap LockZap contract address
+	 * @param _dao DAO address
+	 * @param _userlist UserList contract address
+	 * @param priceProvider PriceProvider contract address
+	 * @param _rewardsDuration Duration that rewards are streamed over
+	 * @param _rewardsLookback Duration that rewards loop back
 	 * @param _lockDuration lock duration
+	 * @param _burnRatio Proportion of burn amount
+	 * @param _vestDuration vest duration
 	 */
 	function initialize(
 		address _rdntToken,
@@ -251,6 +273,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (_bounty == address(0)) revert AddressZero();
 		bountyManager = _bounty;
 		minters[_bounty] = true;
+		emit BountyManagerUpdated(_bounty);
 	}
 
 	/**
@@ -260,10 +283,11 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
 		if (_rewardConverter == address(0)) revert AddressZero();
 		rewardConverter = _rewardConverter;
+		emit RewardConverterUpdated(_rewardConverter);
 	}
 
 	/**
-	 * @notice Add a new reward token to be distributed to stakers.
+	 * @notice Sets lock period and reward multipliers.
 	 * @param _lockPeriod lock period array
 	 * @param _rewardMultipliers multipliers per lock period
 	 */
@@ -279,6 +303,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				i++;
 			}
 		}
+		emit LockTypeInfoUpdated(lockPeriod, rewardMultipliers);
 	}
 
 	/**
@@ -297,6 +322,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		incentivesController = _controller;
 		middleFeeDistribution = _middleFeeDistribution;
 		startfleetTreasury = _treasury;
+		emit AddressesUpdated(_controller, _middleFeeDistribution, _treasury);
 	}
 
 	/**
@@ -305,8 +331,9 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function setLPToken(address _stakingToken) external onlyOwner {
 		if (_stakingToken == address(0)) revert AddressZero();
-		if (stakingToken != address(0)) revert AddressZero();
+		if (stakingToken != address(0)) revert AlreadySet();
 		stakingToken = _stakingToken;
+		emit LPTokenUpdated(_stakingToken);
 	}
 
 	/**
@@ -314,7 +341,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @param _rewardToken address
 	 */
 	function addReward(address _rewardToken) external override {
-		if (_rewardToken == address(0)) revert InvalidBurn();
+		if (_rewardToken == address(0)) revert AddressZero();
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
 		rewardTokens.push(_rewardToken);
@@ -322,6 +349,46 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		Reward storage rewardData = rewardData[_rewardToken];
 		rewardData.lastUpdateTime = block.timestamp;
 		rewardData.periodFinish = block.timestamp;
+
+		emit RewardAdded(_rewardToken);
+	}
+
+	/**
+	 * @notice Remove an existing reward token.
+	 * @param _rewardToken address to be removed
+	 */
+	function removeReward(address _rewardToken) external override {
+		if (!minters[msg.sender]) revert InsufficientPermission();
+
+		bool isTokenFound;
+		uint256 indexToRemove;
+
+		uint256 length = rewardTokens.length;
+		for (uint256 i; i < length; i++) {
+			if (rewardTokens[i] == _rewardToken) {
+				isTokenFound = true;
+				indexToRemove = i;
+				break;
+			}
+		}
+
+		if (!isTokenFound) revert InvalidAddress();
+
+
+		// Reward token order is changed, but that doesn't have an impact
+		if (indexToRemove < length - 1) {
+			rewardTokens[indexToRemove] = rewardTokens[length - 1];
+		}
+
+		rewardTokens.pop();
+
+		// Scrub historical reward token data
+		Reward storage rd = rewardData[_rewardToken];
+		rd.lastUpdateTime = 0;
+		rd.periodFinish = 0;
+		rd.balance = 0;
+		rd.rewardPerSecond = 0;
+		rd.rewardPerTokenStored = 0;
 	}
 
 	/********************** View functions ***********************/
@@ -344,6 +411,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	/**
+	 * @notice Set relock status
+	 * @param _status true if auto relock is enabled.
+	 */
+	function setRelock(bool _status) external virtual {
+		autoRelockDisabled[msg.sender] = !_status;
+	}
+
+	/********************** View functions ***********************/
+
+	/**
 	 * @notice Return lock duration.
 	 */
 	function getLockDurations() external view returns (uint256[] memory) {
@@ -358,40 +435,12 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	/**
-	 * @notice Set relock status
-	 * @param _status true if auto relock is enabled.
-	 */
-	function setRelock(bool _status) external virtual {
-		autoRelockDisabled[msg.sender] = !_status;
-	}
-
-	/**
 	 * @notice Returns all locks of a user.
 	 * @param user address.
 	 * @return lockInfo of the user.
 	 */
 	function lockInfo(address user) external view override returns (LockedBalance[] memory) {
 		return userLocks[user];
-	}
-
-	/**
-	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders.
-	 * @param tokenAddress to recover.
-	 * @param tokenAmount to recover.
-	 */
-	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
-		emit Recovered(tokenAddress, tokenAmount);
-	}
-
-	/**
-	 * @notice Withdraw and restake assets.
-	 */
-	function relock() external virtual {
-		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
-		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
-		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
 	}
 
 	/**
@@ -420,7 +469,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		view
 		override
 		returns (
-			uint256,
+			uint256 total,
 			uint256 unlockable,
 			uint256 locked,
 			uint256 lockedWithMultiplier,
@@ -446,7 +495,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				i++;
 			}
 		}
-		return (balances[user].locked, unlockable, locked, lockedWithMultiplier, lockData);
+		total = balances[user].locked;
 	}
 
 	/**
@@ -457,7 +506,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function lockedBalance(address user) public view override returns (uint256 locked) {
 		LockedBalance[] storage locks = userLocks[user];
 		uint256 length = locks.length;
-		for (uint i; i < length; ) {
+		for (uint256 i; i < length; ) {
 			if (locks[i].unlockTime > block.timestamp) {
 				locked = locked + locks[i].amount;
 			}
@@ -469,7 +518,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/**
 	 * @notice Earnings which is locked yet
-	 * @dev Earned balances may be withdrawn immediately for a 50% penalty.
+	 * @dev Earned balances may be withdrawn immediately for an appropriate penalty.
 	 * @return total earnings
 	 * @return unlocked earnings
 	 * @return earningsData which is an array of all infos
@@ -486,7 +535,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				if (idx == 0) {
 					earningsData = new EarnedBalance[](earnings.length - i);
 				}
-				(, uint256 penaltyAmount, , ) = ieeWithdrawableBalances(user, earnings[i].unlockTime);
+				(, uint256 penaltyAmount, , ) = ieeWithdrawableBalance(user, earnings[i].unlockTime);
 				earningsData[idx].amount = earnings[i].amount;
 				earningsData[idx].unlockTime = earnings[i].unlockTime;
 				earningsData[idx].penalty = penaltyAmount;
@@ -633,14 +682,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		uint256 length = rewardTokens.length;
 		for (uint256 i; i < length; ) {
 			address token = rewardTokens[i];
-			_notifyUnseenReward(token);
-			uint256 reward = rewards[onBehalf][token] / 1e12;
-			if (reward > 0) {
-				rewards[onBehalf][token] = 0;
-				rewardData[token].balance = rewardData[token].balance - reward;
+			if (token != address(rdntToken)) {
+				_notifyUnseenReward(token);
+				uint256 reward = rewards[onBehalf][token] / 1e12;
+				if (reward > 0) {
+					rewards[onBehalf][token] = 0;
+					rewardData[token].balance = rewardData[token].balance - reward;
 
-				IERC20(token).safeTransfer(rewardConverter, reward);
-				emit RewardPaid(onBehalf, token, reward);
+					IERC20(token).safeTransfer(rewardConverter, reward);
+					emit RewardPaid(onBehalf, token, reward);
+				}
 			}
 			unchecked {
 				i++;
@@ -651,6 +702,15 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	/********************** Operate functions ***********************/
+
+	/**
+	 * @notice Withdraw and restake assets.
+	 */
+	function relock() external virtual {
+		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
+		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
+		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
+	}
 
 	/**
 	 * @notice Stake tokens to receive rewards.
@@ -676,7 +736,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (bountyManager != address(0)) {
 			if (amount < IBountyManager(bountyManager).minDLPBalance()) revert InvalidAmount();
 		}
-		if (typeIndex >= lockPeriod.length) revert InvalidAmount();
+		if (typeIndex >= lockPeriod.length) revert InvalidType();
 
 		_updateReward(onBehalfOf);
 
@@ -706,17 +766,37 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * rewardMultipliers[typeIndex]);
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * rewardMultipliers[typeIndex]);
 
-		_insertLock(
-			onBehalfOf,
-			LockedBalance({
-				amount: amount,
-				unlockTime: block.timestamp + lockPeriod[typeIndex],
-				multiplier: rewardMultipliers[typeIndex],
-				duration: lockPeriod[typeIndex]
-			})
-		);
-
-		userlist.addToList(onBehalfOf);
+		uint256 userLocksLength = userLocks[onBehalfOf].length;
+		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
+		if (userLocksLength > 0){
+			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
+			uint256 unlockDay = (block.timestamp + lockPeriod[typeIndex]) / 1 days;
+			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
+				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount + amount;
+			} else {
+				_insertLock(
+					onBehalfOf,
+					LockedBalance({
+						amount: amount,
+						unlockTime: block.timestamp + lockPeriod[typeIndex],
+						multiplier: rewardMultipliers[typeIndex],
+						duration: lockPeriod[typeIndex]
+					})
+				);
+				userlist.addToList(onBehalfOf);
+			}
+		} else {
+			_insertLock(
+				onBehalfOf,
+				LockedBalance({
+					amount: amount,
+					unlockTime: block.timestamp + lockPeriod[typeIndex],
+					multiplier: rewardMultipliers[typeIndex],
+					duration: lockPeriod[typeIndex]
+				})
+			);
+			userlist.addToList(onBehalfOf);
+		}
 
 		if (!isRelock) {
 			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), transferAmount);
@@ -784,14 +864,27 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		if (withPenalty) {
 			bal.earned = bal.earned + amount;
 			LockedBalance[] storage earnings = userEarnings[user];
-			uint256 unlockTime = block.timestamp + vestDuration;
-			earnings.push(
-				LockedBalance({amount: amount, unlockTime: unlockTime, multiplier: 1, duration: vestDuration})
-			);
+			
+			uint256 currentDay = block.timestamp / 1 days;
+			uint256 lastIndex = earnings.length > 0 ? earnings.length - 1 : 0;
+			uint256 vestingDurationDays = vestDuration / 1 days;
+
+			// We check if an entry for the current day already exists. If yes, add new amount to that entry
+			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestingDurationDays) {
+				earnings[lastIndex].amount = earnings[lastIndex].amount + amount;
+			} else {
+				// If there is no entry for the current day, create a new one
+				uint256 unlockTime = block.timestamp + vestDuration;
+				earnings.push(LockedBalance({
+					amount: amount,
+					unlockTime: unlockTime,
+					multiplier: 1,
+					duration: vestDuration
+				}));
+			}
 		} else {
 			bal.unlocked = bal.unlocked + amount;
 		}
-		//emit Staked(user, amount, false);
 	}
 
 	/**
@@ -802,7 +895,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function withdraw(uint256 amount) external {
 		address _address = msg.sender;
-		if (amount == 0) revert InvalidAmount();
+		if (amount == 0) revert AmountZero();
 
 		uint256 penaltyAmount;
 		uint256 burnAmount;
@@ -819,22 +912,29 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 			for (i = 0; ; i++) {
 				uint256 earnedAmount = userEarnings[_address][i].amount;
 				if (earnedAmount == 0) continue;
-				(, uint256 penaltyFactor, , ) = _penaltyInfo(userEarnings[_address][i]);
+				(
+					uint256 withdrawAmount,
+					uint256 penaltyFactor,
+					uint256 newPenaltyAmount,
+					uint256 newBurnAmount
+				) = _penaltyInfo(userEarnings[_address][i]);
 
-				// Amount required from this lock, taking into account the penalty
-				uint256 requiredAmount = remaining * WHOLE / (WHOLE - penaltyFactor);
-				if (requiredAmount >= earnedAmount) {
-					requiredAmount = earnedAmount;
-					remaining = remaining - (earnedAmount * (WHOLE - penaltyFactor) / WHOLE); // remaining -= earned * (1 - pentaltyFactor)
+				uint256 requiredAmount = earnedAmount;
+				if (remaining >= withdrawAmount) {
+					remaining = remaining - withdrawAmount;
 					if (remaining == 0) i++;
 				} else {
+					requiredAmount = remaining * WHOLE / (WHOLE - penaltyFactor);
 					userEarnings[_address][i].amount = earnedAmount - requiredAmount;
 					remaining = 0;
+
+					newPenaltyAmount = requiredAmount * penaltyFactor / WHOLE;
+					newBurnAmount = newPenaltyAmount * burn / WHOLE;
 				}
 				sumEarned = sumEarned - requiredAmount;
 
-				penaltyAmount = penaltyAmount + (requiredAmount * penaltyFactor / WHOLE); // penalty += amount * penaltyFactor
-				burnAmount = burnAmount + (penaltyAmount * burn / WHOLE); // burn += penalty * burnFactor
+				penaltyAmount = penaltyAmount + newPenaltyAmount;
+				burnAmount = burnAmount + newBurnAmount;
 
 				if (remaining == 0) {
 					break;
@@ -860,7 +960,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	}
 
 	/**
-	 * @notice Returns withdrawable balances at exact unlock time
+	 * @notice Returns withdrawable balance at exact unlock time
 	 * @param user address for withdraw
 	 * @param unlockTime exact unlock time
 	 * @return amount total withdrawable amount
@@ -868,21 +968,21 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 * @return burnAmount amount to burn
 	 * @return index of earning
 	 */
-	function ieeWithdrawableBalances(
+	function ieeWithdrawableBalance(
 		address user,
 		uint256 unlockTime
 	) internal view returns (uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) {
 		uint256 length = userEarnings[user].length;
-		for (uint256 i; i < length; ) {
-			if (userEarnings[user][i].unlockTime == unlockTime) {
-				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][i]);
-				index = i;
-				break;
+		for (index; index < length; ) {
+			if (userEarnings[user][index].unlockTime == unlockTime) {
+				(amount, , penaltyAmount, burnAmount) = _penaltyInfo(userEarnings[user][index]);
+				return (amount, penaltyAmount, burnAmount, index);
 			}
 			unchecked {
-				i++;
+				index++;
 			}
 		}
+		revert UnlockTimeNotFound();
 	}
 
 	/**
@@ -893,14 +993,10 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	function individualEarlyExit(bool claimRewards, uint256 unlockTime) external {
 		address onBehalfOf = msg.sender;
 		if (unlockTime <= block.timestamp) revert InvalidTime();
-		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalances(
+		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount, uint256 index) = ieeWithdrawableBalance(
 			onBehalfOf,
 			unlockTime
 		);
-
-		if (index >= userEarnings[onBehalfOf].length) {
-			return;
-		}
 
 		uint256 length = userEarnings[onBehalfOf].length;
 		for (uint256 i = index + 1; i < length; ) {
@@ -1018,7 +1114,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 
 	/**
 	 * @notice Notify unseen rewards.
-	 * @dev for rewards other than stakingToken, every 24 hours we check if new
+	 * @dev for rewards other than RDNT token, every 24 hours we check if new
 	 *  rewards were sent to the contract or accrued via aToken interest.
 	 * @param token address
 	 */
@@ -1038,13 +1134,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		}
 	}
 
+	/**
+	 * @notice Hook to be called on upgrade.
+	 */
 	function onUpgrade() public {}
 
 	/**
 	 * @notice Sets the loopback period
 	 * @param _lookback in seconds
 	 */
-	function setLookback(uint256 _lookback) public onlyOwner {
+	function setLookback(uint256 _lookback) external onlyOwner {
 		rewardsLookback = _lookback;
 	}
 
@@ -1065,7 +1164,6 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 				rewardData[token].balance = rewardData[token].balance - reward;
 
 				IERC20(token).safeTransfer(_user, reward);
-				// TODO: ask if bulk event is possible. Roughly 50% cheaper
 				emit RewardPaid(_user, token, reward);
 			}
 			unchecked {
@@ -1167,7 +1265,7 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 		bool doTransfer,
 		uint256 limit
 	) internal whenNotPaused returns (uint256 amount) {
-		require(isRelockAction == false || _address == msg.sender || lockZap == msg.sender);
+		if (isRelockAction && _address != msg.sender && lockZap != msg.sender) revert InsufficientPermission();
 		_updateReward(_address);
 
 		uint256 amountWithMultiplier;
@@ -1306,5 +1404,16 @@ contract MultiFeeDistribution is IMultiFeeDistribution, Initializable, PausableU
 	 */
 	function requalify() external {
 		requalifyFor(msg.sender);
+	}
+
+	/**
+	 * @notice Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders.
+	 * @param tokenAddress to recover.
+	 * @param tokenAmount to recover.
+	 */
+	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
+		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
+		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+		emit Recovered(tokenAddress, tokenAmount);
 	}
 }

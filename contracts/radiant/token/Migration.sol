@@ -8,15 +8,14 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 /// @title Migration contract from V1 to V2
 /// @author Radiant team
-/// @dev All function calls are currently implemented without side effects
 contract Migration is Ownable, Pausable {
 	using SafeERC20 for ERC20;
 
 	/// @notice V1 of RDNT
-	ERC20 public tokenV1;
+	ERC20 public immutable tokenV1;
 
 	/// @notice V2 of RDNT
-	ERC20 public tokenV2;
+	ERC20 public immutable tokenV2;
 
 	/// @notice emitted when migrate v1 token into v2
 	event Migrate(address indexed user, uint256 amount);

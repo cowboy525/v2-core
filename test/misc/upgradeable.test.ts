@@ -41,7 +41,8 @@ describe('Upgradeable Contracts', () => {
 		const MockNewChefIncentivesController = await ethers.getContractFactory('MockNewChefIncentivesController');
 		const mockNewChefIncentivesController = await upgrades.upgradeProxy(
 			deployData.chefIncentivesController,
-			MockNewChefIncentivesController
+			MockNewChefIncentivesController,
+			{unsafeAllow: ['constructor']}
 		);
 		const mockNewFunction = await mockNewChefIncentivesController.mockNewFunction();
 
@@ -55,7 +56,8 @@ describe('Upgradeable Contracts', () => {
 		const MockNewMiddleFeeDistribution = await ethers.getContractFactory('MockNewMiddleFeeDistribution');
 		const mockNewMiddleFeeDistribution = await upgrades.upgradeProxy(
 			deployData.middleFeeDistribution,
-			MockNewMiddleFeeDistribution
+			MockNewMiddleFeeDistribution,
+			{unsafeAllow: ['constructor']}
 		);
 		const mockNewFunction = await mockNewMiddleFeeDistribution.mockNewFunction();
 
@@ -66,7 +68,8 @@ describe('Upgradeable Contracts', () => {
 		const MockNewMultiFeeDistribution = await ethers.getContractFactory('MockNewMultiFeeDistribution');
 		const mockNewMultiFeeDistribution = await upgrades.upgradeProxy(
 			deployData.multiFeeDistribution,
-			MockNewMultiFeeDistribution
+			MockNewMultiFeeDistribution,
+			{unsafeAllow: ['constructor']}
 		);
 		const mockNewFunction = await mockNewMultiFeeDistribution.mockNewFunction();
 
@@ -75,7 +78,7 @@ describe('Upgradeable Contracts', () => {
 
 	it('Upgradeable PriceProvider works.', async () => {
 		const MockNewPriceProvider = await ethers.getContractFactory('MockNewPriceProvider');
-		const mockNewPriceProvider = await upgrades.upgradeProxy(deployData.priceProvider, MockNewPriceProvider);
+		const mockNewPriceProvider = await upgrades.upgradeProxy(deployData.priceProvider, MockNewPriceProvider, {unsafeAllow: ['constructor']});
 		const mockNewFunction = await mockNewPriceProvider.mockNewFunction();
 
 		assert.equal(mockNewFunction, true, `Upgrade PriceProvider`);
