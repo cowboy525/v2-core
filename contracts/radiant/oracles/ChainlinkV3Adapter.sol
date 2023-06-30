@@ -2,9 +2,8 @@
 pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
@@ -26,6 +25,10 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	uint256 public ethLatestTimestamp;
 	/// @notice Latest timestamp of token price update
 	uint256 public tokenLatestTimestamp;
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

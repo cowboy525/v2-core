@@ -85,6 +85,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		return LENDINGPOOL_REVISION;
 	}
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
 	 * LendingPoolAddressesProvider of the market.

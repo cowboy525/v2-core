@@ -7,11 +7,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-
 /// @title UniV3TwapOracle Contract
 /// @author Radiant
-contract UniV3TwapOracle is Initializable, BaseOracle {
+contract UniV3TwapOracle is BaseOracle {
 	using SafeMath for uint256;
 
 	/// @notice Uniswap V3 pool address
@@ -38,8 +36,14 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	/********************** Events ***********************/
 
 	event ObservationCardinalityIncreased(uint16 indexed numCardinals);
+
 	event TWAPLookbackSecUpdated(uint32 indexed _secs);
+	
 	event TokenForPricingToggled();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

@@ -49,6 +49,10 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 		return CONFIGURATOR_REVISION;
 	}
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	function initialize(ILendingPoolAddressesProvider provider) public initializer {
 		addressesProvider = provider;
 		pool = ILendingPool(addressesProvider.getLendingPool());

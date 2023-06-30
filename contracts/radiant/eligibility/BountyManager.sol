@@ -5,10 +5,9 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 import {IMultiFeeDistribution, IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
@@ -72,6 +71,10 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	error Ineligible();
 	error Override();
 	error InvalidSlippage();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initialize

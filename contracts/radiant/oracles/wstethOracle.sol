@@ -1,5 +1,5 @@
 pragma solidity ^0.8.0;
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../interfaces/IChainlinkAggregator.sol";
 import "../../interfaces/AggregatorV3Interface.sol";
 import "../../interfaces/IBaseOracle.sol";
@@ -18,6 +18,10 @@ contract WSTETHOracle is OwnableUpgradeable {
 	error StalePrice();
 
 	error InvalidPrice();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer

@@ -87,7 +87,7 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 		middle = await upgrades.deployProxy(
 			middleFactory,
 			[radiant.address, mfd.address, mfd.address, mfd.address], //middle should be aaveoracle
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await middle.deployed();
 	});

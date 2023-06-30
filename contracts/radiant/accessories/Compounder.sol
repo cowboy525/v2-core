@@ -94,6 +94,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Reward to base swap route
 	mapping(address => address[]) public rewardToBaseRoute;
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _uniRouter Uniswap router address

@@ -185,6 +185,10 @@ contract MultiFeeDistribution is
 	error UnlockTimeNotFound();
 	error InvalidAddress();
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @dev Initializer
 	 *  First reward MUST be the RDNT token or things will break

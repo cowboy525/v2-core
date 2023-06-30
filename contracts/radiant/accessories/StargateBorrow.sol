@@ -106,6 +106,10 @@ contract StargateBorrow is OwnableUpgradeable {
 	/// @notice Emitted when new slippage is set too high
 	error SlippageSetToHigh();
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Constructor
 	 * @param _router Stargate Router address
