@@ -59,9 +59,9 @@ contract UniV3TwapOracle is BaseOracle {
 		address _ethChainlinkFeed,
 		uint32 _lookbackSecs
 	) external initializer {
-		require(_pair != address(0), "pair is 0 address");
-		require(_rdnt != address(0), "rdnt is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		if (_pair == address(0)) revert AddressZero();
+		if (_rdnt == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
 		if (_lookbackSecs == 0) revert InvalidLoopbackSecs();
 
 		pool = IUniswapV3Pool(_pair);

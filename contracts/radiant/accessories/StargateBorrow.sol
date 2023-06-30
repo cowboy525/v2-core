@@ -108,10 +108,12 @@ contract StargateBorrow is OwnableUpgradeable {
 
 	error InvalidRatio();
 
-	error ZeroAddress();
+	error AddressZero();
 
 	/// @notice Emitted when new slippage is set too high
 	error SlippageSetToHigh();
+
+	error LengthMismatch();
 
 	constructor() {
 		_disableInitializers();
@@ -135,11 +137,11 @@ contract StargateBorrow is OwnableUpgradeable {
 		uint256 _xChainBorrowFeePercent,
 		uint256 _maxSlippage
 	) external initializer {
-		if (address(_router) == address(0)) revert ZeroAddress();
-		if (address(_lendingPool) == address(0)) revert ZeroAddress();
-		if (address(_weth) == address(0)) revert ZeroAddress();
-		if (_treasury == address(0)) revert ZeroAddress();
-		if (_xChainBorrowFeePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
+		if (address(_router) == address(0)) revert AddressZero();
+		if (address(_lendingPool) == address(0)) revert AddressZero();
+		if (address(_weth) == address(0)) revert AddressZero();
+		if (_treasury == address(0)) revert AddressZero();
+		if (_xChainBorrowFeePercent > MAX_REASONABLE_FEE) revert AddressZero();
 		if (_maxSlippage < MAX_SLIPPAGE) revert SlippageSetToHigh();
 
 		router = _router;
@@ -159,7 +161,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param _daoTreasury DAO Treasury address.
 	 */
 	function setDAOTreasury(address _daoTreasury) external onlyOwner {
-		require(_daoTreasury != address(0), "daoTreasury is 0 address");
+		if (_daoTreasury == address(0)) revert AddressZero();
 		daoTreasury = _daoTreasury;
 		emit DAOTreasuryUpdated(_daoTreasury);
 	}
@@ -180,7 +182,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param poolIDs array.
 	 */
 	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
-		require(assets.length == poolIDs.length, "length mismatch");
+		if (assets.length != poolIDs.length) revert LengthMismatch();
 		for (uint256 i = 0; i < assets.length; i += 1) {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 		}
@@ -279,6 +281,11 @@ contract StargateBorrow is OwnableUpgradeable {
 		);
 	}
 
+	/**
+	 * @notice Allows owner to recover ETH locked in this contract.
+	 * @param to ETH receiver
+	 * @param value ETH amount
+	 */
 	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
 		TransferHelper.safeTransferETH(to, value);
 	}

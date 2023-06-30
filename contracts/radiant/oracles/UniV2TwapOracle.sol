@@ -46,6 +46,16 @@ contract UniV2TwapOracle is BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	error InvalidToken();
+
+	error NoReserves();
+
+	error PeriodBelowMin();
+
+	error PeriodNotElapsed();
+
+	error PriceIsStale();
+
 	/********************** Events ***********************/
 
 	event PeriodUpdated(uint256 indexed _period);
@@ -75,9 +85,9 @@ contract UniV2TwapOracle is BaseOracle {
 		uint256 _consultLeniency,
 		bool _allowStaleConsults
 	) external initializer {
-		require(_pair != address(0), "pair is 0 address");
-		require(_rdnt != address(0), "rdnt is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		if (_pair == address(0)) revert AddressZero();
+		if (_rdnt == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
 
 		pair = IUniswapV2Pair(_pair);
 		token0 = pair.token0();
@@ -89,9 +99,8 @@ contract UniV2TwapOracle is BaseOracle {
 		uint112 reserve1;
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 
-		require(reserve0 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
-		require(reserve1 != 0, "NO_RESERVES"); // Ensure that there's liquidity in the pair
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		if (reserve0 == 0 || reserve1 == 0) revert NoReserves(); // Ensure that there's liquidity in the pair
+		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
 
 		period = _period;
 		consultLeniency = _consultLeniency;
@@ -105,7 +114,7 @@ contract UniV2TwapOracle is BaseOracle {
 	 * @param _period TWAP period.
 	 */
 	function setPeriod(uint256 _period) external onlyOwner {
-		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
+		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
 		period = _period;
 		emit PeriodUpdated(_period);
 	}
@@ -152,7 +161,7 @@ contract UniV2TwapOracle is BaseOracle {
 		}
 
 		// Ensure that at least one full period has passed since the last update
-		require(timeElapsed >= period, "PERIOD_NOT_ELAPSED");
+		if (timeElapsed < period) revert PeriodNotElapsed();
 
 		// Overflow is desired, casting never truncates
 		// Cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
@@ -176,12 +185,12 @@ contract UniV2TwapOracle is BaseOracle {
 		}
 
 		// Ensure that the price is not stale
-		require((timeElapsed < (period + consultLeniency)) || allowStaleConsults, "PRICE_IS_STALE_CALL_UPDATE");
+		if ((timeElapsed >= (period + consultLeniency)) && !allowStaleConsults) revert PriceIsStale();
 
 		if (_token == token0) {
 			amountOut = price0Average.mul(_amountIn).decode144();
 		} else {
-			require(_token == token1, "UniswapPairOracle: INVALID_TOKEN");
+			if (_token != token1) revert InvalidToken();
 			amountOut = price1Average.mul(_amountIn).decode144();
 		}
 	}

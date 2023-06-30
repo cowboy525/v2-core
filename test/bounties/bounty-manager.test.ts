@@ -177,7 +177,7 @@ describe(`BountyManager:`, async () => {
 	it('can be gated by a whitelist', async () => {
 		await bountyManager.connect(deployer).changeWL(true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.be.revertedWith(
-			'!whiteliested'
+			'NotWhitelisted'
 		);
 		await bountyManager.connect(deployer).addAddressToWL(hunter.address, true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.not.be.reverted;

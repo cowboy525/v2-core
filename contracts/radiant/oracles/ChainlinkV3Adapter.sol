@@ -26,6 +26,8 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	/// @notice Latest timestamp of token price update
 	uint256 public tokenLatestTimestamp;
 
+	error AddressZero();
+
 	constructor() {
 		_disableInitializers();
 	}
@@ -37,9 +39,9 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	 * @param _tokenChainlinkFeed Chainlink price feed for token.
 	 */
 	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
-		require(_token != address(0), "token is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
-		require(_tokenChainlinkFeed != address(0), "tokenChainlinkFeed is 0 address");
+		if (_token == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
+		if (_tokenChainlinkFeed == address(0)) revert AddressZero();
 		ethChainlinkFeed = AggregatorV3Interface(_ethChainlinkFeed);
 		tokenChainlinkFeed = AggregatorV3Interface(_tokenChainlinkFeed);
 		token = _token;

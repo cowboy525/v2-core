@@ -81,7 +81,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @dev Throws if called by any account other than the admin or owner.
 	 */
 	modifier onlyAdminOrOwner() {
-		require(admin == _msgSender() || owner() == _msgSender(), "caller is not the admin or owner");
+		if(admin != _msgSender() && owner() != _msgSender()) revert InsufficientPermission();
 		_;
 	}
 

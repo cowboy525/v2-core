@@ -49,7 +49,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	modifier isWhitelisted() {
 		if (whitelistActive) {
-			require(whitelist[msg.sender] || msg.sender == address(this), "!whiteliested");
+			if (!whitelist[msg.sender] && msg.sender != address(this)) revert NotWhitelisted();
 		}
 		_;
 	}
@@ -72,6 +72,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	error Override();
 	error InvalidSlippage();
 	error ActionTypeIndexOutOfBounds();
+	error NotWhitelisted();
 
 	constructor() {
 		_disableInitializers();

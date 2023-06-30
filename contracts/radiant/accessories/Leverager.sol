@@ -65,13 +65,21 @@ contract Leverager is Ownable {
 	/// @notice Emitted when treasury is updated
 	event TreasuryUpdated(address indexed _treasury);
 
+	error AddressZero();
+
+	error ReceiveNotAllowed();
+
+	error FallbackNotAllowed();
+
+	error InsufficientPermission();
+
+	error EthTransferFailed();
+
 	/// @notice Disallow a loop count of 0
 	error InvalidLoopCount();
 
 	/// @notice Emitted when ratio is invalid
 	error InvalidRatio();
-
-	error ZeroAddress();
 
 	/// @notice Thrown when deployer sets the margin too high
 	error MarginTooHigh();
@@ -99,13 +107,13 @@ contract Leverager is Ownable {
 		address _treasury,
 		uint256 _zapMargin
 	) {
-		if (address(_lendingPool) == address(0)) revert ZeroAddress();
-		if (address(_rewardEligibleDataProvider) == address(0)) revert ZeroAddress();
-		if (address(_aaveOracle) == address(0)) revert ZeroAddress();
-		if (address(_lockZap) == address(0)) revert ZeroAddress();
-		if (address(_cic) == address(0)) revert ZeroAddress();
-		if (address(_weth) == address(0)) revert ZeroAddress();
-		if (_treasury == address(0)) revert ZeroAddress();
+		if (address(_lendingPool) == address(0)) revert AddressZero();
+		if (address(_rewardEligibleDataProvider) == address(0)) revert AddressZero();
+		if (address(_aaveOracle) == address(0)) revert AddressZero();
+		if (address(_lockZap) == address(0)) revert AddressZero();
+		if (address(_cic) == address(0)) revert AddressZero();
+		if (address(_weth) == address(0)) revert AddressZero();
+		if (_treasury == address(0)) revert AddressZero();
 		if (_feePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
 		if(_zapMargin >= 10) revert MarginTooHigh();
 
@@ -124,14 +132,14 @@ contract Leverager is Ownable {
 	 * @dev Only WETH contract is allowed to transfer ETH here. Prevent other addresses to send Ether to this contract.
 	 */
 	receive() external payable {
-		require(msg.sender == address(weth), "Receive not allowed");
+		if (msg.sender != address(weth)) revert ReceiveNotAllowed();
 	}
 
 	/**
 	 * @dev Revert fallback calls
 	 */
 	fallback() external payable {
-		revert("Fallback not allowed");
+		revert FallbackNotAllowed();
 	}
 
 	/**
@@ -150,7 +158,7 @@ contract Leverager is Ownable {
 	 * @param _treasury address
 	 */
 	function setTreasury(address _treasury) external onlyOwner {
-		require(_treasury != address(0), "treasury is 0 address");
+		if (_treasury == address(0)) revert AddressZero();
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}
@@ -378,7 +386,7 @@ contract Leverager is Ownable {
 	 * @return liquidity amount by zapping
 	 **/
 	function zapWETHWithBorrow(uint256 amount, address borrower) public returns (uint256 liquidity) {
-		require(msg.sender == borrower || msg.sender == address(lendingPool), "!borrower||lendingpool");
+		if (msg.sender != borrower && msg.sender != address(lendingPool)) revert InsufficientPermission();
 
 		if (amount > 0) {
 			uint16 referralCode = 0;
