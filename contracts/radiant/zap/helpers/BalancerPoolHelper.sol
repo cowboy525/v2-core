@@ -124,8 +124,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		IERC20 lp = IERC20(lpTokenAddr);
 		IERC20 weth = IERC20(wethAddr);
 
-		outToken.safeApprove(vaultAddr, type(uint256).max);
-		inToken.safeApprove(vaultAddr, type(uint256).max);
+		outToken.forceApprove(vaultAddr, type(uint256).max);
+		inToken.forceApprove(vaultAddr, type(uint256).max);
 		weth.approve(vaultAddr, type(uint256).max);
 
 		IAsset[] memory assets = new IAsset[](2);
@@ -354,50 +354,6 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	/**
-	 * @notice Perform swap operation
-	 * @param _amount Input amount
-	 * @param _tokenInAddress Input token address
-	 * @param _tokenOutAddress Output token address
-	 * @param _lpAddr LP address
-	 */
-	function swap(
-		uint256 _amount,
-		address _tokenInAddress,
-		address _tokenOutAddress,
-		address _lpAddr
-	) internal returns (uint256 amountOut) {
-		IAsset tokenInAddress = IAsset(_tokenInAddress);
-		IAsset tokenOutAddress = IAsset(_tokenOutAddress);
-
-		bytes32 _poolId = IWeightedPool(_lpAddr).getPoolId();
-
-		bytes memory userDataEncoded = abi.encode(); //https://dev.balancer.fi/helpers/encoding
-		IVault.SingleSwap memory singleSwapRequest = IVault.SingleSwap(
-			_poolId,
-			IVault.SwapKind.GIVEN_IN,
-			tokenInAddress,
-			tokenOutAddress,
-			_amount,
-			userDataEncoded
-		);
-		IVault.FundManagement memory fundManagementRequest = IVault.FundManagement(
-			address(this),
-			false,
-			payable(address(this)),
-			false
-		);
-
-		uint256 limit = 0;
-
-		amountOut = IVault(vaultAddr).swap(
-			singleSwapRequest,
-			fundManagementRequest,
-			limit,
-			(block.timestamp + 3 minutes)
-		);
-	}
-
-	/**
 	 * @notice Set lockzap contract
 	 */
 	function setLockZap(address _lockZap) external onlyOwner {
@@ -464,7 +420,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 		uint256 currentAllowance = IERC20(_inToken).allowance(address(this), vaultAddr);
 		if (_amount > currentAllowance) {
-			IERC20(_inToken).safeIncreaseAllowance(vaultAddr, _amount - currentAllowance);
+			IERC20(_inToken).forceApprove(vaultAddr, _amount);
 		}
 		IVault(vaultAddr).swap(singleSwap, funds, _minAmountOut, block.timestamp);
 	}

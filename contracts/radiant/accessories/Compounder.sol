@@ -256,7 +256,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function _convertBaseToLPandStake(address _user) internal returns (uint256 liquidity) {
 		uint256 baseBal = IERC20(baseToken).balanceOf(address(this));
 		if (baseBal != 0) {
-			IERC20(baseToken).safeApprove(lockZap, baseBal);
+			IERC20(baseToken).forceApprove(lockZap, baseBal);
 			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user);
 		}
 	}
@@ -398,7 +398,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {
-				IERC20(baseToken).safeApprove(uniRouter, _wethIn);
+				IERC20(baseToken).forceApprove(uniRouter, _wethIn);
 				uint256[] memory amounts = IUniswapV2Router01(uniRouter).swapExactTokensForTokens(
 					_wethIn,
 					0,

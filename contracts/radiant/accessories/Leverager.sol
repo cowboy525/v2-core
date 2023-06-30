@@ -384,7 +384,7 @@ contract Leverager is Ownable {
 			uint16 referralCode = 0;
 			lendingPool.borrow(address(weth), amount, 2, referralCode, borrower);
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
-				IERC20(address(weth)).safeApprove(address(lockZap), type(uint256).max);
+				IERC20(address(weth)).forceApprove(address(lockZap), type(uint256).max);
 			}
 			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower);
 		}
@@ -413,10 +413,10 @@ contract Leverager is Ownable {
 	 **/
 	function _approve(address asset) internal {
 		if (IERC20(asset).allowance(address(this), address(lendingPool)) == 0) {
-			IERC20(asset).safeApprove(address(lendingPool), type(uint256).max);
+			IERC20(asset).forceApprove(address(lendingPool), type(uint256).max);
 		}
 		if (IERC20(asset).allowance(address(this), address(treasury)) == 0) {
-			IERC20(asset).safeApprove(treasury, type(uint256).max);
+			IERC20(asset).forceApprove(treasury, type(uint256).max);
 		}
 	}
 
