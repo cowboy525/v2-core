@@ -108,7 +108,7 @@ contract StargateBorrow is OwnableUpgradeable {
 
 	error InvalidRatio();
 
-	error ZeroAddress();
+	error AddressZero();
 
 	/// @notice Emitted when new slippage is set too high
 	error SlippageSetToHigh();

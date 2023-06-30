@@ -28,8 +28,6 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 
 	error AddressZero();
 
-	error InvalidPrice();
-
 	constructor() {
 		_disableInitializers();
 	}
