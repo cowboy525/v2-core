@@ -187,4 +187,10 @@ describe(`BountyManager:`, async () => {
 		await bountyManager.connect(deployer).changeWL(true);
 		quote = await bountyManager.connect(hunter).quote(user1.address);
 	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 4)).to.be.revertedWith(
+			'ActionTypeIndexOutOfBounds'
+		);
+	});
 });

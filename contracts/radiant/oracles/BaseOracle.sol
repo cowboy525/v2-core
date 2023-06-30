@@ -2,15 +2,13 @@
 pragma solidity 0.8.12;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -30,6 +28,15 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 
 	error FallbackNotSet();
 
+	/********************** Events ***********************/
+	event FallbackOracleUpdated(address indexed _fallback);
+
+	event FallbackOracleEnabled(bool indexed _enabled);
+
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _token Token address.
@@ -45,18 +52,20 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @notice Sets fallback oracle
 	 * @param _fallback Oracle address for fallback.
 	 */
-	function setFallback(address _fallback) public onlyOwner {
+	function setFallback(address _fallback) external onlyOwner {
 		if (_fallback == address(0)) revert AddressZero();
 		fallbackOracle = IBaseOracle(_fallback);
+		emit FallbackOracleUpdated(_fallback);
 	}
 
 	/**
 	 * @notice Enable/Disable use of fallback oracle
 	 * @param _enabled Boolean value.
 	 */
-	function enableFallback(bool _enabled) public onlyOwner {
+	function enableFallback(bool _enabled) external onlyOwner {
 		if (address(fallbackOracle) == (address(0))) revert FallbackNotSet();
 		fallbackEnabled = _enabled;
+		emit FallbackOracleEnabled(_enabled);
 	}
 
 	/**
@@ -75,7 +84,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns USD price in ETH
+	 * @notice Returns price in ETH
 	 * @dev supports 18 decimal token
 	 * @return price of token in decimal 8.
 	 */
@@ -99,4 +108,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @dev implement in child contract
 	 */
 	function consult() public view virtual returns (uint256) {}
+
+	// Allowing for storage vars to be added/shifted above without effecting any inheriting contracts/proxies
+	uint256[50] private __gap;
 }

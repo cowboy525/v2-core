@@ -1,19 +1,17 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
 /// @title PriceProvider Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract PriceProvider is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -34,6 +32,20 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	error AddressZero();
 
 	error InvalidOracle();
+
+	/********************** Events ***********************/
+
+	event OracleUpdated(address indexed _newOracle);
+
+	event PoolHelperUpdated(address indexed _poolHelper);
+
+	event AggregatorUpdated(address indexed _baseTokenPriceInUsdProxyAggregator);
+	
+	event UsePoolUpdated(bool indexed _usePool);
+	
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -121,6 +133,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setOracle(address _newOracle) external onlyOwner {
 		if (_newOracle == address(0)) revert AddressZero();
 		oracle = IBaseOracle(_newOracle);
+		emit OracleUpdated(_newOracle);
 	}
 
 	/**
@@ -129,6 +142,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
 		if (getLpTokenPrice() == 0) revert InvalidOracle();
+		emit PoolHelperUpdated(_poolHelper);
 	}
 
 	/**
@@ -137,6 +151,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
 		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
 		if (getLpTokenPriceUsd() == 0) revert InvalidOracle();
+		emit AggregatorUpdated(_baseTokenPriceInUsdProxyAggregator);
 	}
 
 	/**
@@ -144,6 +159,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function setUsePool(bool _usePool) external onlyOwner {
 		usePool = _usePool;
+		emit UsePoolUpdated(_usePool);
 	}
 
 	/**

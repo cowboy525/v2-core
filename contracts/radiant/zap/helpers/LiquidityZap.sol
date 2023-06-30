@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.12;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -42,14 +42,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {DustRefunder} from "./DustRefunder.sol";
+
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
-contract LiquidityZap is Initializable, OwnableUpgradeable {
+contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 	using SafeMath for uint256;
 
@@ -57,12 +58,17 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	error InvalidETHAmount();
 	error AddressZero();
 	error InsufficientPermision();
+	error TransferFailed();
 
 	address public _token;
 	address public _tokenWETHPair;
 	IWETH public weth;
-	bool private initialized;
+	bool private initializedLiquidityZap;
 	address public poolHelper;
+
+	constructor() {
+			_disableInitializers();
+		}
 
 	/**
 	 * @notice Initialize
@@ -78,12 +84,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @param tokenWethPair LP pair
 	 * @param _helper Pool helper contract
 	 */
-	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
-		if (initialized) revert ZapExists();
+	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external onlyOwner {
+		if (initializedLiquidityZap) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
 		_tokenWETHPair = tokenWethPair;
-		initialized = true;
+		initializedLiquidityZap = true;
 		poolHelper = _helper;
 	}
 
@@ -187,6 +193,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 	 * @return liquidity LP amount
 	 */
 	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256) {
+		if (to == address(0)) revert AddressZero();
+		if (tokenAmount == 0 || _wethAmt == 0) revert InvalidETHAmount();
 		IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);
@@ -205,26 +213,22 @@ contract LiquidityZap is Initializable, OwnableUpgradeable {
 		uint256 wethAmount,
 		address payable to
 	) internal returns (uint256 liquidity) {
-		(uint256 wethReserve, uint256 tokenReserve) = getPairReserves();
-
-		uint256 optimalTokenAmount = UniswapV2Library.quote(wethAmount, wethReserve, tokenReserve);
+		uint256 optimalTokenAmount = quote(wethAmount);
 
 		uint256 optimalWETHAmount;
 		if (optimalTokenAmount > tokenAmount) {
-			optimalWETHAmount = UniswapV2Library.quote(tokenAmount, tokenReserve, wethReserve);
+			optimalWETHAmount = quoteFromToken(tokenAmount);
 			optimalTokenAmount = tokenAmount;
 		} else optimalWETHAmount = wethAmount;
 
-		assert(weth.transfer(_tokenWETHPair, optimalWETHAmount));
+		bool wethTransferSuccess = weth.transfer(_tokenWETHPair, optimalWETHAmount);
+		if (!wethTransferSuccess) revert TransferFailed();
 		IERC20(_token).safeTransfer(_tokenWETHPair, optimalTokenAmount);
 
 		liquidity = IUniswapV2Pair(_tokenWETHPair).mint(to);
 
 		//refund dust
-		if (tokenAmount > optimalTokenAmount) IERC20(_token).safeTransfer(to, tokenAmount.sub(optimalTokenAmount));
-		if (wethAmount > optimalWETHAmount) {
-			weth.transfer(to, wethAmount.sub(optimalWETHAmount));
-		}
+		refundDust(_token, address(weth), to);
 	}
 
 	/**
