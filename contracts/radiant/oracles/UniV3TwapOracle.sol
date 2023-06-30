@@ -7,12 +7,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-
 /// @title UniV3TwapOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
-contract UniV3TwapOracle is Initializable, BaseOracle {
+contract UniV3TwapOracle is BaseOracle {
 	using SafeMath for uint256;
 
 	/// @notice Uniswap V3 pool address
@@ -36,6 +33,20 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	/// @notice Can flip the order of the pricing
 	bool public priceInToken0;
 
+	/********************** Events ***********************/
+
+	event ObservationCardinalityIncreased(uint16 indexed numCardinals);
+
+	event TWAPLookbackSecUpdated(uint32 indexed _secs);
+	
+	event TokenForPricingToggled();
+
+	error InvalidLoopbackSecs();
+
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _pair Uniswap pair contract
@@ -48,9 +59,11 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 		address _ethChainlinkFeed,
 		uint32 _lookbackSecs
 	) external initializer {
-		require(_pair != address(0), "pair is 0 address");
-		require(_rdnt != address(0), "rdnt is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		if (_pair == address(0)) revert AddressZero();
+		if (_rdnt == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
+		if (_lookbackSecs == 0) revert InvalidLoopbackSecs();
+
 		pool = IUniswapV3Pool(_pair);
 		token0 = IERC20Metadata(pool.token0());
 		token1 = IERC20Metadata(pool.token1());
@@ -71,6 +84,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 */
 	function increaseObservationCardinality(uint16 numCardinals) external onlyOwner {
 		pool.increaseObservationCardinalityNext(numCardinals);
+		emit ObservationCardinalityIncreased(numCardinals);
 	}
 
 	/**
@@ -78,7 +92,9 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 * @param _secs Loopback period in seconds
 	 */
 	function setTWAPLookbackSec(uint32 _secs) external onlyOwner {
+		if (_secs == 0) revert InvalidLoopbackSecs();
 		lookbackSecs = _secs;
+		emit TWAPLookbackSecUpdated(_secs);
 	}
 
 	/**
@@ -86,6 +102,7 @@ contract UniV3TwapOracle is Initializable, BaseOracle {
 	 */
 	function toggleTokenForPricing() external onlyOwner {
 		priceInToken0 = !priceInToken0;
+		emit TokenForPricingToggled();
 	}
 
 	/* ========== VIEWS ========== */

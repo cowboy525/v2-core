@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {InitializableImmutableAdminUpgradeabilityProxy} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 
 import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
 
 /**
  * @title LendingPoolAddressesProvider contract
@@ -203,7 +204,7 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
 		InitializableImmutableAdminUpgradeabilityProxy proxy = InitializableImmutableAdminUpgradeabilityProxy(
 			proxyAddress
 		);
-		bytes memory params = abi.encodeWithSignature("initialize(address)", address(this));
+		bytes memory params = abi.encodeCall(ILendingPool.initialize, ILendingPoolAddressesProvider(address(this)));
 
 		if (proxyAddress == address(0)) {
 			proxy = new InitializableImmutableAdminUpgradeabilityProxy(address(this));
