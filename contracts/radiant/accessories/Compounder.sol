@@ -116,7 +116,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		address _lockZap,
 		uint256 _compoundFee,
 		uint256 _slippageLimit
-	) public initializer {
+	) external initializer {
 		if (_uniRouter == address(0)) revert AddressZero();
 		if (_mfd == address(0)) revert AddressZero();
 		if (_baseToken == address(0)) revert AddressZero();
@@ -143,14 +143,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/**
 	 * @notice Pause contract
 	 */
-	function pause() public onlyOwner {
+	function pause() external onlyOwner {
 		_pause();
 	}
 
 	/**
 	 * @notice Unpause contract
 	 */
-	function unpause() public onlyOwner {
+	function unpause() external onlyOwner {
 		_unpause();
 	}
 
@@ -463,7 +463,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @param _user address
 	 * @return eligible `true` or `false`
 	 */
-	function userEligibleForCompound(address _user) public view returns (bool eligible) {
+	function userEligibleForCompound(address _user) external view returns (bool eligible) {
 		eligible = _userEligibleForCompound(_user);
 	}
 
@@ -471,7 +471,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @notice Returns if the `msg.sender` is eligible for self compound
 	 * @return eligible `true` or `false`
 	 */
-	function selfEligibleCompound() public view returns (bool eligible) {
+	function selfEligibleCompound() external view returns (bool eligible) {
 		eligible = _userEligibleForCompound(msg.sender);
 	}
 
