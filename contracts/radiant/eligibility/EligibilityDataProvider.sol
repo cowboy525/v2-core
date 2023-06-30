@@ -188,14 +188,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Is user DQed due to lock expire or price update
-	 * @param _user's address
-	 */
-	function isMarketDisqualified(address _user) public view returns (bool) {
-		return requiredUsdValue(_user) > 0 && !isEligibleForRewards(_user) && lastEligibleTime(_user) > block.timestamp;
-	}
-
-	/**
 	 * @notice Returns if the user is eligible to receive rewards
 	 * @param _user's address
 	 */
@@ -219,8 +211,13 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 *  CAUTION: this function only works perfect when the array
 	 *  is ordered by lock time. This is assured when _stake happens.
 	 * @param user's address
+	 * @return lastEligibleTimestamp of the user. Returns 0 if user is not eligible.
 	 */
 	function lastEligibleTime(address user) public view returns (uint256 lastEligibleTimestamp) {
+		if (!isEligibleForRewards(user)) {
+			return 0;
+		}
+
 		uint256 requiredValue = requiredUsdValue(user);
 
 		IMultiFeeDistribution multiFeeDistribution = IMultiFeeDistribution(
