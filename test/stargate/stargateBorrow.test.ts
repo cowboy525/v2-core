@@ -180,4 +180,10 @@ describe('Stargate Borrow', () => {
 			stargateBorrow.connect(user2).borrow('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', borrowAmt, 2, 10143)
 		).to.be.revertedWith('ETHTransferFailed');
 	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		await expect(
+			stargateBorrow.setXChainBorrowFeePercent(101)
+		).to.be.revertedWith('InvalidRatio');
+	});
 });

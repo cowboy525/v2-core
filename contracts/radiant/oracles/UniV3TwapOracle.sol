@@ -41,6 +41,8 @@ contract UniV3TwapOracle is BaseOracle {
 	
 	event TokenForPricingToggled();
 
+	error InvalidLoopbackSecs();
+
 	constructor() {
 		_disableInitializers();
 	}
@@ -60,6 +62,8 @@ contract UniV3TwapOracle is BaseOracle {
 		require(_pair != address(0), "pair is 0 address");
 		require(_rdnt != address(0), "rdnt is 0 address");
 		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
+		if (_lookbackSecs == 0) revert InvalidLoopbackSecs();
+
 		pool = IUniswapV3Pool(_pair);
 		token0 = IERC20Metadata(pool.token0());
 		token1 = IERC20Metadata(pool.token1());
@@ -88,6 +92,7 @@ contract UniV3TwapOracle is BaseOracle {
 	 * @param _secs Loopback period in seconds
 	 */
 	function setTWAPLookbackSec(uint32 _secs) external onlyOwner {
+		if (_secs == 0) revert InvalidLoopbackSecs();
 		lookbackSecs = _secs;
 		emit TWAPLookbackSecUpdated(_secs);
 	}

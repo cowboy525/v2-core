@@ -23,6 +23,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Divisor for fee ratio, 100%
 	uint256 public constant FEE_DIVISOR = 10000;
 
+	/// @notice Max reasonable fee, 1%
+	uint256 public constant MAX_REASONABLE_FEE = 100;
+
 	/// @notice PriceProvider, for RDNT price in native fee calc
 	IPriceProvider public priceProvider;
 
@@ -37,6 +40,12 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 
 	/// @notice Error message emitted when the provided ETH does not cover the bridge fee
 	error InsufficientETHForFee();
+
+	/// @notice Emitted when null address is set
+	error ZeroAddress();
+
+	/// @notice Emitted when ratio is invalid
+	error InvalidRatio();
 
 	/**
 	 * @notice Create RadiantOFT
@@ -55,9 +64,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _treasury,
 		uint256 _mintAmt
 	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
-		require(_endpoint != address(0), "invalid LZ Endpoint");
-		require(_dao != address(0), "invalid DAO");
-		require(_treasury != address(0), "invalid treasury");
+		if (_endpoint == address(0)) revert ZeroAddress();
+		if (_dao == address(0)) revert ZeroAddress();
+		if (_treasury == address(0)) revert ZeroAddress();
 
 		treasury = _treasury;
 
@@ -167,14 +176,14 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _adapterParams LZ adapter params
 	 */
 	function _sendAndCall(
-		address _from, 
-		uint16 _dstChainId, 
-		bytes32 _toAddress, 
-		uint _amount, 
-		bytes memory _payload, 
-		uint64 _dstGasForCall, 
-		address payable _refundAddress, 
-		address _zroPaymentAddress, 
+		address _from,
+		uint16 _dstChainId,
+		bytes32 _toAddress,
+		uint _amount,
+		bytes memory _payload,
+		uint64 _dstGasForCall,
+		address payable _refundAddress,
+		address _zroPaymentAddress,
 		bytes memory _adapterParams
 	) internal override nonReentrant returns (uint amount) {
 		(amount,) = _removeDust(_amount);
@@ -231,7 +240,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _fee ratio
 	 */
 	function setFee(uint256 _fee) external onlyOwner {
-		require(_fee <= 1e4, "Invalid ratio");
+		if (_fee > MAX_REASONABLE_FEE) revert InvalidRatio();
 		feeRatio = _fee;
 		emit FeeUpdated(_fee);
 	}

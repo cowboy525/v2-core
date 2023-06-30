@@ -13,7 +13,7 @@ const {expect} = chai;
 describe('Deposit/AutoZap', () => {
 	let vdWETH: VariableDebtToken;
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 
 	before(async () => {
 		const {leverager}: FixtureDeploy = await setupTest();

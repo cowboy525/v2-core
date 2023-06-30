@@ -26,8 +26,11 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice RAITO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
+	/// @notice Min reasonable ratio, 5%
+	uint256 public constant MIN_REASONABLE_RATIO = 9500;
+
 	/// @notice Acceptable ratio
-	uint256 public ACCEPTABLE_RATIO;
+	uint256 public acceptableSlippageRatio;
 
 	/// @notice Wrapped ETH
 	IWETH public weth;
@@ -86,7 +89,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	error EthTransferFailed();
 
-	uint256 public ethLPRatio; // paramter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
+	uint256 public ethLPRatio; // parameter to set the ratio of ETH in the LP token, can be 2000 for an 80/20 bal lp
 
 	constructor() {
 		_disableInitializers();
@@ -105,13 +108,14 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		IWETH _weth,
 		address _rdntAddr,
 		uint256 _ethLPRatio,
-		uint256 _ACCEPTABLE_RATIO
+		uint256 _acceptableSlippageRatio
 	) external initializer {
 		if (address(_poolHelper) == address(0)) revert AddressZero();
 		if (address(_lendingPool) == address(0)) revert AddressZero();
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_rdntAddr == address(0)) revert AddressZero();
-		if (_ethLPRatio > 10_000) revert InvalidRatio();
+		if (_ethLPRatio == 0 || _ethLPRatio >= RATIO_DIVISOR) revert InvalidRatio();
+		if ( _acceptableSlippageRatio < MIN_REASONABLE_RATIO || _acceptableSlippageRatio > RATIO_DIVISOR) revert InvalidRatio();
 
 		__Ownable_init();
 		__Pausable_init();
@@ -121,7 +125,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		weth = _weth;
 		rdntAddr = _rdntAddr;
 		ethLPRatio = _ethLPRatio;
-		ACCEPTABLE_RATIO = _ACCEPTABLE_RATIO;
+		acceptableSlippageRatio = _acceptableSlippageRatio;
 	}
 
 	receive() external payable {}
@@ -240,7 +244,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 		if (address(priceProvider) != address(0)) {
 			uint256 slippage = _calcSlippage((balanceBeforeZap - balanceAfterZap), liquidity);
-			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
+			if (slippage < acceptableSlippageRatio) revert InvalidSlippage();
 		}
 
 		return liquidity;
@@ -263,7 +267,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 		IERC20(_asset).safeTransferFrom(msg.sender, address(poolHelper), _amount);
 		uint256 wethBalanceBefore = weth.balanceOf(address(poolHelper));
-		uint256 minAcceptableWeth = (expectedEthAmount * ACCEPTABLE_RATIO) / RATIO_DIVISOR;
+		uint256 minAcceptableWeth = (expectedEthAmount * acceptableSlippageRatio) / RATIO_DIVISOR;
 		poolHelper.swapToWeth(_asset, _amount, minAcceptableWeth);
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
@@ -361,7 +365,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 		if (address(priceProvider) != address(0)) {
 			uint256 slippage = _calcSlippage(totalWethValueIn, liquidity);
-			if (slippage < ACCEPTABLE_RATIO) revert InvalidSlippage();
+			if (slippage < acceptableSlippageRatio) revert InvalidSlippage();
 		}
 
 		IERC20(poolHelper.lpTokenAddr()).safeApprove(address(mfd), liquidity);
@@ -388,12 +392,17 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/**
 	 * @notice Updates acceptable slippage ratio.
 	 */
-	function setAcceptableRatio(uint256 _newRatio) external onlyOwner {
-		if (_newRatio > RATIO_DIVISOR) revert InvalidRatio();
-		ACCEPTABLE_RATIO = _newRatio;
-		emit SlippageRatioChanged(ACCEPTABLE_RATIO);
+	function setAcceptableSlippageRatio(uint256 _newRatio) external onlyOwner {
+		if (_newRatio < MIN_REASONABLE_RATIO || _newRatio > RATIO_DIVISOR) revert InvalidRatio();
+		acceptableSlippageRatio = _newRatio;
+		emit SlippageRatioChanged(acceptableSlippageRatio);
 	}
 
+	/**
+	 * @notice Allows owner to recover ETH locked in this contract.
+	 * @param to ETH receiver
+	 * @param value ETH amount
+	 */
 	function withdrawLockedETH(address to, uint256 value) external onlyOwner {
 		TransferHelper.safeTransferETH(to, value);
 	}
