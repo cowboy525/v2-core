@@ -36,22 +36,22 @@ contract Leverager is Ownable {
 	address public constant API_ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
 	/// @notice Lending Pool address
-	ILendingPool public lendingPool;
+	ILendingPool public immutable lendingPool;
 
 	/// @notice EligibilityDataProvider contract address
-	IEligibilityDataProvider public eligibilityDataProvider;
+	IEligibilityDataProvider public immutable eligibilityDataProvider;
 
 	/// @notice LockZap contract address
-	ILockZap public lockZap;
+	ILockZap public immutable lockZap;
 
 	/// @notice ChefIncentivesController contract address
-	IChefIncentivesController public cic;
+	IChefIncentivesController public immutable cic;
 
 	/// @notice Wrapped ETH contract address
-	IWETH public weth;
+	IWETH public immutable weth;
 
 	/// @notice Aave oracle address
-	IAaveOracle public aaveOracle;
+	IAaveOracle public immutable aaveOracle;
 
 	/// @notice Fee ratio
 	uint256 public feePercent;
