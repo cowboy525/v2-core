@@ -25,13 +25,14 @@ describe('Zapper', function () {
 		const accounts = await getNamedAccounts();
 		deployer = accounts.deployer;
 
-		const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
-		poolHelper = await hre.upgrades.deployProxy(
-			BalancerPoolHelper,
-			[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
-			{kind: 'transparent'}
-		);
-		await poolHelper.deployed();
+			const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
+
+			const poolHelper = await hre.upgrades.deployProxy(
+				BalancerPoolHelper,
+				[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
+				{kind: 'transparent', unsafeAllow: ['constructor']}
+			);
+			await poolHelper.deployed();
 
 		const ownerSigner = ethers.provider.getSigner(0);
 		await poolHelper.connect(ownerSigner).setLockZap(lockZapAddress);
@@ -82,6 +83,25 @@ describe('Zapper', function () {
 	});
 
 	it('Can zap USDT & DAI - Live Arbitrum', async () => {
+		const realWethAddress = '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1';
+		const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+		const weightedPoolFactory = '0xf1665E19bc105BE4EDD3739F88315cC699cc5b65';
+
+		const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
+
+		const poolHelper = await hre.upgrades.deployProxy(
+			BalancerPoolHelper,
+			[
+				realWethAddress,
+				realWethAddress, // wrong, but doesn't matter in this test
+				realWethAddress,
+				balancerVault,
+				weightedPoolFactory,
+			],
+			{kind: 'transparent', unsafeAllow: ['constructor']}
+		);
+		await poolHelper.deployed();
+
 		const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 
 		await network.provider.request({
