@@ -21,7 +21,7 @@ describe('Uniswap Pool Helper', function () {
                     deverloper.address,
                     deverloper.address,
                 ],
-                {initializer: 'initialize'}
+                {initializer: 'initialize', unsafeAllow: ['constructor']}
             )
         );
 
