@@ -3,7 +3,6 @@ pragma solidity 0.8.12;
 
 import {OFTV2} from "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -12,8 +11,6 @@ import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
 contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
-	using SafeMath for uint256;
-
 	/// @notice bridge fee reciever
 	address private treasury;
 
@@ -118,7 +115,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		bytes calldata _adapterParams
 	) public view override returns (uint256 nativeFee, uint256 zroFee) {
 		(nativeFee, zroFee) = super.estimateSendFee(_dstChainId, _toAddress, _amount, _useZro, _adapterParams);
-		nativeFee = nativeFee.add(getBridgeFee(_amount));
+		nativeFee = nativeFee + getBridgeFee(_amount);
 	}
 
 	function _updatePrice() internal {
@@ -159,7 +156,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		if (amount == 0) revert AmountTooSmall();
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
-		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
 		Address.sendValue(payable(treasury), fee);
 
@@ -197,11 +194,11 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
 		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
-		require(amount > 0, "OFTCore: amount too small");
+		if (amount == 0) revert AmountTooSmall();
 
 		// encode the msg.sender into the payload instead of _from
 		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
-		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
 		Address.sendValue(payable(treasury), fee);
 
@@ -235,7 +232,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		}
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
-		uint256 rdntInEth = _rdntAmount.mul(priceInEth).div(10 ** priceDecimals).mul(10 ** 18).div(10 ** decimals());
+		uint256 rdntInEth = _rdntAmount * priceInEth / (10 ** priceDecimals) * (10 ** 18) / (10 ** decimals());
 		bridgeFee = (rdntInEth * feeRatio) / FEE_DIVISOR;
 	}
 

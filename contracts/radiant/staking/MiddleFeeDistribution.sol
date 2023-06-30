@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -21,7 +20,6 @@ import {IAaveProtocolDataProvider} from "../../interfaces/IAaveProtocolDataProvi
 /// @title Fee distributor inside
 /// @author Radiant
 contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable, RecoverERC20 {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	/// @notice RDNT token
@@ -188,7 +186,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
-				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
+				uint256 opExAmount = total * operationExpenseRatio / RATIO_DIVISOR;
 				if (opExAmount != 0) {
 					IERC20(rewardToken).safeTransfer(operationExpenses, opExAmount);
 				}
@@ -236,7 +234,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
 					10 ** assetDecimals
 				);
 			} catch {
@@ -244,7 +242,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
 					10 ** assetDecimals
 				);
 			}

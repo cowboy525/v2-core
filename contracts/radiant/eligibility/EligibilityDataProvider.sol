@@ -2,7 +2,6 @@
 pragma solidity 0.8.12;
 pragma abicoder v2;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {ILendingPool} from "../../interfaces/ILendingPool.sol";
@@ -15,7 +14,6 @@ import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
 contract EligibilityDataProvider is OwnableUpgradeable {
-	using SafeMath for uint256;
 
 	/********************** Common Info ***********************/
 
@@ -189,7 +187,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function requiredUsdValue(address user) public view returns (uint256 required) {
 		(uint256 totalCollateralUSD, , , , , ) = lendingPool.getUserAccountData(user);
-		required = totalCollateralUSD.mul(requiredDepositRatio).div(RATIO_DIVISOR);
+		required = totalCollateralUSD * requiredDepositRatio / RATIO_DIVISOR;
 	}
 
 	/**
@@ -198,7 +196,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function isEligibleForRewards(address _user) public view returns (bool) {
 		uint256 lockedValue = lockedUsdValue(_user);
-		uint256 requiredValue = requiredUsdValue(_user).mul(priceToleranceRatio).div(RATIO_DIVISOR);
+		uint256 requiredValue = requiredUsdValue(_user) * priceToleranceRatio / RATIO_DIVISOR;
 		return requiredValue != 0 && lockedValue >= requiredValue;
 	}
 
@@ -276,6 +274,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {
 		uint256 lpPrice = priceProvider.getLpTokenPriceUsd();
-		return lockedLP.mul(lpPrice).div(10 ** 18);
+		return lockedLP * lpPrice / 10 ** 18;
 	}
 }

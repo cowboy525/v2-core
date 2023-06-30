@@ -5,7 +5,6 @@ pragma abicoder v2;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -29,7 +28,6 @@ contract MultiFeeDistribution is
 	OwnableUpgradeable,
 	RecoverERC20
 {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 	using SafeERC20 for IMintableToken;
 
@@ -488,10 +486,10 @@ contract MultiFeeDistribution is
 				}
 				lockData[idx] = locks[i];
 				idx++;
-				locked = locked.add(locks[i].amount);
-				lockedWithMultiplier = lockedWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
+				locked = locked + locks[i].amount;
+				lockedWithMultiplier = lockedWithMultiplier + (locks[i].amount * locks[i].multiplier);
 			} else {
-				unlockable = unlockable.add(locks[i].amount);
+				unlockable = unlockable + locks[i].amount;
 			}
 			unchecked {
 				i++;
@@ -510,7 +508,7 @@ contract MultiFeeDistribution is
 		uint256 length = locks.length;
 		for (uint256 i; i < length; ) {
 			if (locks[i].unlockTime > block.timestamp) {
-				locked = locked.add(locks[i].amount);
+				locked = locked + locks[i].amount;
 			}
 			unchecked {
 				i++;
@@ -542,9 +540,9 @@ contract MultiFeeDistribution is
 				earningsData[idx].unlockTime = earnings[i].unlockTime;
 				earningsData[idx].penalty = penaltyAmount;
 				idx++;
-				total = total.add(earnings[i].amount);
+				total = total + earnings[i].amount;
 			} else {
-				unlocked = unlocked.add(earnings[i].amount);
+				unlocked = unlocked + earnings[i].amount;
 			}
 			unchecked {
 				i++;
@@ -578,14 +576,14 @@ contract MultiFeeDistribution is
 				uint256 earnedAmount = userEarnings[user][i].amount;
 				if (earnedAmount == 0) continue;
 				(, , uint256 newPenaltyAmount, uint256 newBurnAmount) = _penaltyInfo(userEarnings[user][i]);
-				penaltyAmount = penaltyAmount.add(newPenaltyAmount);
-				burnAmount = burnAmount.add(newBurnAmount);
+				penaltyAmount = penaltyAmount + newPenaltyAmount;
+				burnAmount = burnAmount + newBurnAmount;
 				unchecked {
 					i++;
 				}
 			}
 		}
-		amount = balances[user].unlocked.add(earned).sub(penaltyAmount);
+		amount = balances[user].unlocked + earned - penaltyAmount;
 		return (amount, penaltyAmount, burnAmount);
 	}
 
@@ -602,11 +600,11 @@ contract MultiFeeDistribution is
 	) internal view returns (uint256 amount, uint256 penaltyFactor, uint256 penaltyAmount, uint256 burnAmount) {
 		if (earning.unlockTime > block.timestamp) {
 			// 90% on day 1, decays to 25% on day 90
-			penaltyFactor = earning.unlockTime.sub(block.timestamp).mul(HALF).div(vestDuration).add(QUART); // 25% + timeLeft/vestDuration * 65%
+			penaltyFactor = (earning.unlockTime - block.timestamp) * HALF / vestDuration + QUART; // 25% + timeLeft/vestDuration * 65%
 		}
-		penaltyAmount = earning.amount.mul(penaltyFactor).div(WHOLE);
-		burnAmount = penaltyAmount.mul(burn).div(WHOLE);
-		amount = earning.amount.sub(penaltyAmount);
+		penaltyAmount = earning.amount * penaltyFactor / WHOLE;
+		burnAmount = penaltyAmount * burn / WHOLE;
+		amount = earning.amount - penaltyAmount;
 	}
 
 	/********************** Reward functions ***********************/
@@ -617,7 +615,7 @@ contract MultiFeeDistribution is
 	 * @return reward amount for duration
 	 */
 	function getRewardForDuration(address _rewardToken) external view returns (uint256) {
-		return rewardData[_rewardToken].rewardPerSecond.mul(rewardsDuration).div(1e12);
+		return rewardData[_rewardToken].rewardPerSecond * rewardsDuration / 1e12;
 	}
 
 	/**
@@ -639,10 +637,10 @@ contract MultiFeeDistribution is
 	function rewardPerToken(address _rewardToken) public view returns (uint256 rptStored) {
 		rptStored = rewardData[_rewardToken].rewardPerTokenStored;
 		if (lockedSupplyWithMultiplier > 0) {
-			uint256 newReward = lastTimeRewardApplicable(_rewardToken).sub(rewardData[_rewardToken].lastUpdateTime).mul(
+			uint256 newReward = (lastTimeRewardApplicable(_rewardToken) - rewardData[_rewardToken].lastUpdateTime) *
 				rewardData[_rewardToken].rewardPerSecond
-			);
-			rptStored = rptStored.add(newReward.mul(1e18).div(lockedSupplyWithMultiplier));
+			;
+			rptStored = rptStored + (newReward * 1e18 / lockedSupplyWithMultiplier);
 		}
 	}
 
@@ -664,7 +662,7 @@ contract MultiFeeDistribution is
 				rewardsData[i].token,
 				balances[account].lockedWithMultiplier,
 				rewardPerToken(rewardsData[i].token)
-			).div(1e12);
+			) / 1e12;
 			unchecked {
 				i++;
 			}
@@ -686,10 +684,10 @@ contract MultiFeeDistribution is
 			address token = rewardTokens[i];
 			if (token != address(rdntToken)) {
 				_notifyUnseenReward(token);
-				uint256 reward = rewards[onBehalf][token].div(1e12);
+				uint256 reward = rewards[onBehalf][token] / 1e12;
 				if (reward > 0) {
 					rewards[onBehalf][token] = 0;
-					rewardData[token].balance = rewardData[token].balance.sub(reward);
+					rewardData[token].balance = rewardData[token].balance - reward;
 
 					IERC20(token).safeTransfer(rewardConverter, reward);
 					emit RewardPaid(onBehalf, token, reward);
@@ -752,7 +750,7 @@ contract MultiFeeDistribution is
 					uint256 withdrawnAmt;
 					if (!autoRelockDisabled[onBehalfOf]) {
 						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, userLocks[onBehalfOf].length);
-						amount = amount.add(withdrawnAmt);
+						amount = amount + withdrawnAmt;
 					} else {
 						_withdrawExpiredLocksFor(onBehalfOf, true, true, userLocks[onBehalfOf].length);
 					}
@@ -760,13 +758,13 @@ contract MultiFeeDistribution is
 			}
 		}
 		Balances storage bal = balances[onBehalfOf];
-		bal.total = bal.total.add(amount);
+		bal.total = bal.total + amount;
 
-		bal.locked = bal.locked.add(amount);
-		lockedSupply = lockedSupply.add(amount);
+		bal.locked = bal.locked + amount;
+		lockedSupply = lockedSupply + amount;
 
-		bal.lockedWithMultiplier = bal.lockedWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
-		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.add(amount.mul(rewardMultipliers[typeIndex]));
+		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * rewardMultipliers[typeIndex]);
+		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * rewardMultipliers[typeIndex]);
 
 		uint256 userLocksLength = userLocks[onBehalfOf].length;
 		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
@@ -774,13 +772,13 @@ contract MultiFeeDistribution is
 			LockedBalance memory lastUserLock = userLocks[onBehalfOf][lastIndex];
 			uint256 unlockDay = (block.timestamp + lockPeriod[typeIndex]) / 1 days;
 			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultipliers[typeIndex]) {
-				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount.add(amount);
+				userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount + amount;
 			} else {
 				_insertLock(
 					onBehalfOf,
 					LockedBalance({
 						amount: amount,
-						unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+						unlockTime: block.timestamp + lockPeriod[typeIndex],
 						multiplier: rewardMultipliers[typeIndex],
 						duration: lockPeriod[typeIndex]
 					})
@@ -792,7 +790,7 @@ contract MultiFeeDistribution is
 				onBehalfOf,
 				LockedBalance({
 					amount: amount,
-					unlockTime: block.timestamp.add(lockPeriod[typeIndex]),
+					unlockTime: block.timestamp + lockPeriod[typeIndex],
 					multiplier: rewardMultipliers[typeIndex],
 					duration: lockPeriod[typeIndex]
 				})
@@ -862,9 +860,9 @@ contract MultiFeeDistribution is
 		}
 
 		Balances storage bal = balances[user];
-		bal.total = bal.total.add(amount);
+		bal.total = bal.total + amount;
 		if (withPenalty) {
-			bal.earned = bal.earned.add(amount);
+			bal.earned = bal.earned + amount;
 			LockedBalance[] storage earnings = userEarnings[user];
 			
 			uint256 currentDay = block.timestamp / 1 days;
@@ -873,10 +871,10 @@ contract MultiFeeDistribution is
 
 			// We check if an entry for the current day already exists. If yes, add new amount to that entry
 			if (earnings.length > 0 && (earnings[lastIndex].unlockTime / 1 days) == currentDay + vestingDurationDays) {
-				earnings[lastIndex].amount = earnings[lastIndex].amount.add(amount);
+				earnings[lastIndex].amount = earnings[lastIndex].amount + amount;
 			} else {
 				// If there is no entry for the current day, create a new one
-				uint256 unlockTime = block.timestamp.add(vestDuration);
+				uint256 unlockTime = block.timestamp + vestDuration;
 				earnings.push(LockedBalance({
 					amount: amount,
 					unlockTime: unlockTime,
@@ -885,7 +883,7 @@ contract MultiFeeDistribution is
 				}));
 			}
 		} else {
-			bal.unlocked = bal.unlocked.add(amount);
+			bal.unlocked = bal.unlocked + amount;
 		}
 	}
 
@@ -904,9 +902,9 @@ contract MultiFeeDistribution is
 		Balances storage bal = balances[_address];
 
 		if (amount <= bal.unlocked) {
-			bal.unlocked = bal.unlocked.sub(amount);
+			bal.unlocked = bal.unlocked - amount;
 		} else {
-			uint256 remaining = amount.sub(bal.unlocked);
+			uint256 remaining = amount - bal.unlocked;
 			if (bal.earned < remaining) revert InvalidEarned();
 			bal.unlocked = 0;
 			uint256 sumEarned = bal.earned;
@@ -956,7 +954,7 @@ contract MultiFeeDistribution is
 		}
 
 		// Update values
-		bal.total = bal.total.sub(amount).sub(penaltyAmount);
+		bal.total = bal.total - amount - penaltyAmount;
 
 		_withdrawTokens(_address, amount, penaltyAmount, burnAmount, false);
 	}
@@ -1010,8 +1008,8 @@ contract MultiFeeDistribution is
 		userEarnings[onBehalfOf].pop();
 
 		Balances storage bal = balances[onBehalfOf];
-		bal.total = bal.total.sub(amount).sub(penaltyAmount);
-		bal.earned = bal.earned.sub(amount).sub(penaltyAmount);
+		bal.total = bal.total - amount - penaltyAmount;
+		bal.earned = bal.earned - amount - penaltyAmount;
 
 		_withdrawTokens(onBehalfOf, amount, penaltyAmount, burnAmount, claimRewards);
 	}
@@ -1027,7 +1025,7 @@ contract MultiFeeDistribution is
 		delete userEarnings[onBehalfOf];
 
 		Balances storage bal = balances[onBehalfOf];
-		bal.total = bal.total.sub(bal.unlocked).sub(bal.earned);
+		bal.total = bal.total - bal.unlocked - bal.earned;
 
 		_withdrawTokens(onBehalfOf, amount, penaltyAmount, burnAmount, claimRewards);
 	}
@@ -1064,8 +1062,8 @@ contract MultiFeeDistribution is
 		uint256 _currentRewardPerToken
 	) internal view returns (uint256 earnings) {
 		earnings = rewards[_user][_rewardToken];
-		uint256 realRPT = _currentRewardPerToken.sub(userRewardPerTokenPaid[_user][_rewardToken]);
-		earnings = earnings.add(_balance.mul(realRPT).div(1e18));
+		uint256 realRPT = _currentRewardPerToken - userRewardPerTokenPaid[_user][_rewardToken];
+		earnings = earnings + (_balance * realRPT / 1e18);
 	}
 
 	/**
@@ -1102,16 +1100,16 @@ contract MultiFeeDistribution is
 	function _notifyReward(address _rewardToken, uint256 reward) internal {
 		Reward storage r = rewardData[_rewardToken];
 		if (block.timestamp >= r.periodFinish) {
-			r.rewardPerSecond = reward.mul(1e12).div(rewardsDuration);
+			r.rewardPerSecond = reward * 1e12 / rewardsDuration;
 		} else {
-			uint256 remaining = r.periodFinish.sub(block.timestamp);
-			uint256 leftover = remaining.mul(r.rewardPerSecond).div(1e12);
-			r.rewardPerSecond = reward.add(leftover).mul(1e12).div(rewardsDuration);
+			uint256 remaining = r.periodFinish - block.timestamp;
+			uint256 leftover = remaining * r.rewardPerSecond / 1e12;
+			r.rewardPerSecond = (reward + leftover) * 1e12 / rewardsDuration;
 		}
 
 		r.lastUpdateTime = block.timestamp;
-		r.periodFinish = block.timestamp.add(rewardsDuration);
-		r.balance = r.balance.add(reward);
+		r.periodFinish = block.timestamp + rewardsDuration;
+		r.balance = r.balance + reward;
 	}
 
 	/**
@@ -1128,8 +1126,8 @@ contract MultiFeeDistribution is
 		Reward storage r = rewardData[token];
 		uint256 periodFinish = r.periodFinish;
 		if (periodFinish == 0) revert InvalidPeriod();
-		if (periodFinish < block.timestamp.add(rewardsDuration - rewardsLookback)) {
-			uint256 unseen = IERC20(token).balanceOf(address(this)).sub(r.balance);
+		if (periodFinish < block.timestamp + rewardsDuration - rewardsLookback) {
+			uint256 unseen = IERC20(token).balanceOf(address(this)) - r.balance;
 			if (unseen > 0) {
 				_notifyReward(token, unseen);
 			}
@@ -1160,10 +1158,10 @@ contract MultiFeeDistribution is
 		for (uint256 i; i < length; ) {
 			address token = _rewardTokens[i];
 			_notifyUnseenReward(token);
-			uint256 reward = rewards[_user][token].div(1e12);
+			uint256 reward = rewards[_user][token] / 1e12;
 			if (reward > 0) {
 				rewards[_user][token] = 0;
-				rewardData[token].balance = rewardData[token].balance.sub(reward);
+				rewardData[token].balance = rewardData[token].balance - reward;
 
 				IERC20(token).safeTransfer(_user, reward);
 				emit RewardPaid(_user, token, reward);
@@ -1197,7 +1195,7 @@ contract MultiFeeDistribution is
 			if (burnAmount > 0) {
 				rdntToken.safeTransfer(startfleetTreasury, burnAmount);
 			}
-			rdntToken.safeTransfer(daoTreasury, penaltyAmount.sub(burnAmount));
+			rdntToken.safeTransfer(daoTreasury, penaltyAmount - burnAmount);
 		}
 
 		if (claimRewards) {
@@ -1233,8 +1231,8 @@ contract MultiFeeDistribution is
 			uint256 length = locks.length <= limit ? locks.length : limit;
 			uint256 i;
 			while (i < length && locks[i].unlockTime <= block.timestamp) {
-				lockAmount = lockAmount.add(locks[i].amount);
-				lockAmountWithMultiplier = lockAmountWithMultiplier.add(locks[i].amount.mul(locks[i].multiplier));
+				lockAmount = lockAmount + locks[i].amount;
+				lockAmountWithMultiplier = lockAmountWithMultiplier + (locks[i].amount * locks[i].multiplier);
 				i = i + 1;
 			}
 			for (uint256 j = i; j < locks.length; j = j + 1) {
@@ -1273,11 +1271,11 @@ contract MultiFeeDistribution is
 		uint256 amountWithMultiplier;
 		Balances storage bal = balances[_address];
 		(amount, amountWithMultiplier) = _cleanWithdrawableLocks(_address, bal.locked, bal.lockedWithMultiplier, limit);
-		bal.locked = bal.locked.sub(amount);
-		bal.lockedWithMultiplier = bal.lockedWithMultiplier.sub(amountWithMultiplier);
-		bal.total = bal.total.sub(amount);
-		lockedSupply = lockedSupply.sub(amount);
-		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier.sub(amountWithMultiplier);
+		bal.locked = bal.locked - amount;
+		bal.lockedWithMultiplier = bal.lockedWithMultiplier - amountWithMultiplier;
+		bal.total = bal.total - amount;
+		lockedSupply = lockedSupply - amount;
+		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier - amountWithMultiplier;
 
 		if (!isRelockAction && !autoRelockDisabled[_address]) {
 			_stake(amount, _address, defaultLockIndex[_address], true);
@@ -1330,7 +1328,7 @@ contract MultiFeeDistribution is
 		LockedBalance[] storage earnings = userEarnings[_user];
 		for (uint256 i = earnings.length; i > 0; i -= 1) {
 			if (earnings[i - 1].unlockTime > block.timestamp) {
-				zapped = zapped.add(earnings[i - 1].amount);
+				zapped = zapped + earnings[i - 1].amount;
 				earnings.pop();
 			} else {
 				break;
@@ -1340,8 +1338,8 @@ contract MultiFeeDistribution is
 		rdntToken.safeTransfer(lockZap, zapped);
 
 		Balances storage bal = balances[_user];
-		bal.earned = bal.earned.sub(zapped);
-		bal.total = bal.total.sub(zapped);
+		bal.earned = bal.earned - zapped;
+		bal.total = bal.total - zapped;
 
 		IPriceProvider(_priceProvider).update();
 

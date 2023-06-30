@@ -6,7 +6,6 @@ import {DustRefunder} from "./DustRefunder.sol";
 import {BNum} from "../../../dependencies/math/BNum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -19,7 +18,6 @@ import {VaultReentrancyLib} from "../../libraries/balancer-reentrancy/VaultReent
 /// @author Radiant
 contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgradeable, BNum, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	error AddressZero();
 	error PoolExists();
@@ -233,7 +231,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		);
 		// use fairReserveA and fairReserveB to compute LP token price
 		// LP price = (fairResA * pxA + fairResB * pxB) / totalLPSupply
-		priceInEth = fairResA.mul(pxA).add(fairResB.mul(pxB)).div(pool.totalSupply());
+		priceInEth = (fairResA * pxA + fairResB * pxB) / pool.totalSupply();
 	}
 
 	/**
@@ -249,7 +247,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 		uint256 poolWeight = 4;
 
-		return wethBalance.mul(1e8).div(rdntBalance.div(poolWeight));
+		return wethBalance * 1e8 / (rdntBalance / poolWeight);
 	}
 
 	/**
@@ -348,9 +346,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 */
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
-		uint256 p1 = rdntPriceInEth.mul(1e10);
-		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
-		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
+		uint256 p1 = rdntPriceInEth * 1e10;
+		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
+		optimalWETHAmount = ethRequiredBeforeWeight / 4;
 	}
 
 	/**

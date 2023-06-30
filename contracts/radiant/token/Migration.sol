@@ -5,12 +5,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /// @title Migration contract from V1 to V2
 /// @author Radiant team
 contract Migration is Ownable, Pausable {
-	using SafeMath for uint256;
 	using SafeERC20 for ERC20;
 
 	/// @notice V1 of RDNT
