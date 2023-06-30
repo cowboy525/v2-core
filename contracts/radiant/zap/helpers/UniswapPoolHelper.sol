@@ -62,6 +62,11 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		address _routerAddr,
 		ILiquidityZap _liquidityZap
 	) external initializer {
+		if (_rdntAddr == address(0)) revert AddressZero();
+		if (_wethAddr == address(0)) revert AddressZero();
+		if (_routerAddr == address(0)) revert AddressZero();
+		if (address(_liquidityZap) == address(0)) revert AddressZero();
+
 		__Ownable_init();
 
 		rdntAddr = _rdntAddr;

@@ -103,6 +103,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	) public initializer {
 		if (_rdntToken == address(0)) revert ZeroAddress();
 		if (aaveOracle == address(0)) revert ZeroAddress();
+		if (address(_multiFeeDistribution) == address(0)) revert ZeroAddress();
+
 		__Ownable_init();
 
 		rdntToken = IMintableToken(_rdntToken);

@@ -67,6 +67,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		if (_outTokenAddr == address(0)) revert AddressZero();
 		if (_wethAddr == address(0)) revert AddressZero();
 		if (_vault == address(0)) revert AddressZero();
+		if (address(_poolFactory) == address(0)) revert AddressZero();
 
 		__Ownable_init();
 		inTokenAddr = _inTokenAddr;
