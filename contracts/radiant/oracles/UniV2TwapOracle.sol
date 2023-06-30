@@ -46,6 +46,14 @@ contract UniV2TwapOracle is BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	/********************** Events ***********************/
+
+	event PeriodUpdated(uint256 indexed _period);
+
+	event ConsultLeniencyUpdated(uint256 indexed _consultLeniency);
+
+	event AllowStaleConsultsUpdated(bool indexed _allowStaleConsults);
+	
 	constructor() {
 		_disableInitializers();
 	}
@@ -99,6 +107,7 @@ contract UniV2TwapOracle is BaseOracle {
 	function setPeriod(uint256 _period) external onlyOwner {
 		require(_period >= 10, "PERIOD_BELOW_MIN"); // Ensure period has a min time
 		period = _period;
+		emit PeriodUpdated(_period);
 	}
 
 	/**
@@ -107,6 +116,7 @@ contract UniV2TwapOracle is BaseOracle {
 	 */
 	function setConsultLeniency(uint256 _consultLeniency) external onlyOwner {
 		consultLeniency = _consultLeniency;
+		emit ConsultLeniencyUpdated(_consultLeniency);
 	}
 
 	/**
@@ -115,6 +125,7 @@ contract UniV2TwapOracle is BaseOracle {
 	 */
 	function setAllowStaleConsults(bool _allowStaleConsults) external onlyOwner {
 		allowStaleConsults = _allowStaleConsults;
+		emit AllowStaleConsultsUpdated(_allowStaleConsults);
 	}
 
 	/**
@@ -122,7 +133,10 @@ contract UniV2TwapOracle is BaseOracle {
 	 */
 	function canUpdate() public view override returns (bool) {
 		uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
-		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		uint32 timeElapsed;
+		unchecked {
+			timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		}
 		return (timeElapsed >= period);
 	}
 
@@ -132,18 +146,23 @@ contract UniV2TwapOracle is BaseOracle {
 	function update() external {
 		(uint256 price0Cumulative, uint256 price1Cumulative, uint32 blockTimestamp) = UniswapV2OracleLibrary
 			.currentCumulativePrices(address(pair));
-		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		uint32 timeElapsed;
+		unchecked {
+			timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		}
 
 		// Ensure that at least one full period has passed since the last update
 		require(timeElapsed >= period, "PERIOD_NOT_ELAPSED");
 
 		// Overflow is desired, casting never truncates
 		// Cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
-		price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
-		price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
-		price0CumulativeLast = price0Cumulative;
-		price1CumulativeLast = price1Cumulative;
-		blockTimestampLast = blockTimestamp;
+		unchecked {
+			price0Average = FixedPoint.uq112x112(uint224((price0Cumulative - price0CumulativeLast) / timeElapsed));
+			price1Average = FixedPoint.uq112x112(uint224((price1Cumulative - price1CumulativeLast) / timeElapsed));
+			price0CumulativeLast = price0Cumulative;
+			price1CumulativeLast = price1Cumulative;
+			blockTimestampLast = blockTimestamp;
+		}
 	}
 
 	/**
@@ -151,7 +170,10 @@ contract UniV2TwapOracle is BaseOracle {
 	 */
 	function _consult(address _token, uint256 _amountIn) internal view returns (uint256 amountOut) {
 		uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
-		uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		uint32 timeElapsed;
+		unchecked {
+			timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+		}
 
 		// Ensure that the price is not stale
 		require((timeElapsed < (period + consultLeniency)) || allowStaleConsults, "PRICE_IS_STALE_CALL_UPDATE");

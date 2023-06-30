@@ -9,7 +9,6 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract BaseOracle is Initializable, OwnableUpgradeable {
 	using SafeMath for uint256;
 
@@ -24,6 +23,11 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 
 	/// @notice Oracle to be used as a fallback
 	IBaseOracle public fallbackOracle;
+
+	/********************** Events ***********************/
+	event FallbackOracleUpdated(address indexed _fallback);
+
+	event FallbackOracleEnabled(bool indexed _enabled);
 
 	constructor() {
 		_disableInitializers();
@@ -47,6 +51,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	function setFallback(address _fallback) public onlyOwner {
 		require(_fallback != address(0), "invalid address");
 		fallbackOracle = IBaseOracle(_fallback);
+		emit FallbackOracleUpdated(_fallback);
 	}
 
 	/**
@@ -56,6 +61,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	function enableFallback(bool _enabled) public onlyOwner {
 		require(address(fallbackOracle) != (address(0)), "no fallback set");
 		fallbackEnabled = _enabled;
+		emit FallbackOracleEnabled(_enabled);
 	}
 
 	/**
@@ -74,7 +80,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	}
 
 	/**
-	 * @notice Returns USD price in ETH
+	 * @notice Returns price in ETH
 	 * @dev supports 18 decimal token
 	 * @return price of token in decimal 8.
 	 */
@@ -98,4 +104,7 @@ contract BaseOracle is Initializable, OwnableUpgradeable {
 	 * @dev implement in child contract
 	 */
 	function consult() public view virtual returns (uint256) {}
+
+	// Allowing for storage vars to be added/shifted above without effecting any inheriting contracts/proxies
+	uint256[50] private __gap;
 }
