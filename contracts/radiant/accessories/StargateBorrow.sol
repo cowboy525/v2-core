@@ -119,7 +119,6 @@ contract StargateBorrow is OwnableUpgradeable {
 		_disableInitializers();
 	}
 
-
 	/**
 	 * @notice Constructor
 	 * @param _router Stargate Router address
