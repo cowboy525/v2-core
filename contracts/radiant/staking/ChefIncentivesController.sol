@@ -731,7 +731,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		} else {
 			isEligible = eligibleDataProvider.isEligibleForRewards(_user);
 		}
-		return _processEligibility(_user, isEligible, _execute);
+		issueBaseBounty = _processEligibility(_user, isEligible, _execute);
 	}
 
 	/**
@@ -848,7 +848,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @return amount available
 	 */
 	function availableRewards() internal view returns (uint256 amount) {
-		return depositedRewards.sub(accountedRewards);
+		amount = depositedRewards.sub(accountedRewards);
 	}
 
 	/**
