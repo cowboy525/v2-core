@@ -84,7 +84,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @param tokenWethPair LP pair
 	 * @param _helper Pool helper contract
 	 */
-	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
+	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external onlyOwner {
 		if (initializedLiquidityZap) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
