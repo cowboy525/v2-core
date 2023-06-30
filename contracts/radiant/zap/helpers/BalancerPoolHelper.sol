@@ -346,9 +346,9 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 */
 	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
-		uint256 p1 = rdntPriceInEth.mul(1e10);
-		uint256 ethRequiredBeforeWeight = tokenAmount.mul(p1).div(1e18);
-		optimalWETHAmount = ethRequiredBeforeWeight.div(4);
+		uint256 p1 = rdntPriceInEth * 1e10;
+		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
+		optimalWETHAmount = ethRequiredBeforeWeight / 4;
 	}
 
 	/**
