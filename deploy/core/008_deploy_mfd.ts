@@ -14,6 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	let priceProvider = await deployments.get(`PriceProvider`);
 	let lockZap = await deployments.get(`LockZap`);
 	let aaveOracle = await deployments.get('AaveOracle');
+	const dataProvider = await deployments.get('AaveProtocolDataProvider');
 
 	const lockerList = await deploy('LockerList', {
 		...txnOpts,
@@ -52,7 +53,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			execute: {
 				init: {
 					methodName: 'initialize',
-					args: [radiantToken.address, aaveOracle.address, mfd.address],
+					args: [radiantToken.address, aaveOracle.address, mfd.address, dataProvider.address],
 				},
 			},
 		},
