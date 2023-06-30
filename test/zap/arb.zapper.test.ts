@@ -27,7 +27,7 @@ describe('Zapper', function () {
 
 			const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
 
-			const poolHelper = await hre.upgrades.deployProxy(
+			poolHelper = await hre.upgrades.deployProxy(
 				BalancerPoolHelper,
 				[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
 				{kind: 'transparent', unsafeAllow: ['constructor']}
