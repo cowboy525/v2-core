@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
+import {ILendingPoolCollateralManager} from "../../interfaces/ILendingPoolCollateralManager.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
 import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
 import {IFlashLoanReceiver} from "../flashloan/interfaces/IFlashLoanReceiver.sol";
@@ -84,6 +85,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		return LENDINGPOOL_REVISION;
 	}
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
 	 * LendingPoolAddressesProvider of the market.
@@ -91,7 +96,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	 *   on subsequent operations
 	 * @param provider The address of the LendingPoolAddressesProvider
 	 **/
-	function initialize(ILendingPoolAddressesProvider provider) public initializer {
+	function initialize(ILendingPoolAddressesProvider provider) public override initializer {
 		_addressesProvider = provider;
 		_maxStableRateBorrowSizePercent = 2500;
 		_flashLoanPremiumTotal = 9;
@@ -436,14 +441,16 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
 		//solium-disable-next-line
 		(bool success, bytes memory result) = collateralManager.delegatecall(
-			abi.encodeWithSignature(
-				"liquidationCall(address,address,address,uint256,bool,address)",
-				collateralAsset,
-				debtAsset,
-				user,
-				debtToCover,
-				receiveAToken,
-				liquidationFeeTo
+			abi.encodeCall(
+				ILendingPoolCollateralManager.liquidationCall,
+				(
+					collateralAsset,
+					debtAsset,
+					user,
+					debtToCover,
+					receiveAToken,
+					liquidationFeeTo
+				)
 			)
 		);
 
