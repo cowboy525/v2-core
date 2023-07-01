@@ -7,7 +7,7 @@ import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title BaseOracle Contract
 /// @author Radiant
-contract BaseOracle is Initializable, OwnableUpgradeable {
+abstract contract BaseOracle is Initializable, OwnableUpgradeable {
 	/// @notice Token for price
 	address public token;
 
