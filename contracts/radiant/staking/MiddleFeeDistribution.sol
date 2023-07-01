@@ -181,7 +181,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		uint256 length = _rewardTokens.length;
-		for (uint256 i = 0; i < length; i += 1) {
+		for (uint256 i = 0; i < length;) {
 			address rewardToken = _rewardTokens[i];
 			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
@@ -202,6 +202,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			emit ForwardReward(rewardToken, total);
 
 			emitNewTransferAdded(rewardToken, total);
+			unchecked {
+				i++;
+			}
 		}
 	}
 

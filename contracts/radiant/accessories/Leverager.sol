@@ -227,7 +227,7 @@ contract Leverager is Ownable {
 			amount = (amount * RATIO_DIVISOR) / borrowRatio;
 		}
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount; ) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -240,6 +240,9 @@ contract Leverager is Ownable {
 			IERC20(asset).safeTransfer(treasury, fee);
 
 			lendingPool.deposit(asset, amount - fee, msg.sender, referralCode);
+			unchecked {
+				i++;
+			}
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -267,7 +270,7 @@ contract Leverager is Ownable {
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount;) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -282,6 +285,9 @@ contract Leverager is Ownable {
 
 			weth.deposit{value: amount - fee}();
 			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
+			unchecked {
+				i++;
+			}
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -308,7 +314,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, true);
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount;) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -324,6 +330,9 @@ contract Leverager is Ownable {
 			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
 
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
+			unchecked {
+				i++;
+			}
 		}
 		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
 	}
@@ -355,10 +364,13 @@ contract Leverager is Ownable {
 
 		required = required + requiredLocked(asset, amount);
 
-		for (uint256 i = 0; i < loopCount; i += 1) {
+		for (uint256 i = 0; i < loopCount;) {
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			fee = (amount * feePercent) / RATIO_DIVISOR;
 			required = required + requiredLocked(asset, amount - fee);
+			unchecked {
+				i++;
+			}
 		}
 		return _calcWethAmount(locked, required);
 	}

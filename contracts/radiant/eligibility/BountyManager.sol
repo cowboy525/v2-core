@@ -228,11 +228,14 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			(incentivizer, totalBounty, issueBaseBounty) = bounties[_actionTypeIndex](_user, _execute);
 			actionType = _actionTypeIndex;
 		} else {
-			for (uint256 i = 1; i <= bountyCount; i++) {
+			for (uint256 i = 1; i <= bountyCount; ) {
 				(incentivizer, totalBounty, issueBaseBounty) = bounties[i](_user, _execute);
 				if (totalBounty != 0 || issueBaseBounty) {
 					actionType = i;
 					break;
+				}
+				unchecked {
+					i++;
 				}
 			}
 		}

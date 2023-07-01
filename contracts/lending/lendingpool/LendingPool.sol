@@ -508,12 +508,15 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
 		vars.receiver = IFlashLoanReceiver(receiverAddress);
 
-		for (vars.i = 0; vars.i < assets.length; vars.i++) {
+		for (vars.i = 0; vars.i < assets.length; ) {
 			aTokenAddresses[vars.i] = _reserves[assets[vars.i]].aTokenAddress;
 
 			premiums[vars.i] = amounts[vars.i].mul(_flashLoanPremiumTotal).div(10000);
 
 			IAToken(aTokenAddresses[vars.i]).transferUnderlyingTo(receiverAddress, amounts[vars.i]);
+			unchecked {
+				vars.i++;
+			}
 		}
 
 		require(
@@ -521,7 +524,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 			Errors.LP_INVALID_FLASH_LOAN_EXECUTOR_RETURN
 		);
 
-		for (vars.i = 0; vars.i < assets.length; vars.i++) {
+		for (vars.i = 0; vars.i < assets.length; ) {
 			vars.currentAsset = assets[vars.i];
 			vars.currentAmount = amounts[vars.i];
 			vars.currentPremium = premiums[vars.i];
@@ -570,6 +573,9 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 				vars.currentPremium,
 				referralCode
 			);
+			unchecked {
+				vars.i++;
+			}
 		}
 	}
 
@@ -669,8 +675,11 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	function getReservesList() external view override returns (address[] memory) {
 		address[] memory _activeReserves = new address[](_reservesCount);
 
-		for (uint256 i = 0; i < _reservesCount; i++) {
+		for (uint256 i = 0; i < _reservesCount; ) {
 			_activeReserves[i] = _reservesList[i];
+			unchecked {
+				i++;
+			}
 		}
 		return _activeReserves;
 	}
