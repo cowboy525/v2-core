@@ -10,7 +10,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
-import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
 import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";

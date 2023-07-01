@@ -14,11 +14,7 @@ import {HomoraMath} from "../../../dependencies/math/HomoraMath.sol";
 
 import {IUniswapV2Router02} from "../../../interfaces/uniswap/IUniswapV2Router02.sol";
 import {ILiquidityZap} from "../../../interfaces/ILiquidityZap.sol";
-import {IMultiFeeDistribution} from "../../../interfaces/IMultiFeeDistribution.sol";
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {ILendingPool} from "../../../interfaces/ILendingPool.sol";
-import {IPoolHelper} from "../../../interfaces/IPoolHelper.sol";
-import {IERC20DetailedBytes} from "../../../interfaces/IERC20DetailedBytes.sol";
 
 /// @title Uniswap Pool Helper Contract
 /// @author Radiant

@@ -8,11 +8,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {RecoverERC20} from "../libraries/RecoverERC20.sol";
-import {IAToken} from "../../interfaces/IAToken.sol";
-import {IMultiFeeDistribution, IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
-import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
-import {ILendingPool} from "../../interfaces/ILendingPool.sol";
-import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
