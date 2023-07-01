@@ -407,7 +407,7 @@ contract Leverager is Ownable {
 
 	/**
 	 * @notice Returns required LP lock amount.
-	 * @param asset underlyig asset
+	 * @param asset underlying asset
 	 * @param amount of tokens
 	 * @return Required lock value
 	 **/

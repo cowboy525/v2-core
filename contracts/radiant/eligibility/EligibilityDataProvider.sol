@@ -49,7 +49,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/// @notice Disqualified time of the user
 	mapping(address => uint256) public disqualifiedTime;
 
-	// Elgible deposits per rToken
+	// Eligible deposits per rToken
 	mapping(address => uint256) private eligibleDeposits;
 
 	/// @notice User's deposits per rToken; rToken => user => amount

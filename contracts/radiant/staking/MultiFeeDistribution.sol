@@ -118,7 +118,7 @@ contract MultiFeeDistribution is
 	address public override daoTreasury;
 
 	/// @notice treasury wallet
-	address public startfleetTreasury;
+	address public starfleetTreasury;
 
 	/// @notice Addresses approved to call mint
 	mapping(address => bool) public minters;
@@ -277,7 +277,7 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Sets reward convert contract.
+	 * @notice Sets reward converter contract.
 	 * @param _rewardConverter contract address
 	 */
 	function addRewardConverter(address _rewardConverter) external onlyOwner {
@@ -321,7 +321,7 @@ contract MultiFeeDistribution is
 		if (address(_middleFeeDistribution) == address(0)) revert AddressZero();
 		incentivesController = _controller;
 		middleFeeDistribution = _middleFeeDistribution;
-		startfleetTreasury = _treasury;
+		starfleetTreasury = _treasury;
 		emit AddressesUpdated(_controller, _middleFeeDistribution, _treasury);
 	}
 
@@ -517,8 +517,8 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Earnings which is locked yet
-	 * @dev Earned balances may be withdrawn immediately for an appropriate penalty.
+	 * @notice Earnings which are vesting, and earnings which have vested for full duration.
+	 * @dev Earned balances may be withdrawn immediately, but will incur a penalty between 25-90%, based on a linear schedule of elapsed time.
 	 * @return total earnings
 	 * @return unlocked earnings
 	 * @return earningsData which is an array of all infos
@@ -672,7 +672,7 @@ contract MultiFeeDistribution is
 
 	/**
 	 * @notice Claim rewards by converter.
-	 * @dev Rewards are transfered to converter.
+	 * @dev Rewards are transferred to converter.
 	 * @param onBehalf address to claim.
 	 */
 	function claimFromConverter(address onBehalf) external override whenNotPaused {
@@ -744,7 +744,7 @@ contract MultiFeeDistribution is
 		if (userLocks[onBehalfOf].length != 0) {
 			//if user has any locks
 			if (userLocks[onBehalfOf][0].unlockTime <= block.timestamp) {
-				//if users soonest unlock has already elapsed
+				//if user's soonest unlock has already elapsed
 				if (onBehalfOf == msg.sender || msg.sender == lockZap) {
 					//if the user is msg.sender or the lockzap contract
 					uint256 withdrawnAmt;
@@ -1152,7 +1152,7 @@ contract MultiFeeDistribution is
 	function onUpgrade() public {}
 
 	/**
-	 * @notice Sets the loopback period
+	 * @notice Sets the lookback period
 	 * @param _lookback in seconds
 	 */
 	function setLookback(uint256 _lookback) external onlyOwner {
@@ -1205,7 +1205,7 @@ contract MultiFeeDistribution is
 		rdntToken.safeTransfer(onBehalfOf, amount);
 		if (penaltyAmount > 0) {
 			if (burnAmount > 0) {
-				rdntToken.safeTransfer(startfleetTreasury, burnAmount);
+				rdntToken.safeTransfer(starfleetTreasury, burnAmount);
 			}
 			rdntToken.safeTransfer(daoTreasury, penaltyAmount - burnAmount);
 		}

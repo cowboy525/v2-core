@@ -24,7 +24,7 @@ contract UniV3TwapOracle is BaseOracle {
 	/// @notice Decimal of token1
 	uint8 public decimals1;
 
-	/// @notice TWAP loopback period
+	/// @notice TWAP lookback period
 	uint32 public lookbackSecs;
 
 	/// @notice Can flip the order of the pricing
@@ -85,8 +85,8 @@ contract UniV3TwapOracle is BaseOracle {
 	}
 
 	/**
-	 * @notice Sets new TWAP loopback period
-	 * @param _secs Loopback period in seconds
+	 * @notice Sets new TWAP lookback period
+	 * @param _secs Lookback period in seconds
 	 */
 	function setTWAPLookbackSec(uint32 _secs) external onlyOwner {
 		if (_secs == 0) revert InvalidLoopbackSecs();

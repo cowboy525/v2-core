@@ -23,7 +23,7 @@ import {TransferHelper} from "../libraries/TransferHelper.sol";
 contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
 
-	/// @notice RAITO Divisor
+	/// @notice RATIO Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
 	/// @notice Min reasonable ratio, 5%
