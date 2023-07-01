@@ -177,7 +177,7 @@ describe(`BountyManager:`, async () => {
 	it('can be gated by a whitelist', async () => {
 		await bountyManager.connect(deployer).changeWL(true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.be.revertedWith(
-			'!whitelisted'
+			'NotWhitelisted'
 		);
 		await bountyManager.connect(deployer).addAddressToWL(hunter.address, true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.not.be.reverted;
@@ -186,5 +186,11 @@ describe(`BountyManager:`, async () => {
 		let quote = await bountyManager.connect(hunter).quote(user1.address);
 		await bountyManager.connect(deployer).changeWL(true);
 		quote = await bountyManager.connect(hunter).quote(user1.address);
+	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 4)).to.be.revertedWith(
+			'ActionTypeIndexOutOfBounds'
+		);
 	});
 });
