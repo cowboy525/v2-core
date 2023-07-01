@@ -2,7 +2,7 @@
 pragma solidity 0.8.12;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
+import {AggregatorV3Interface} from "../../interfaces/AggregatorV3Interface.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title ChainlinkV3Adapter Contract
