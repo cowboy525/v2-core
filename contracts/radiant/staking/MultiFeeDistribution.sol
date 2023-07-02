@@ -603,8 +603,8 @@ contract MultiFeeDistribution is
 			penaltyFactor = (earning.unlockTime - block.timestamp) * HALF / vestDuration + QUART; // 25% + timeLeft/vestDuration * 65%
 			penaltyAmount = earning.amount * penaltyFactor / WHOLE;
 			burnAmount = penaltyAmount * burn / WHOLE;
-			amount = earning.amount - penaltyAmount;
 		}
+		amount = earning.amount - penaltyAmount;
 	}
 
 	/********************** Reward functions ***********************/
