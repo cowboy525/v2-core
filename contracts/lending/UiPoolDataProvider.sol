@@ -58,7 +58,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 		AggregatedReserveData[] memory reservesData = new AggregatedReserveData[](reserves.length);
 		UserReserveData[] memory userReservesData = new UserReserveData[](user != address(0) ? reserves.length : 0);
 
-		for (uint256 i = 0; i < reserves.length; i++) {
+		for (uint256 i = 0; i < reserves.length; ) {
 			AggregatedReserveData memory reserveData = reservesData[i];
 			reserveData.underlyingAsset = reserves[i];
 
@@ -172,6 +172,9 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 						).getUserLastUpdated(user);
 					}
 				}
+			}
+			unchecked {
+				i++;
 			}
 		}
 
