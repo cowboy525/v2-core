@@ -42,9 +42,6 @@ contract Leverager is Ownable {
 	/// @notice Interest rate mode
 	uint256 public constant INTEREST_RATE_MODE = 2;
 
-	/// @notice Margin percent
-	uint256 public constant MARGIN_PERCENT = 6;
-
 	/// @notice Lending Pool address
 	ILendingPool public immutable lendingPool;
 
