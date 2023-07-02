@@ -35,8 +35,6 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Emitted when Treasury is updated
 	event TreasuryUpdated(address indexed treasury);
 
-	error NotEnoughFee();
-
 	error AmountTooSmall();
 
 	/// @notice Error message emitted when the provided ETH does not cover the bridge fee
@@ -143,22 +141,24 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override nonReentrant returns (uint256 amount) {
+	) internal override nonReentrant whenNotPaused returns (uint256 amount) {
 		_updatePrice();
 
 		(amount, ) = _removeDust(_amount);
 		uint256 fee = getBridgeFee(amount);
-		if (msg.value < fee) revert NotEnoughFee();
+		if (msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
-		amount = _debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
 		if (amount == 0) revert AmountTooSmall();
+		_debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
-		Address.sendValue(payable(treasury), fee);
+		if (fee > 0) {
+			Address.sendValue(payable(treasury), fee);
+		}
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
@@ -186,21 +186,25 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override nonReentrant returns (uint amount) {
+	) internal override nonReentrant whenNotPaused returns (uint amount) {
+		_updatePrice();
+		
 		(amount,) = _removeDust(_amount);
 		uint256 fee = getBridgeFee(amount);
 		if(msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
-		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
 		if (amount == 0) revert AmountTooSmall();
+		_debitFrom(_from, _dstChainId, _toAddress, amount);
 
 		// encode the msg.sender into the payload instead of _from
 		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
-		Address.sendValue(payable(treasury), fee);
+		if (fee > 0) {
+			Address.sendValue(payable(treasury), fee);
+		}
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}

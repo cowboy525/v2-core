@@ -180,8 +180,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param poolIDs array.
 	 */
 	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
-		if (assets.length != poolIDs.length) revert LengthMismatch();
-		for (uint256 i = 0; i < assets.length;) {
+		uint256 length = assets.length;
+		if (length != poolIDs.length) revert LengthMismatch();
+		for (uint256 i = 0; i < length;) {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 			unchecked {
 				i++;
@@ -243,8 +244,11 @@ contract StargateBorrow is OwnableUpgradeable {
 		} else {
 			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-			IERC20(asset).safeTransfer(daoTreasury, feeAmount);
-			IERC20(asset).forceApprove(address(router), amount - feeAmount);
+			if(feeAmount > 0) {
+				IERC20(asset).safeTransfer(daoTreasury, feeAmount);
+				amount = amount - feeAmount;
+			}
+			IERC20(asset).forceApprove(address(router), amount);
 			router.swap{value: msg.value}(
 				dstChainId, // dest chain id
 				poolIdPerChain[asset], // src chain pool id
@@ -269,8 +273,10 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		TransferHelper.safeTransferETH(daoTreasury, feeAmount);
-		amount = amount - feeAmount;
+		if(feeAmount > 0) {
+			TransferHelper.safeTransferETH(daoTreasury, feeAmount);
+			amount = amount - feeAmount;
+		}
 
 		routerETH.swapETH{value: amount + msg.value}(
 			dstChainId, // dest chain id

@@ -20,7 +20,8 @@ contract StableAndVariableTokensHelper is Ownable {
 	function initDeployment(address[] calldata tokens, string[] calldata symbols) external onlyOwner {
 		require(tokens.length == symbols.length, "Arrays not same length");
 		require(pool != address(0), "Pool can not be zero address");
-		for (uint256 i = 0; i < tokens.length; ) {
+		uint256 length = tokens.length;
+		for (uint256 i = 0; i < length; ) {
 			emit deployedContracts(address(new StableDebtToken()), address(new VariableDebtToken()));
 			unchecked {
 				i++;
@@ -35,7 +36,8 @@ contract StableAndVariableTokensHelper is Ownable {
 	) external onlyOwner {
 		require(assets.length == rates.length, "Arrays not same length");
 
-		for (uint256 i = 0; i < assets.length; ) {
+		uint256 length = assets.length;
+		for (uint256 i = 0; i < length; ) {
 			// LendingRateOracle owner must be this contract
 			LendingRateOracle(oracle).setMarketBorrowRate(assets[i], rates[i]);
 			unchecked {

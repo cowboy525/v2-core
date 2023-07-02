@@ -63,7 +63,8 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 	 **/
 	function batchInitReserve(InitReserveInput[] calldata input) external onlyPoolAdmin {
 		ILendingPool cachedPool = pool;
-		for (uint256 i = 0; i < input.length; ) {
+		uint256 length = input.length;
+		for (uint256 i = 0; i < length; ) {
 			_initReserve(cachedPool, input[i]);
 			unchecked {
 				i++;

@@ -214,8 +214,10 @@ contract Leverager is Ownable {
 		if (!isBorrow) {
 			IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			IERC20(asset).safeTransfer(treasury, fee);
-			amount = amount - fee;
+			if(fee > 0) {
+				IERC20(asset).safeTransfer(treasury, fee);
+				amount = amount - fee;
+			}
 		}
 		_approve(asset);
 
@@ -237,7 +239,9 @@ contract Leverager is Ownable {
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			IERC20(asset).safeTransfer(treasury, fee);
+			if(fee > 0) {
+				IERC20(asset).safeTransfer(treasury, fee);
+			}
 
 			lendingPool.deposit(asset, amount - fee, msg.sender, referralCode);
 			unchecked {
@@ -261,9 +265,10 @@ contract Leverager is Ownable {
 		_approve(address(weth));
 
 		uint256 fee = (amount * feePercent) / RATIO_DIVISOR;
-		TransferHelper.safeTransferETH(treasury, fee);
-
-		amount = amount - fee;
+		if(fee > 0) {
+			TransferHelper.safeTransferETH(treasury, fee);
+			amount = amount - fee;
+		}
 
 		cic.setEligibilityExempt(msg.sender, true);
 
@@ -278,12 +283,13 @@ contract Leverager is Ownable {
 
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
-			weth.withdraw(amount);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			TransferHelper.safeTransferETH(treasury, fee);
+			if(fee > 0) {
+				weth.withdraw(fee);
+				TransferHelper.safeTransferETH(treasury, fee);
+			}
 
-			weth.deposit{value: amount - fee}();
 			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
 			unchecked {
 				i++;
@@ -321,12 +327,13 @@ contract Leverager is Ownable {
 			}
 
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
-			weth.withdraw(amount);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			TransferHelper.safeTransferETH(treasury, fee);
+			if(fee > 0) {
+				weth.withdraw(fee);
+				TransferHelper.safeTransferETH(treasury, fee);
+			}
 
-			weth.deposit{value: amount - fee}();
 			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
 
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;

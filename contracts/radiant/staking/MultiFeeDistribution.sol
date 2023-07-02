@@ -601,9 +601,9 @@ contract MultiFeeDistribution is
 		if (earning.unlockTime > block.timestamp) {
 			// 90% on day 1, decays to 25% on day 90
 			penaltyFactor = (earning.unlockTime - block.timestamp) * HALF / vestDuration + QUART; // 25% + timeLeft/vestDuration * 65%
+			penaltyAmount = earning.amount * penaltyFactor / WHOLE;
+			burnAmount = penaltyAmount * burn / WHOLE;
 		}
-		penaltyAmount = earning.amount * penaltyFactor / WHOLE;
-		burnAmount = penaltyAmount * burn / WHOLE;
 		amount = earning.amount - penaltyAmount;
 	}
 
@@ -949,7 +949,8 @@ contract MultiFeeDistribution is
 				}
 			}
 			if (i > 0) {
-				for (uint256 j = i; j < userEarnings[_address].length; ) {
+				uint256 length = userEarnings[_address].length;
+				for (uint256 j = i; j < length; ) {
 					userEarnings[_address][j - i] = userEarnings[_address][j];
 					unchecked {
 						j++;
@@ -1247,7 +1248,8 @@ contract MultiFeeDistribution is
 				lockAmountWithMultiplier = lockAmountWithMultiplier + (locks[i].amount * locks[i].multiplier);
 				i = i + 1;
 			}
-			for (uint256 j = i; j < locks.length; ) {
+			uint256 locksLength = locks.length;
+			for (uint256 j = i; j < locksLength; ) {
 				locks[j - i] = locks[j];
 				unchecked {
 					j++;

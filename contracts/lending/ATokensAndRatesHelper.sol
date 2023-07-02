@@ -37,7 +37,8 @@ contract ATokensAndRatesHelper is Ownable {
 	}
 
 	function initDeployment(InitDeploymentInput[] calldata inputParams) external onlyOwner {
-		for (uint256 i = 0; i < inputParams.length; ) {
+		uint256 length = inputParams.length;
+		for (uint256 i = 0; i < length; ) {
 			emit deployedContracts(
 				address(new AToken()),
 				address(
@@ -60,7 +61,8 @@ contract ATokensAndRatesHelper is Ownable {
 
 	function configureReserves(ConfigureReserveInput[] calldata inputParams) external onlyOwner {
 		LendingPoolConfigurator configurator = LendingPoolConfigurator(poolConfigurator);
-		for (uint256 i = 0; i < inputParams.length; ) {
+		uint256 length = inputParams.length;
+		for (uint256 i = 0; i < length; ) {
 			configurator.configureReserveAsCollateral(
 				inputParams[i].asset,
 				inputParams[i].baseLTV,
