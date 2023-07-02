@@ -246,7 +246,7 @@ contract StargateBorrow is OwnableUpgradeable {
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 			if(feeAmount > 0) {
 				IERC20(asset).safeTransfer(daoTreasury, feeAmount);
-				amount = amount - feeAmount
+				amount = amount - feeAmount;
 			}
 			IERC20(asset).forceApprove(address(router), amount);
 			router.swap{value: msg.value}(
