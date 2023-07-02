@@ -82,6 +82,9 @@ contract StargateBorrow is OwnableUpgradeable {
 	// Weth address
 	IWETH internal weth;
 
+	// Referral code
+	uint16 public constant REFERRAL_CODE = 0;
+
 	/// @notice asset => poolId; at the moment, pool IDs for USDC and USDT are the same accross all chains
 	mapping(address => uint256) public poolIdPerChain;
 
@@ -242,7 +245,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		if (address(asset) == ETH_ADDRESS && address(routerETH) != address(0)) {
 			borrowETH(amount, interestRateMode, dstChainId);
 		} else {
-			lendingPool.borrow(asset, amount, interestRateMode, 0, msg.sender);
+			lendingPool.borrow(asset, amount, interestRateMode, REFERRAL_CODE, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 			if(feeAmount > 0) {
 				IERC20(asset).safeTransfer(daoTreasury, feeAmount);
@@ -270,7 +273,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param dstChainId Destination chain id
 	 **/
 	function borrowETH(uint256 amount, uint256 interestRateMode, uint16 dstChainId) internal {
-		lendingPool.borrow(address(weth), amount, interestRateMode, 0, msg.sender);
+		lendingPool.borrow(address(weth), amount, interestRateMode, REFERRAL_CODE, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
 		if(feeAmount > 0) {

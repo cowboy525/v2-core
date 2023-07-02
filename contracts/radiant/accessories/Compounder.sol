@@ -63,6 +63,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/// @notice Percent divisor which is equal to 100%
 	uint256 public constant PERCENT_DIVISOR = 10000;
+	uint256 public constant MAX_COMPOUND_FEE = 2000;
+	uint256 public constant MIN_SLIPPAGE_LIMIT = 8000;
+	uint256 public constant MIN_DELAY = 1 days;
 	/// @notice Fee of compounding
 	uint256 public compoundFee;
 	/// @notice Slippage limit
@@ -122,7 +125,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		if (_addressProvider == address(0)) revert AddressZero();
 		if (_lockZap == address(0)) revert AddressZero();
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
 		_validateSlippageLimit(_slippageLimit);
 
 		uniRouter = _uniRouter;
@@ -188,7 +191,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 */
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
 		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 		emit CompoundFeeUpdated(_compoundFee);
 	}
@@ -415,7 +418,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 
 	/**
@@ -440,7 +443,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function isEligibleForAutoCompound(address _user, uint256 _pending) public view returns (bool) {
 		bool delayComplete = true;
 		if (lastAutocompound[_user] != 0) {
-			delayComplete = (block.timestamp - lastAutocompound[_user]) >= 1 days;
+			delayComplete = (block.timestamp - lastAutocompound[_user]) >= MIN_DELAY;
 		}
 		return
 			IMultiFeeDistribution(multiFeeDistribution).autocompoundEnabled(_user) &&
@@ -490,6 +493,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	* @param _slippageLimit slippage limit to be validated
 	*/
 	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
-		if (_slippageLimit < 8000 || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
+		if (_slippageLimit < MIN_SLIPPAGE_LIMIT || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 }

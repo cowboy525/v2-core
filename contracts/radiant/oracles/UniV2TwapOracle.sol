@@ -46,6 +46,9 @@ contract UniV2TwapOracle is BaseOracle {
 	/// @notice Average price of token1
 	FixedPoint.uq112x112 public price1Average;
 
+	/// @notice Minimum TWAP time period
+	uint256 public constant PERIOD_MIN = 10;
+
 	error InvalidToken();
 
 	error NoReserves();
@@ -100,7 +103,7 @@ contract UniV2TwapOracle is BaseOracle {
 		(reserve0, reserve1, blockTimestampLast) = pair.getReserves();
 
 		if (reserve0 == 0 || reserve1 == 0) revert NoReserves(); // Ensure that there's liquidity in the pair
-		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
+		if (_period < PERIOD_MIN) revert PeriodBelowMin(); // Ensure period has a min time
 
 		period = _period;
 		consultLeniency = _consultLeniency;
@@ -114,7 +117,7 @@ contract UniV2TwapOracle is BaseOracle {
 	 * @param _period TWAP period.
 	 */
 	function setPeriod(uint256 _period) external onlyOwner {
-		if (_period < 10) revert PeriodBelowMin(); // Ensure period has a min time
+		if (_period < PERIOD_MIN) revert PeriodBelowMin(); // Ensure period has a min time
 		period = _period;
 		emit PeriodUpdated(_period);
 	}

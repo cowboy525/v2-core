@@ -33,6 +33,12 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	bytes32 public poolId;
 	address public lockZap;
 	IWeightedPoolFactory public poolFactory;
+	uint256 public constant RDNT_WEIGHT = 800000000000000000;
+	uint256 public constant WETH_WEIGHT = 200000000000000000;
+	uint256 public constant INITIAL_SWAP_FEE_PERCENTAGE = 1000000000000000;
+
+	/// @notice In 80/20 pool, RDNT Weight is 4x of WETH weight
+	uint256 public constant POOL_WEIGHT = 4;
 
 	bytes32 public constant WBTC_WETH_USDC_POOL_ID = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
 	bytes32 public constant DAI_USDT_USDC_POOL_ID = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
@@ -93,16 +99,14 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		rateProviders[0] = 0x0000000000000000000000000000000000000000;
 		rateProviders[1] = 0x0000000000000000000000000000000000000000;
 
-		uint256 swapFeePercentage = 1000000000000000;
-
 		uint256[] memory weights = new uint256[](2);
 
 		if (token0 == outTokenAddr) {
-			weights[0] = 800000000000000000;
-			weights[1] = 200000000000000000;
+			weights[0] = RDNT_WEIGHT;
+			weights[1] = WETH_WEIGHT;
 		} else {
-			weights[0] = 200000000000000000;
-			weights[1] = 800000000000000000;
+			weights[0] = WETH_WEIGHT;
+			weights[1] = RDNT_WEIGHT;
 		}
 
 		lpTokenAddr = poolFactory.create(
@@ -111,7 +115,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 			tokens,
 			weights,
 			rateProviders,
-			swapFeePercentage,
+			INITIAL_SWAP_FEE_PERCENTAGE,
 			address(this)
 		);
 
@@ -245,9 +249,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		uint256 poolWeight = 4;
-
-		return wethBalance * 1e8 / (rdntBalance / poolWeight);
+		return wethBalance * 1e8 / (rdntBalance / POOL_WEIGHT);
 	}
 
 	/**
@@ -348,7 +350,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth * 1e10;
 		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
-		optimalWETHAmount = ethRequiredBeforeWeight / 4;
+		optimalWETHAmount = ethRequiredBeforeWeight / POOL_WEIGHT;
 	}
 
 	/**

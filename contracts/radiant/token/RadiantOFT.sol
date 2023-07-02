@@ -26,6 +26,9 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice PriceProvider, for RDNT price in native fee calc
 	IPriceProvider public priceProvider;
 
+	/// @notice Decimals for OFTV2
+	uint8 public constant SHARED_DECIMALS = 8;
+
 	/// @notice Emitted when fee ratio is updated
 	event FeeUpdated(uint256 indexed fee);
 
@@ -62,7 +65,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _dao,
 		address _treasury,
 		uint256 _mintAmt
-	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
+	) OFTV2(_tokenName, _symbol, SHARED_DECIMALS, _endpoint) {
 		if (_endpoint == address(0)) revert AddressZero();
 		if (_dao == address(0)) revert AddressZero();
 		if (_treasury == address(0)) revert AddressZero();

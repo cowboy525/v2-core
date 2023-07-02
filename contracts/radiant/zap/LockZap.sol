@@ -29,6 +29,15 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	/// @notice Min reasonable ratio, 5%
 	uint256 public constant MIN_REASONABLE_RATIO = 9500;
 
+	/// @notice Base Percent
+	uint256 public constant BASE_PERCENT = 100;
+
+	/// @notice Adjustment factor
+	uint256 public constant ADJUSTMENT_FACTOR = 97;
+
+	/// @notice Borrow rate mode
+	uint256 public constant VARIABLE_INTEREST_RATE_MODE = 2;
+
 	/// @notice Acceptable ratio
 	uint256 public acceptableSlippageRatio;
 
@@ -182,7 +191,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _tokenAmount amount of tokens.
 	 */
 	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * 100 / 97;
+		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * BASE_PERCENT / ADJUSTMENT_FACTOR;
 	}
 
 	/**
@@ -291,7 +300,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		if (availableBorrowsETH < ethAmtUsd) revert ExceedsAvailableBorrowsETH();
 
 		uint16 referralCode = 0;
-		lendingPool.borrow(address(weth), _amount, 2, referralCode, msg.sender);
+		lendingPool.borrow(address(weth), _amount, VARIABLE_INTEREST_RATE_MODE, referralCode, msg.sender);
 	}
 
 	/**

@@ -35,6 +35,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	uint256 public minStakeAmount;
 	uint256 public slippageLimit;
 
+	/// @notice Ratio Divisor
+	uint256 public constant RATIO_DIVISOR = 10000;
+
 	// Array of available Bounty functions to run. See getMfdBounty, getChefBounty, etc.
 	mapping(uint256 => function(address, bool) returns (address, uint256, bool)) private bounties;
 
@@ -106,7 +109,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		if (_priceProvider == address(0)) revert AddressZero();
 		if (_eligibilityDataProvider == address(0)) revert AddressZero();
 		if (_compounder == address(0)) revert AddressZero();
-		if (_hunterShare > 10000) revert Override();
+		if (_hunterShare > RATIO_DIVISOR) revert Override();
 		if (_baseBountyUsdTarget == 0) revert InvalidNumber();
 		if (_maxBaseBounty == 0) revert InvalidNumber();
 
@@ -187,7 +190,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			bounty = getBaseBounty();
 		} else {
 			if (totalBounty != 0) {
-				bounty = totalBounty * hunterShare / 10000;
+				bounty = totalBounty * hunterShare / RATIO_DIVISOR;
 			}
 		}
 
@@ -363,7 +366,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _newVal New hunter share ratio
 	 */
 	function setHunterShare(uint256 _newVal) external onlyOwner {
-		if (_newVal > 10000) revert Override();
+		if (_newVal > RATIO_DIVISOR) revert Override();
 		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
@@ -394,7 +397,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _newVal New slippage limit
 	 */
 	function setSlippageLimit(uint256 _newVal) external onlyOwner {
-		if (_newVal > 10000) revert InvalidSlippage();
+		if (_newVal > RATIO_DIVISOR) revert InvalidSlippage();
 		slippageLimit = _newVal;
 		emit SlippageLimitUpdated(_newVal);
 	}

@@ -24,6 +24,9 @@ contract Leverager is Ownable {
 	/// @notice margin estimation used for zapping eth to dlp 
 	uint256 public immutable ZAP_MARGIN_ESTIMATION;
 
+	/// @notice maximum margin allowed to be set by the deployer
+	uint256 public constant MAX_MARGIN = 10;
+
 	/// @notice Ratio Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
@@ -32,6 +35,12 @@ contract Leverager is Ownable {
 
 	/// @notice Mock ETH address
 	address public constant API_ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+	/// @notice LTV Calculation precision
+	uint256 public constant TWO_POW_16 = 2 ** 16;
+
+	/// @notice Interest rate mode
+	uint256 public constant INTEREST_RATE_MODE = 2;
 
 	/// @notice Lending Pool address
 	ILendingPool public immutable lendingPool;
@@ -113,7 +122,7 @@ contract Leverager is Ownable {
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_treasury == address(0)) revert AddressZero();
 		if (_feePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
-		if(_zapMargin >= 10) revert MarginTooHigh();
+		if(_zapMargin >= MAX_MARGIN) revert MarginTooHigh();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -187,7 +196,7 @@ contract Leverager is Ownable {
 	 **/
 	function ltv(address asset) external view returns (uint256) {
 		DataTypes.ReserveConfigurationMap memory conf = getConfiguration(asset);
-		return conf.data % (2 ** 16);
+		return conf.data % TWO_POW_16;
 	}
 
 	/**
@@ -404,7 +413,7 @@ contract Leverager is Ownable {
 
 		if (amount > 0) {
 			uint16 referralCode = 0;
-			lendingPool.borrow(address(weth), amount, 2, referralCode, borrower);
+			lendingPool.borrow(address(weth), amount, INTEREST_RATE_MODE, referralCode, borrower);
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
 				IERC20(address(weth)).forceApprove(address(lockZap), type(uint256).max);
 			}

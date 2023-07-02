@@ -20,6 +20,15 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	/// @notice RATIO BASE equal to 100%
 	uint256 public constant RATIO_DIVISOR = 10000;
 
+	/// @notice Initial required ratio of TVL to get reward; in bips
+	uint256 public constant INITIAL_REQUIRED_DEPOSIT_RATIO = 500;
+
+	/// @notice Initial ratio of the required price to still allow without disqualification; in bips
+	uint256 public constant INITIAL_PRICE_TOLERANCE_RATIO = 9000;
+
+	/// @notice Minimum required ratio of TVL to get reward; in bips
+	uint256 public constant MIN_PRICE_TOLERANCE_RATIO = 8000;
+
 	/// @notice Address of Lending Pool
 	ILendingPool public lendingPool;
 
@@ -103,8 +112,8 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		lendingPool = _lendingPool;
 		middleFeeDistribution = _middleFeeDistribution;
 		priceProvider = _priceProvider;
-		requiredDepositRatio = 500;
-		priceToleranceRatio = 9000;
+		requiredDepositRatio = INITIAL_REQUIRED_DEPOSIT_RATIO;
+		priceToleranceRatio = INITIAL_PRICE_TOLERANCE_RATIO;
 		__Ownable_init();
 	}
 
@@ -147,7 +156,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-		if (_priceToleranceRatio < 8000 || _priceToleranceRatio > RATIO_DIVISOR) revert InvalidRatio();
+		if (_priceToleranceRatio < MIN_PRICE_TOLERANCE_RATIO || _priceToleranceRatio > RATIO_DIVISOR) revert InvalidRatio();
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
