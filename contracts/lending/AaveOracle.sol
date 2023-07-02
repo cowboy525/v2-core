@@ -68,9 +68,12 @@ contract AaveOracle is IPriceOracleGetter, Ownable {
 	function _setAssetsSources(address[] memory assets, address[] memory sources) internal {
 		require(assets.length == sources.length, "INCONSISTENT_PARAMS_LENGTH");
 		uint256 assetsLength = assets.length;
-		for (uint256 i = 0; i < assetsLength; i++) {
+		for (uint256 i = 0; i < assetsLength; ) {
 			assetsSources[assets[i]] = IChainlinkAggregator(sources[i]);
 			emit AssetSourceUpdated(assets[i], sources[i]);
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -105,8 +108,11 @@ contract AaveOracle is IPriceOracleGetter, Ownable {
 	function getAssetsPrices(address[] calldata assets) external view returns (uint256[] memory) {
 		uint256 length = assets.length;
 		uint256[] memory prices = new uint256[](length);
-		for (uint256 i = 0; i < length; i++) {
+		for (uint256 i = 0; i < length; ) {
 			prices[i] = getAssetPrice(assets[i]);
+			unchecked {
+				i++;
+			}
 		}
 		return prices;
 	}

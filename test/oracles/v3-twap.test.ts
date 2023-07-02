@@ -72,4 +72,8 @@ describe('Uni V3 TWAP', () => {
 		const price0 = await oracle.latestAnswer();
 		expect(Number(ethers.utils.formatUnits(price0, 8))).not.equals(0);
 	});
+
+	it('fails when invalid input', async () => {
+		await expect(oracle.connect(owner).setTWAPLookbackSec(0)).to.be.revertedWith('InvalidLoopbackSecs');
+	});
 });

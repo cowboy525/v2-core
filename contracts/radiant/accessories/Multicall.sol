@@ -16,10 +16,13 @@ contract Multicall {
 		blockNumber = block.number;
 		uint256 length = calls.length;
 		returnData = new bytes[](length);
-		for (uint256 i = 0; i < length; i++) {
+		for (uint256 i = 0; i < length; ) {
 			(bool success, bytes memory ret) = calls[i].target.call(calls[i].callData);
 			require(success);
 			returnData[i] = ret;
+			unchecked {
+				i++;
+			}
 		}
 	}
 
