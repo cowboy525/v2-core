@@ -18,11 +18,6 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	/// @notice Token address
 	address public token;
 
-	/// @notice Latest timestamp of eth price update
-	uint256 public ethLatestTimestamp;
-	/// @notice Latest timestamp of token price update
-	uint256 public tokenLatestTimestamp;
-
 	error AddressZero();
 
 	constructor() {
@@ -67,18 +62,16 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	}
 
 	/**
-	 * @notice Updates price
-	 */
-	function update() public {
-		(, , , ethLatestTimestamp, ) = ethChainlinkFeed.latestRoundData();
-		(, , , tokenLatestTimestamp, ) = tokenChainlinkFeed.latestRoundData();
-	}
-
-	/**
 	 * @dev Check if update() can be called instead of wasting gas calling it.
 	 */
 	function canUpdate() public pure returns (bool) {
 		return false;
+	}
+	
+	/**
+	* @dev this function only exists so that the contract is compatible with the IBaseOracle Interface
+	*/
+	function update() public {
 	}
 
 	/**

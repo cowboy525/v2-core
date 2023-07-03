@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {DustRefunder} from "./helpers/DustRefunder.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -144,7 +144,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _provider Price provider contract address.
 	 */
 	function setPriceProvider(address _provider) external onlyOwner {
-		if (address(_provider) == address(0)) revert AddressZero();
+		if (_provider == address(0)) revert AddressZero();
 		priceProvider = IPriceProvider(_provider);
 		ethOracle = IChainlinkAggregator(priceProvider.baseTokenPriceInUsdProxyAggregator());
 		emit PriceProviderUpdated(_provider);
@@ -155,7 +155,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _mfdAddr New contract address.
 	 */
 	function setMfd(address _mfdAddr) external onlyOwner {
-		if (address(_mfdAddr) == address(0)) revert AddressZero();
+		if (_mfdAddr == address(0)) revert AddressZero();
 		mfd = IMultiFeeDistribution(_mfdAddr);
 		emit MfdUpdated(_mfdAddr);
 	}
@@ -165,7 +165,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _poolHelper New PoolHelper contract address.
 	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
-		if (address(_poolHelper) == address(0)) revert AddressZero();
+		if (_poolHelper == address(0)) revert AddressZero();
 		poolHelper = IPoolHelper(_poolHelper);
 		emit PoolHelperUpdated(_poolHelper);
 	}

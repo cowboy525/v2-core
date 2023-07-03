@@ -47,14 +47,14 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 		);
 	}
 
-	function getReservesList(ILendingPoolAddressesProvider provider) public view override returns (address[] memory) {
+	function getReservesList(ILendingPoolAddressesProvider provider) public view returns (address[] memory) {
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		return lendingPool.getReservesList();
 	}
 
 	function getReservesData(
 		ILendingPoolAddressesProvider provider
-	) public view override returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory) {
+	) public view returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory) {
 		IAaveOracle oracle = IAaveOracle(provider.getPriceOracle());
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		address[] memory reserves = lendingPool.getReservesList();
@@ -149,7 +149,7 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 	function getUserReservesData(
 		ILendingPoolAddressesProvider provider,
 		address user
-	) external view override returns (UserReserveData[] memory, uint8) {
+	) external view returns (UserReserveData[] memory, uint8) {
 		ILendingPool lendingPool = ILendingPool(provider.getLendingPool());
 		address[] memory reserves = lendingPool.getReservesList();
 		DataTypes.UserConfigurationMap memory userConfig = lendingPool.getUserConfiguration(user);

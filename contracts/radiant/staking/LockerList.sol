@@ -20,11 +20,6 @@ contract LockerList is Ownable {
 	event LockerAdded(address indexed locker);
 	event LockerRemoved(address indexed locker);
 
-	/**
-	 * @dev Constructor
-	 */
-	constructor() Ownable() {}
-
 	/********************** Errors ***********************/
 
 	error Ineligible();

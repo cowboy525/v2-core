@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -29,16 +29,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	IMultiFeeDistribution public multiFeeDistribution;
 
 	/// @notice Reward ratio for operation expenses
-	uint256 public override operationExpenseRatio;
+	uint256 public operationExpenseRatio;
 
 	uint256 public constant RATIO_DIVISOR = 10000;
 
 	uint8 public constant DECIMALS = 18;
 
-	mapping(address => bool) public override isRewardToken;
+	mapping(address => bool) public isRewardToken;
 
 	/// @notice Operation Expense account
-	address public override operationExpenses;
+	address public operationExpenses;
 
 	/// @notice Admin address
 	address public admin;
@@ -149,7 +149,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 * @param _rewardsToken address of the reward token
 	 */
-	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+	function addReward(address _rewardsToken) external onlyAdminOrOwner {
 		if (msg.sender != admin) {
 			try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
 				(address aTokenAddress, , ) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
@@ -177,7 +177,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Run by MFD to pull pending platform revenue
 	 * @param _rewardTokens an array of reward token addresses
 	 */
-	function forwardReward(address[] memory _rewardTokens) external override {
+	function forwardReward(address[] memory _rewardTokens) external {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		uint256 length = _rewardTokens.length;
@@ -212,7 +212,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Returns RDNT token address.
 	 * @return RDNT token address
 	 */
-	function getRdntTokenAddress() external view override returns (address) {
+	function getRdntTokenAddress() external view returns (address) {
 		return address(rdntToken);
 	}
 
@@ -220,7 +220,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Returns MFD address.
 	 * @return MFD address
 	 */
-	function getMultiFeeDistributionAddress() external view override returns (address) {
+	function getMultiFeeDistributionAddress() external view returns (address) {
 		return address(multiFeeDistribution);
 	}
 

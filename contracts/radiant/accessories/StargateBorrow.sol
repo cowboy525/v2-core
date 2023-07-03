@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -60,9 +60,6 @@ contract StargateBorrow is OwnableUpgradeable {
 
 	// MAX slippage that cannot be exceeded when setting slippage variable
 	uint256 public constant MAX_SLIPPAGE = 80;
-
-	// ETH pool Id
-	uint256 private constant POOL_ID_ETH = 13;
 
 	// ETH address
 	address private constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;

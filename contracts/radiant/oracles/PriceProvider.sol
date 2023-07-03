@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
-import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 
 /// @title PriceProvider Contract
 /// @author Radiant
@@ -16,9 +14,6 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 
 	/// @notice Pool helper contract - Uniswap/Balancer
 	IPoolHelper public poolHelper;
-
-	/// @notice Eligibility data provider contract
-	IEligibilityDataProvider public eligibilityProvider;
 
 	/// @notice Base oracle contract
 	IBaseOracle public oracle;

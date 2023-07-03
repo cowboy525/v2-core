@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -69,10 +69,10 @@ contract MultiFeeDistribution is
 	IChefIncentivesController public incentivesController;
 
 	/// @notice Address of RDNT
-	IMintableToken public override rdntToken;
+	IMintableToken public rdntToken;
 
 	/// @notice Address of LP token
-	address public override stakingToken;
+	address public stakingToken;
 
 	// Address of Lock Zapper
 	address internal lockZap;
@@ -83,7 +83,7 @@ contract MultiFeeDistribution is
 	mapping(address => Balances) private balances;
 	mapping(address => LockedBalance[]) internal userLocks;
 	mapping(address => LockedBalance[]) private userEarnings;
-	mapping(address => bool) public override autocompoundEnabled;
+	mapping(address => bool) public autocompoundEnabled;
 	mapping(address => uint256) public lastAutocompound;
 
 	/// @notice Total locked value
@@ -115,7 +115,7 @@ contract MultiFeeDistribution is
 	/********************** Other Info ***********************/
 
 	/// @notice DAO wallet
-	address public override daoTreasury;
+	address public daoTreasury;
 
 	/// @notice treasury wallet
 	address public starfleetTreasury;
@@ -124,10 +124,10 @@ contract MultiFeeDistribution is
 	mapping(address => bool) public minters;
 
 	// Addresses to relock
-	mapping(address => bool) public override autoRelockDisabled;
+	mapping(address => bool) public autoRelockDisabled;
 
 	// Default lock index for relock
-	mapping(address => uint256) public override defaultLockIndex;
+	mapping(address => uint256) public defaultLockIndex;
 
 	/// @notice Flag to prevent more minter addings
 	bool public mintersAreSet;
@@ -340,7 +340,7 @@ contract MultiFeeDistribution is
 	 * @notice Add a new reward token to be distributed to stakers.
 	 * @param _rewardToken address
 	 */
-	function addReward(address _rewardToken) external override {
+	function addReward(address _rewardToken) external {
 		if (_rewardToken == address(0)) revert AddressZero();
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (rewardData[_rewardToken].lastUpdateTime != 0) revert AlreadyAdded();
@@ -397,7 +397,7 @@ contract MultiFeeDistribution is
 	 * @notice Set default lock type index for user relock.
 	 * @param _index of default lock length
 	 */
-	function setDefaultRelockTypeIndex(uint256 _index) external override {
+	function setDefaultRelockTypeIndex(uint256 _index) external {
 		if (_index >= lockPeriod.length) revert InvalidType();
 		defaultLockIndex[msg.sender] = _index;
 	}
@@ -439,7 +439,7 @@ contract MultiFeeDistribution is
 	 * @param user address.
 	 * @return lockInfo of the user.
 	 */
-	function lockInfo(address user) external view override returns (LockedBalance[] memory) {
+	function lockInfo(address user) external view returns (LockedBalance[] memory) {
 		return userLocks[user];
 	}
 
@@ -447,7 +447,7 @@ contract MultiFeeDistribution is
 	 * @notice Total balance of an account, including unlocked, locked and earned tokens.
 	 * @param user address.
 	 */
-	function totalBalance(address user) external view override returns (uint256) {
+	function totalBalance(address user) external view returns (uint256) {
 		if (stakingToken == address(rdntToken)) {
 			return balances[user].total;
 		}
@@ -467,7 +467,6 @@ contract MultiFeeDistribution is
 	)
 		public
 		view
-		override
 		returns (
 			uint256 total,
 			uint256 unlockable,
@@ -503,7 +502,7 @@ contract MultiFeeDistribution is
 	 * @param user address
 	 * @return locked amount
 	 */
-	function lockedBalance(address user) public view override returns (uint256 locked) {
+	function lockedBalance(address user) public view returns (uint256 locked) {
 		LockedBalance[] storage locks = userLocks[user];
 		uint256 length = locks.length;
 		for (uint256 i; i < length; ) {
@@ -651,7 +650,7 @@ contract MultiFeeDistribution is
 	 */
 	function claimableRewards(
 		address account
-	) public view override returns (IFeeDistribution.RewardData[] memory rewardsData) {
+	) public view returns (IFeeDistribution.RewardData[] memory rewardsData) {
 		rewardsData = new IFeeDistribution.RewardData[](rewardTokens.length);
 
 		uint256 length = rewardTokens.length;
@@ -675,7 +674,7 @@ contract MultiFeeDistribution is
 	 * @dev Rewards are transferred to converter.
 	 * @param onBehalf address to claim.
 	 */
-	function claimFromConverter(address onBehalf) external override whenNotPaused {
+	function claimFromConverter(address onBehalf) external whenNotPaused {
 		if (msg.sender != rewardConverter) revert InsufficientPermission();
 		_updateReward(onBehalf);
 		middleFeeDistribution.forwardReward(rewardTokens);
@@ -719,7 +718,7 @@ contract MultiFeeDistribution is
 	 * @param onBehalfOf address for staking.
 	 * @param typeIndex lock type index.
 	 */
-	function stake(uint256 amount, address onBehalfOf, uint256 typeIndex) external override {
+	function stake(uint256 amount, address onBehalfOf, uint256 typeIndex) external {
 		_stake(amount, onBehalfOf, typeIndex, false);
 	}
 
@@ -852,7 +851,7 @@ contract MultiFeeDistribution is
 	 * @param amount to vest.
 	 * @param withPenalty does this bear penalty?
 	 */
-	function mint(address user, uint256 amount, bool withPenalty) external override whenNotPaused {
+	function mint(address user, uint256 amount, bool withPenalty) external whenNotPaused {
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (amount == 0) return;
 
@@ -1031,7 +1030,7 @@ contract MultiFeeDistribution is
 	 * @notice Withdraw full unlocked balance and earnings, optionally claim pending rewards.
 	 * @param claimRewards true to claim rewards when exit
 	 */
-	function exit(bool claimRewards) external override {
+	function exit(bool claimRewards) external {
 		address onBehalfOf = msg.sender;
 		(uint256 amount, uint256 penaltyAmount, uint256 burnAmount) = withdrawableBalance(onBehalfOf);
 
@@ -1262,10 +1261,6 @@ contract MultiFeeDistribution is
 				}
 			}
 			if (locks.length == 0) {
-				lockAmount = totalLock;
-				lockAmountWithMultiplier = totalLockWithMultiplier;
-				delete userLocks[user];
-
 				userlist.removeFromList(user);
 			}
 		}
@@ -1314,7 +1309,7 @@ contract MultiFeeDistribution is
 	 * @param _address of the user
 	 * @return withdraw amount
 	 */
-	function withdrawExpiredLocksFor(address _address) external override returns (uint256) {
+	function withdrawExpiredLocksFor(address _address) external returns (uint256) {
 		return _withdrawExpiredLocksFor(_address, false, true, userLocks[_address].length);
 	}
 
@@ -1340,7 +1335,7 @@ contract MultiFeeDistribution is
 	 * @param _user address
 	 * @return zapped amount
 	 */
-	function zapVestingToLp(address _user) external override returns (uint256 zapped) {
+	function zapVestingToLp(address _user) external returns (uint256 zapped) {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 
 		_updateReward(_user);
@@ -1372,7 +1367,7 @@ contract MultiFeeDistribution is
 	/**
 	 * @notice Returns price provider address
 	 */
-	function getPriceProvider() external view override returns (address) {
+	function getPriceProvider() external view returns (address) {
 		return _priceProvider;
 	}
 

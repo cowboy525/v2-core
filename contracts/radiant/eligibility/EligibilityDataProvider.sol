@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -57,12 +57,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 
 	/// @notice Disqualified time of the user
 	mapping(address => uint256) public disqualifiedTime;
-
-	// Eligible deposits per rToken
-	mapping(address => uint256) private eligibleDeposits;
-
-	/// @notice User's deposits per rToken; rToken => user => amount
-	mapping(address => mapping(address => uint256)) public userDeposits;
 
 	/********************** Events ***********************/
 

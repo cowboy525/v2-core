@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {DustRefunder} from "./DustRefunder.sol";
 import {UniswapV2Library} from "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
@@ -106,7 +106,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(liquidityZap), amount);
-		liquidity = liquidityZap.addLiquidityWETHOnly(amount, payable(address(this)));
+		liquidityZap.addLiquidityWETHOnly(amount, payable(address(this)));
 		IERC20 lp = IERC20(lpTokenAddr);
 
 		liquidity = lp.balanceOf(address(this));
@@ -169,7 +169,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		IWETH weth = IWETH(wethAddr);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(rdntAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
-		liquidity = liquidityZap.standardAdd(_rdntAmt, _wethAmt, address(this));
+		liquidityZap.standardAdd(_rdntAmt, _wethAmt, address(this));
 		IERC20 lp = IERC20(lpTokenAddr);
 		liquidity = lp.balanceOf(address(this));
 		lp.safeTransfer(msg.sender, liquidity);

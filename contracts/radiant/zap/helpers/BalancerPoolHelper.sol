@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {DustRefunder} from "./DustRefunder.sol";
 import {BNum} from "../../../dependencies/math/BNum.sol";
@@ -28,7 +28,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	address public inTokenAddr;
 	address public outTokenAddr;
 	address public wethAddr;
-	address public override lpTokenAddr;
+	address public lpTokenAddr;
 	address public vaultAddr;
 	bytes32 public poolId;
 	address public lockZap;
@@ -203,7 +203,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param rdntPriceInEth RDNT price in ETH
 	 * @return priceInEth LP price in ETH
 	 */
-	function getLpPrice(uint256 rdntPriceInEth) public view override returns (uint256 priceInEth) {
+	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
 		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
 		(uint256 rdntBalance, uint256 wethBalance, ) = getReserves();
@@ -258,7 +258,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @return weth WETH amount
 	 * @return lpTokenSupply LP token supply
 	 */
-	function getReserves() public view override returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
+	function getReserves() public view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply) {
 		IERC20 lpToken = IERC20(lpTokenAddr);
 
 		address vaultAddress = vaultAddr;
@@ -305,7 +305,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param amount to zap
 	 * @return liquidity token amount
 	 */
-	function zapWETH(uint256 amount) public override returns (uint256 liquidity) {
+	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
 		liquidity = joinPool(amount, 0);
@@ -320,7 +320,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _rdntAmt RDNT amount
 	 * @return liquidity token amount
 	 */
-	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public override returns (uint256 liquidity) {
+	function zapTokens(uint256 _wethAmt, uint256 _rdntAmt) public returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
@@ -346,7 +346,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param tokenAmount RDNT amount
 	 * @return optimalWETHAmount WETH amount
 	 */
-	function quoteFromToken(uint256 tokenAmount) public view override returns (uint256 optimalWETHAmount) {
+	function quoteFromToken(uint256 tokenAmount) public view returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth * 1e10;
 		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
