@@ -248,7 +248,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _feeRatio ratio
 	 */
 	function setFeeRatio(uint256 _feeRatio) external onlyOwner {
-		if (_fee > MAX_REASONABLE_FEE) revert InvalidRatio();
+		if (_feeRatio > MAX_REASONABLE_FEE) revert InvalidRatio();
 		feeRatio = _feeRatio;
 		emit FeeRatioUpdated(_feeRatio);
 	}
