@@ -1,41 +1,42 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
-
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 import {IPoolHelper} from "../../interfaces/IPoolHelper.sol";
 import {IChainlinkAggregator} from "../../interfaces/IChainlinkAggregator.sol";
-import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 
 /// @title PriceProvider Contract
 /// @author Radiant
 contract PriceProvider is Initializable, OwnableUpgradeable {
-	using SafeMath for uint256;
-
 	/// @notice Chainlink aggregator for USD price of base token
 	IChainlinkAggregator public baseTokenPriceInUsdProxyAggregator;
 
 	/// @notice Pool helper contract - Uniswap/Balancer
 	IPoolHelper public poolHelper;
 
-	/// @notice Eligibility data provider contract
-	IEligibilityDataProvider public eligibilityProvider;
-
 	/// @notice Base oracle contract
 	IBaseOracle public oracle;
 
 	bool private usePool;
 
+	error AddressZero();
+
+	error InvalidOracle();
+
 	/********************** Events ***********************/
 
 	event OracleUpdated(address indexed _newOracle);
+
 	event PoolHelperUpdated(address indexed _poolHelper);
+
 	event AggregatorUpdated(address indexed _baseTokenPriceInUsdProxyAggregator);
+	
 	event UsePoolUpdated(bool indexed _usePool);
+	
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -46,8 +47,8 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		IChainlinkAggregator _baseTokenPriceInUsdProxyAggregator,
 		IPoolHelper _poolHelper
 	) public initializer {
-		require(address(_baseTokenPriceInUsdProxyAggregator) != (address(0)), "Not a valid address");
-		require(address(_poolHelper) != (address(0)), "Not a valid address");
+		if (address(_baseTokenPriceInUsdProxyAggregator) == (address(0))) revert AddressZero();
+		if (address(_poolHelper) == (address(0))) revert AddressZero();
 		__Ownable_init();
 
 		poolHelper = _poolHelper;
@@ -84,7 +85,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 			// use sparingly, TWAP/CL otherwise
 			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
 			uint256 priceInEth = poolHelper.getPrice();
-			price = priceInEth.mul(ethPrice).div(10 ** 8);
+			price = priceInEth * ethPrice / (10 ** 8);
 		} else {
 			price = oracle.latestAnswer();
 		}
@@ -107,7 +108,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
 		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
-		price = lpPriceInEth.mul(ethPrice).div(10 ** 8);
+		price = lpPriceInEth * ethPrice / (10 ** 8);
 	}
 
 	/**
@@ -121,17 +122,17 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 * @notice Sets new oracle.
 	 */
 	function setOracle(address _newOracle) external onlyOwner {
-		require(_newOracle != address(0), "Invalid oracle address");
+		if (_newOracle == address(0)) revert AddressZero();
 		oracle = IBaseOracle(_newOracle);
 		emit OracleUpdated(_newOracle);
 	}
 
 	/**
-	 * @notice Sets pool heler contract.
+	 * @notice Sets pool helper contract.
 	 */
 	function setPoolHelper(address _poolHelper) external onlyOwner {
 		poolHelper = IPoolHelper(_poolHelper);
-		require(getLpTokenPrice() != 0, "invalid oracle");
+		if (getLpTokenPrice() == 0) revert InvalidOracle();
 		emit PoolHelperUpdated(_poolHelper);
 	}
 
@@ -140,7 +141,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	 */
 	function setAggregator(address _baseTokenPriceInUsdProxyAggregator) external onlyOwner {
 		baseTokenPriceInUsdProxyAggregator = IChainlinkAggregator(_baseTokenPriceInUsdProxyAggregator);
-		require(getLpTokenPriceUsd() != 0, "invalid oracle");
+		if (getLpTokenPriceUsd() == 0) revert InvalidOracle();
 		emit AggregatorUpdated(_baseTokenPriceInUsdProxyAggregator);
 	}
 

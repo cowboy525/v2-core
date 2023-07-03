@@ -228,6 +228,16 @@ describe(`AutoCompound:`, async () => {
 		await expect(fee.value).to.be.equal(0);
 	});
 
+	it('can selfcompound for no Fee', async () => {
+		await generatePlatformRevenue(1 * HOUR);
+		let fee = await compounder.connect(user1).claimCompound(user1.address, false);
+		await expect(fee.value).to.be.equal(0);
+
+		await generatePlatformRevenue(1 * HOUR);
+		fee = await compounder.connect(user1).claimCompound(user1.address, true);
+		await expect(fee.value).to.be.equal(0);
+	});
+
 	it('swap failed', async () => {
 		const quote = await bountyManager.connect(hunter).quote(user1.address);
 		await generateGiganticPlatformRevenue();

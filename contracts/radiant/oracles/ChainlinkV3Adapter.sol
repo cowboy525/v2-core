@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../../interfaces/IChainlinkAggregator.sol";
-import "../../interfaces/AggregatorV3Interface.sol";
-import "../../interfaces/IBaseOracle.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AggregatorV3Interface} from "../../interfaces/AggregatorV3Interface.sol";
+import {IBaseOracle} from "../../interfaces/IBaseOracle.sol";
 
 /// @title ChainlinkV3Adapter Contract
 /// @author Radiant
@@ -22,10 +18,11 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	/// @notice Token address
 	address public token;
 
-	/// @notice Latest timestamp of eth price update
-	uint256 public ethLatestTimestamp;
-	/// @notice Latest timestamp of token price update
-	uint256 public tokenLatestTimestamp;
+	error AddressZero();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initializer
@@ -34,9 +31,9 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	 * @param _tokenChainlinkFeed Chainlink price feed for token.
 	 */
 	function initialize(address _token, address _ethChainlinkFeed, address _tokenChainlinkFeed) external initializer {
-		require(_token != address(0), "token is 0 address");
-		require(_ethChainlinkFeed != address(0), "ethChainlinkFeed is 0 address");
-		require(_tokenChainlinkFeed != address(0), "tokenChainlinkFeed is 0 address");
+		if (_token == address(0)) revert AddressZero();
+		if (_ethChainlinkFeed == address(0)) revert AddressZero();
+		if (_tokenChainlinkFeed == address(0)) revert AddressZero();
 		ethChainlinkFeed = AggregatorV3Interface(_ethChainlinkFeed);
 		tokenChainlinkFeed = AggregatorV3Interface(_tokenChainlinkFeed);
 		token = _token;
@@ -65,25 +62,23 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	}
 
 	/**
-	 * @notice Updates price
-	 */
-	function update() public {
-		(, , , ethLatestTimestamp, ) = ethChainlinkFeed.latestRoundData();
-		(, , , tokenLatestTimestamp, ) = tokenChainlinkFeed.latestRoundData();
-	}
-
-	/**
 	 * @dev Check if update() can be called instead of wasting gas calling it.
 	 */
 	function canUpdate() public pure returns (bool) {
 		return false;
+	}
+	
+	/**
+	* @dev this function only exists so that the contract is compatible with the IBaseOracle Interface
+	*/
+	function update() public {
 	}
 
 	/**
 	 * @notice Returns current price.
 	 */
 	function consult() public view returns (uint256 price) {
-		return latestAnswer();
+		price = latestAnswer();
 	}
 
 	/**
@@ -123,7 +118,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		view
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
-		return tokenChainlinkFeed.getRoundData(_roundId);
+		(roundId, answer, startedAt, updatedAt, answeredInRound) = tokenChainlinkFeed.getRoundData(_roundId);
 	}
 
 	/**
@@ -139,7 +134,7 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 		view
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
-		return tokenChainlinkFeed.latestRoundData();
+		(roundId, answer, startedAt, updatedAt, answeredInRound) = tokenChainlinkFeed.latestRoundData();
 	}
 
 	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {

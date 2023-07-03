@@ -17,11 +17,14 @@ library AddressPagination {
 		uint256 limit
 	) internal pure returns (address[] memory result) {
 		result = new address[](limit);
-		for (uint256 i = 0; i < limit; i++) {
+		for (uint256 i = 0; i < limit; ) {
 			if (page * limit + i >= array.length) {
 				result[i] = address(0);
 			} else {
 				result[i] = array[page * limit + i];
+			}
+			unchecked {
+				i++;
 			}
 		}
 	}

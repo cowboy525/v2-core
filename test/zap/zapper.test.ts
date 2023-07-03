@@ -302,6 +302,7 @@ describe('Zapper', function () {
 					liquidityZap.initLiquidityZap(
 						ethers.constants.AddressZero,
 						ethers.constants.AddressZero,
+						ethers.constants.AddressZero,
 						ethers.constants.AddressZero
 					)
 				).to.be.reverted;

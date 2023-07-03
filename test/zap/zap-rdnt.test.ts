@@ -1,4 +1,5 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import {solidity} from 'ethereum-waffle';
 import {ethers} from 'hardhat';
 import {
 	LendingPool,
@@ -9,10 +10,13 @@ import {
 	WETH,
 	PriceProvider,
 } from '../../typechain';
-import {expect} from 'chai';
+// import {expect} from 'chai';
+import chai from 'chai';
 import {setupTest} from '../setup';
 import {advanceTimeAndBlock} from '../shared/helpers';
 import {DeployConfig} from '../../scripts/deploy/types';
+chai.use(solidity);
+const {expect} = chai;
 
 describe('LockZap: 2-token zap', function () {
 	let dao: SignerWithAddress;
@@ -23,9 +27,10 @@ describe('LockZap: 2-token zap', function () {
 	let multiFeeDistribution: MultiFeeDistribution;
 	let priceProvider: PriceProvider;
 	let deployConfig: DeployConfig;
+	let deployer: SignerWithAddress;
 
 	beforeEach(async function () {
-		({dao, rdntToken, lendingPool, lockZap, weth, multiFeeDistribution, priceProvider, deployConfig} =
+		({dao, rdntToken, lendingPool, lockZap, weth, multiFeeDistribution, priceProvider, deployConfig, deployer} =
 			await setupTest());
 
 		// setup for a borrow
@@ -71,5 +76,10 @@ describe('LockZap: 2-token zap', function () {
 		});
 		lockInfo = await multiFeeDistribution.lockedBalances(dao.address);
 		expect(lockInfo.lockData.length).to.be.equal(1);
+	});
+
+	it('fail when invalid input', async function () {
+		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(9459)).to.be.revertedWith('InvalidRatio');
+		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(10001)).to.be.revertedWith('InvalidRatio');
 	});
 });

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -21,7 +19,6 @@ import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.so
 /// based on the Sushi MasterChef
 ///	https://github.com/sushiswap/sushiswap/blob/master/contracts/MasterChef.sol
 contract ChefIncentivesController is Initializable, PausableUpgradeable, OwnableUpgradeable, RecoverERC20 {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	// Info of each user.
@@ -107,8 +104,6 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error BountyOnly();
 
-	error UserStillEligible();
-
 	error NotEligible();
 
 	error CadenceTooLong();
@@ -152,7 +147,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	mapping(address => PoolInfo) public poolInfo;
 	mapping(address => bool) private validRTokens;
 
-	// Total allocation poitns. Must be the sum of all allocation points in all pools.
+	// Total allocation points. Must be the sum of all allocation points in all pools.
 	uint256 public totalAllocPoint;
 
 	// token => user => Info of each user that stakes LP tokens.
@@ -197,6 +192,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	// Info of reward emission end time
 	EndingTime public endingTime;
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _poolConfigurator Pool configurator address
@@ -210,7 +209,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		IMiddleFeeDistribution _rewardMinter,
 		uint256 _rewardsPerSecond
 	) public initializer {
-		if (address(_poolConfigurator) == address(0)) revert AddressZero();
+		if (_poolConfigurator == address(0)) revert AddressZero();
 		if (address(_eligibleDataProvider) == address(0)) revert AddressZero();
 		if (address(_rewardMinter) == address(0)) revert AddressZero();
 
@@ -290,7 +289,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (msg.sender != poolConfigurator) revert NotAllowed();
 		if (poolInfo[_token].lastRewardTime != 0) revert PoolExists();
 		_updateEmissions();
-		totalAllocPoint = totalAllocPoint.add(_allocPoint);
+		totalAllocPoint = totalAllocPoint + _allocPoint;
 		registeredTokens.push(_token);
 		PoolInfo storage pool = poolInfo[_token];
 		pool.allocPoint = _allocPoint;
@@ -304,16 +303,19 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _tokens for reward pools
 	 * @param _allocPoints allocation points of the pools
 	 */
-	function batchUpdateAllocPoint(address[] calldata _tokens, uint256[] calldata _allocPoints) public onlyOwner {
+	function batchUpdateAllocPoint(address[] calldata _tokens, uint256[] calldata _allocPoints) external onlyOwner {
 		if (_tokens.length != _allocPoints.length) revert ArrayLengthMismatch();
 		_massUpdatePools();
 		uint256 _totalAllocPoint = totalAllocPoint;
 		uint256 length = _tokens.length;
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			PoolInfo storage pool = poolInfo[_tokens[i]];
 			if (pool.lastRewardTime == 0) revert UnknownPool();
-			_totalAllocPoint = _totalAllocPoint.sub(pool.allocPoint).add(_allocPoints[i]);
+			_totalAllocPoint = _totalAllocPoint - pool.allocPoint + _allocPoints[i];
 			pool.allocPoint = _allocPoints[i];
+			unchecked {
+				i++;
+			}
 		}
 		totalAllocPoint = _totalAllocPoint;
 		emit BatchAllocPointsUpdated(_tokens, _allocPoints);
@@ -339,8 +341,12 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (!persistRewardsPerSecond) {
 			uint256 length = emissionSchedule.length;
 			uint256 i = emissionScheduleIndex;
-			uint128 offset = uint128(block.timestamp.sub(startTime));
-			for (; i < length && offset >= emissionSchedule[i].startTimeOffset; i++) {}
+			uint128 offset = uint128(block.timestamp - startTime);
+			for (; i < length && offset >= emissionSchedule[i].startTimeOffset; ) {
+				unchecked {
+					i++;
+				}
+			}
 			if (i > emissionScheduleIndex) {
 				emissionScheduleIndex = i;
 				_massUpdatePools();
@@ -376,7 +382,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 length = _startTimeOffsets.length;
 		if (length <= 0 || length != _rewardsPerSecond.length) revert ArrayLengthMismatch();
 
-		for (uint256 i = 0; i < length; i++) {
+		for (uint256 i = 0; i < length; ) {
 			if (i > 0) {
 				if (_startTimeOffsets[i - 1] > _startTimeOffsets[i]) revert NotAscending();
 			}
@@ -385,7 +391,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (_checkDuplicateSchedule(_startTimeOffsets[i])) revert DuplicateSchedule();
 
 			if (startTime > 0) {
-				if (_startTimeOffsets[i] < block.timestamp.sub(startTime)) revert InvalidStart();
+				if (_startTimeOffsets[i] < block.timestamp - startTime) revert InvalidStart();
 			}
 			emissionSchedule.push(
 				EmissionPoint({
@@ -393,6 +399,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 					rewardsPerSecond: uint128(_rewardsPerSecond[i])
 				})
 			);
+			unchecked {
+				i++;
+			}
 		}
 		emit EmissionScheduleAppended(_startTimeOffsets, _rewardsPerSecond);
 	}
@@ -427,8 +436,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function _massUpdatePools() internal {
 		uint256 totalAP = totalAllocPoint;
 		uint256 length = poolLength();
-		for (uint256 i; i < length; ++i) {
+		for (uint256 i; i < length; ) {
 			_updatePool(poolInfo[registeredTokens[i]], totalAP);
+			unchecked {
+				i++;
+			}
 		}
 		lastAllPoolUpdate = block.timestamp;
 	}
@@ -465,7 +477,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function pendingRewards(address _user, address[] memory _tokens) public view returns (uint256[] memory) {
 		uint256[] memory claimable = new uint256[](_tokens.length);
 		uint256 length = _tokens.length;
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			address token = _tokens[i];
 			PoolInfo storage pool = poolInfo[token];
 			UserInfo storage user = userInfo[token][_user];
@@ -475,6 +487,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 				accRewardPerShare = accRewardPerShare + newAccRewardPerShare;
 			}
 			claimable[i] = user.amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
+			unchecked {
+				i++;
+			}
 		}
 		return claimable;
 	}
@@ -495,16 +510,19 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		userBaseClaimable[_user] = 0;
 		uint256 _totalAllocPoint = totalAllocPoint;
 		uint256 length = _tokens.length;
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			if (!validRTokens[_tokens[i]]) revert InvalidRToken();
 			PoolInfo storage pool = poolInfo[_tokens[i]];
 			if (pool.lastRewardTime == 0) revert UnknownPool();
 			_updatePool(pool, _totalAllocPoint);
 			UserInfo storage user = userInfo[_tokens[i]][_user];
-			uint256 rewardDebt = user.amount.mul(pool.accRewardPerShare).div(ACC_REWARD_PRECISION);
-			pending = pending.add(rewardDebt.sub(user.rewardDebt));
+			uint256 rewardDebt = user.amount * pool.accRewardPerShare / ACC_REWARD_PRECISION;
+			pending = pending + rewardDebt - user.rewardDebt;
 			user.rewardDebt = rewardDebt;
 			user.lastClaimTime = block.timestamp;
+			unchecked {
+				i++;
+			}
 		}
 
 		_vestTokens(_user, pending);
@@ -512,16 +530,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		eligibleDataProvider.updatePrice();
 
 		if (endRewardTime() < block.timestamp + 5 days) {
-			_emitReserveLow();
+			address rdntToken = rewardMinter.getRdntTokenAddress();
+			emit ChefReserveLow(IERC20(rdntToken).balanceOf(address(this)));
 		}
-	}
-
-	/**
-	 * @notice Emits ReserveLow event.
-	 */
-	function _emitReserveLow() internal {
-		address rdntToken = rewardMinter.getRdntTokenAddress();
-		emit ChefReserveLow(IERC20(rdntToken).balanceOf(address(this)));
 	}
 
 	/**
@@ -531,12 +542,13 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 */
 	function _vestTokens(address _user, uint256 _amount) internal {
 		if (_amount == 0) revert NothingToMint();
-		_sendRadiant(address(_getMfd()), _amount);
-		_getMfd().vestTokens(_user, _amount, true);
+		IMultiFeeDistribution mfd = _getMfd();
+		_sendRadiant(address(mfd), _amount);
+		mfd.vestTokens(_user, _amount, true);
 	}
 
 	/**
-	 * @notice Exempt a contract from eligbility check.
+	 * @notice Exempt a contract from eligibility check.
 	 * @dev Can be called by owner or leverager contract
 	 * @param _contract address to exempt
 	 * @param _value flag for exempt
@@ -606,15 +618,15 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 amount = user.amount;
 		uint256 accRewardPerShare = pool.accRewardPerShare;
 		if (amount != 0) {
-			uint256 pending = amount.mul(accRewardPerShare).div(ACC_REWARD_PRECISION).sub(user.rewardDebt);
+			uint256 pending = amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
 			if (pending != 0) {
-				userBaseClaimable[_user] = userBaseClaimable[_user].add(pending);
+				userBaseClaimable[_user] = userBaseClaimable[_user] + pending;
 			}
 		}
-		pool.totalSupply = pool.totalSupply.sub(user.amount);
+		pool.totalSupply = pool.totalSupply - user.amount;
 		user.amount = _balance;
-		user.rewardDebt = _balance.mul(accRewardPerShare).div(ACC_REWARD_PRECISION);
-		pool.totalSupply = pool.totalSupply.add(_balance);
+		user.rewardDebt = _balance * accRewardPerShare / ACC_REWARD_PRECISION;
+		pool.totalSupply = pool.totalSupply + _balance;
 		if (pool.onwardIncentives != IOnwardIncentivesController(address(0))) {
 			pool.onwardIncentives.handleAction(_token, _user, _balance, _totalSupply);
 		}
@@ -646,7 +658,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
 			if (isCurrentlyEligible) {
 				uint256 length = poolLength();
-				for (uint256 i; i < length; i++) {
+				for (uint256 i; i < length; ) {
 					uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
 					uint256 registeredBal = userInfo[registeredTokens[i]][_user].amount;
 					if (newBal != 0 && newBal != registeredBal) {
@@ -654,8 +666,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 							registeredTokens[i],
 							_user,
 							newBal,
-							poolInfo[registeredTokens[i]].totalSupply.add(newBal).sub(registeredBal)
+							poolInfo[registeredTokens[i]].totalSupply + newBal - registeredBal
 						);
+					}
+					unchecked {
+						i++;
 					}
 				}
 			} else {
@@ -678,7 +693,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 				break;
 			}
 			unchecked {
-				++i;
+				i++;
 			}
 		}
 	}
@@ -703,7 +718,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			issueBaseBounty = true;
 		}
 		if (_execute && issueBaseBounty) {
-			stopEmissionsFor(_user, _isEligible);
+			stopEmissionsFor(_user);
 			emit Disqualified(_user);
 		}
 	}
@@ -727,7 +742,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		} else {
 			isEligible = eligibleDataProvider.isEligibleForRewards(_user);
 		}
-		return _processEligibility(_user, isEligible, _execute);
+		issueBaseBounty = _processEligibility(_user, isEligible, _execute);
 	}
 
 	/**
@@ -744,20 +759,21 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	/**
 	 * @dev Stop RDNT emissions for specific users
 	 * @param _user address of recipient
-	 * @param _isEligible eligible status
 	 */
-	function stopEmissionsFor(address _user, bool _isEligible) internal {
+	function stopEmissionsFor(address _user) internal {
 		if (!eligibilityEnabled) revert NotEligible();
 		// lastEligibleStatus will be fresh from refresh before this call
-		if (_isEligible) revert UserStillEligible();
 		uint256 length = poolLength();
-		for (uint256 i; i < length; ++i) {
+		for (uint256 i; i < length; ) {
 			address token = registeredTokens[i];
 			PoolInfo storage pool = poolInfo[token];
 			UserInfo storage user = userInfo[token][_user];
 
 			if (user.amount != 0) {
-				_handleActionAfterForToken(token, _user, 0, pool.totalSupply.sub(user.amount));
+				_handleActionAfterForToken(token, _user, 0, pool.totalSupply - user.amount);
+			}
+			unchecked {
+				i++;
 			}
 		}
 		eligibleDataProvider.setDqTime(_user, block.timestamp);
@@ -788,7 +804,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @notice Ending reward distribution time.
 	 */
 	function endRewardTime() public returns (uint256) {
-		uint256 unclaimedRewards = depositedRewards - accountedRewards;
+		uint256 unclaimedRewards = availableRewards();
 		uint256 extra = 0;
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ) {
@@ -830,7 +846,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount new deposit amount
 	 */
 	function registerRewardDeposit(uint256 _amount) external onlyOwner {
-		depositedRewards = depositedRewards.add(_amount);
+		depositedRewards = depositedRewards + _amount;
 		_massUpdatePools();
 		if (rewardsPerSecond == 0 && lastRPS > 0) {
 			rewardsPerSecond = lastRPS;
@@ -844,7 +860,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @return amount available
 	 */
 	function availableRewards() internal view returns (uint256 amount) {
-		return depositedRewards.sub(accountedRewards);
+		return depositedRewards - accountedRewards;
 	}
 
 	/**
@@ -864,9 +880,11 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		pending = userBaseClaimable[_user];
 		uint256[] memory claimable = pendingRewards(_user, registeredTokens);
 		uint256 length = claimable.length;
-		// TODO: potentially replace with inline assembly loop if this is called in a transaction
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length; ) {
 			pending += claimable[i];
+			unchecked {
+				i++;
+			}
 		}
 	}
 

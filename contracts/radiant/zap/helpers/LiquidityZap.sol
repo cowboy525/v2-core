@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.12;
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -39,25 +39,23 @@ import {IUniswapV2Pair} from "@uniswap/lib/contracts/interfaces/IUniswapV2Pair.s
 import {UniswapV2Library} from "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {DustRefunder} from "./DustRefunder.sol";
 
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {Initializable} from "../../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
 contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	using SafeERC20 for IERC20;
-	using SafeMath for uint256;
 
 	error ZapExists();
 	error InvalidETHAmount();
 	error AddressZero();
-	error InsufficientPermision();
+	error InsufficientPermission();
 	error TransferFailed();
 
 	address public _token;
@@ -65,6 +63,10 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	IWETH public weth;
 	bool private initializedLiquidityZap;
 	address public poolHelper;
+
+	constructor() {
+			_disableInitializers();
+		}
 
 	/**
 	 * @notice Initialize
@@ -80,7 +82,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @param tokenWethPair LP pair
 	 * @param _helper Pool helper contract
 	 */
-	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external {
+	function initLiquidityZap(address token, address _weth, address tokenWethPair, address _helper) external onlyOwner {
 		if (initializedLiquidityZap) revert ZapExists();
 		_token = token;
 		weth = IWETH(_weth);
@@ -112,9 +114,9 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @return liquidity lp amount
 	 */
 	function addLiquidityWETHOnly(uint256 _amount, address payable to) public returns (uint256) {
-		if (msg.sender != poolHelper) revert InsufficientPermision();
+		if (msg.sender != poolHelper) revert InsufficientPermission();
 		if (to == address(0)) revert AddressZero();
-		uint256 buyAmount = _amount.div(2);
+		uint256 buyAmount = _amount / 2;
 		if (buyAmount == 0) revert InvalidETHAmount();
 
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
@@ -140,7 +142,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 */
 	function addLiquidityETHOnly(address payable to) public payable returns (uint256) {
 		if (to == address(0)) revert AddressZero();
-		uint256 buyAmount = msg.value.div(2);
+		uint256 buyAmount = msg.value / 2;
 		if (buyAmount == 0) revert InvalidETHAmount();
 		weth.deposit{value: msg.value}();
 
@@ -185,10 +187,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @dev use with quote
 	 * @param tokenAmount RDNT amount
 	 * @param _wethAmt WETH amount
-	 * @param to LP address to be transfered
+	 * @param to LP address to be transferred
 	 * @return liquidity LP amount
 	 */
 	function standardAdd(uint256 tokenAmount, uint256 _wethAmt, address payable to) public returns (uint256) {
+		if (to == address(0)) revert AddressZero();
+		if (tokenAmount == 0 || _wethAmt == 0) revert InvalidETHAmount();
 		IERC20(_token).safeTransferFrom(msg.sender, address(this), tokenAmount);
 		weth.transferFrom(msg.sender, address(this), _wethAmt);
 		return _addLiquidity(tokenAmount, _wethAmt, to);
@@ -199,7 +203,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @dev use with quote
 	 * @param tokenAmount RDNT amount
 	 * @param wethAmount WETH amount
-	 * @param to LP address to be transfered
+	 * @param to LP address to be transferred
 	 * @return liquidity LP amount
 	 */
 	function _addLiquidity(
@@ -232,15 +236,15 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 */
 	function getLPTokenPerEthUnit(uint256 ethAmt) public view returns (uint256 liquidity) {
 		(uint256 reserveWeth, uint256 reserveTokens) = getPairReserves();
-		uint256 outTokens = UniswapV2Library.getAmountOut(ethAmt.div(2), reserveWeth, reserveTokens);
+		uint256 outTokens = UniswapV2Library.getAmountOut(ethAmt / 2, reserveWeth, reserveTokens);
 		uint256 _totalSupply = IUniswapV2Pair(_tokenWETHPair).totalSupply();
 
 		(address token0, ) = UniswapV2Library.sortTokens(address(weth), _token);
-		(uint256 amount0, uint256 amount1) = token0 == _token ? (outTokens, ethAmt.div(2)) : (ethAmt.div(2), outTokens);
+		(uint256 amount0, uint256 amount1) = token0 == _token ? (outTokens, ethAmt / 2) : (ethAmt / 2, outTokens);
 		(uint256 _reserve0, uint256 _reserve1) = token0 == _token
 			? (reserveTokens, reserveWeth)
 			: (reserveWeth, reserveTokens);
-		liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
+		liquidity = Math.min(amount0 * _totalSupply / _reserve0, amount1 * _totalSupply / _reserve1);
 	}
 
 	/**

@@ -49,6 +49,10 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 		return CONFIGURATOR_REVISION;
 	}
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	function initialize(ILendingPoolAddressesProvider provider) public initializer {
 		addressesProvider = provider;
 		pool = ILendingPool(addressesProvider.getLendingPool());
@@ -59,8 +63,12 @@ contract LendingPoolConfigurator is VersionedInitializable, ILendingPoolConfigur
 	 **/
 	function batchInitReserve(InitReserveInput[] calldata input) external onlyPoolAdmin {
 		ILendingPool cachedPool = pool;
-		for (uint256 i = 0; i < input.length; i++) {
+		uint256 length = input.length;
+		for (uint256 i = 0; i < length; ) {
 			_initReserve(cachedPool, input[i]);
+			unchecked {
+				i++;
+			}
 		}
 	}
 

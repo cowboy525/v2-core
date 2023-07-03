@@ -55,7 +55,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -78,7 +78,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
@@ -938,7 +938,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -957,7 +957,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 

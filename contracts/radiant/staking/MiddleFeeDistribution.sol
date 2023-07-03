@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {RecoverERC20} from "../libraries/RecoverERC20.sol";
 import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.sol";
-import {IMultiFeeDistribution, LockedBalance} from "../../interfaces/IMultiFeeDistribution.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
 import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
 import {IAToken} from "../../interfaces/IAToken.sol";
@@ -21,7 +20,6 @@ import {IAaveProtocolDataProvider} from "../../interfaces/IAaveProtocolDataProvi
 /// @title Fee distributor inside
 /// @author Radiant
 contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, OwnableUpgradeable, RecoverERC20 {
-	using SafeMath for uint256;
 	using SafeERC20 for IERC20;
 
 	/// @notice RDNT token
@@ -31,16 +29,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	IMultiFeeDistribution public multiFeeDistribution;
 
 	/// @notice Reward ratio for operation expenses
-	uint256 public override operationExpenseRatio;
+	uint256 public operationExpenseRatio;
 
 	uint256 public constant RATIO_DIVISOR = 10000;
 
 	uint8 public constant DECIMALS = 18;
 
-	mapping(address => bool) public override isRewardToken;
+	mapping(address => bool) public isRewardToken;
 
 	/// @notice Operation Expense account
-	address public override operationExpenses;
+	address public operationExpenses;
 
 	/// @notice Admin address
 	address public admin;
@@ -81,8 +79,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @dev Throws if called by any account other than the admin or owner.
 	 */
 	modifier onlyAdminOrOwner() {
-		require(admin == _msgSender() || owner() == _msgSender(), "caller is not the admin or owner");
+		if(admin != _msgSender() && owner() != _msgSender()) revert InsufficientPermission();
 		_;
+	}
+
+	constructor() {
+		_disableInitializers();
 	}
 
 	/**
@@ -99,6 +101,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	) public initializer {
 		if (_rdntToken == address(0)) revert ZeroAddress();
 		if (aaveOracle == address(0)) revert ZeroAddress();
+		if (address(_multiFeeDistribution) == address(0)) revert ZeroAddress();
+
 		__Ownable_init();
 
 		rdntToken = IMintableToken(_rdntToken);
@@ -145,7 +149,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Add a new reward token to be distributed to stakers
 	 * @param _rewardsToken address of the reward token
 	 */
-	function addReward(address _rewardsToken) external override onlyAdminOrOwner {
+	function addReward(address _rewardsToken) external onlyAdminOrOwner {
 		if (msg.sender != admin) {
 			try IAToken(_rewardsToken).UNDERLYING_ASSET_ADDRESS() returns (address underlying) {
 				(address aTokenAddress, , ) = aaveProtocolDataProvider.getReserveTokensAddresses(underlying);
@@ -173,16 +177,16 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Run by MFD to pull pending platform revenue
 	 * @param _rewardTokens an array of reward token addresses
 	 */
-	function forwardReward(address[] memory _rewardTokens) external override {
+	function forwardReward(address[] memory _rewardTokens) external {
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		uint256 length = _rewardTokens.length;
-		for (uint256 i = 0; i < length; i += 1) {
+		for (uint256 i = 0; i < length;) {
 			address rewardToken = _rewardTokens[i];
 			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
-				uint256 opExAmount = total.mul(operationExpenseRatio).div(RATIO_DIVISOR);
+				uint256 opExAmount = total * operationExpenseRatio / RATIO_DIVISOR;
 				if (opExAmount != 0) {
 					IERC20(rewardToken).safeTransfer(operationExpenses, opExAmount);
 				}
@@ -198,6 +202,9 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			emit ForwardReward(rewardToken, total);
 
 			emitNewTransferAdded(rewardToken, total);
+			unchecked {
+				i++;
+			}
 		}
 	}
 
@@ -205,7 +212,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Returns RDNT token address.
 	 * @return RDNT token address
 	 */
-	function getRdntTokenAddress() external view override returns (address) {
+	function getRdntTokenAddress() external view returns (address) {
 		return address(rdntToken);
 	}
 
@@ -213,7 +220,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Returns MFD address.
 	 * @return MFD address
 	 */
-	function getMultiFeeDistributionAddress() external view override returns (address) {
+	function getMultiFeeDistributionAddress() external view returns (address) {
 		return address(multiFeeDistribution);
 	}
 
@@ -230,7 +237,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
 					10 ** assetDecimals
 				);
 			} catch {
@@ -238,7 +245,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice.mul(lpReward).mul(10 ** DECIMALS).div(10 ** priceDecimal).div(
+				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
 					10 ** assetDecimals
 				);
 			}

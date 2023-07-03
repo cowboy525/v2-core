@@ -3,17 +3,14 @@ pragma solidity 0.8.12;
 
 import {OFTV2} from "@layerzerolabs/solidity-examples/contracts/token/oft/v2/OFTV2.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "../../interfaces/IPriceProvider.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
 /// @title Radiant token contract with OFT integration
 /// @author Radiant Devs
 contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
-	using SafeMath for uint256;
-
 	/// @notice bridge fee reciever
 	address private treasury;
 
@@ -23,8 +20,14 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Divisor for fee ratio, 100%
 	uint256 public constant FEE_DIVISOR = 10000;
 
+	/// @notice Max reasonable fee, 1%
+	uint256 public constant MAX_REASONABLE_FEE = 100;
+
 	/// @notice PriceProvider, for RDNT price in native fee calc
 	IPriceProvider public priceProvider;
+
+	/// @notice Decimals for OFTV2
+	uint8 public constant SHARED_DECIMALS = 8;
 
 	/// @notice Emitted when fee ratio is updated
 	event FeeRatioUpdated(uint256 indexed fee);
@@ -35,8 +38,16 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	/// @notice Emitted when Treasury is updated
 	event TreasuryUpdated(address indexed treasury);
 
+	error AmountTooSmall();
+
 	/// @notice Error message emitted when the provided ETH does not cover the bridge fee
 	error InsufficientETHForFee();
+
+	/// @notice Emitted when null address is set
+	error AddressZero();
+
+	/// @notice Emitted when ratio is invalid
+	error InvalidRatio();
 
 	/**
 	 * @notice Create RadiantOFT
@@ -54,10 +65,10 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address _dao,
 		address _treasury,
 		uint256 _mintAmt
-	) OFTV2(_tokenName, _symbol, 8, _endpoint) {
-		require(_endpoint != address(0), "invalid LZ Endpoint");
-		require(_dao != address(0), "invalid DAO");
-		require(_treasury != address(0), "invalid treasury");
+	) OFTV2(_tokenName, _symbol, SHARED_DECIMALS, _endpoint) {
+		if (_endpoint == address(0)) revert AddressZero();
+		if (_dao == address(0)) revert AddressZero();
+		if (_treasury == address(0)) revert AddressZero();
 
 		treasury = _treasury;
 
@@ -105,7 +116,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		bytes calldata _adapterParams
 	) public view override returns (uint256 nativeFee, uint256 zroFee) {
 		(nativeFee, zroFee) = super.estimateSendFee(_dstChainId, _toAddress, _amount, _useZro, _adapterParams);
-		nativeFee = nativeFee.add(getBridgeFee(_amount));
+		nativeFee = nativeFee + getBridgeFee(_amount);
 	}
 
 	function _updatePrice() internal {
@@ -133,22 +144,24 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		address payable _refundAddress,
 		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override nonReentrant returns (uint256 amount) {
+	) internal override nonReentrant whenNotPaused returns (uint256 amount) {
 		_updatePrice();
 
 		(amount, ) = _removeDust(_amount);
 		uint256 fee = getBridgeFee(amount);
-		require(msg.value >= fee, "ETH sent is not enough for fee");
+		if (msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND, _adapterParams, NO_EXTRA_GAS);
 
-		amount = _debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
-		require(amount > 0, "OFTCore: amount too small");
+		if (amount == 0) revert AmountTooSmall();
+		_debitFrom(_from, _dstChainId, _toAddress, amount); // amount returned should not have dust
 
 		bytes memory lzPayload = _encodeSendPayload(_toAddress, _ld2sd(amount));
-		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value.sub(fee));
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
-		Address.sendValue(payable(treasury), fee);
+		if (fee > 0) {
+			Address.sendValue(payable(treasury), fee);
+		}
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
@@ -167,30 +180,34 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _adapterParams LZ adapter params
 	 */
 	function _sendAndCall(
-		address _from, 
-		uint16 _dstChainId, 
-		bytes32 _toAddress, 
-		uint _amount, 
-		bytes memory _payload, 
-		uint64 _dstGasForCall, 
-		address payable _refundAddress, 
-		address _zroPaymentAddress, 
+		address _from,
+		uint16 _dstChainId,
+		bytes32 _toAddress,
+		uint _amount,
+		bytes memory _payload,
+		uint64 _dstGasForCall,
+		address payable _refundAddress,
+		address _zroPaymentAddress,
 		bytes memory _adapterParams
-	) internal override nonReentrant returns (uint amount) {
+	) internal override nonReentrant whenNotPaused returns (uint amount) {
+		_updatePrice();
+		
 		(amount,) = _removeDust(_amount);
 		uint256 fee = getBridgeFee(amount);
 		if(msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
-		amount = _debitFrom(_from, _dstChainId, _toAddress, amount);
-		require(amount > 0, "OFTCore: amount too small");
+		if (amount == 0) revert AmountTooSmall();
+		_debitFrom(_from, _dstChainId, _toAddress, amount);
 
 		// encode the msg.sender into the payload instead of _from
 		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
-		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value);
+		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
-		Address.sendValue(payable(treasury), fee);
+		if (fee > 0) {
+			Address.sendValue(payable(treasury), fee);
+		}
 
 		emit SendToChain(_dstChainId, _from, _toAddress, amount);
 	}
@@ -222,7 +239,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		}
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
-		uint256 rdntInEth = _rdntAmount.mul(priceInEth).div(10 ** priceDecimals).mul(10 ** 18).div(10 ** decimals());
+		uint256 rdntInEth = _rdntAmount * priceInEth / (10 ** priceDecimals) * (10 ** 18) / (10 ** decimals());
 		bridgeFee = (rdntInEth * feeRatio) / FEE_DIVISOR;
 	}
 
@@ -231,7 +248,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _feeRatio ratio
 	 */
 	function setFeeRatio(uint256 _feeRatio) external onlyOwner {
-		require(_feeRatio <= 1e4, "Invalid ratio");
+		if (_fee > MAX_REASONABLE_FEE) revert InvalidRatio();
 		feeRatio = _feeRatio;
 		emit FeeRatioUpdated(_feeRatio);
 	}
@@ -241,7 +258,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _priceProvider address
 	 */
 	function setPriceProvider(IPriceProvider _priceProvider) external onlyOwner {
-		require(address(_priceProvider) != address(0), "invalid PriceProvider");
+		if (address(_priceProvider) == address(0)) revert AddressZero();
 		priceProvider = _priceProvider;
 		emit PriceProviderUpdated(_priceProvider);
 	}
@@ -251,7 +268,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	 * @param _treasury address
 	 */
 	function setTreasury(address _treasury) external onlyOwner {
-		require(_treasury != address(0), "invalid Treasury address");
+		if (_treasury == address(0)) revert AddressZero();
 		treasury = _treasury;
 		emit TreasuryUpdated(_treasury);
 	}

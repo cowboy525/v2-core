@@ -69,8 +69,8 @@ describe('Stargate Borrow', () => {
 				wrappedEth.address,
 				fixture.treasury.address,
 				deployConfig.FEE_XCHAIN_BORROW,
-				INITIAL_MAX_SLIPPAGE
-			])
+				INITIAL_MAX_SLIPPAGE,
+			], {unsafeAllow: ['constructor']})
 		);
 		//stargateBorrow = <StargateBorrow> await ethers.getContractAt("StargateBorrow", deployData.stargateBorrow);
 	});
@@ -179,5 +179,11 @@ describe('Stargate Borrow', () => {
 		await expect(
 			stargateBorrow.connect(user2).borrow('0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', borrowAmt, 2, 10143)
 		).to.be.revertedWith('ETHTransferFailed');
+	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		await expect(
+			stargateBorrow.setXChainBorrowFeePercent(101)
+		).to.be.revertedWith('InvalidRatio');
 	});
 });

@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-import "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {IUniswapV2Router} from "@uniswap/lib/contracts/interfaces/IUniswapV2Router.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import "../../interfaces/IAToken.sol";
-import "../../interfaces/IMultiFeeDistribution.sol";
-import "../../interfaces/ILendingPoolAddressesProvider.sol";
-import "../../interfaces/IAaveOracle.sol";
-import "../../interfaces/ILendingPool.sol";
-import "../../interfaces/ILockZap.sol";
-import "../../interfaces/IPriceProvider.sol";
-import "../../interfaces/IFeeDistribution.sol";
-import "../../interfaces/IERC20DetailedBytes.sol";
-import "../../interfaces/IMintableToken.sol";
-import "../../interfaces/IBountyManager.sol";
+import {IAToken} from "../../interfaces/IAToken.sol";
+import {IMultiFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
+import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
+import {IAaveOracle} from "../../interfaces/IAaveOracle.sol";
+import {ILendingPool} from "../../interfaces/ILendingPool.sol";
+import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
+import {IFeeDistribution} from "../../interfaces/IFeeDistribution.sol";
+import {IMintableToken} from "../../interfaces/IMintableToken.sol";
+import {IBountyManager} from "../../interfaces/IBountyManager.sol";
 
 /// @title Compounder Contract
 /// @author Radiant
@@ -64,6 +63,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/// @notice Percent divisor which is equal to 100%
 	uint256 public constant PERCENT_DIVISOR = 10000;
+	uint256 public constant MAX_COMPOUND_FEE = 2000;
+	uint256 public constant MIN_SLIPPAGE_LIMIT = 8000;
+	uint256 public constant MIN_DELAY = 1 days;
 	/// @notice Fee of compounding
 	uint256 public compoundFee;
 	/// @notice Slippage limit
@@ -94,6 +96,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Reward to base swap route
 	mapping(address => address[]) public rewardToBaseRoute;
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _uniRouter Uniswap router address
@@ -112,14 +118,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		address _lockZap,
 		uint256 _compoundFee,
 		uint256 _slippageLimit
-	) public initializer {
+	) external initializer {
 		if (_uniRouter == address(0)) revert AddressZero();
 		if (_mfd == address(0)) revert AddressZero();
 		if (_baseToken == address(0)) revert AddressZero();
 		if (_addressProvider == address(0)) revert AddressZero();
 		if (_lockZap == address(0)) revert AddressZero();
-		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee == 0) revert InvalidCompoundFee();
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
 		_validateSlippageLimit(_slippageLimit);
 
 		uniRouter = _uniRouter;
@@ -139,14 +145,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/**
 	 * @notice Pause contract
 	 */
-	function pause() public onlyOwner {
+	function pause() external onlyOwner {
 		_pause();
 	}
 
 	/**
 	 * @notice Unpause contract
 	 */
-	function unpause() public onlyOwner {
+	function unpause() external onlyOwner {
 		_unpause();
 	}
 
@@ -184,8 +190,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @param _compoundFee Sets new compounding fee
 	 */
 	function setCompoundFee(uint256 _compoundFee) external onlyOwner {
-		if (_compoundFee <= 0) revert InvalidCompoundFee();
-		if (_compoundFee > 2000) revert InvalidCompoundFee();
+		if (_compoundFee == 0) revert InvalidCompoundFee();
+		if (_compoundFee > MAX_COMPOUND_FEE) revert InvalidCompoundFee();
 		compoundFee = _compoundFee;
 		emit CompoundFeeUpdated(_compoundFee);
 	}
@@ -234,7 +240,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 						0,
 						rewardToBaseRoute[tokenToTrade],
 						address(this),
-						block.timestamp + 600
+						block.timestamp
 					)
 				{} catch {
 					revert SwapFailed(tokenToTrade, amount);
@@ -252,7 +258,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function _convertBaseToLPandStake(address _user) internal returns (uint256 liquidity) {
 		uint256 baseBal = IERC20(baseToken).balanceOf(address(this));
 		if (baseBal != 0) {
-			IERC20(baseToken).safeApprove(lockZap, baseBal);
+			IERC20(baseToken).forceApprove(lockZap, baseBal);
 			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user);
 		}
 	}
@@ -289,9 +295,13 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		if (!_execute) {
-			uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
-			fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
-			return fee;
+			if (isAutoCompound) {
+				uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
+				fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
+				return fee;
+			} else {
+				return 0;
+			}
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
@@ -310,11 +320,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Self compound
-	 * @return fee amount
+	 * @notice User compounds their own rewards
 	 */
-	function selfCompound() external returns (uint256 fee) {
-		fee = claimCompound(msg.sender, true);
+	function selfCompound() external {
+		claimCompound(msg.sender, true);
 	}
 
 	/**
@@ -355,8 +364,8 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		IAaveOracle oracle = IAaveOracle(ILendingPoolAddressesProvider(addressProvider).getPriceOracle());
 		uint256 priceInAsset = oracle.getAssetPrice(_in); //USDC: 100000000
 		uint256 priceOutAsset = oracle.getAssetPrice(_out); //WETH: 153359950000
-		uint256 decimalsIn = IERC20DetailedBytes(_in).decimals();
-		uint256 decimalsOut = IERC20DetailedBytes(_out).decimals();
+		uint256 decimalsIn = IERC20Metadata(_in).decimals();
+		uint256 decimalsOut = IERC20Metadata(_out).decimals();
 		tokensOut = (_amtIn * priceInAsset * (10 ** decimalsOut)) / (priceOutAsset * (10 ** decimalsIn));
 	}
 
@@ -391,17 +400,17 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPrice();
 		if (_wethIn != 0) {
 			if (_execute) {
-				IERC20(baseToken).safeApprove(uniRouter, _wethIn);
-				uint256[] memory amounts = IUniswapV2Router01(uniRouter).swapExactTokensForTokens(
+				IERC20(baseToken).forceApprove(uniRouter, _wethIn);
+				uint256[] memory amounts = IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 					_wethIn,
 					0,
 					wethToRadiant,
 					address(this),
-					block.timestamp + 600
+					block.timestamp
 				);
 				rdntOut = amounts[amounts.length - 1];
 			} else {
-				uint256[] memory amounts = IUniswapV2Router01(uniRouter).getAmountsOut(
+				uint256[] memory amounts = IUniswapV2Router(uniRouter).getAmountsOut(
 					_wethIn, //amt in
 					wethToRadiant
 				);
@@ -409,7 +418,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / 10000) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 
 	/**
@@ -434,7 +443,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	function isEligibleForAutoCompound(address _user, uint256 _pending) public view returns (bool) {
 		bool delayComplete = true;
 		if (lastAutocompound[_user] != 0) {
-			delayComplete = (block.timestamp - lastAutocompound[_user]) >= 1 days;
+			delayComplete = (block.timestamp - lastAutocompound[_user]) >= MIN_DELAY;
 		}
 		return
 			IMultiFeeDistribution(multiFeeDistribution).autocompoundEnabled(_user) &&
@@ -456,7 +465,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @param _user address
 	 * @return eligible `true` or `false`
 	 */
-	function userEligibleForCompound(address _user) public view returns (bool eligible) {
+	function userEligibleForCompound(address _user) external view returns (bool eligible) {
 		eligible = _userEligibleForCompound(_user);
 	}
 
@@ -464,7 +473,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @notice Returns if the `msg.sender` is eligible for self compound
 	 * @return eligible `true` or `false`
 	 */
-	function selfEligibleCompound() public view returns (bool eligible) {
+	function selfEligibleCompound() external view returns (bool eligible) {
 		eligible = _userEligibleForCompound(msg.sender);
 	}
 
@@ -484,6 +493,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	* @param _slippageLimit slippage limit to be validated
 	*/
 	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
-		if (_slippageLimit < 8000 || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
+		if (_slippageLimit < MIN_SLIPPAGE_LIMIT || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 }

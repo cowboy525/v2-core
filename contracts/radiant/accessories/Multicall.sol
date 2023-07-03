@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 /// @title Multicall - Aggregate results from multiple read-only function calls
 /// @author Michael Elliot <mike@makerdao.com>
@@ -14,11 +14,15 @@ contract Multicall {
 
 	function aggregate(Call[] memory calls) public returns (uint256 blockNumber, bytes[] memory returnData) {
 		blockNumber = block.number;
-		returnData = new bytes[](calls.length);
-		for (uint256 i = 0; i < calls.length; i++) {
+		uint256 length = calls.length;
+		returnData = new bytes[](length);
+		for (uint256 i = 0; i < length; ) {
 			(bool success, bytes memory ret) = calls[i].target.call(calls[i].callData);
 			require(success);
 			returnData[i] = ret;
+			unchecked {
+				i++;
+			}
 		}
 	}
 
