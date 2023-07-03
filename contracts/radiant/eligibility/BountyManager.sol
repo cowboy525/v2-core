@@ -4,26 +4,20 @@ pragma solidity 0.8.12;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
-import {Initializable} from "../../dependencies/openzeppelin/upgradeability/Initializable.sol";
-import {OwnableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "../../dependencies/openzeppelin/upgradeability/PausableUpgradeable.sol";
-import {IAToken} from "../../interfaces/IAToken.sol";
-import {IMultiFeeDistribution, IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
-import {ILendingPoolAddressesProvider} from "../../interfaces/ILendingPoolAddressesProvider.sol";
-import {ILendingPool} from "../../interfaces/ILendingPool.sol";
-import {ILockZap} from "../../interfaces/ILockZap.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {RecoverERC20} from "../libraries/RecoverERC20.sol";
+import {IMFDPlus} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IChefIncentivesController} from "../../interfaces/IChefIncentivesController.sol";
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 import {IEligibilityDataProvider} from "../../interfaces/IEligibilityDataProvider.sol";
 import {ICompounder} from "../../interfaces/ICompounder.sol";
+import {IBountyManager} from "../../interfaces/IBountyManager.sol";
 
 /// @title BountyManager Contract
 /// @author Radiant Devs
-/// @dev All function calls are currently implemented without side effects
-contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable {
-	using SafeMath for uint256;
+contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable, RecoverERC20 {
 	using SafeERC20 for IERC20;
 
 	address public rdnt;
@@ -39,6 +33,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	uint256 public bountyCount;
 	uint256 public minStakeAmount;
 
+	/// @notice Ratio Divisor
+	uint256 public constant RATIO_DIVISOR = 10000;
+
 	// Array of available Bounty functions to run. See getMfdBounty, getChefBounty, etc.
 	mapping(uint256 => function(address, bool) returns (address, uint256, bool)) private bounties;
 
@@ -47,15 +44,18 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	modifier isWhitelisted() {
 		if (whitelistActive) {
-			require(whitelist[msg.sender] || msg.sender == address(this), "!whiteliested");
+			if (!whitelist[msg.sender] && msg.sender != address(this)) revert NotWhitelisted();
 		}
 		_;
 	}
 
+	event MinStakeAmountUpdated(uint256 indexed _minStakeAmount);
 	event BaseBountyUsdTargetUpdated(uint256 indexed _newVal);
 	event HunterShareUpdated(uint256 indexed _newVal);
 	event MaxBaseBountyUpdated(uint256 indexed _newVal);
+	event BountiesSet();
 	event BountyReserveEmpty(uint256 indexed _bal);
+	event WhitelistUpdated(address indexed _user, bool indexed _isActive);
 	event WhitelistActiveChanged(bool indexed isActive);
 
 	error AddressZero();
@@ -64,6 +64,12 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	error Ineligible();
 	error Override();
 	error InvalidSlippage();
+	error ActionTypeIndexOutOfBounds();
+	error NotWhitelisted();
+
+	constructor() {
+		_disableInitializers();
+	}
 
 	/**
 	 * @notice Initialize
@@ -72,6 +78,8 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _mfd MFD, to send bounties as vesting RDNT to Hunter (user calling bounty)
 	 * @param _chef CIC, to query bounties for ineligible emissions
 	 * @param _priceProvider PriceProvider service, to get RDNT price for bounty quotes
+	 * @param _eligibilityDataProvider Eligibility data provider
+	 * @param _compounder Compounder address
 	 * @param _hunterShare % of reclaimed rewards to send to Hunter
 	 * @param _baseBountyUsdTarget Base Bounty is paid in RDNT, will scale to match this USD target value
 	 * @param _maxBaseBounty cap the scaling above
@@ -95,7 +103,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		if (_priceProvider == address(0)) revert AddressZero();
 		if (_eligibilityDataProvider == address(0)) revert AddressZero();
 		if (_compounder == address(0)) revert AddressZero();
-		if (_hunterShare > 10000) revert InvalidNumber();
+		if (_hunterShare > RATIO_DIVISOR) revert Override();
 		if (_baseBountyUsdTarget == 0) revert InvalidNumber();
 		if (_maxBaseBounty == 0) revert InvalidNumber();
 
@@ -128,9 +136,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return actionType which of the 3 bounty types (above) to run.
 	 * getBestBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
 	 */
-	function quote(address _user) public view whenNotPaused returns (uint256 bounty, uint256 actionType) {
+	function quote(address _user) public view returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
-			abi.encodeWithSignature("executeBounty(address,bool,uint256)", _user, false, 0)
+			abi.encodeCall(IBountyManager.executeBounty, (_user, false, 0))
 		);
 		if (!success) revert QuoteFail();
 
@@ -145,7 +153,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return bounty in RDNT to be paid to Hunter (via vesting)
 	 * @return actionType which bounty ran
 	 */
-	function claim(address _user, uint256 _actionType) public whenNotPaused isWhitelisted returns (uint256, uint256) {
+	function claim(address _user, uint256 _actionType) public returns (uint256, uint256) {
 		return executeBounty(_user, true, _actionType);
 	}
 
@@ -169,14 +177,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		uint256 totalBounty;
 		bool issueBaseBounty;
 		address incentivizer;
-		uint256 bb = getBaseBounty();
 
 		(incentivizer, totalBounty, issueBaseBounty, actionType) = getBestBounty(_user, _execute, _actionType);
 		if (issueBaseBounty) {
-			bounty = bb;
+			bounty = getBaseBounty();
 		} else {
 			if (totalBounty != 0) {
-				bounty = totalBounty.mul(hunterShare).div(10000);
+				bounty = totalBounty * hunterShare / RATIO_DIVISOR;
 			}
 		}
 
@@ -184,7 +191,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			if (!issueBaseBounty) {
 				IERC20(rdnt).safeTransferFrom(incentivizer, address(this), totalBounty);
 			}
-			_sendBounty(msg.sender, bounty);
+			bounty = _sendBounty(msg.sender, bounty);
 		}
 	}
 
@@ -195,7 +202,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	}
 
 	/**
-	 * @notice Given a user and actionType, execute that bounty on either CIC or MFD.
+	 * @notice Given a user and actionType, execute that bounty on either CIC or MFD or Compounder.
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @param _actionTypeIndex, which of the 3 bounty types (above) to run.
@@ -210,16 +217,20 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool _execute,
 		uint256 _actionTypeIndex
 	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty, uint256 actionType) {
+		if (_actionTypeIndex > bountyCount) revert ActionTypeIndexOutOfBounds();
 		if (_actionTypeIndex != 0) {
 			// execute bounty w/ given params
 			(incentivizer, totalBounty, issueBaseBounty) = bounties[_actionTypeIndex](_user, _execute);
 			actionType = _actionTypeIndex;
 		} else {
-			for (uint256 i = 1; i <= bountyCount; i++) {
+			for (uint256 i = 1; i <= bountyCount; ) {
 				(incentivizer, totalBounty, issueBaseBounty) = bounties[i](_user, _execute);
 				if (totalBounty != 0 || issueBaseBounty) {
 					actionType = i;
 					break;
+				}
+				unchecked {
+					i++;
 				}
 			}
 		}
@@ -231,7 +242,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case MFD
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
 	function getMfdBounty(
 		address _user,
@@ -239,6 +250,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IMFDPlus(mfd).claimBounty(_user, _execute);
 		incentivizer = mfd;
+		return (incentivizer, 0, issueBaseBounty);
 	}
 
 	/**
@@ -247,7 +259,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
 	 * @return incentivizer in this case CIC
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
-	 * false when !autorelock because they will have rewards removed from their ineligible time after locks expired
+	 * @return issueBaseBounty will be true
 	 */
 	function getChefBounty(
 		address _user,
@@ -255,14 +267,16 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
 		issueBaseBounty = IChefIncentivesController(chef).claimBounty(_user, _execute);
 		incentivizer = chef;
+		return (incentivizer, 0, issueBaseBounty);
 	}
 
 	/**
-	 * @notice call MFDPlus.claimCompound(). compound pending rewards for _user into locked LP
+	 * @notice call Compounder.claimCompound(). compound pending rewards for _user into locked LP
 	 * @param _user address
 	 * @param _execute whether to execute this txn, or just quote what its execution would return
-	 * @return incentivizer in this case MFDPlus
+	 * @return incentivizer is the Compounder
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
+	 * @return issueBaseBounty will be false, will vary based on autocompound fee
 	 */
 	function getAutoCompoundBounty(
 		address _user,
@@ -296,12 +310,12 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 
 	/**
 	 * @notice Return RDNT amount for Base Bounty.
-	 * Base Bounty used to incentivize operations that dont generate their own reward to pay to Hunter.
+	 * Base Bounty used to incentivize operations that don't generate their own reward to pay to Hunter.
 	 * @return bounty in RDNT
 	 */
 	function getBaseBounty() public view whenNotPaused returns (uint256 bounty) {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPriceUsd();
-		bounty = baseBountyUsdTarget.mul(1e8).div(rdntPrice);
+		bounty = baseBountyUsdTarget * 1e8 / rdntPrice;
 		if (bounty > maxBaseBounty) {
 			bounty = maxBaseBounty;
 		}
@@ -312,7 +326,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function minDLPBalance() public view returns (uint256 min) {
 		uint256 lpTokenPrice = IPriceProvider(priceProvider).getLpTokenPriceUsd();
-		min = minStakeAmount.mul(1e8).div(lpTokenPrice);
+		min = minStakeAmount * 1e8 / lpTokenPrice;
 	}
 
 	/**
@@ -322,6 +336,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function setMinStakeAmount(uint256 _minStakeAmount) external onlyOwner {
 		minStakeAmount = _minStakeAmount;
+		emit MinStakeAmountUpdated(_minStakeAmount);
 	}
 
 	/**
@@ -340,7 +355,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _newVal New hunter share ratio
 	 */
 	function setHunterShare(uint256 _newVal) external onlyOwner {
-		if (_newVal > 10000) revert Override();
+		if (_newVal > RATIO_DIVISOR) revert Override();
 		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
@@ -363,6 +378,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bounties[1] = getMfdBounty;
 		bounties[2] = getChefBounty;
 		bounties[3] = getAutoCompoundBounty;
+		emit BountiesSet();
 	}
 
 	/**
@@ -371,7 +387,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param tokenAmount Amount to recover
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 
 	/**
@@ -381,6 +397,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function addAddressToWL(address user, bool status) external onlyOwner {
 		whitelist[user] = status;
+		emit WhitelistUpdated(user, status);
 	}
 
 	/**

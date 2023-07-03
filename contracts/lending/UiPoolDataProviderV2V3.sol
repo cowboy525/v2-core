@@ -60,7 +60,7 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 		address[] memory reserves = lendingPool.getReservesList();
 		AggregatedReserveData[] memory reservesData = new AggregatedReserveData[](reserves.length);
 
-		for (uint256 i = 0; i < reserves.length; i++) {
+		for (uint256 i = 0; i < reserves.length; ) {
 			AggregatedReserveData memory reserveData = reservesData[i];
 			reserveData.underlyingAsset = reserves[i];
 
@@ -119,6 +119,9 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 			) = getInterestRateStrategySlopes(
 				DefaultReserveInterestRateStrategy(reserveData.interestRateStrategyAddress)
 			);
+			unchecked {
+				i++;
+			}
 		}
 
 		BaseCurrencyInfo memory baseCurrencyInfo;
@@ -153,7 +156,7 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 
 		UserReserveData[] memory userReservesData = new UserReserveData[](user != address(0) ? reserves.length : 0);
 
-		for (uint256 i = 0; i < reserves.length; i++) {
+		for (uint256 i = 0; i < reserves.length; ) {
 			DataTypes.ReserveData memory baseData = lendingPool.getReserveData(reserves[i]);
 
 			// user reserve data
@@ -174,6 +177,9 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 					).getUserLastUpdated(user);
 				}
 			}
+			unchecked {
+				i++;
+			}
 		}
 
 		// Return 0 to be compatible with v3 userEmodeCategoryId return
@@ -186,8 +192,11 @@ contract UiPoolDataProviderV2V3 is IUiPoolDataProviderV3 {
 			i++;
 		}
 		bytes memory bytesArray = new bytes(i);
-		for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
+		for (i = 0; i < 32 && _bytes32[i] != 0; ) {
 			bytesArray[i] = _bytes32[i];
+			unchecked {
+				i++;
+			}
 		}
 		return string(bytesArray);
 	}
