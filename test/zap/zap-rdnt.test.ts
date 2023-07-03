@@ -9,6 +9,7 @@ import {
 	LockZap,
 	WETH,
 	PriceProvider,
+	UniswapPoolHelper
 } from '../../typechain';
 // import {expect} from 'chai';
 import chai from 'chai';
@@ -28,6 +29,8 @@ describe('LockZap: 2-token zap', function () {
 	let priceProvider: PriceProvider;
 	let deployConfig: DeployConfig;
 	let deployer: SignerWithAddress;
+	let poolHelperAddress: string;
+	let poolHelper: UniswapPoolHelper;
 
 	beforeEach(async function () {
 		({dao, rdntToken, lendingPool, lockZap, weth, multiFeeDistribution, priceProvider, deployConfig, deployer} =
@@ -45,6 +48,8 @@ describe('LockZap: 2-token zap', function () {
 		await vdWETH.connect(dao).approveDelegation(lockZap.address, ethers.constants.MaxUint256);
 		await advanceTimeAndBlock(deployConfig.TWAP_PERIOD);
 		await priceProvider.update();
+		poolHelperAddress = await lockZap.getPoolHelper();
+		poolHelper = <UniswapPoolHelper>await ethers.getContractAt('UniswapPoolHelper', poolHelperAddress);
 	});
 
 	it('2-token zap, with borrow', async function () {
@@ -52,7 +57,7 @@ describe('LockZap: 2-token zap', function () {
 		expect(lockInfo.lockData.length).to.be.equal(0);
 
 		const rdntZapAmt = ethers.utils.parseEther('100');
-		const wethAmt = await lockZap.quoteFromToken(rdntZapAmt);
+		const wethAmt = await poolHelper.quoteFromToken(rdntZapAmt);
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
@@ -67,7 +72,7 @@ describe('LockZap: 2-token zap', function () {
 		expect(lockInfo.lockData.length).to.be.equal(0);
 
 		const rdntZapAmt = ethers.utils.parseEther('100');
-		const ethAmt = await lockZap.quoteFromToken(rdntZapAmt);
+		const ethAmt = await poolHelper.quoteFromToken(rdntZapAmt);
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 

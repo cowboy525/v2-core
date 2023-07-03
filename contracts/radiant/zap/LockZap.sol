@@ -187,14 +187,6 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	/**
-	 * @notice Get quote from the pool
-	 * @param _tokenAmount amount of tokens.
-	 */
-	function quoteFromToken(uint256 _tokenAmount) public view returns (uint256 optimalWETHAmount) {
-		optimalWETHAmount = poolHelper.quoteFromToken(_tokenAmount) * BASE_PERCENT / ADJUSTMENT_FACTOR;
-	}
-
-	/**
 	 * @notice Zap tokens to stake LP
 	 * @param _borrow option to borrow ETH
 	 * @param _wethAmt amount of weth.
@@ -238,7 +230,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 */
 	function zapFromVesting(bool _borrow, uint256 _lockTypeIndex) public payable whenNotPaused returns (uint256) {
 		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
-		uint256 wethAmt = quoteFromToken(rdntAmt);
+		uint256 wethAmt = poolHelper.quoteFromToken(rdntAmt);
 		return _zap(_borrow, wethAmt, rdntAmt, address(this), msg.sender, _lockTypeIndex, msg.sender);
 	}
 
