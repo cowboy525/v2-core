@@ -230,7 +230,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		liquidity = IUniswapV2Pair(tokenWETHPair).mint(to);
 
 		//refund dust
-		refundDust(_token, address(weth), to);
+		_refundDust(token, address(weth), to);
 	}
 
 	/**

@@ -96,12 +96,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	function initialize(
 		address rdntToken_,
 		address aaveOracle_,
-		IMultiFeeDistribution multiFeeDistribution,
+		IMultiFeeDistribution multiFeeDistribution_,
 		IAaveProtocolDataProvider aaveProtocolDataProvider_
 	) public initializer {
 		if (rdntToken_ == address(0)) revert ZeroAddress();
 		if (aaveOracle_ == address(0)) revert ZeroAddress();
-		if (address(_multiFeeDistribution) == address(0)) revert ZeroAddress();
+		if (address(multiFeeDistribution_) == address(0)) revert ZeroAddress();
 
 		__Ownable_init();
 
