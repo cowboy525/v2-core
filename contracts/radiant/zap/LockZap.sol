@@ -281,7 +281,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		uint256 wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 
 		weth.approve(address(poolHelper), wethGained);
-		uint256 liquidity = poolHelper.zapWETH(wethGained);
+		uint256 liquidity = _zapWETHWithSlippageCheck(wethGained);
 
 		IERC20(poolHelper.lpTokenAddr()).forceApprove(address(mfd), liquidity);
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);

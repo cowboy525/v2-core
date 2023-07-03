@@ -211,9 +211,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		uint256 wethAmount,
 		address payable to
 	) internal returns (uint256 liquidity) {
-		(uint256 wethReserve, uint256 tokenReserve) = _getPairReserves();
-
-		uint256 optimalTokenAmount = UniswapV2Library.quote(wethAmount, wethReserve, tokenReserve);
+		uint256 optimalTokenAmount = quote(wethAmount);
 
 		uint256 optimalWETHAmount;
 		if (optimalTokenAmount > tokenAmount) {
