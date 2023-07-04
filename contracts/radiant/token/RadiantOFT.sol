@@ -30,7 +30,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	uint8 public constant SHARED_DECIMALS = 8;
 
 	/// @notice Emitted when fee ratio is updated
-	event FeeUpdated(uint256 indexed fee);
+	event FeeRatioUpdated(uint256 indexed fee);
 
 	/// @notice Emitted when PriceProvider is updated
 	event PriceProviderUpdated(IPriceProvider indexed priceProvider);
@@ -245,12 +245,12 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 
 	/**
 	 * @notice Set fee info
-	 * @param _fee ratio
+	 * @param _feeRatio ratio
 	 */
-	function setFee(uint256 _fee) external onlyOwner {
-		if (_fee > MAX_REASONABLE_FEE) revert InvalidRatio();
-		feeRatio = _fee;
-		emit FeeUpdated(_fee);
+	function setFeeRatio(uint256 _feeRatio) external onlyOwner {
+		if (_feeRatio > MAX_REASONABLE_FEE) revert InvalidRatio();
+		feeRatio = _feeRatio;
+		emit FeeRatioUpdated(_feeRatio);
 	}
 
 	/**

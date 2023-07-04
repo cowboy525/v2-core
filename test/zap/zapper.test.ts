@@ -142,7 +142,7 @@ describe('Zapper', function () {
 
 		await chefIncentivesController.claim(user2.address, [rUSDCAddress]);
 
-		let totalVesting = (await mfd.earnedBalances(user2.address)).total;
+		let totalVesting = (await mfd.earnedBalances(user2.address)).totalVesting;
 
 		const wethRequired = await poolHelper.connect(user2).quoteFromToken(totalVesting);
 
@@ -156,7 +156,7 @@ describe('Zapper', function () {
 			value: wethRequired,
 		});
 
-		totalVesting = (await mfd.earnedBalances(user2.address)).total;
+		totalVesting = (await mfd.earnedBalances(user2.address)).totalVesting;
 
 		const lockedLpBalEnd = (await mfd.lockedBalances(user2.address)).locked;
 		expect(lockedLpBalEnd).to.be.gt(lockedLpBalStart);
@@ -227,7 +227,7 @@ describe('Zapper', function () {
 
 		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
-		let totalVesting = (await mfd.earnedBalances(user4.address)).total;
+		let totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
 		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
 
@@ -239,7 +239,7 @@ describe('Zapper', function () {
 
 		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
-		totalVesting = (await mfd.earnedBalances(user4.address)).total;
+		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
 		const lockedLpBal2 = (await mfd.lockedBalances(user4.address)).locked;
 		expect(lockedLpBal2).to.be.gt(lockedLpBal1);
@@ -279,11 +279,11 @@ describe('Zapper', function () {
 
 		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
 
-		let totalVesting = (await mfd.earnedBalances(user4.address)).total;
+		let totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
 		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
-		totalVesting = (await mfd.earnedBalances(user4.address)).total;
+		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
 		const lockedLpBal2 = (await mfd.lockedBalances(user4.address)).locked;
 		expect(lockedLpBal2).to.be.gt(lockedLpBal1);
@@ -291,7 +291,7 @@ describe('Zapper', function () {
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.be.gt(BigNumber.from(0));
 
 		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
-		expect((await mfd.earnedBalances(user4.address)).total).to.be.gt(BigNumber.from(0));
+		expect((await mfd.earnedBalances(user4.address)).totalVesting).to.be.gt(BigNumber.from(0));
 
 		const rdntBal1 = await radiant.balanceOf(user4.address);
 		await mfd.connect(user4).exit(false);

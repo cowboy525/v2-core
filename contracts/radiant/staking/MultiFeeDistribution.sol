@@ -530,13 +530,13 @@ contract MultiFeeDistribution is
 	/**
 	 * @notice Earnings which are vesting, and earnings which have vested for full duration.
 	 * @dev Earned balances may be withdrawn immediately, but will incur a penalty between 25-90%, based on a linear schedule of elapsed time.
-	 * @return total earnings
+	 * @return totalVesting sum of vesting tokens
 	 * @return unlocked earnings
 	 * @return earningsData which is an array of all infos
 	 */
 	function earnedBalances(
 		address user
-	) public view returns (uint256 total, uint256 unlocked, EarnedBalance[] memory earningsData) {
+	) public view returns (uint256 totalVesting, uint256 unlocked, EarnedBalance[] memory earningsData) {
 		unlocked = balances[user].unlocked;
 		LockedBalance[] storage earnings = userEarnings[user];
 		uint256 idx;
@@ -551,7 +551,7 @@ contract MultiFeeDistribution is
 				earningsData[idx].unlockTime = earnings[i].unlockTime;
 				earningsData[idx].penalty = penaltyAmount;
 				idx++;
-				total = total + earnings[i].amount;
+				totalVesting = totalVesting + earnings[i].amount;
 			} else {
 				unlocked = unlocked + earnings[i].amount;
 			}
@@ -559,7 +559,7 @@ contract MultiFeeDistribution is
 				i++;
 			}
 		}
-		return (total, unlocked, earningsData);
+		return (totalVesting, unlocked, earningsData);
 	}
 
 	/**
@@ -683,7 +683,8 @@ contract MultiFeeDistribution is
 
 	/**
 	 * @notice Claim rewards by converter.
-	 * @dev Rewards are transferred to converter.
+	 * @dev Rewards are transfered to converter. In the Radiant Capital protocol
+	 * 		the role of the Converter is taken over by Compounder.sol.
 	 * @param onBehalf address to claim.
 	 */
 	function claimFromConverter(address onBehalf) external whenNotPaused {
@@ -719,7 +720,6 @@ contract MultiFeeDistribution is
 	 */
 	function relock() external virtual {
 		uint256 amount = _withdrawExpiredLocksFor(msg.sender, true, true, userLocks[msg.sender].length);
-		_stake(amount, msg.sender, defaultLockIndex[msg.sender], false);
 		emit Relocked(msg.sender, amount, defaultLockIndex[msg.sender]);
 	}
 
@@ -863,7 +863,7 @@ contract MultiFeeDistribution is
 	 * @param amount to vest.
 	 * @param withPenalty does this bear penalty?
 	 */
-	function mint(address user, uint256 amount, bool withPenalty) external whenNotPaused {
+	function vestTokens(address user, uint256 amount, bool withPenalty) external whenNotPaused {
 		if (!minters[msg.sender]) revert InsufficientPermission();
 		if (amount == 0) return;
 
@@ -1304,7 +1304,7 @@ contract MultiFeeDistribution is
 		lockedSupply = lockedSupply - amount;
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier - amountWithMultiplier;
 
-		if (!isRelockAction && !autoRelockDisabled[_address]) {
+		if (isRelockAction || (_address != msg.sender && !autoRelockDisabled[_address])) {
 			_stake(amount, _address, defaultLockIndex[_address], true);
 		} else {
 			if (doTransfer) {
@@ -1317,29 +1317,20 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Withdraw all currently locked tokens where the unlock time has passed.
-	 * @param _address of the user
-	 * @return withdraw amount
-	 */
-	function withdrawExpiredLocksFor(address _address) external returns (uint256) {
-		return _withdrawExpiredLocksFor(_address, false, true, userLocks[_address].length);
-	}
-
-	/**
 	 * @notice Withdraw expired locks with options
 	 * @param _address for withdraw
 	 * @param _limit of lock length for withdraw
-	 * @param _ignoreRelock option to ignore relock
+	 * @param _isRelockAction option to relock
 	 * @return withdraw amount
 	 */
 	function withdrawExpiredLocksForWithOptions(
 		address _address,
 		uint256 _limit,
-		bool _ignoreRelock
+		bool _isRelockAction
 	) external returns (uint256) {
 		if (_limit == 0) _limit = userLocks[_address].length;
 
-		return _withdrawExpiredLocksFor(_address, _ignoreRelock, true, _limit);
+		return _withdrawExpiredLocksFor(_address, _isRelockAction, true, _limit);
 	}
 
 	/**
@@ -1442,8 +1433,6 @@ contract MultiFeeDistribution is
 	 * @param tokenAmount to recover.
 	 */
 	function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyOwner {
-		if (rewardData[tokenAddress].lastUpdateTime != 0) revert ActiveReward();
-		IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
-		emit Recovered(tokenAddress, tokenAmount);
+		_recoverERC20(tokenAddress, tokenAmount);
 	}
 }

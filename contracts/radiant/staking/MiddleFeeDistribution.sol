@@ -196,7 +196,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 			IERC20(rewardToken).safeTransfer(address(multiFeeDistribution), total);
 
 			if (rewardToken == address(rdntToken)) {
-				multiFeeDistribution.mint(address(multiFeeDistribution), total, false);
+				multiFeeDistribution.vestTokens(address(multiFeeDistribution), total, false);
 			}
 
 			emit ForwardReward(rewardToken, total);

@@ -191,7 +191,7 @@ describe(`AutoCompound:`, async () => {
 
 		await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
 
-		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
+		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting);
 		expect(bountyReceived).closeTo(expectedFee, 0.5);
 
 		const lockInfo1 = await multiFeeDistribution.lockedBalances(user1.address);
