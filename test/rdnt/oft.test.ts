@@ -268,7 +268,7 @@ describe('Radiant OFT: ', function () {
 	});
 
 	it('fails when invalid input', async function () {
-		await expect(execute('RadiantOFT', {from: admin}, 'setFee', 101)).to.be.revertedWith(
+		await expect(execute('RadiantOFT', {from: admin}, 'setFeeRatio', 101)).to.be.revertedWith(
 			'InvalidRatio'
 		);
 	});
