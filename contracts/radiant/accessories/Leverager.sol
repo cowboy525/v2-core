@@ -250,9 +250,10 @@ contract Leverager is Ownable {
 			fee = (amount * feePercent) / RATIO_DIVISOR;
 			if(fee > 0) {
 				IERC20(asset).safeTransfer(treasury, fee);
+				amount = amount - fee;
 			}
 
-			lendingPool.deposit(asset, amount - fee, msg.sender, referralCode);
+			lendingPool.deposit(asset, amount, msg.sender, referralCode);
 			unchecked {
 				i++;
 			}
@@ -297,9 +298,10 @@ contract Leverager is Ownable {
 			if(fee > 0) {
 				weth.withdraw(fee);
 				TransferHelper.safeTransferETH(treasury, fee);
+				amount = amount - fee;
 			}
 
-			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 			unchecked {
 				i++;
 			}
@@ -341,9 +343,10 @@ contract Leverager is Ownable {
 			if(fee > 0) {
 				weth.withdraw(fee);
 				TransferHelper.safeTransferETH(treasury, fee);
+				amount = amount - fee;
 			}
 
-			lendingPool.deposit(address(weth), amount - fee, msg.sender, referralCode);
+			lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			unchecked {
@@ -383,7 +386,8 @@ contract Leverager is Ownable {
 		for (uint256 i = 0; i < loopCount;) {
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			required = required + requiredLocked(asset, amount - fee);
+			amount = amount - fee;
+			required = required + requiredLocked(asset, amount);
 			unchecked {
 				i++;
 			}
