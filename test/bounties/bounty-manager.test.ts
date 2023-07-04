@@ -140,7 +140,7 @@ describe(`BountyManager:`, async () => {
 		// let quote2 = await bountyManager.connect(hunter).executeBounty(user1.address, false, 0);
 		// console.log(quote2);
 		await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
-		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
+		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting);
 
 		/* const BountyManagerFactory = await ethers.getContractFactory(
             "BountyManagerBountiesUpgradeTest"

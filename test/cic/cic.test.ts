@@ -277,7 +277,7 @@ describe('Non-Elig CIC', () => {
 			// mine 100 seconds
 			await advanceTimeAndBlock(period);
 
-			const balanceBefore = (await multiFeeDistribution.earnedBalances(user1.address)).total;
+			const balanceBefore = (await multiFeeDistribution.earnedBalances(user1.address)).totalVesting;
 
 			const claimableRewards = await chefIncentivesController.pendingRewards(user1.address, [rUSDCAddress]);
 
@@ -293,7 +293,7 @@ describe('Non-Elig CIC', () => {
 			await expect(chefIncentivesController.connect(user1).claim(user1.address, [user1.address])).to.be.reverted;
 			await chefIncentivesController.connect(user1).claimAll(user1.address);
 
-			const balanceAfter = (await multiFeeDistribution.earnedBalances(user1.address)).total;
+			const balanceAfter = (await multiFeeDistribution.earnedBalances(user1.address)).totalVesting;
 
 			expect(balanceAfter.sub(balanceBefore)).to.be.gt(claimableRewards[0]);
 		});

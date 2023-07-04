@@ -151,7 +151,7 @@ describe('Require Locked Value', () => {
 
 		await advanceTimeAndBlock(duration);
 		await multiFeeDistribution.connect(user2).setRelock(false);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user2).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		const lockedVaule0 = await eligibilityDataProvider.lockedUsdValue(user2.address);
 		expect(lockedVaule0).to.be.equal(0);
