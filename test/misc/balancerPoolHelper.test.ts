@@ -71,7 +71,7 @@ describe('Balancer Pool Helper', function () {
 					deployConfig.BAL_VAULT,
 					deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		);
 		await poolHelper.deployed();
@@ -104,7 +104,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			);
 			await newPoolHelper.deployed();
@@ -127,6 +127,26 @@ describe('Balancer Pool Helper', function () {
 			await newPoolHelper.zapWETH(amount);
 		});
 
+		it('Only owner can initialize', async () => {
+			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
+			// Deploy 
+			const newPoolHelper = <BalancerPoolHelper>(
+				await upgrades.deployProxy(
+					poolHelperFactory,
+					[
+						wethContract.address,
+						radiantToken.address,
+						wethContract.address,
+						deployConfig.BAL_VAULT,
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
+					],
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
+				)
+			);
+
+			await expect(newPoolHelper.connect(dao).initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith("Ownable: caller is not the owner");
+		});
+
 		it('sortTokens: IDENTICAL_ADDRESSES', async () => {
 			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
 			poolHelper = <BalancerPoolHelper>(
@@ -139,7 +159,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			);
 			await poolHelper.deployed();
@@ -158,7 +178,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_VAULT,
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith('AddressZero');
 		});

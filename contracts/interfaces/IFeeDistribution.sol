@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import "./LockedBalance.sol";
 
@@ -12,4 +12,6 @@ interface IFeeDistribution {
 	}
 
 	function addReward(address rewardsToken) external;
+
+	function removeReward(address _rewardToken) external;
 }

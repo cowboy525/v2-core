@@ -89,6 +89,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			// console.log(await read('RadiantOFT', 'balanceOf', poolHelper.address));
 
 			await execute('PoolHelper', txnOpts, 'initializePool');
+
+			const lpTokenAddr = await read('PoolHelper', {}, 'lpTokenAddr');
+			await execute(
+				'LiquidityZap',
+				txnOpts,
+				'initLiquidityZap',
+				radiantToken.address,
+				wethAddr,
+				lpTokenAddr,
+				poolHelper.address
+			);
 		}
 	} else {
 		// Balancer

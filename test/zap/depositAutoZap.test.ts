@@ -14,7 +14,7 @@ const {expect} = chai;
 describe('Deposit/AutoZap', () => {
 	let vdWETH: VariableDebtToken;
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 	const SLIPPAGE_DIVISOR = BigNumber.from('10000');
 	const MAX_SLIPPAGE = SLIPPAGE_DIVISOR.mul(950).div(1000);
 

@@ -37,7 +37,8 @@ contract ATokensAndRatesHelper is Ownable {
 	}
 
 	function initDeployment(InitDeploymentInput[] calldata inputParams) external onlyOwner {
-		for (uint256 i = 0; i < inputParams.length; i++) {
+		uint256 length = inputParams.length;
+		for (uint256 i = 0; i < length; ) {
 			emit deployedContracts(
 				address(new AToken()),
 				address(
@@ -52,12 +53,16 @@ contract ATokensAndRatesHelper is Ownable {
 					)
 				)
 			);
+			unchecked {
+				i++;
+			}
 		}
 	}
 
 	function configureReserves(ConfigureReserveInput[] calldata inputParams) external onlyOwner {
 		LendingPoolConfigurator configurator = LendingPoolConfigurator(poolConfigurator);
-		for (uint256 i = 0; i < inputParams.length; i++) {
+		uint256 length = inputParams.length;
+		for (uint256 i = 0; i < length; ) {
 			configurator.configureReserveAsCollateral(
 				inputParams[i].asset,
 				inputParams[i].baseLTV,
@@ -69,6 +74,9 @@ contract ATokensAndRatesHelper is Ownable {
 				configurator.enableBorrowingOnReserve(inputParams[i].asset, inputParams[i].stableBorrowingEnabled);
 			}
 			configurator.setReserveFactor(inputParams[i].asset, inputParams[i].reserveFactor);
+			unchecked {
+				i++;
+			}
 		}
 	}
 }

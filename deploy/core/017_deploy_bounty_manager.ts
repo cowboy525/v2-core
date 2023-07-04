@@ -38,7 +38,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 						config.DQ_HUNTER_SHARE,
 						config.DQ_TARGET_BASE_BOUNTY_USD,
 						config.DQ_MAX_BASE_BOUNTY,
-						config.DQ_BOOSTER,
 					],
 				},
 			},
@@ -48,7 +47,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	if (bountyManager.newlyDeployed) {
 		await execute('RadiantOFT', txnOpts, 'transfer', bountyManager.address, config.SUPPLY_DQ_RESERVE);
 
-		await execute('BountyManager', txnOpts, 'setSlippageLimit', config.ZAP_SLIPPAGE_LIMIT);
 		await execute('BountyManager', txnOpts, 'setMinStakeAmount', config.MIN_STAKE_AMT);
 		await execute('BountyManager', txnOpts, 'setBounties');
 
