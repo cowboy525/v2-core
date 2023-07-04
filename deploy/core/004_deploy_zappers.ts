@@ -100,6 +100,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				lpTokenAddr,
 				poolHelper.address
 			);
+			await execute('LiquidityZap', txnOpts, 'setAcceptableRatio', config.ZAP_SLIPPAGE_LIMIT);
 		}
 	} else {
 		// Balancer
