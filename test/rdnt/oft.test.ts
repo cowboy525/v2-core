@@ -6,6 +6,7 @@ import {ethers} from 'hardhat';
 import {getConfigForChain} from '../../config';
 import {DeployConfig} from '../../scripts/deploy/types';
 import {LZEndpointMock, MockPriceProvider, RadiantOFT} from '../../typechain';
+import { MockOFTReceiverV2 } from '../../typechain/contracts/test/MockOFTReceiverV2';
 import {StaticPriceProvider} from '../../typechain/contracts/test/StaticPriceProvider';
 import {advanceTimeAndBlock} from '../shared/helpers';
 chai.use(solidity);
@@ -31,6 +32,7 @@ describe('Radiant OFT: ', function () {
 	let admin: SignerWithAddress;
 	let OFTSrc: RadiantOFT;
 	let OFTDst: RadiantOFT;
+	let oftReceiver: MockOFTReceiverV2;
 	let priceProvider: MockPriceProvider;
 
 	before(async function () {
@@ -103,6 +105,10 @@ describe('Radiant OFT: ', function () {
 		await execute('RadiantOFT', {from: admin}, 'setTrustedRemote', chainIdDst, OFTDst.address);
 		await execute('RadiantOFTDst', {from: admin}, 'setTrustedRemote', chainIdSrc, OFTSrc.address);
 
+		const MockOFTReceiverV2 = await ethers.getContractFactory("MockOFTReceiverV2");
+		oftReceiver = <MockOFTReceiverV2>await MockOFTReceiverV2.deploy();
+		await oftReceiver.deployed();
+
 		priceProvider = <StaticPriceProvider>await ethers.getContract('StaticPriceProvider');
 
 		srcSupply = await OFTSrc.balanceOf(dao);
@@ -171,7 +177,7 @@ describe('Radiant OFT: ', function () {
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
 		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
 
-		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [oftReceiver.address]);
 
 		const dstGasForCall = ethers.utils.parseEther("1").div(10);
 		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
@@ -195,7 +201,7 @@ describe('Radiant OFT: ', function () {
 
 		// verify tokens burned on source chain and minted on destination chain
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty));
-		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', oftReceiver.address)).to.be.equal(sendQty);
 	});
 
 	it('sendAndCall() with very few amount', async function () {
@@ -203,7 +209,7 @@ describe('Radiant OFT: ', function () {
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
 		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
 
-		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [oftReceiver.address]);
 
 		const sendQty = BigNumber.from("19900000000"); // amount to be sent across
 		const dust = BigNumber.from("9900000000"); // amount to be sent across
@@ -235,12 +241,8 @@ describe('Radiant OFT: ', function () {
 		expect(treasuryEth1.sub(treasuryEth0)).to.be.equal(fees[0]);
 
 		// verify tokens burned on source chain and minted on destination chain
-		console.log((await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).toString());
-		console.log(srcSupply.sub(sendQty).add(dust).toString());
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty).add(dust));
-		console.log((await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).toString());
-		console.log(dstSupply.add(sendQty).sub(dust).toString());
-		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply.add(sendQty).sub(dust));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', oftReceiver.address)).to.be.equal(sendQty.sub(dust));
 	});
 
 	it('full Bridge flow', async function () {
