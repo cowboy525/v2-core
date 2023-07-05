@@ -6,6 +6,7 @@ import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
+import { mineBlock } from '../shared/helpers';
 chai.use(solidity);
 const {expect} = chai;
 
@@ -153,7 +154,7 @@ describe('MultiFeeDistribution', () => {
 		await expect(mfd.addReward(radiant.address)).to.be.reverted;
 	});
 
-	it.only('removing rewards', async () => {
+	it('removing rewards', async () => {
 		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith("InsufficientPermission");
 		await expect(mfd.removeReward(user1.address)).to.be.revertedWith("InvalidAddress");
 
@@ -165,6 +166,58 @@ describe('MultiFeeDistribution', () => {
 		const rewardData = await mfd.rewardData(radiant.address);
 		expect(rewardData.lastUpdateTime).to.be.equal(0);
 		expect(await mfd.rewardTokens(0)).to.be.equal(user1.address);
+	});
+
+	it('base functionality still works after removing rewards', async () => {
+		// remove RDNT
+		await mfd.removeReward(radiant.address);
+
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+		await radiant.mint(mfd.address, depositAmount);
+		await mfd.vestTokens(user1.address, depositAmount, true);
+
+		const users = await lockerlist.getUsers(0, 1);
+		expect(users[0]).to.be.equal(user1.address);
+
+		const LOCK_DURATION = await mfd.defaultLockDuration();
+		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
+
+		const balance0 = await radiant.balanceOf(user1.address);
+		await mfd.connect(user1).setRelock(false);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
+		const balance1 = await radiant.balanceOf(user1.address);
+
+		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
+	});
+
+	it('Different reward amount per lock lengths', async () => {
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+		const rewardAmount = ethers.utils.parseUnits('100', 18);
+
+		await mfd.connect(user1).stake(depositAmount.mul(4), user1.address, 0);
+
+		await radiant.mint(mfd.address, rewardAmount);
+		await mfd.vestTokens(mfd.address, rewardAmount, false);
+
+		const REWARDS_DURATION = await mfd.rewardsDuration();
+		await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
+		const timestamp = await getLatestBlockTimestamp();
+
+		const rewards1 = await mfd.claimableRewards(user1.address);
+		expect(rewards1[0].amount).to.be.gt(0);
+
+		// remove RDNT
+		await mfd.removeReward(radiant.address);
+		await advanceTimeAndBlock(REWARDS_DURATION.toNumber() / 2);
+		// add RDNT
+		await mfd.addReward(radiant.address);
+
+		await setNextBlockTimestamp(timestamp + REWARDS_DURATION.toNumber());
+		await mineBlock();
+		const rewards2 = await mfd.claimableRewards(user1.address);
+		// reward is zero
+		expect(rewards2[0].amount).to.be.equal(0);
 	});
 
 	// it("delegateExit", async () => {
