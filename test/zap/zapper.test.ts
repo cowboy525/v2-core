@@ -39,6 +39,8 @@ describe('Zapper', function () {
 	const wethPerAccount = ethers.utils.parseUnits('100', 18);
 	const depositAmt = ethers.utils.parseUnits('1', 6);
 	const depositAmtWeth = ethers.utils.parseUnits('1', 18);
+	const SLIPPAGE_DIVISOR = BigNumber.from('10000');
+	const MAX_SLIPPAGE = SLIPPAGE_DIVISOR.mul(950).div(1000);
 	let USDC: MockToken;
 	let usdcAddress = '';
 	let rUSDCAddress = '';
@@ -111,7 +113,7 @@ describe('Zapper', function () {
 	});
 
 	it('can zap into locked lp', async function () {
-		await lockZap.connect(user2).zap(false, 0, 0, 0, {
+		await lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 
@@ -122,7 +124,7 @@ describe('Zapper', function () {
 	});
 
 	it('can zap from Vesting', async function () {
-		await lockZap.connect(user2).zap(false, 0, 0, 0, {
+		await lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 
@@ -145,12 +147,12 @@ describe('Zapper', function () {
 		const wethRequired = await poolHelper.connect(user2).quoteFromToken(totalVesting);
 
 		await expect(
-			lockZap.connect(user2).zapFromVesting(false, 0, {
+			lockZap.connect(user2).zapFromVesting(false, 0, 0, {
 				value: wethRequired.div(2),
 			})
 		).to.be.revertedWith('InsufficientETH');
 
-		await lockZap.connect(user2).zapFromVesting(false, 0, {
+		await lockZap.connect(user2).zapFromVesting(false, 0, 0, {
 			value: wethRequired,
 		});
 
@@ -171,7 +173,7 @@ describe('Zapper', function () {
 		const lockedLpBal1 = (await mfd.lockedBalances(user3.address)).locked;
 		expect(lockedLpBal1).to.equal(BigNumber.from(0));
 
-		await lockZap.connect(user3).zap(false, depositAmtWeth, 0, 0);
+		await lockZap.connect(user3).zap(false, depositAmtWeth, 0, 0, 0);
 
 		const lockedLpBal2 = (await mfd.lockedBalances(user3.address)).locked;
 		expect(lockedLpBal2).to.not.equal(BigNumber.from(0));
@@ -186,7 +188,7 @@ describe('Zapper', function () {
 
 		expect((await lendingPool.getUserAccountData(user3.address)).totalCollateralETH).to.be.gt(BigNumber.from(0));
 
-		await lockZap.connect(user3).zap(true, depositAmtWeth, 0, 0);
+		await lockZap.connect(user3).zap(true, depositAmtWeth, 0, 0, 0);
 		const lockedLpBal3 = (await mfd.lockedBalances(user3.address)).locked;
 
 		expect(lockedLpBal3).to.be.gt(lockedLpBal2);
@@ -195,7 +197,7 @@ describe('Zapper', function () {
 
 	it('can zap from Vesting w/ Borrow', async function () {
 		// Become eligilble for rewards;
-		await lockZap.connect(user4).zap(false, 0, 0, 0, {
+		await lockZap.connect(user4).zap(false, 0, 0, 0, 0, {
 			value: wethPerAccount,
 		});
 
@@ -229,11 +231,13 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0)).to.be.revertedWith('ExceedsAvailableBorrowsETH');
+		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 0)).to.be.revertedWith(
+			'ExceedsAvailableBorrowsETH'
+		);
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		await lockZap.connect(user4).zapFromVesting(true, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
@@ -263,7 +267,7 @@ describe('Zapper', function () {
 		expect((await lendingPool.getUserAccountData(user4.address)).totalDebtETH).to.equal(BigNumber.from(0));
 
 		// Become eligilble for rewards;
-		await lockZap.connect(user4).zap(false, 0, 0, 0, {
+		await lockZap.connect(user4).zap(false, 0, 0, 0, 0, {
 			value: depositAmtWeth,
 		});
 
@@ -277,7 +281,7 @@ describe('Zapper', function () {
 
 		let totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
-		await lockZap.connect(user4).zapFromVesting(true, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
@@ -347,7 +351,7 @@ describe('Zapper', function () {
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 			await USDC.approve(lockZap.address, zapAmount);
 			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
-			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0);
+			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
 			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
 
@@ -361,6 +365,30 @@ describe('Zapper', function () {
 				.div(bpsUnit);
 
 			expect(lpValueGained).to.be.gt(minAcceptedLpValue);
+		});
+
+		it('slippage limits are not breached', async () => {
+			const reserves = await poolHelper.getReserves();
+			const lpTokens = reserves.lpTokenSupply;
+			const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
+			const poolValueInUSD = lpTokens.mul(lpTokenPriceUsd).div(ethers.utils.parseUnits('1', 18));
+			console.log('poolValueInUSD: ', poolValueInUSD.toString());
+
+			// We trade 0.001% of the pool value
+			const zapAmount = poolValueInUSD.div(1000000); // div 1000000 instead of 100000 to account for USDC 6 decimals
+
+			await USDC.approve(lockZap.address, zapAmount);
+			const tooTightSlippageLimit = SLIPPAGE_DIVISOR.mul(999).div(1000); // 0.1% slippage
+			await expect(
+				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooTightSlippageLimit)
+			).to.be.revertedWith('UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+
+			const tooLooseSlippageLimit = SLIPPAGE_DIVISOR.mul(95).div(100).sub(1); // >5% slippage
+			await expect(
+				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooLooseSlippageLimit)
+			).to.be.revertedWith('SpecifiedSlippageExceedLimit');
+
+			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 		});
 	});
 });

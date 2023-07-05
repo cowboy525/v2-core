@@ -196,7 +196,7 @@ describe('MFD Relocking', () => {
 		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
 		await vdWETH.connect(user3).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		await wethGateway.connect(user3).depositETHWithAutoDLP(lendingPool.address, user3.address, 0, {
+		await wethGateway.connect(user3).depositETHWithAutoDLP(lendingPool.address, user3.address, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 

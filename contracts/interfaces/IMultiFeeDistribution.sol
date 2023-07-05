@@ -44,6 +44,8 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function stakingToken() external view returns (address);
 
+	function userSlippage(address) external view returns (uint256);
+
 	function claimFromConverter(address) external;
 
 	function vestTokens(address user, uint256 amount, bool withPenalty) external;

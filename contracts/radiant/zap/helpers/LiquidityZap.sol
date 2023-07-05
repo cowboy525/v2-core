@@ -306,7 +306,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	function _calcSlippage(uint256 _ethAmt, uint256 _tokens) internal returns (uint256 ratio) {
 		priceProvider.update();
 		uint256 tokenAmtEth = _tokens * priceProvider.getTokenPrice() * 1e18 / (10 ** priceProvider.decimals()); // price decimal is 8
-		ratio = tokenAmtEth.mul(RATIO_DIVISOR).div(_ethAmt);
-		ratio = ratio.div(1E18);
+		ratio = tokenAmtEth * RATIO_DIVISOR / _ethAmt;
+		ratio = ratio / 1E18;
 	}
 }

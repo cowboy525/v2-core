@@ -39,6 +39,10 @@ contract MultiFeeDistribution is
 	uint256 public constant HALF = 65000; //  65%
 	uint256 public constant WHOLE = 100000; // 100%
 
+	// Maximum slippage allowed to be set by users (used for compounding).
+	uint256 public constant MAX_SLIPPAGE = 9500; //5%
+	uint256 public constant PERCENT_DIVISOR = 10000; //100%
+
 	/// @notice Proportion of burn amount
 	uint256 public burn;
 
@@ -140,6 +144,9 @@ contract MultiFeeDistribution is
 
 	/// @notice Bounty manager contract
 	address public bountyManager;
+
+	/// @notice Maximum slippage for each trade excepted by the individual user when performing compound trades
+	mapping(address => uint256) public userSlippage;
 
 	/********************** Events ***********************/
 
@@ -405,9 +412,14 @@ contract MultiFeeDistribution is
 	/**
 	 * @notice Sets option if auto compound is enabled.
 	 * @param _status true if auto compounding is enabled.
+	 * @param _slippage the maximum amount of slippage that the user will incur for each compounding trade
 	 */
-	function setAutocompound(bool _status) external {
+	function setAutocompound(bool _status, uint256 _slippage) external {
 		autocompoundEnabled[msg.sender] = _status;
+		if (_slippage < MAX_SLIPPAGE || _slippage >= PERCENT_DIVISOR) {
+			revert InvalidAmount();
+		}
+		userSlippage[msg.sender] = _slippage;
 	}
 
 	/**

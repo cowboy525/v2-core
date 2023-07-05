@@ -61,7 +61,7 @@ describe('LockZap: 2-token zap', function () {
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
-		await lockZap.connect(dao).zap(true, wethAmt, rdntZapAmt, 0);
+		await lockZap.connect(dao).zap(true, wethAmt, rdntZapAmt, 0, 0);
 
 		lockInfo = await multiFeeDistribution.lockedBalances(dao.address);
 		expect(lockInfo.lockData.length).to.be.equal(1);
@@ -76,15 +76,10 @@ describe('LockZap: 2-token zap', function () {
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
-		await lockZap.connect(dao).zap(false, 0, rdntZapAmt, 0, {
+		await lockZap.connect(dao).zap(false, 0, rdntZapAmt, 0, 0, {
 			value: ethAmt,
 		});
 		lockInfo = await multiFeeDistribution.lockedBalances(dao.address);
 		expect(lockInfo.lockData.length).to.be.equal(1);
-	});
-
-	it('fail when invalid input', async function () {
-		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(9459)).to.be.revertedWith('InvalidRatio');
-		await expect(lockZap.connect(deployer).setAcceptableSlippageRatio(10001)).to.be.revertedWith('InvalidRatio');
 	});
 });

@@ -45,6 +45,7 @@ let bountyManager: BountyManager;
 let lpToken: ERC20;
 
 const eligibleAmt = 1000000;
+const acceptableUserSlippage = 9500;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await doBorrow('rWETH', '1000', deployer, lendingPool, deployData);
@@ -112,7 +113,7 @@ describe(`BountyManager:`, async () => {
 
 	before(async () => {
 		await loadZappedUserFixture();
-		await multiFeeDistribution.connect(user1).setAutocompound(true);
+		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 		const minDLPBalance = await bountyManager.minDLPBalance();
 		await lpToken.approve(multiFeeDistribution.address, minDLPBalance);
 		await multiFeeDistribution.stake(minDLPBalance, hunter.address, 0);
@@ -122,7 +123,7 @@ describe(`BountyManager:`, async () => {
 
 		await vdWETH.connect(hunter).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
+		await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 	});

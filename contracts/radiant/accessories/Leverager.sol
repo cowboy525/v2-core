@@ -207,6 +207,7 @@ contract Leverager is Ownable {
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
 	 * @param isBorrow true when the loop without deposit tokens
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
 	function loop(
 		address asset,
@@ -214,7 +215,8 @@ contract Leverager is Ownable {
 		uint256 interestRateMode,
 		uint256 borrowRatio,
 		uint256 loopCount,
-		bool isBorrow
+		bool isBorrow,
+		uint256 _slippage
 	) external {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
@@ -258,7 +260,7 @@ contract Leverager is Ownable {
 				i++;
 			}
 		}
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -266,8 +268,14 @@ contract Leverager is Ownable {
 	 * @param interestRateMode stable or variable borrow mode
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
-	function loopETH(uint256 interestRateMode, uint256 borrowRatio, uint256 loopCount) external payable {
+	function loopETH(
+		uint256 interestRateMode,
+		uint256 borrowRatio,
+		uint256 loopCount,
+		uint256 _slippage
+	) external payable {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
@@ -306,7 +314,7 @@ contract Leverager is Ownable {
 				i++;
 			}
 		}
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -315,12 +323,14 @@ contract Leverager is Ownable {
 	 * @param amount initial amount to borrow
 	 * @param borrowRatio Ratio of tokens to borrow
 	 * @param loopCount Repeat count for loop
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 **/
 	function loopETHFromBorrow(
 		uint256 interestRateMode,
 		uint256 amount,
 		uint256 borrowRatio,
-		uint256 loopCount
+		uint256 loopCount,
+		uint256 _slippage
 	) external {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
 		if(loopCount == 0) revert InvalidLoopCount();
@@ -353,7 +363,7 @@ contract Leverager is Ownable {
 				i++;
 			}
 		}
-		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender);
+		zapWETHWithBorrow(wethToZap(msg.sender), msg.sender, _slippage);
 	}
 
 	/**
@@ -410,9 +420,10 @@ contract Leverager is Ownable {
 	 * @notice Zap WETH by borrowing.
 	 * @param amount to zap
 	 * @param borrower to zap
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
 	 * @return liquidity amount by zapping
 	 **/
-	function zapWETHWithBorrow(uint256 amount, address borrower) public returns (uint256 liquidity) {
+	function zapWETHWithBorrow(uint256 amount, address borrower, uint256 _slippage) public returns (uint256 liquidity) {
 		if (msg.sender != borrower && msg.sender != address(lendingPool)) revert InsufficientPermission();
 
 		if (amount > 0) {
@@ -421,7 +432,7 @@ contract Leverager is Ownable {
 			if (IERC20(address(weth)).allowance(address(this), address(lockZap)) == 0) {
 				IERC20(address(weth)).forceApprove(address(lockZap), type(uint256).max);
 			}
-			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower);
+			liquidity = lockZap.zapOnBehalf(false, amount, 0, borrower, _slippage);
 		}
 	}
 
