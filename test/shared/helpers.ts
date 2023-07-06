@@ -207,9 +207,9 @@ export const zapIntoEligibility = async (
 	await (await vdWETH.connect(user).approveDelegation(lockZap.address, ethers.constants.MaxUint256)).wait();
 	await delay2();
 	if (borrow) {
-		await (await lockZap.connect(user).zap(borrow, amountEth, 0, lockLengthIndex)).wait();
+		await (await lockZap.connect(user).zap(borrow, amountEth, 0, lockLengthIndex, 0)).wait();
 	} else {
-		await lockZap.connect(user).zap(borrow, 0, 0, lockLengthIndex, {
+		await lockZap.connect(user).zap(borrow, 0, 0, lockLengthIndex, 0, {
 			value: ethers.utils.parseEther(amountEth),
 		});
 	}
@@ -505,5 +505,5 @@ export const toJsNum = (bn: BigNumber) => {
 	return parseFloat(ethers.utils.formatEther(bn));
 };
 export const getUserEarnings = async (mfd: MultiFeeDistribution, user: SignerWithAddress) => {
-	return toJsNum((await mfd.earnedBalances(user.address)).total);
+	return toJsNum((await mfd.earnedBalances(user.address)).totalVesting);
 };

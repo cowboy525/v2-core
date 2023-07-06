@@ -146,11 +146,12 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		address asset,
 		uint256 amount,
 		address onBehalfOf,
-		uint16 referralCode
+		uint16 referralCode,
+		uint256 _slippage
 	) external whenNotPaused {
 		require(tx.origin == onBehalfOf);
 		deposit(asset, amount, onBehalfOf, referralCode);
-		leverager.zapWETHWithBorrow(leverager.wethToZap(onBehalfOf), onBehalfOf);
+		leverager.zapWETHWithBorrow(leverager.wethToZap(onBehalfOf), onBehalfOf, _slippage);
 	}
 
 	/**

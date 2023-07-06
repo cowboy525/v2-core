@@ -44,6 +44,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {DustRefunder} from "./DustRefunder.sol";
 
 import {IWETH} from "../../../interfaces/IWETH.sol";
+import {IPriceProvider} from "../../../interfaces/IPriceProvider.sol";
+import {IChainlinkAggregator} from "../../../interfaces/IChainlinkAggregator.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -57,6 +59,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	error AddressZero();
 	error InsufficientPermission();
 	error TransferFailed();
+	error InvalidRatio();
+	error InvalidSlippage();
+
+	/// @notice RAITO Divisor
+	uint256 public constant RATIO_DIVISOR = 10000;
 
 	address public token;
 	address public tokenWETHPair;
@@ -67,6 +74,15 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	constructor() {
 			_disableInitializers();
 		}
+
+	/// @notice Acceptable ratio
+	uint256 public acceptableRatio;
+
+	/// @notice Price provider contract
+	IPriceProvider public priceProvider;
+
+	/// @notice ETH oracle contract
+	IChainlinkAggregator public ethOracle;
 
 	/**
 	 * @notice Initialize
@@ -95,6 +111,25 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		if (msg.sender != address(weth)) {
 			addLiquidityETHOnly(payable(msg.sender));
 		}
+	}
+
+	/**
+	 * @notice Set Price Provider.
+	 * @param _provider Price provider contract address.
+	 */
+	function setPriceProvider(address _provider) external onlyOwner {
+		if (address(_provider) == address(0)) revert AddressZero();
+		priceProvider = IPriceProvider(_provider);
+		ethOracle = IChainlinkAggregator(priceProvider.baseTokenPriceInUsdProxyAggregator());
+	}
+
+	/**
+	 * @notice Set Acceptable Ratio.
+	 * @param _acceptableRatio Acceptable slippage ratio.
+	 */
+	function setAcceptableRatio(uint256 _acceptableRatio) external onlyOwner {
+		if (_acceptableRatio > RATIO_DIVISOR) revert InvalidRatio();
+		acceptableRatio = _acceptableRatio;
 	}
 
 	/**
@@ -148,6 +183,11 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 
 		(uint256 reserveWeth, uint256 reserveTokens) = _getPairReserves();
 		uint256 outTokens = UniswapV2Library.getAmountOut(buyAmount, reserveWeth, reserveTokens);
+
+		if (address(priceProvider) != address(0)) {
+			uint256 slippage = _calcSlippage(buyAmount, outTokens);
+			if (slippage < acceptableRatio) revert InvalidSlippage();
+		}
 
 		weth.transfer(tokenWETHPair, buyAmount);
 
@@ -258,5 +298,17 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		(address token0, ) = UniswapV2Library.sortTokens(address(weth), token);
 		(uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(tokenWETHPair).getReserves();
 		(wethReserves, tokenReserves) = token0 == token ? (reserve1, reserve0) : (reserve0, reserve1);
+	}
+
+	/**
+	 * @notice Calculates slippage ratio from weth to RDNT
+	 * @param _ethAmt ETH amount
+	 * @param _tokens RDNT token amount
+	 */
+	function _calcSlippage(uint256 _ethAmt, uint256 _tokens) internal returns (uint256 ratio) {
+		priceProvider.update();
+		uint256 tokenAmtEth = _tokens * priceProvider.getTokenPrice() * 1e18 / (10 ** priceProvider.decimals()); // price decimal is 8
+		ratio = tokenAmtEth * RATIO_DIVISOR / _ethAmt;
+		ratio = ratio / 1E18;
 	}
 }

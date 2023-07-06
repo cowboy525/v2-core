@@ -134,7 +134,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return bounty amount of RDNT Hunter will recieve.
 	 * can be a fixed amt (Base Bounty) or dynamic amt based on rewards removed from target user during execution (ineligible revenue, autocompound fee)
 	 * @return actionType which of the 3 bounty types (above) to run.
-	 * _getBestBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
+	 * _getAvailableBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
 	 */
 	function quote(address _user) public view returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
@@ -178,7 +178,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool issueBaseBounty;
 		address incentivizer;
 
-		(incentivizer, totalBounty, issueBaseBounty, actionType) = _getBestBounty(_user, _execute, _actionType);
+		(incentivizer, totalBounty, issueBaseBounty, actionType) = _getAvailableBounty(_user, _execute, _actionType);
 		if (issueBaseBounty) {
 			bounty = getBaseBounty();
 		} else {
@@ -212,7 +212,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return issueBaseBounty whether Incentivizer will pay bounty from its own RDNT reserve, or from this contracts RDNT reserve
 	 * @return actionType the action type index executed
 	 */
-	function _getBestBounty(
+	function _getAvailableBounty(
 		address _user,
 		bool _execute,
 		uint256 _actionTypeIndex
@@ -297,13 +297,13 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		uint256 bountyReserve = IERC20(rdnt).balanceOf(address(this));
 		if (_amount > bountyReserve) {
 			IERC20(rdnt).safeTransfer(address(mfd), bountyReserve);
-			IMFDPlus(mfd).mint(_to, bountyReserve, true);
+			IMFDPlus(mfd).vestTokens(_to, bountyReserve, true);
 			emit BountyReserveEmpty(bountyReserve);
 			_pause();
 			return bountyReserve;
 		} else {
 			IERC20(rdnt).safeTransfer(address(mfd), _amount);
-			IMFDPlus(mfd).mint(_to, _amount, true);
+			IMFDPlus(mfd).vestTokens(_to, _amount, true);
 			return _amount;
 		}
 	}

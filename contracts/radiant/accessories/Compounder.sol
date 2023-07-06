@@ -61,6 +61,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	error SwapFailed(address asset, uint256 amount);
 
+	/// @notice The maximum slippage limit that can be set by admins
+	/// @dev The max slippage should be equal to the max slippage of the ZapLock, otherwise transactions could revert
+	uint256 public constant MAX_SLIPPAGE_LIMIT = 9500; //5%
+
 	/// @notice Percent divisor which is equal to 100%
 	uint256 public constant PERCENT_DIVISOR = 10000;
 	uint256 public constant MAX_COMPOUND_FEE = 2000;
@@ -253,13 +257,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/**
 	 * @notice Converts base token to lp token and stake them.
 	 * @param _user User for this action
+	 * @param _slippage maximum tolerated slippage for any occurring swaps
 	 * @return liquidity LP token amount
 	 */
-	function _convertBaseToLPandStake(address _user) internal returns (uint256 liquidity) {
+	function _convertBaseToLPandStake(address _user, uint256 _slippage) internal returns (uint256 liquidity) {
 		uint256 baseBal = IERC20(baseToken).balanceOf(address(this));
 		if (baseBal != 0) {
 			IERC20(baseToken).forceApprove(lockZap, baseBal);
-			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user);
+			liquidity = ILockZap(lockZap).zapOnBehalf(false, baseBal, 0, _user, _slippage);
 		}
 	}
 
@@ -280,6 +285,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 noSlippagePendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
 
+		uint256 userSlippageLimit = IMultiFeeDistribution(multiFeeDistribution).userSlippage(_user);
+		if (userSlippageLimit == 0) {
+			userSlippageLimit = slippageLimit;
+		}
+
 		if (isAutoCompound) {
 			if (msg.sender != bountyManager) revert NotBountyManager();
 			bool eligible = isEligibleForAutoCompound(_user, noSlippagePendingEth);
@@ -296,7 +306,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 		if (!_execute) {
 			if (isAutoCompound) {
-				uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute);
+				uint256 pendingInRdnt = _wethToRdnt(noSlippagePendingEth, _execute, userSlippageLimit);
 				fee = (pendingInRdnt * compoundFee) / PERCENT_DIVISOR;
 				return fee;
 			} else {
@@ -305,13 +315,14 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		}
 
 		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
-		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < slippageLimit) revert InvalidSlippage();
+		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit)
+			revert InvalidSlippage();
 
 		if (isAutoCompound) {
-			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute);
+			fee = _wethToRdnt(((actualWethAfterSwap * compoundFee) / PERCENT_DIVISOR), _execute, userSlippageLimit);
 		}
 
-		_convertBaseToLPandStake(_user);
+		_convertBaseToLPandStake(_user, userSlippageLimit);
 
 		if (isAutoCompound) {
 			rdntToken.approve(bountyManager, fee);
@@ -391,9 +402,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 * @notice Swap WETH to RDNT.
 	 * @param _wethIn WETH input amount
 	 * @param _execute Option to excute this action or not
+	 * @param _slippageLimit User defined slippage limit
 	 * @return rdntOut Output RDNT amount
 	 */
-	function _wethToRdnt(uint256 _wethIn, bool _execute) internal returns (uint256 rdntOut) {
+	function _wethToRdnt(uint256 _wethIn, bool _execute, uint256 _slippageLimit) internal returns (uint256 rdntOut) {
 		if (_execute) {
 			IPriceProvider(priceProvider).update();
 		}
@@ -418,7 +430,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 		uint256 ethValueOfRDNT = rdntPrice * rdntOut;
-		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * slippageLimit) / PERCENT_DIVISOR) revert InvalidSlippage();
+		if (ethValueOfRDNT / 10 ** 8 < (_wethIn * _slippageLimit) / PERCENT_DIVISOR) revert InvalidSlippage();
 	}
 
 	/**

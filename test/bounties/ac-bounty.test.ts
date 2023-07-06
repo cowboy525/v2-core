@@ -48,6 +48,7 @@ let bountyManager: BountyManager;
 let lpToken: ERC20;
 
 const eligibleAmt = 1000000;
+const acceptableUserSlippage = 9500;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await deposit('rWETH', '20000', deployer, lendingPool, deployData);
@@ -159,7 +160,7 @@ describe(`AutoCompound:`, async () => {
 	before(async () => {
 		await loadZappedUserFixture();
 		await makeHunterEligible();
-		await multiFeeDistribution.connect(user1).setAutocompound(true);
+		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
 	it('no bounty when no platform rev', async () => {
@@ -190,7 +191,7 @@ describe(`AutoCompound:`, async () => {
 
 		await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
 
-		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
+		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting);
 		expect(bountyReceived).closeTo(expectedFee, 0.5);
 
 		const lockInfo1 = await multiFeeDistribution.lockedBalances(user1.address);
@@ -217,9 +218,9 @@ describe(`AutoCompound:`, async () => {
 	});
 
 	it('cant AC user who has not enabled', async () => {
-		await multiFeeDistribution.connect(user1).setAutocompound(false);
+		await multiFeeDistribution.connect(user1).setAutocompound(false, acceptableUserSlippage);
 		await expect(bountyManager.connect(hunter).claim(user1.address)).to.be.reverted;
-		await multiFeeDistribution.connect(user1).setAutocompound(true);
+		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
 	it('can autocompound self for no Fee', async () => {

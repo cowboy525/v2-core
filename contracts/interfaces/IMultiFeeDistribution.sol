@@ -36,8 +36,6 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function zapVestingToLp(address _address) external returns (uint256);
 
-	function withdrawExpiredLocksFor(address _address) external returns (uint256);
-
 	function claimableRewards(address account) external view returns (IFeeDistribution.RewardData[] memory rewards);
 
 	function setDefaultRelockTypeIndex(uint256 _index) external;
@@ -46,9 +44,11 @@ interface IMultiFeeDistribution is IFeeDistribution {
 
 	function stakingToken() external view returns (address);
 
+	function userSlippage(address) external view returns (uint256);
+
 	function claimFromConverter(address) external;
 
-	function mint(address user, uint256 amount, bool withPenalty) external;
+	function vestTokens(address user, uint256 amount, bool withPenalty) external;
 }
 
 interface IMFDPlus is IMultiFeeDistribution {
