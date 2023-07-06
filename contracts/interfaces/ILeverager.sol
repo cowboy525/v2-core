@@ -6,8 +6,8 @@ interface ILeverager {
 	function wethToZap(address user) external view returns (uint256);
 
 	function zapWETHWithBorrow(
-		uint256 amount, 
-		address borrower, 
+		uint256 amount,
+		address borrower,
 		uint256 slippage
 	) external returns (uint256 liquidity);
 }
