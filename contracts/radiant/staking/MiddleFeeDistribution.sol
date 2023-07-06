@@ -89,26 +89,26 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	/**
 	 * @notice Initializer
-	 * @param _rdntToken RDNT address
-	 * @param aaveOracle Aave oracle address
-	 * @param _multiFeeDistribution Multi fee distribution contract
+	 * @param rdntToken_ RDNT address
+	 * @param aaveOracle_ Aave oracle address
+	 * @param multiFeeDistribution_ Multi fee distribution contract
 	 */
 	function initialize(
-		address _rdntToken,
-		address aaveOracle,
-		IMultiFeeDistribution _multiFeeDistribution,
-		IAaveProtocolDataProvider _aaveProtocolDataProvider
+		address rdntToken_,
+		address aaveOracle_,
+		IMultiFeeDistribution multiFeeDistribution_,
+		IAaveProtocolDataProvider aaveProtocolDataProvider_
 	) public initializer {
-		if (_rdntToken == address(0)) revert ZeroAddress();
-		if (aaveOracle == address(0)) revert ZeroAddress();
-		if (address(_multiFeeDistribution) == address(0)) revert ZeroAddress();
+		if (rdntToken_ == address(0)) revert ZeroAddress();
+		if (aaveOracle_ == address(0)) revert ZeroAddress();
+		if (address(multiFeeDistribution_) == address(0)) revert ZeroAddress();
 
 		__Ownable_init();
 
-		rdntToken = IMintableToken(_rdntToken);
-		_aaveOracle = aaveOracle;
-		multiFeeDistribution = _multiFeeDistribution;
-		aaveProtocolDataProvider = _aaveProtocolDataProvider;
+		rdntToken = IMintableToken(rdntToken_);
+		_aaveOracle = aaveOracle_;
+		multiFeeDistribution = multiFeeDistribution_;
+		aaveProtocolDataProvider = aaveProtocolDataProvider_;
 
 		admin = msg.sender;
 	}
@@ -162,7 +162,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		isRewardToken[_rewardsToken] = true;
 		emit RewardsUpdated(_rewardsToken);
 	}
-	
+
 	/**
 	 * @notice Remove an existing reward token
 	 */
@@ -201,7 +201,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 			emit ForwardReward(rewardToken, total);
 
-			emitNewTransferAdded(rewardToken, total);
+			_emitNewTransferAdded(rewardToken, total);
 			unchecked {
 				i++;
 			}
@@ -229,7 +229,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @param asset address of transfer assset
 	 * @param lpReward amount of rewards
 	 */
-	function emitNewTransferAdded(address asset, uint256 lpReward) internal {
+	function _emitNewTransferAdded(address asset, uint256 lpReward) internal {
 		uint256 lpUsdValue;
 		if (asset != address(rdntToken)) {
 			try IAToken(asset).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {

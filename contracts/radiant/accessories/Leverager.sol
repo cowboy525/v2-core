@@ -21,7 +21,7 @@ import {IWETH} from "../../interfaces/IWETH.sol";
 contract Leverager is Ownable {
 	using SafeERC20 for IERC20;
 
-	/// @notice margin estimation used for zapping eth to dlp 
+	/// @notice margin estimation used for zapping eth to dlp
 	uint256 public immutable ZAP_MARGIN_ESTIMATION;
 
 	/// @notice maximum margin allowed to be set by the deployer
@@ -391,13 +391,13 @@ contract Leverager is Ownable {
 		uint256 fee = (amount * feePercent) / RATIO_DIVISOR;
 		amount = amount - fee;
 
-		required = required + requiredLocked(asset, amount);
+		required = required + _requiredLocked(asset, amount);
 
 		for (uint256 i = 0; i < loopCount;) {
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			fee = (amount * feePercent) / RATIO_DIVISOR;
 			amount = amount - fee;
-			required = required + requiredLocked(asset, amount);
+			required = required + _requiredLocked(asset, amount);
 			unchecked {
 				i++;
 			}
@@ -442,7 +442,7 @@ contract Leverager is Ownable {
 	 * @param amount of tokens
 	 * @return Required lock value
 	 **/
-	function requiredLocked(address asset, uint256 amount) internal view returns (uint256) {
+	function _requiredLocked(address asset, uint256 amount) internal view returns (uint256) {
 		uint256 assetPrice = aaveOracle.getAssetPrice(asset);
 		uint8 assetDecimal = IERC20Metadata(asset).decimals();
 		uint256 requiredVal = (((assetPrice * amount) / (10 ** assetDecimal)) *

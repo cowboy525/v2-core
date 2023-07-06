@@ -288,7 +288,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		mfd.stake(liquidity, msg.sender, _lockTypeIndex);
 		emit Zapped(false, wethGained, 0, msg.sender, msg.sender, _lockTypeIndex);
 
-		refundDust(rdntAddr, address(weth), msg.sender);
+		_refundDust(rdntAddr, address(weth), msg.sender);
 	}
 
 	/**
@@ -388,7 +388,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 		mfd.stake(liquidity, _onBehalf, _lockTypeIndex);
 		emit Zapped(_borrow, _wethAmt, _rdntAmt, _from, _onBehalf, _lockTypeIndex);
 
-		refundDust(rdntAddr, address(weth), _refundAddress);
+		_refundDust(rdntAddr, address(weth), _refundAddress);
 	}
 
 	/**

@@ -36,7 +36,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	/// @notice Ratio Divisor
 	uint256 public constant RATIO_DIVISOR = 10000;
 
-	// Array of available Bounty functions to run. See getMfdBounty, getChefBounty, etc.
+	// Array of available Bounty functions to run. See _getMfdBounty, _getChefBounty, etc.
 	mapping(uint256 => function(address, bool) returns (address, uint256, bool)) private bounties;
 
 	mapping(address => bool) public whitelist;
@@ -119,9 +119,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		baseBountyUsdTarget = _baseBountyUsdTarget;
 		maxBaseBounty = _maxBaseBounty;
 
-		bounties[1] = getMfdBounty;
-		bounties[2] = getChefBounty;
-		bounties[3] = getAutoCompoundBounty;
+		bounties[1] = _getMfdBounty;
+		bounties[2] = _getChefBounty;
+		bounties[3] = _getAutoCompoundBounty;
 		bountyCount = 3;
 
 		__Ownable_init();
@@ -134,7 +134,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return bounty amount of RDNT Hunter will recieve.
 	 * can be a fixed amt (Base Bounty) or dynamic amt based on rewards removed from target user during execution (ineligible revenue, autocompound fee)
 	 * @return actionType which of the 3 bounty types (above) to run.
-	 * getAvailableBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
+	 * _getAvailableBounty returns this based on priority (expired locks first, then inelig emissions, then autocompound)
 	 */
 	function quote(address _user) public view returns (uint256 bounty, uint256 actionType) {
 		(bool success, bytes memory data) = address(this).staticcall(
@@ -178,7 +178,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		bool issueBaseBounty;
 		address incentivizer;
 
-		(incentivizer, totalBounty, issueBaseBounty, actionType) = getAvailableBounty(_user, _execute, _actionType);
+		(incentivizer, totalBounty, issueBaseBounty, actionType) = _getAvailableBounty(_user, _execute, _actionType);
 		if (issueBaseBounty) {
 			bounty = getBaseBounty();
 		} else {
@@ -212,7 +212,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return issueBaseBounty whether Incentivizer will pay bounty from its own RDNT reserve, or from this contracts RDNT reserve
 	 * @return actionType the action type index executed
 	 */
-	function getAvailableBounty(
+	function _getAvailableBounty(
 		address _user,
 		bool _execute,
 		uint256 _actionTypeIndex
@@ -244,7 +244,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
 	 * @return issueBaseBounty false when !autorelock because they will have rewards removed from their ineligible time after locks expired
 	 */
-	function getMfdBounty(
+	function _getMfdBounty(
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
@@ -261,7 +261,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return totalBounty RDNT to pay for this _user's bounty execution
 	 * @return issueBaseBounty will be true
 	 */
-	function getChefBounty(
+	function _getChefBounty(
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
@@ -278,7 +278,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @return totalBounty RDNT to pay for this _user's bounty execution. paid from Autocompound fee
 	 * @return issueBaseBounty will be false, will vary based on autocompound fee
 	 */
-	function getAutoCompoundBounty(
+	function _getAutoCompoundBounty(
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256 totalBounty, bool issueBaseBounty) {
@@ -375,9 +375,9 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @dev Only owner can call this function.
 	 */
 	function setBounties() external onlyOwner {
-		bounties[1] = getMfdBounty;
-		bounties[2] = getChefBounty;
-		bounties[3] = getAutoCompoundBounty;
+		bounties[1] = _getMfdBounty;
+		bounties[2] = _getChefBounty;
+		bounties[3] = _getAutoCompoundBounty;
 		emit BountiesSet();
 	}
 

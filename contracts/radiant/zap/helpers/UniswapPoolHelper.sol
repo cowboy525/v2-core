@@ -111,7 +111,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 
 		liquidity = lp.balanceOf(address(this));
 		lp.safeTransfer(msg.sender, liquidity);
-		refundDust(rdntAddr, wethAddr, msg.sender);
+		_refundDust(rdntAddr, wethAddr, msg.sender);
 	}
 
 	/**
@@ -148,7 +148,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		// rdnt in eth, decis 8
 		uint256 px0 = rdntPriceInEth * (2 ** 112); // in 2**112
 		// eth in eth, decis 8
-		uint256 px1 = uint256(100000000) * (2 ** 112); // in 2**112
+		uint256 px1 = uint256(100_000_000) * (2 ** 112); // in 2**112
 
 		// fair token0 amt: sqrtK * sqrt(px1/px0)
 		// fair token1 amt: sqrtK * sqrt(px0/px1)
@@ -173,7 +173,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		IERC20 lp = IERC20(lpTokenAddr);
 		liquidity = lp.balanceOf(address(this));
 		lp.safeTransfer(msg.sender, liquidity);
-		refundDust(rdntAddr, wethAddr, msg.sender);
+		_refundDust(rdntAddr, wethAddr, msg.sender);
 	}
 
 	/**

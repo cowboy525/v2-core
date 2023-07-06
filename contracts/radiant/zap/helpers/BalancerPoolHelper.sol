@@ -89,7 +89,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function initializePool(string calldata _tokenName, string calldata _tokenSymbol) public onlyOwner {
 		if (lpTokenAddr != address(0)) revert PoolExists();
 
-		(address token0, address token1) = sortTokens(inTokenAddr, outTokenAddr);
+		(address token0, address token1) = _sortTokens(inTokenAddr, outTokenAddr);
 
 		IERC20[] memory tokens = new IERC20[](2);
 		tokens[0] = IERC20(token0);
@@ -164,7 +164,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	/// @param wB Weight of the second asset
 	/// @param pxA Fair price of the first asset
 	/// @param pxB Fair price of the second asset
-	function computeFairReserves(
+	function _computeFairReserves(
 		uint256 resA,
 		uint256 resB,
 		uint256 wA,
@@ -205,7 +205,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 */
 	function getLpPrice(uint256 rdntPriceInEth) public view returns (uint256 priceInEth) {
 		IWeightedPool pool = IWeightedPool(lpTokenAddr);
-		(address token0, ) = sortTokens(inTokenAddr, outTokenAddr);
+		(address token0, ) = _sortTokens(inTokenAddr, outTokenAddr);
 		(uint256 rdntBalance, uint256 wethBalance, ) = getReserves();
 		uint256[] memory weights = pool.getNormalizedWeights();
 
@@ -225,7 +225,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		// ETH in eth, 8 decis
 		uint256 pxB = 100000000;
 
-		(uint256 fairResA, uint256 fairResB) = computeFairReserves(
+		(uint256 fairResA, uint256 fairResB) = _computeFairReserves(
 			rdntBalance,
 			wethBalance,
 			rdntWeight,
@@ -277,8 +277,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	 * @param _rdntAmt RDNT amount
 	 * @return liquidity amount of LP token
 	 */
-	function joinPool(uint256 _wethAmt, uint256 _rdntAmt) internal returns (uint256 liquidity) {
-		(address token0, address token1) = sortTokens(outTokenAddr, inTokenAddr);
+	function _joinPool(uint256 _wethAmt, uint256 _rdntAmt) internal returns (uint256 liquidity) {
+		(address token0, address token1) = _sortTokens(outTokenAddr, inTokenAddr);
 		IAsset[] memory assets = new IAsset[](2);
 		assets[0] = IAsset(token0);
 		assets[1] = IAsset(token1);
@@ -308,10 +308,10 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function zapWETH(uint256 amount) public returns (uint256 liquidity) {
 		if (msg.sender != lockZap) revert InsufficientPermission();
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), amount);
-		liquidity = joinPool(amount, 0);
+		liquidity = _joinPool(amount, 0);
 		IERC20 lp = IERC20(lpTokenAddr);
 		lp.safeTransfer(msg.sender, liquidity);
-		refundDust(outTokenAddr, wethAddr, msg.sender);
+		_refundDust(outTokenAddr, wethAddr, msg.sender);
 	}
 
 	/**
@@ -325,17 +325,17 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		IWETH(wethAddr).transferFrom(msg.sender, address(this), _wethAmt);
 		IERC20(outTokenAddr).safeTransferFrom(msg.sender, address(this), _rdntAmt);
 
-		liquidity = joinPool(_wethAmt, _rdntAmt);
+		liquidity = _joinPool(_wethAmt, _rdntAmt);
 		IERC20 lp = IERC20(lpTokenAddr);
 		lp.safeTransfer(msg.sender, liquidity);
 
-		refundDust(outTokenAddr, wethAddr, msg.sender);
+		_refundDust(outTokenAddr, wethAddr, msg.sender);
 	}
 
 	/**
 	 * @notice Sort tokens
 	 */
-	function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
+	function _sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
 		if (tokenA == tokenB) revert IdenticalAddresses();
 		(token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
 		if (token0 == address(0)) revert AddressZero();
