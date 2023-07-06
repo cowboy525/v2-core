@@ -236,7 +236,7 @@ describe('Looping/Leverager', () => {
 
 		const treasuryEth0 = await ethers.provider.getBalance(treasuryAddress);
 
-		await leverager.connect(user2).loopETH(2, borrowRatio, loops, {value: amt});
+		await leverager.connect(user2).loopETH(2, borrowRatio, loops, 9700, {value: amt});
 
 		const tresuryEth1 = await ethers.provider.getBalance(treasuryAddress);
 		expect(tresuryEth1.sub(treasuryEth0)).to.equal(totalFees);
