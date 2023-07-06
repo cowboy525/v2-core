@@ -324,6 +324,27 @@ describe('Non-Elig CIC', () => {
 			await chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets, cicRewardsPerSecond);
 		});
 
+		it('setEmissionSchedule: Duplicate Emission Schedules Are Not Allowed', async () => {
+			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
+			const chef = await upgrades.deployProxy(
+				chefFactory,
+				[
+					deployer.address, // Mock address
+					deployer.address, // Mock address
+					deployer.address, // Mock address
+					100,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			);
+			await chef.deployed();
+
+			const cicStartTimeOffSets1 = [100, 100, 1000];
+			const cicStartTimeOffSets2 = [100, 1000, 1000];
+			const cicRewardsPerSecond = [100, 200, 300];
+			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets1, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
+			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets2, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
+		});
+
 		it('manually set rewards', async () => {
 			const newRPS = 1000;
 
