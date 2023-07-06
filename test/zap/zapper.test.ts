@@ -391,4 +391,18 @@ describe('Zapper', function () {
 			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 		});
 	});
+
+	it("Locked ETH in lockZap contract", async () => {
+		const depositAmount = ethers.utils.parseEther("1");
+		await deployer.sendTransaction({
+			to: lockZap.address,
+			value: depositAmount
+		});
+
+		const user2Eth0 = await user2.getBalance();
+		await lockZap.withdrawLockedETH(user2.address, depositAmount);
+		const user2Eth1 = await user2.getBalance();
+
+		expect(user2Eth1.sub(user2Eth0)).to.be.equal(depositAmount);
+	});
 });

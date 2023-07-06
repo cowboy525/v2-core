@@ -14,6 +14,7 @@ describe('Stargate Borrow', () => {
 	let deployData: DeployData;
 	let deployConfig: DeployConfig;
 
+	let deployer: SignerWithAddress;
 	let user2: SignerWithAddress;
 	let treasury: SignerWithAddress;
 	let USDC: MockToken;
@@ -40,6 +41,7 @@ describe('Stargate Borrow', () => {
 		treasury = fixture.treasury;
 		wrappedEth = fixture.weth;
 		user2 = fixture.user2;
+		deployer = fixture.deployer;
 
 		USDC = <MockToken>await ethers.getContractAt('MockToken', fixture.usdc.address);
 		wrappedEth = <WETH>await ethers.getContractAt('WETH', fixture.weth.address);
@@ -185,5 +187,19 @@ describe('Stargate Borrow', () => {
 		await expect(
 			stargateBorrow.setXChainBorrowFeePercent(101)
 		).to.be.revertedWith('InvalidRatio');
+	});
+
+	it("Locked ETH in StargateBorrow contract", async () => {
+		const depositAmount = ethers.utils.parseEther("1");
+		await deployer.sendTransaction({
+			to: stargateBorrow.address,
+			value: depositAmount
+		});
+
+		const user2Eth0 = await user2.getBalance();
+		await stargateBorrow.withdrawLockedETH(user2.address, depositAmount);
+		const user2Eth1 = await user2.getBalance();
+
+		expect(user2Eth1.sub(user2Eth0)).to.be.equal(depositAmount);
 	});
 });
