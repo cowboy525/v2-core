@@ -1073,4 +1073,48 @@ describe('MultiFeeDistribution', () => {
 		expect(totalBalanceAfter).to.be.lte(totalBalanceBefore); // we successfully forces a user to withdraw even though he preferred to re-lock
 		expect(lockInfoAfter.length).to.be.lte(lockInfoBefore.length); // There are less locks after the withdrawal as expected
 	});
+
+	describe("Aggregate locks", async () => {
+		it('Scenario #1; should aggregate all of them', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(1);
+		});
+
+		it('Scenario #2; should aggregate none', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(3);
+		});
+
+		it('Scenario #3; should aggregate the last 3', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(2);
+		});
+	});
 });
