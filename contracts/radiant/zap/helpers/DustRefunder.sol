@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
-pragma abicoder v2;
+
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../../../interfaces/IWETH.sol";
+import {IWETH} from "../../../interfaces/IWETH.sol";
 
 /// @title Dust Refunder Contract
-/// @dev Refunds dust tokens remained from zapping.
+/// @dev Refunds dust tokens remaining from zapping.
 /// @author Radiant
 contract DustRefunder {
 	using SafeERC20 for IERC20;
@@ -19,7 +19,7 @@ contract DustRefunder {
 	 * @param _weth WETH address
 	 * @param _refundAddress Address for refund
 	 */
-	function refundDust(address _rdnt, address _weth, address _refundAddress) internal {
+	function _refundDust(address _rdnt, address _weth, address _refundAddress) internal {
 		IERC20 rdnt = IERC20(_rdnt);
 		IWETH weth = IWETH(_weth);
 

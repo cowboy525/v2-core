@@ -64,7 +64,7 @@ describe('MFD Relocking', () => {
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user2).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(0, "Didn't withdraw properly");
@@ -89,7 +89,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(true);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");
@@ -113,7 +113,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(true);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksForWithOptions(user2.address, 0, true);
+		await multiFeeDistribution.connect(user2).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(0, "Didn't relock properly");
@@ -137,7 +137,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(false);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(0, "Didn't relock properly");
@@ -161,14 +161,14 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(true);
-		await multiFeeDistribution.connect(user3).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 
 		let u3LockedBal = (await multiFeeDistribution.lockedBalances(user3.address)).locked;
 		expect(u3LockedBal).to.be.eq(0, 'user3 get nothing');
 
-		await multiFeeDistribution.connect(user3).withdrawExpiredLocksFor(user3.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 		u3LockedBal = (await multiFeeDistribution.lockedBalances(user3.address)).locked;
 		expect(u3LockedBal).to.be.eq(0, 'user3 get nothing');
 	});
@@ -196,7 +196,7 @@ describe('MFD Relocking', () => {
 		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
 		await vdWETH.connect(user3).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		await wethGateway.connect(user3).depositETHWithAutoDLP(lendingPool.address, user3.address, 0, {
+		await wethGateway.connect(user3).depositETHWithAutoDLP(lendingPool.address, user3.address, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 
@@ -209,7 +209,7 @@ describe('MFD Relocking', () => {
 		assert.equal(lockedBal.toString(), '0', `Locking expired`);
 
 		await multiFeeDistribution.connect(user2).setRelock(true);
-		await multiFeeDistribution.connect(user2).withdrawExpiredLocksFor(user2.address);
+		await multiFeeDistribution.connect(user3).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");

@@ -20,10 +20,10 @@ export const zap = async (
 		await (
 			await lockZap
 				.connect(user)
-				.zapOnBehalf(borrow, ethers.utils.parseEther(amountEth), defaultLockTime, user.address)
+				.zapOnBehalf(borrow, ethers.utils.parseEther(amountEth), defaultLockTime, user.address, 0)
 		).wait();
 	} else {
-		await lockZap.connect(user).zap(false, 0, 0, defaultLockTime, {
+		await lockZap.connect(user).zap(false, 0, 0, defaultLockTime, 0, {
 			value: ethers.utils.parseEther(amountEth),
 		});
 	}

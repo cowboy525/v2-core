@@ -162,6 +162,8 @@ interface ILendingPool {
 		uint256 variableBorrowIndex
 	);
 
+	function initialize(ILendingPoolAddressesProvider provider) external;
+
 	/**
 	 * @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
 	 * - E.g. User deposits 100 USDC and gets in return 100 aUSDC
@@ -175,7 +177,13 @@ interface ILendingPool {
 	 **/
 	function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
 
-	function depositWithAutoDLP(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+	function depositWithAutoDLP(
+		address asset,
+		uint256 amount,
+		address onBehalfOf,
+		uint16 referralCode,
+		uint256 slippage
+	) external;
 
 	/**
 	 * @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned

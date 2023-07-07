@@ -89,11 +89,11 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 		return _stableRateSlope2;
 	}
 
-	function baseVariableBorrowRate() external view override returns (uint256) {
+	function baseVariableBorrowRate() external view returns (uint256) {
 		return _baseVariableBorrowRate;
 	}
 
-	function getMaxVariableBorrowRate() external view override returns (uint256) {
+	function getMaxVariableBorrowRate() external view returns (uint256) {
 		return _baseVariableBorrowRate.add(_variableRateSlope1).add(_variableRateSlope2);
 	}
 
@@ -117,7 +117,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	) external view override returns (uint256, uint256, uint256) {
+	) external view returns (uint256, uint256, uint256) {
 		uint256 availableLiquidity = IERC20(reserve).balanceOf(aToken);
 		//avoid stack too deep
 		availableLiquidity = availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
@@ -160,7 +160,7 @@ contract DefaultReserveInterestRateStrategy is IReserveInterestRateStrategy {
 		uint256 totalVariableDebt,
 		uint256 averageStableBorrowRate,
 		uint256 reserveFactor
-	) public view override returns (uint256, uint256, uint256) {
+	) public view returns (uint256, uint256, uint256) {
 		CalcInterestRatesLocalVars memory vars;
 
 		vars.totalDebt = totalStableDebt.add(totalVariableDebt);
