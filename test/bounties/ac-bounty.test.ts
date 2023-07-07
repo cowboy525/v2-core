@@ -13,6 +13,8 @@ import {
 	Compounder,
 	EligibilityDataProvider,
 	PriceProvider,
+	MiddleFeeDistribution,
+	CustomERC20,
 } from '../../typechain';
 import _ from 'lodash';
 import chai from 'chai';
@@ -29,6 +31,7 @@ const {expect} = chai;
 
 let multiFeeDistribution: MultiFeeDistribution;
 let eligibilityProvider: EligibilityDataProvider;
+let middleFeeDistribution: MiddleFeeDistribution;
 let compounder: Compounder;
 let lendingPool: LendingPool;
 let leverager: Leverager;
@@ -46,6 +49,8 @@ let LOCK_DURATION: number;
 let SKIP_DURATION: number;
 let bountyManager: BountyManager;
 let lpToken: ERC20;
+let rdntToken: CustomERC20;
+let usdc: CustomERC20;
 
 const eligibleAmt = 1000000;
 const acceptableUserSlippage = 9500;
@@ -98,7 +103,7 @@ const loadZappedUserFixture = async () => {
 	({
 		multiFeeDistribution,
 		eligibilityProvider,
-		multiFeeDistribution,
+		middleFeeDistribution,
 		lendingPool,
 		leverager,
 		weth,
@@ -111,6 +116,8 @@ const loadZappedUserFixture = async () => {
 		user1,
 		user2,
 		deployer,
+		rdntToken,
+		usdc
 	} = await setupTest());
 
 	hunter = user2;
@@ -223,12 +230,6 @@ describe(`AutoCompound:`, async () => {
 		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
-	it('can autocompound self for no Fee', async () => {
-		await generatePlatformRevenue(1 * HOUR);
-		let fee = await compounder.connect(user1).selfCompound();
-		await expect(fee.value).to.be.equal(0);
-	});
-
 	it('can selfcompound for no Fee', async () => {
 		await generatePlatformRevenue(1 * HOUR);
 		let fee = await compounder.connect(user1).claimCompound(user1.address, false);
@@ -237,6 +238,27 @@ describe(`AutoCompound:`, async () => {
 		await generatePlatformRevenue(1 * HOUR);
 		fee = await compounder.connect(user1).claimCompound(user1.address, true);
 		await expect(fee.value).to.be.equal(0);
+	});
+
+	it('Add USDC as Reward and Not Stuck in Compounder', async () => {
+		const amount = BigNumber.from('10000000');
+		await middleFeeDistribution.addReward(usdc.address);
+		const rewardBaseTokens = [];
+		for (let i = 0; ; i++) {
+			try {
+				const token = await compounder.rewardBaseTokens(i);
+				rewardBaseTokens.push(token);
+			} catch (e) {
+				break;
+			}
+		}
+		rewardBaseTokens.push(usdc.address);
+		await compounder.addRewardBaseTokens(rewardBaseTokens);
+		await usdc.mint(multiFeeDistribution.address, amount);
+		await generatePlatformRevenue(1 * HOUR);
+
+		await compounder.connect(user1).selfCompound();
+		expect(await usdc.balanceOf(compounder.address)).equal(BigNumber.from('0'));
 	});
 
 	it('swap failed', async () => {
