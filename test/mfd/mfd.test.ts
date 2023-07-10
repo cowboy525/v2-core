@@ -990,4 +990,41 @@ describe('MultiFeeDistribution', () => {
 		expect(totalBalanceAfter).to.be.lte(totalBalanceBefore); // we successfully forces a user to withdraw even though he preferred to re-lock
 		expect(lockInfoAfter.length).to.be.lte(lockInfoBefore.length); // There are less locks after the withdrawal as expected
 	});
+
+	it('Check Penalty and Burn Amount Calculation', async () => {
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+		await radiant.mint(mfd.address, depositAmount);
+		await mfd.mint(user1.address, depositAmount, true);
+
+		const blockTimestamp = await getLatestBlockTimestamp();
+
+		const daoTreasury = await mfd.daoTreasury();
+		const startfleetTreasury = await mfd.startfleetTreasury();
+		const treasuryBal0 = await radiant.balanceOf(daoTreasury);
+		const sTreasuryBal0 = await radiant.balanceOf(startfleetTreasury);
+
+		await advanceTimeAndBlock(MFD_VEST_DURATION / 3);
+
+		const earningsData = await mfd.earnedBalances(user1.address);
+		const unlockTime = blockTimestamp + MFD_VEST_DURATION;
+		expect(earningsData.earningsData[0].unlockTime).to.be.equal(unlockTime);
+
+		const penaltyFactor = Math.floor(QUART + (HALF * (unlockTime - blockTimestamp)) / MFD_VEST_DURATION);
+		const penalty = depositAmount.mul(penaltyFactor).div(WHOLE);
+		const amount = depositAmount.sub(penalty);
+
+		await mfd.connect(user1).withdraw(amount);
+
+		const treasuryBal1 = await radiant.balanceOf(daoTreasury);
+		const sTreasuryBal1 = await radiant.balanceOf(startfleetTreasury);
+
+		const blockTimestamp1 = await getLatestBlockTimestamp();
+		const penaltyFactor1 = Math.floor(QUART + (HALF * (unlockTime - blockTimestamp1)) / MFD_VEST_DURATION);
+		const requiredAmount = amount.mul(WHOLE).div(WHOLE - penaltyFactor1);
+		const penalty1 = requiredAmount.mul(penaltyFactor1).div(WHOLE);
+		const burnAmount1 = penalty1.mul(BURN).div(WHOLE);
+
+		expect(penalty1.sub(burnAmount1)).to.be.equal(treasuryBal1.sub(treasuryBal0));
+		expect(burnAmount1).to.be.equal(sTreasuryBal1.sub(sTreasuryBal0));
+	});
 });
