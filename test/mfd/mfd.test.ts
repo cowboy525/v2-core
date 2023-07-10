@@ -1077,12 +1077,12 @@ describe('MultiFeeDistribution', () => {
 	it('Check Penalty and Burn Amount Calculation', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const blockTimestamp = await getLatestBlockTimestamp();
 
 		const daoTreasury = await mfd.daoTreasury();
-		const startfleetTreasury = await mfd.startfleetTreasury();
+		const startfleetTreasury = await mfd.starfleetTreasury();
 		const treasuryBal0 = await radiant.balanceOf(daoTreasury);
 		const sTreasuryBal0 = await radiant.balanceOf(startfleetTreasury);
 
