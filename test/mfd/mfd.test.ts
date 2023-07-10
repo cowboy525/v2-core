@@ -1,11 +1,12 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import hre, {ethers, upgrades} from 'hardhat';
-import {advanceTimeAndBlock, getLatestBlockTimestamp} from '../../scripts/utils';
+import {advanceTimeAndBlock, getLatestBlockTimestamp, setNextBlockTimestamp} from '../../scripts/utils';
 import {CustomERC20, LockerList, MultiFeeDistribution} from '../../typechain';
 import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
+import { mineBlock } from '../shared/helpers';
 chai.use(solidity);
 const {expect} = chai;
 
@@ -55,7 +56,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -78,7 +79,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
@@ -153,6 +154,72 @@ describe('MultiFeeDistribution', () => {
 		await expect(mfd.addReward(radiant.address)).to.be.reverted;
 	});
 
+	it('removing rewards', async () => {
+		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith("InsufficientPermission");
+		await expect(mfd.removeReward(user1.address)).to.be.revertedWith("InvalidAddress");
+
+		// [RDNT, User1]
+		await mfd.addReward(user1.address);
+
+		// remove RDNT
+		await mfd.removeReward(radiant.address);
+		const rewardData = await mfd.rewardData(radiant.address);
+		expect(rewardData.lastUpdateTime).to.be.equal(0);
+		expect(await mfd.rewardTokens(0)).to.be.equal(user1.address);
+	});
+
+	it('base functionality still works after removing rewards', async () => {
+		// remove RDNT
+		await mfd.removeReward(radiant.address);
+
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+		await radiant.mint(mfd.address, depositAmount);
+		await mfd.vestTokens(user1.address, depositAmount, true);
+
+		const users = await lockerlist.getUsers(0, 1);
+		expect(users[0]).to.be.equal(user1.address);
+
+		const LOCK_DURATION = await mfd.defaultLockDuration();
+		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
+
+		const balance0 = await radiant.balanceOf(user1.address);
+		await mfd.connect(user1).setRelock(false);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
+		const balance1 = await radiant.balanceOf(user1.address);
+
+		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
+	});
+
+	it('Different reward amount per lock lengths', async () => {
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+		const rewardAmount = ethers.utils.parseUnits('100', 18);
+
+		await mfd.connect(user1).stake(depositAmount.mul(4), user1.address, 0);
+
+		await radiant.mint(mfd.address, rewardAmount);
+		await mfd.vestTokens(mfd.address, rewardAmount, false);
+
+		const REWARDS_DURATION = await mfd.rewardsDuration();
+		await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
+		const timestamp = await getLatestBlockTimestamp();
+
+		const rewards1 = await mfd.claimableRewards(user1.address);
+		expect(rewards1[0].amount).to.be.gt(0);
+
+		// remove RDNT
+		await mfd.removeReward(radiant.address);
+		await advanceTimeAndBlock(REWARDS_DURATION.toNumber() / 2);
+		// add RDNT
+		await mfd.addReward(radiant.address);
+
+		await setNextBlockTimestamp(timestamp + REWARDS_DURATION.toNumber());
+		await mineBlock();
+		const rewards2 = await mfd.claimableRewards(user1.address);
+		// reward is zero
+		expect(rewards2[0].amount).to.be.equal(0);
+	});
+
 	// it("delegateExit", async () => {
 	//   await expect(mfd.delegateExit(user1.address)).to.be.not.reverted;
 	// });
@@ -160,10 +227,10 @@ describe('MultiFeeDistribution', () => {
 	it('Add some radiant rewards', async () => {
 		const mintAmount = ethers.utils.parseUnits('604800', 18);
 		await radiant.mint(mfd.address, mintAmount);
-		await mfd.mint(mfd.address, 0, false);
-		await mfd.mint(mfd.address, mintAmount, false);
+		await mfd.vestTokens(mfd.address, 0, false);
+		await mfd.vestTokens(mfd.address, mintAmount, false);
 		await radiant.mint(mfd.address, mintAmount);
-		await mfd.mint(mfd.address, mintAmount, false);
+		await mfd.vestTokens(mfd.address, mintAmount, false);
 
 		expect(await radiant.balanceOf(mfd.address)).to.be.equal(mintAmount.mul(2));
 	});
@@ -183,16 +250,16 @@ describe('MultiFeeDistribution', () => {
 
 	it('mint & stake vlidation', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		await expect(mfd.connect(user1).mint(user1.address, depositAmount, true)).to.be.reverted;
-		await mfd.mint(user1.address, 0, true);
-		await mfd.mint(user1.address, depositAmount, false);
+		await expect(mfd.connect(user1).vestTokens(user1.address, depositAmount, true)).to.be.reverted;
+		await mfd.vestTokens(user1.address, 0, true);
+		await mfd.vestTokens(user1.address, depositAmount, false);
 	});
 
 	it('Withdraw expired locks', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const users = await lockerlist.getUsers(0, 1);
 		expect(users[0]).to.be.equal(user1.address);
@@ -202,7 +269,7 @@ describe('MultiFeeDistribution', () => {
 
 		const balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).setRelock(false);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
@@ -247,7 +314,7 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user2).stake(depositAmount, user2.address, 1);
 
 		await radiant.mint(mfd.address, rewardAmount);
-		await mfd.mint(mfd.address, rewardAmount, false);
+		await mfd.vestTokens(mfd.address, rewardAmount, false);
 
 		const REWARDS_DURATION = await mfd.rewardsDuration();
 		await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
@@ -260,7 +327,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const users = await lockerlist.getUsers(0, 1);
 		expect(users[0]).to.be.equal(user1.address);
@@ -272,7 +339,7 @@ describe('MultiFeeDistribution', () => {
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		const balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).setRelock(false);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
@@ -282,7 +349,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		await mfd.connect(user1).setRelock(true);
 
 		const users = await lockerlist.getUsers(0, 1);
@@ -292,7 +359,7 @@ describe('MultiFeeDistribution', () => {
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		const lockedBal2 = (await mfd.lockedBalances(user2.address)).locked;
 
@@ -327,30 +394,30 @@ describe('MultiFeeDistribution', () => {
 
 		// x1 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x3 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x6 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// x12 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, true);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 4, false);
 
 		await expectSorted();
 
 		// withdraw all left
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user2.address, 0, false);
 
 		await expectSorted();
 	});
@@ -369,47 +436,47 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1); // x3
-		await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12
+		await mfd.connect(user1).stake(depositAmount, user1.address, 3); // x12 // This gets aggregated
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2); // x6
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0); // x1
 
 		// x1 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		let balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		let balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(7));
-		expect(lockInfo.lockData.length).to.be.equal(7);
+		expect(lockInfo.lockData.length).to.be.equal(6); // 6 because of the one aggregation
 
 		// x3 was locked 3 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(3));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(4));
-		expect(lockInfo.lockData.length).to.be.equal(4);
+		expect(lockInfo.lockData.length).to.be.equal(3);
 
 		// x6 was locked 2 times
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 6);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
 		lockInfo = await mfd.lockedBalances(user1.address);
 		expect(lockInfo.locked).to.be.equal(depositAmount.mul(2));
-		expect(lockInfo.lockData.length).to.be.equal(2);
+		expect(lockInfo.lockData.length).to.be.equal(1);
 
-		// x12 was locked 2 times
+		// x12 was locked 1 time (due to aggregation)
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(2));
 
@@ -425,17 +492,21 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount.mul(10));
 
-		for (let i = 0; i < 50; i += 1) {
+		let LockLength = 50;
+		let counter = LockLength + 1;
+		for (let i = 0; i < LockLength; i += 1) {
+			// The max locks get aggregated (With the exception of the first one)
+			counter -= i % 4 == 3 ? 1 : 0;
 			await mfd.connect(user1).stake(depositAmount, user1.address, i % 4);
 		}
 
 		let lockInfo = await mfd.lockedBalances(user1.address);
-		expect(lockInfo.locked).to.be.equal(depositAmount.mul(50));
-		expect(lockInfo.lockData.length).to.be.equal(50);
+		expect(lockInfo.locked).to.be.equal(depositAmount.mul(LockLength));
+		expect(lockInfo.lockData.length).to.be.equal(counter);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 12);
 		const balance0 = await radiant.balanceOf(user1.address);
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 		const balance1 = await radiant.balanceOf(user1.address);
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount.mul(50));
 
@@ -448,7 +519,7 @@ describe('MultiFeeDistribution', () => {
 	//   const depositAmount = ethers.utils.parseUnits("100", 18);
 	//   await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 	//   await radiant.mint(mfd.address, depositAmount);
-	//   await mfd.mint(user1.address, depositAmount, true);
+	//   await mfd.vestTokens(user1.address, depositAmount, true);
 
 	//   const LOCK_DURATION = await mfd.DEFAULT_LOCK_DURATION();
 	//   await advanceTimeAndBlock(LOCK_DURATION.toNumber());
@@ -464,7 +535,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
 
@@ -479,11 +550,11 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await mfd.connect(user1).exit(false);
 	});
@@ -492,7 +563,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
 
@@ -510,13 +581,13 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount.mul(4));
 
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		await advanceTimeAndBlock(LOCK_DURATION / 3);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		await advanceTimeAndBlock(LOCK_DURATION / 3);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		await advanceTimeAndBlock(LOCK_DURATION / 3);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		await advanceTimeAndBlock(LOCK_DURATION / 3);
 		await mfd.connect(user1).withdraw(depositAmount);
@@ -532,7 +603,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, false);
+		await mfd.vestTokens(user1.address, depositAmount, false);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
@@ -549,7 +620,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
@@ -561,7 +632,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		await expect(mfd.connect(user1).withdraw(depositAmount)).to.be.reverted;
 
@@ -574,11 +645,11 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		const withdrawAmount = depositAmount.div(10);
 		const balance10 = await radiant.balanceOf(user1.address);
@@ -592,7 +663,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
@@ -609,10 +680,10 @@ describe('MultiFeeDistribution', () => {
 		const rewardAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user2.address, depositAmount, true);
+		await mfd.vestTokens(user2.address, depositAmount, true);
 
 		await radiant.mint(mfd.address, rewardAmount);
-		await mfd.mint(mfd.address, rewardAmount, false);
+		await mfd.vestTokens(mfd.address, rewardAmount, false);
 
 		const REWARDS_DURATION = await mfd.rewardsDuration();
 		await advanceTimeAndBlock(REWARDS_DURATION.toNumber());
@@ -625,7 +696,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; day 1', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const userBal0 = await radiant.balanceOf(user1.address);
 		const daoBal0 = await radiant.balanceOf(treasury.address);
@@ -655,7 +726,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; day 30', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		let blockTimestamp = await getLatestBlockTimestamp();
 		const unlockTime = blockTimestamp + MFD_VEST_DURATION;
@@ -690,7 +761,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; last day', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const userBal0 = await radiant.balanceOf(user1.address);
 		const daoBal0 = await radiant.balanceOf(treasury.address);
@@ -712,7 +783,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; withdraw; day 1', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const userBal0 = await radiant.balanceOf(user1.address);
 		const daoBal0 = await radiant.balanceOf(treasury.address);
@@ -740,7 +811,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; day 30', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const blockTimestamp = await getLatestBlockTimestamp();
 
@@ -768,7 +839,7 @@ describe('MultiFeeDistribution', () => {
 	it('Linear exit; last day', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const userBal0 = await radiant.balanceOf(user1.address);
 		const daoBal0 = await radiant.balanceOf(treasury.address);
@@ -786,7 +857,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		const timestamp = await getLatestBlockTimestamp();
 		await expect(mfd.connect(user1).individualEarlyExit(true, timestamp - 1)).to.be.reverted;
 	});
@@ -794,30 +865,42 @@ describe('MultiFeeDistribution', () => {
 	it('Individual early exit; with penalty', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
 
+		await radiant.mint(mfd.address, depositAmount);
+
+		// these will be aggregated into current day
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 		const timestamp = await getLatestBlockTimestamp();
-		await mfd.connect(user1).individualEarlyExit(true, timestamp + MFD_VEST_DURATION);
+
+		const unlockTime = timestamp + MFD_VEST_DURATION;
+
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+
+		await mfd.connect(user1).individualEarlyExit(true, unlockTime);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
 		const withdrawable = await mfd.withdrawableBalance(user1.address);
-		expect(withdrawable.amount).to.be.equal(depositAmount.div(5).mul(4));
+		// 0 because all was IEE above
+		expect(withdrawable.amount).to.be.equal(0);
 	});
 
-	it('Individual early exit; zero amount', async () => {
+	it('Individual early exit; unlock time not found', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		const LOCK_DURATION = (await mfd.defaultLockDuration()).toNumber();
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		const timestamp = await getLatestBlockTimestamp();
-		await mfd.connect(user1).individualEarlyExit(true, timestamp + 10);
+		await expect(
+			mfd.connect(user1).individualEarlyExit(true, timestamp + MFD_VEST_DURATION + 1)
+		).to.be.revertedWith('UnlockTimeNotFound');
 	});
 
 	it('cleanExpiredLocksAndEarnings; it should work fine', async () => {
@@ -827,23 +910,23 @@ describe('MultiFeeDistribution', () => {
 		await radiant.mint(mfd.address, depositAmount);
 
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() / 3);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() / 3);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() / 3);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() / 3);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
-		await mfd.mint(user1.address, depositAmount.div(5), true);
+		await mfd.vestTokens(user1.address, depositAmount.div(5), true);
 
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() / 3);
 
@@ -861,7 +944,7 @@ describe('MultiFeeDistribution', () => {
 
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		expect(await mfd.getRewardForDuration(radiant.address)).to.be.equal(0);
 
@@ -918,7 +1001,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -937,7 +1020,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 
@@ -982,7 +1065,7 @@ describe('MultiFeeDistribution', () => {
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber() * 3);
 
 		await expect(mfd.connect(user2).withdrawExpiredLocksForWithOptions(victim, 1, true)).to.be.reverted; // only withdrawing one lock because it's just a POC
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(victim, 1, true); // only withdrawing one lock because it's just a POC
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(victim, 1, false); // only withdrawing one lock because it's just a POC
 
 		const totalBalanceAfter = await mfd.totalBalance(victim);
 		const lockInfoAfter = await mfd.lockInfo(victim);
@@ -1026,5 +1109,48 @@ describe('MultiFeeDistribution', () => {
 
 		expect(penalty1.sub(burnAmount1)).to.be.equal(treasuryBal1.sub(treasuryBal0));
 		expect(burnAmount1).to.be.equal(sTreasuryBal1.sub(sTreasuryBal0));
+	});
+	describe("Aggregate locks", async () => {
+		it('Scenario #1; should aggregate all of them', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(1);
+		});
+
+		it('Scenario #2; should aggregate none', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(3);
+		});
+
+		it('Scenario #3; should aggregate the last 3', async () => {
+			await mfd.connect(user1).setRelock(false);
+
+			const depositAmount = ethers.utils.parseUnits('100', 18);
+			await radiant.mint(mfd.address, depositAmount.mul(10));
+
+			await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+			await mfd.connect(user1).stake(depositAmount, user1.address, 1);
+
+			let lockInfo = await mfd.lockedBalances(user1.address);
+			expect(lockInfo.lockData.length).to.be.equal(2);
+		});
 	});
 });

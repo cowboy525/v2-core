@@ -45,6 +45,7 @@ let bountyManager: BountyManager;
 let lpToken: ERC20;
 
 const eligibleAmt = 1000000;
+const acceptableUserSlippage = 9500;
 
 const generatePlatformRevenue = async (duration: number = SKIP_DURATION) => {
 	await doBorrow('rWETH', '1000', deployer, lendingPool, deployData);
@@ -112,7 +113,7 @@ describe(`BountyManager:`, async () => {
 
 	before(async () => {
 		await loadZappedUserFixture();
-		await multiFeeDistribution.connect(user1).setAutocompound(true);
+		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 		const minDLPBalance = await bountyManager.minDLPBalance();
 		await lpToken.approve(multiFeeDistribution.address, minDLPBalance);
 		await multiFeeDistribution.stake(minDLPBalance, hunter.address, 0);
@@ -122,7 +123,7 @@ describe(`BountyManager:`, async () => {
 
 		await vdWETH.connect(hunter).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, {
+		await wethGateway.connect(hunter).depositETHWithAutoDLP(lendingPool.address, hunter.address, 0, 0, {
 			value: ethers.utils.parseEther('1'),
 		});
 	});
@@ -140,7 +141,7 @@ describe(`BountyManager:`, async () => {
 		// let quote2 = await bountyManager.connect(hunter).executeBounty(user1.address, false, 0);
 		// console.log(quote2);
 		await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
-		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).total);
+		const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting);
 
 		/* const BountyManagerFactory = await ethers.getContractFactory(
             "BountyManagerBountiesUpgradeTest"
@@ -177,7 +178,7 @@ describe(`BountyManager:`, async () => {
 	it('can be gated by a whitelist', async () => {
 		await bountyManager.connect(deployer).changeWL(true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.be.revertedWith(
-			'!whiteliested'
+			'NotWhitelisted'
 		);
 		await bountyManager.connect(deployer).addAddressToWL(hunter.address, true);
 		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 0)).to.not.be.reverted;
@@ -186,5 +187,11 @@ describe(`BountyManager:`, async () => {
 		let quote = await bountyManager.connect(hunter).quote(user1.address);
 		await bountyManager.connect(deployer).changeWL(true);
 		quote = await bountyManager.connect(hunter).quote(user1.address);
+	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		await expect(bountyManager.connect(hunter).executeBounty(user1.address, false, 4)).to.be.revertedWith(
+			'ActionTypeIndexOutOfBounds'
+		);
 	});
 });

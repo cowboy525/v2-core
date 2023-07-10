@@ -9,6 +9,7 @@ import {
 	EligibilityDataProvider,
 	WETHGateway,
 	PriceProvider,
+	WETH,
 } from '../../typechain';
 import _ from 'lodash';
 import chai from 'chai';
@@ -26,11 +27,13 @@ describe('Looping/Leverager', () => {
 	let rUSDC: AToken;
 	let vdUSDC: VariableDebtToken;
 	let vdWETH: VariableDebtToken;
+	let WETH: WETH;
 	let usdcAddress = '';
 	let wethAddress = '';
+	let treasuryAddress = '';
 	const usdcAmt = 1000;
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 
 	const usdcPerAccount = ethers.utils.parseUnits(usdcAmt.toString(), 6);
 
@@ -53,11 +56,13 @@ describe('Looping/Leverager', () => {
 	};
 
 	before(async () => {
-		const {deployConfig, deployData, usdc, weth}: FixtureDeploy = await setupTest();
+		const {deployData, usdc, weth, treasury}: FixtureDeploy = await setupTest();
 
+		treasuryAddress = treasury.address;
 		usdcAddress = usdc.address;
 		wethAddress = weth.address;
 		rUSDC = <AToken>await ethers.getContractAt('mockERC20', deployData.allTokens.rUSDC);
+		WETH = <WETH>await ethers.getContract('WETH', wethAddress);
 	});
 
 	it('returns debt token w/ getVDebtToken', async () => {
@@ -95,7 +100,7 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false);
+		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 0);
 
 		const initialFee = amt.mul(FEE_LOOPING).div(1e4);
 		const initialDeposit = amt.sub(initialFee);
@@ -112,7 +117,7 @@ describe('Looping/Leverager', () => {
 		expect(await usdc.balanceOf(user2.address)).to.equal(BigNumber.from(0));
 		expect(await rUSDC.balanceOf(user2.address)).to.equal(totalUserDeposits);
 		expect(await vdUSDC.balanceOf(user2.address)).to.equal(totalUserBorrows);
-		// expect(await USDC.balanceOf(treasury.address)).to.equal(totalFees);
+		expect(await usdc.balanceOf(treasuryAddress)).to.equal(totalFees);
 	});
 
 	it('autoZap while looping', async () => {
@@ -155,8 +160,6 @@ describe('Looping/Leverager', () => {
 
 		expect(await eligibilityProvider.isEligibleForRewards(user2.address)).to.equal(false);
 
-		const required1 = await eligibilityProvider.requiredUsdValue(user2.address);
-		const locked1 = await eligibilityProvider.lockedUsdValue(user2.address);
 		let amt = ethers.utils.parseUnits('197967.89677', 6);
 		let leverage = 1.1;
 		let borrowRatio = Math.floor(loopingLeverageToLtv(leverage) * 10000);
@@ -164,17 +167,15 @@ describe('Looping/Leverager', () => {
 
 		await usdc.connect(user2).mint(user2.address, amt);
 
-		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false);
+		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 0);
 		await advanceTimeAndBlock(3601);
 		await priceProvider.update();
 		expect(await eligibilityProvider.isEligibleForRewards(user2.address)).to.equal(true);
 		// TODO: check these numbers
-		const required2 = await eligibilityProvider.requiredUsdValue(user2.address);
-		const locked2 = await eligibilityProvider.lockedUsdValue(user2.address);
 	});
 
-	it('loop ETH from Borrow', async () => {
-		const {leverager, wethGateway, lendingPool, user2, usdc, weth}: FixtureDeploy = await setupTest();
+	it('loop ETH from Borrow with correct fees', async () => {
+		const {leverager, wethGateway, lendingPool, user2}: FixtureDeploy = await setupTest();
 
 		await leverager.setFeePercent(FEE_LOOPING);
 
@@ -185,18 +186,112 @@ describe('Looping/Leverager', () => {
 
 		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
 
-		const ethBalance = await ethers.provider.getBalance(user2.address);
+		const ethBalance = await (await ethers.provider.getBalance(user2.address)).div(2);
 
 		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
 			value: ethBalance,
 		});
 
 		const ethBalance2 = await ethers.provider.getBalance(user2.address);
-		expect(ethBalance2).to.equal(BigNumber.from(0));
+		expect(ethBalance2).to.equal(ethBalance);
+
+		let borrowRatio = 8000;
+		let amt = ethers.utils.parseEther('1');
+		let loops = 2;
+
+		const initialFee = amt.mul(FEE_LOOPING).div(1e4);
+		const initialDeposit = amt.sub(initialFee);
+		const loop1Borrow = initialDeposit.mul(BigNumber.from(borrowRatio)).div(1e4);
+		const loop1Fee = loop1Borrow.mul(FEE_LOOPING).div(1e4);
+		const totalFees = initialFee.add(loop1Fee);
+
+		const treasuryEth0 = await ethers.provider.getBalance(treasuryAddress);
+
+		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 0);
+
+		const tresuryEth1 = await ethers.provider.getBalance(treasuryAddress);
+		expect(tresuryEth1.sub(treasuryEth0)).to.equal(totalFees);
+	});
+
+	it('loop ETH with correct fees', async () => {
+		const {leverager, user2}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		let borrowRatio = 8000;
+		let amt = ethers.utils.parseEther('1');
+		let loops = 2;
+
+		const initialFee = amt.mul(FEE_LOOPING).div(1e4);
+		const initialDeposit = amt.sub(initialFee);
+		const loop1Borrow = initialDeposit.mul(BigNumber.from(borrowRatio)).div(1e4);
+		const loop1Fee = loop1Borrow.mul(FEE_LOOPING).div(1e4);
+		const loop2Borrow = loop1Borrow.sub(loop1Fee).mul(BigNumber.from(borrowRatio)).div(1e4);
+		const loop2Fee = loop2Borrow.mul(FEE_LOOPING).div(1e4);
+		const totalFees = initialFee.add(loop1Fee).add(loop2Fee);
+
+		const treasuryEth0 = await ethers.provider.getBalance(treasuryAddress);
+
+		await leverager.connect(user2).loopETH(2, borrowRatio, loops, 9700, {value: amt});
+
+		const tresuryEth1 = await ethers.provider.getBalance(treasuryAddress);
+		expect(tresuryEth1.sub(treasuryEth0)).to.equal(totalFees);
+	});
+
+	it('Eligibility Exempt is Temporary', async () => {
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+
+		await vdUSDC.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
+			value: ethers.utils.parseEther('1000'),
+		});
+
+		await usdc.connect(user2).mint(user2.address, usdcPerAccount.div(2));
+		await usdc.connect(user2).approve(leverager.address, ethers.constants.MaxUint256);
+
+		const isEligibleExempt = await chefIncentivesController.eligibilityExempt(user2.address);
+		expect(isEligibleExempt).to.equal(false);
 
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops);
+		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 0);
+
+		expect(await chefIncentivesController.eligibilityExempt(user2.address)).to.equal(isEligibleExempt);
+	});
+
+	it('fail when loopCount is 0', async () => {
+		const {leverager}: FixtureDeploy = await setupTest();
+		await expect(leverager.loop(usdcAddress, 0, 2, 10, 0, false, 0)).to.be.revertedWith('InvalidLoopCount');
+
+		await expect(leverager.loopETHFromBorrow(2, 0, 10, 0, 0)).to.be.revertedWith('InvalidLoopCount');
+
+		await expect(leverager.loopETH(0, 10, 0, 0)).to.be.revertedWith('InvalidLoopCount');
+	});
+
+	it('fail when exceeding the value boundaries', async () => {
+		const {leverager}: FixtureDeploy = await setupTest();
+		await expect(leverager.setFeePercent('10001')).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loop(usdcAddress, 0, 2, 0, 0, false, 0)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loop(usdcAddress, 0, 2, 10001, 0, false, 0)).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loopETH(0, 0, 0, 0)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loopETH(0, 10001, 0, 0)).to.be.revertedWith('InvalidRatio');
+
+		await expect(leverager.loopETHFromBorrow(2, 0, 0, 0, 0)).to.be.revertedWith('InvalidRatio');
+		await expect(leverager.loopETHFromBorrow(2, 0, 10001, 0, 0)).to.be.revertedWith('InvalidRatio');
 	});
 });

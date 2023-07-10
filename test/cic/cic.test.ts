@@ -11,6 +11,7 @@ import {
 	AToken,
 	ChefIncentivesController,
 	CustomERC20,
+	ERC20,
 	LendingPool,
 	MockToken,
 	MultiFeeDistribution,
@@ -42,6 +43,7 @@ describe('Non-Elig CIC', () => {
 	let chefIncentivesController: ChefIncentivesController;
 	let lendingPool: LendingPool;
 	let multiFeeDistribution: MultiFeeDistribution;
+	let rdntToken: ERC20;
 
 	let usdcAddress = '';
 	let rUSDCAddress = '';
@@ -77,6 +79,7 @@ describe('Non-Elig CIC', () => {
 		usdcAddress = fixture.usdc.address;
 		rUSDCAddress = deployData.allTokens.rUSDC;
 
+		rdntToken = fixture.rdntToken;
 		chefIncentivesController = fixture.chefIncentivesController;
 		multiFeeDistribution = fixture.multiFeeDistribution;
 		lendingPool = fixture.lendingPool;
@@ -103,7 +106,7 @@ describe('Non-Elig CIC', () => {
 					deployData.middleFeeDistribution,
 					100,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			);
 			await chef.deployed();
 
@@ -145,6 +148,36 @@ describe('Non-Elig CIC', () => {
 			)
 		).to.be.reverted;
 		await chefIncentivesController.setOnwardIncentives(rUSDCAddress, onwardIncentiveController.address);
+	});
+
+	describe('Fail States', () => {
+		let transferAmount: BigNumberish;
+
+		it('Create Rewards for User 1', async () => {
+			await zapIntoEligibility(user1, deployData, '100');
+
+			await lendingPool.connect(user1).deposit(usdcAddress, depositAmt.div(2), user1.address, 0);
+			await lendingPool.connect(user1).deposit(usdcAddress, depositAmt.div(2), user1.address, 0);
+
+			await chefIncentivesController.connect(deployer).setRewardsPerSecond(rewardsPerSecond, false);
+		});
+
+		it('CIC reverts when out of rewards', async () => {
+			await hre.network.provider.request({
+				method: 'hardhat_impersonateAccount',
+				params: [chefIncentivesController.address],
+			});
+			const cicSigner =  await ethers.getSigner(chefIncentivesController.address);
+			transferAmount = await rdntToken.balanceOf(chefIncentivesController.address);
+			await rdntToken.connect(cicSigner).transfer(user1.address,transferAmount);
+			await advanceTimeAndBlock(100);
+			await expect(chefIncentivesController.connect(user1).claimAll(user1.address)).to.be.revertedWith('OutOfRewards');
+		});
+
+		it('CIC continues when rewards filled up', async () => {
+			await rdntToken.connect(user1).transfer(chefIncentivesController.address,transferAmount);
+			await chefIncentivesController.connect(user1).claimAll(user1.address);
+		});
 	});
 
 	describe('setRewardsPerSecond callable', () => {
@@ -220,7 +253,6 @@ describe('Non-Elig CIC', () => {
 			await chefIncentivesController.connect(deployer).setRewardsPerSecond(rewardsPerSecond2, true);
 
 			const claimableRewards2 = await chefIncentivesController.pendingRewards(user1.address, [rUSDCAddress]);
-
 			// mine 100 seconds again
 			await advanceTimeAndBlock(period);
 
@@ -238,14 +270,14 @@ describe('Non-Elig CIC', () => {
 
 		it('claim for middlefeedistribution', async () => {
 			await expect(chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)).to
-				.be.not.reverted;
+				.be.revertedWith('NothingToMint');
 		});
 
 		it('should claim rewards', async () => {
 			// mine 100 seconds
 			await advanceTimeAndBlock(period);
 
-			const balanceBefore = (await multiFeeDistribution.earnedBalances(user1.address)).total;
+			const balanceBefore = (await multiFeeDistribution.earnedBalances(user1.address)).totalVesting;
 
 			const claimableRewards = await chefIncentivesController.pendingRewards(user1.address, [rUSDCAddress]);
 
@@ -261,15 +293,9 @@ describe('Non-Elig CIC', () => {
 			await expect(chefIncentivesController.connect(user1).claim(user1.address, [user1.address])).to.be.reverted;
 			await chefIncentivesController.connect(user1).claimAll(user1.address);
 
-			const balanceAfter = (await multiFeeDistribution.earnedBalances(user1.address)).total;
+			const balanceAfter = (await multiFeeDistribution.earnedBalances(user1.address)).totalVesting;
 
 			expect(balanceAfter.sub(balanceBefore)).to.be.gt(claimableRewards[0]);
-		});
-
-		it('withdraw all', async () => {
-			const amount = await rUSDC.balanceOf(user1.address);
-			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
-			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
 		});
 	});
 
@@ -278,6 +304,7 @@ describe('Non-Elig CIC', () => {
 	});
 
 	describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', () => {
+
 		it('setEmissionSchedule before start', async () => {
 			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
 			const chef = await upgrades.deployProxy(
@@ -288,13 +315,34 @@ describe('Non-Elig CIC', () => {
 					deployer.address, // Mock address
 					100,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			);
 			await chef.deployed();
 
 			const cicStartTimeOffSets = [100, 500, 1000];
 			const cicRewardsPerSecond = [100, 200, 300];
 			await chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets, cicRewardsPerSecond);
+		});
+
+		it('setEmissionSchedule: Duplicate Emission Schedules Are Not Allowed', async () => {
+			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
+			const chef = await upgrades.deployProxy(
+				chefFactory,
+				[
+					deployer.address, // Mock address
+					deployer.address, // Mock address
+					deployer.address, // Mock address
+					100,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			);
+			await chef.deployed();
+
+			const cicStartTimeOffSets1 = [100, 100, 1000];
+			const cicStartTimeOffSets2 = [100, 1000, 1000];
+			const cicRewardsPerSecond = [100, 200, 300];
+			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets1, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
+			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets2, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
 		});
 
 		it('manually set rewards', async () => {
@@ -326,6 +374,7 @@ describe('Non-Elig CIC', () => {
 
 			await advanceTimeAndBlock(100);
 
+			// snapshot increased claimable rewards
 			await chefIncentivesController.claim(user1.address, [rUSDCAddress]);
 			assert.equal(
 				(await chefIncentivesController.emissionScheduleIndex()).toString(),
@@ -368,6 +417,12 @@ describe('Non-Elig CIC', () => {
 				cicRewardsPerSecond[2].toString(),
 				`get rps from schedule`
 			);
+		});
+
+		it('withdraw all', async () => {
+			const amount = await rUSDC.balanceOf(user1.address);
+			await lendingPool.connect(user1).setUserUseReserveAsCollateral(usdcAddress, false);
+			await lendingPool.connect(user1).withdraw(usdcAddress, amount, user1.address);
 		});
 	});
 

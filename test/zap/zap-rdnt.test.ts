@@ -1,4 +1,5 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
+import {solidity} from 'ethereum-waffle';
 import {ethers} from 'hardhat';
 import {
 	LendingPool,
@@ -8,11 +9,15 @@ import {
 	LockZap,
 	WETH,
 	PriceProvider,
+	UniswapPoolHelper
 } from '../../typechain';
-import {expect} from 'chai';
+// import {expect} from 'chai';
+import chai from 'chai';
 import {setupTest} from '../setup';
 import {advanceTimeAndBlock} from '../shared/helpers';
 import {DeployConfig} from '../../scripts/deploy/types';
+chai.use(solidity);
+const {expect} = chai;
 
 describe('LockZap: 2-token zap', function () {
 	let dao: SignerWithAddress;
@@ -23,9 +28,12 @@ describe('LockZap: 2-token zap', function () {
 	let multiFeeDistribution: MultiFeeDistribution;
 	let priceProvider: PriceProvider;
 	let deployConfig: DeployConfig;
+	let deployer: SignerWithAddress;
+	let poolHelperAddress: string;
+	let poolHelper: UniswapPoolHelper;
 
 	beforeEach(async function () {
-		({dao, rdntToken, lendingPool, lockZap, weth, multiFeeDistribution, priceProvider, deployConfig} =
+		({dao, rdntToken, lendingPool, lockZap, weth, multiFeeDistribution, priceProvider, deployConfig, deployer} =
 			await setupTest());
 
 		// setup for a borrow
@@ -40,6 +48,8 @@ describe('LockZap: 2-token zap', function () {
 		await vdWETH.connect(dao).approveDelegation(lockZap.address, ethers.constants.MaxUint256);
 		await advanceTimeAndBlock(deployConfig.TWAP_PERIOD);
 		await priceProvider.update();
+		poolHelperAddress = await lockZap.getPoolHelper();
+		poolHelper = <UniswapPoolHelper>await ethers.getContractAt('UniswapPoolHelper', poolHelperAddress);
 	});
 
 	it('2-token zap, with borrow', async function () {
@@ -47,11 +57,11 @@ describe('LockZap: 2-token zap', function () {
 		expect(lockInfo.lockData.length).to.be.equal(0);
 
 		const rdntZapAmt = ethers.utils.parseEther('100');
-		const wethAmt = await lockZap.quoteFromToken(rdntZapAmt);
+		const wethAmt = await poolHelper.quoteFromToken(rdntZapAmt);
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
-		await lockZap.connect(dao).zap(true, wethAmt, rdntZapAmt, 0);
+		await lockZap.connect(dao).zap(true, wethAmt, rdntZapAmt, 0, 0);
 
 		lockInfo = await multiFeeDistribution.lockedBalances(dao.address);
 		expect(lockInfo.lockData.length).to.be.equal(1);
@@ -62,11 +72,11 @@ describe('LockZap: 2-token zap', function () {
 		expect(lockInfo.lockData.length).to.be.equal(0);
 
 		const rdntZapAmt = ethers.utils.parseEther('100');
-		const ethAmt = await lockZap.quoteFromToken(rdntZapAmt);
+		const ethAmt = await poolHelper.quoteFromToken(rdntZapAmt);
 
 		await rdntToken.connect(dao).approve(lockZap.address, ethers.constants.MaxUint256);
 
-		await lockZap.connect(dao).zap(false, 0, rdntZapAmt, 0, {
+		await lockZap.connect(dao).zap(false, 0, rdntZapAmt, 0, 0, {
 			value: ethAmt,
 		});
 		lockInfo = await multiFeeDistribution.lockedBalances(dao.address);

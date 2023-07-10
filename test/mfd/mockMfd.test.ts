@@ -56,7 +56,7 @@ describe('MultiFeeDistribution', () => {
 		const priceProvider = await upgrades.deployProxy(
 			PriceProvider,
 			[config.CHAINLINK_ETH_USD_AGGREGATOR_PROXY, poolHelper.address],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await priceProvider.deployed();
 
@@ -79,7 +79,7 @@ describe('MultiFeeDistribution', () => {
 				BURN,
 				MFD_VEST_DURATION,
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
@@ -109,7 +109,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		await mfd.connect(user1).setRelock(true);
 
 		const autoRelockDisabled = await mfd.autoRelockDisabled(user1.address);
@@ -120,7 +120,7 @@ describe('MultiFeeDistribution', () => {
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
-		await mfd.connect(user1).withdrawExpiredLocksFor(user1.address);
+		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
 
 		const lockedBal = (await mfd.lockedBalances(user1.address)).locked;
 
@@ -131,7 +131,7 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 
 		const users = await lockerlist.getUsers(0, 1);
 		expect(users[0]).to.be.equal(user1.address);

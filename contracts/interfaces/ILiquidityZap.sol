@@ -4,9 +4,9 @@ pragma solidity 0.8.12;
 interface ILiquidityZap {
 	function _WETH() external view returns (address);
 
-	function _token() external view returns (address);
+	function token() external view returns (address);
 
-	function _tokenWETHPair() external view returns (address);
+	function tokenWETHPair() external view returns (address);
 
 	function addLiquidityETHOnly(address to) external returns (uint256 liquidity);
 

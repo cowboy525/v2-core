@@ -27,6 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	if (pp.newlyDeployed) {
 		await execute('RadiantOFT', txnOpts, 'setPriceProvider', pp.address);
 		await execute('LockZap', txnOpts, 'setPriceProvider', pp.address);
+		await execute('LiquidityZap', txnOpts, 'setPriceProvider', pp.address);
 	}
 };
 export default func;

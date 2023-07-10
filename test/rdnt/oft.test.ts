@@ -117,12 +117,12 @@ describe('Radiant OFT: ', function () {
 	});
 
 	it('admin perms', async function () {
-		await expect(execute('RadiantOFT', {from: dao}, 'setFee', 1000)).to.be.revertedWith(
+		await expect(execute('RadiantOFT', {from: dao}, 'setFeeRatio', 1000)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);
 
-		let expectedFee = 1234;
-		await execute('RadiantOFT', {from: admin}, 'setFee', expectedFee);
+		let expectedFee = 90;
+		await execute('RadiantOFT', {from: admin}, 'setFeeRatio', expectedFee);
 		let actualFee = await read('RadiantOFT', 'feeRatio');
 		expect(actualFee).equals(expectedFee);
 	});
@@ -167,9 +167,10 @@ describe('Radiant OFT: ', function () {
 	});
 
 	it('full Bridge flow', async function () {
-		let feeVal = 1000;
-		await execute('RadiantOFT', {from: admin}, 'setFee', feeVal);
+		let feeVal = 90;
+		await execute('RadiantOFT', {from: admin}, 'setFeeRatio', feeVal);
 		await execute('RadiantOFT', {from: admin}, 'setPriceProvider', priceProvider.address);
+		await execute('RadiantOFTDst', {from: admin}, 'setPriceProvider', priceProvider.address);
 		// await advanceTimeAndBlock(3601);
 		// await priceProvider.update();
 
@@ -263,6 +264,12 @@ describe('Radiant OFT: ', function () {
 	it('pauseBridge() - reverts if not owner', async function () {
 		await expect(execute('RadiantOFT', {from: dao}, 'pause')).to.be.revertedWith(
 			'Ownable: caller is not the owner'
+		);
+	});
+
+	it('fails when invalid input', async function () {
+		await expect(execute('RadiantOFT', {from: admin}, 'setFeeRatio', 101)).to.be.revertedWith(
+			'InvalidRatio'
 		);
 	});
 });

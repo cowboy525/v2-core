@@ -89,6 +89,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			// console.log(await read('RadiantOFT', 'balanceOf', poolHelper.address));
 
 			await execute('PoolHelper', txnOpts, 'initializePool');
+
+			const lpTokenAddr = await read('PoolHelper', {}, 'lpTokenAddr');
+			await execute(
+				'LiquidityZap',
+				txnOpts,
+				'initLiquidityZap',
+				radiantToken.address,
+				wethAddr,
+				lpTokenAddr,
+				poolHelper.address
+			);
+			await execute('LiquidityZap', txnOpts, 'setAcceptableRatio', config.ZAP_SLIPPAGE_LIMIT);
 		}
 	} else {
 		// Balancer
@@ -151,14 +163,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			execute: {
 				init: {
 					methodName: 'initialize',
-					args: [
-						poolHelper.address,
-						lendingPool,
-						wethAddr,
-						radiantToken.address,
-						ethLpRatio,
-						config.ZAP_SLIPPAGE_LIMIT,
-					],
+					args: [poolHelper.address, lendingPool, wethAddr, radiantToken.address, ethLpRatio],
 				},
 			},
 		},
