@@ -111,6 +111,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Swap route from rewardToken to baseToken
 	mapping(address => address[]) public rewardToBaseRoute;
 
+	constructor() {
+		_disableInitializers();
+	}
+
 	/**
 	 * @notice Initializer
 	 * @param _uniRouter Address of swap router
@@ -332,10 +336,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/**
 	 * @notice Compound `msg.sender`'s rewards.
-	 * @return fee applied to compound
 	 */
-	function selfCompound() external returns (uint256 fee) {
-		fee = claimCompound(msg.sender, true);
+	function selfCompound() external {
+		claimCompound(msg.sender, true);
 	}
 
 	/**
@@ -447,7 +450,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Gets if user is eligbile for auto compounding
+	 * @notice Returns if user is eligbile for auto compounding
 	 * @param _user address
 	 * @param _pending amount
 	 * @return True or False
@@ -464,7 +467,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Gets if pending amount is elgible for auto compounding
+	 * @notice Returns if pending amount is elgible for auto compounding
 	 * @param _pending amount
 	 * @return eligible True or False
 	 */
