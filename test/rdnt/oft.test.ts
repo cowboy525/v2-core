@@ -181,24 +181,6 @@ describe('Radiant OFT: ', function () {
 
 		const dstGasForCall = ethers.utils.parseEther("1").div(10);
 		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
-		let bridgeFee = await OFTSrc.getBridgeFee(sendQty);
-
-		await expect(execute(
-			'RadiantOFT',
-			{from: dao, value: bridgeFee.div(10)},
-			'sendAndCall',
-			dao,
-			chainIdDst,
-			toAddressBytes32,
-			sendQty,
-			'0x',
-			dstGasForCall,
-			{
-				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
-				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
-				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
-			}
-		)).to.be.revertedWith("InsufficientETHForFee");
 
 		await execute(
 			'RadiantOFT',
@@ -234,6 +216,8 @@ describe('Radiant OFT: ', function () {
 
 		const dstGasForCall = ethers.utils.parseEther("1").div(10);
 		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
+
+		const treasuryEth0 = await ethers.provider.getBalance(treasury);
 
 		await execute(
 			'RadiantOFT',
@@ -284,6 +268,14 @@ describe('Radiant OFT: ', function () {
 		const beforeTreasuryBalance = await hre.ethers.provider.getBalance(treasury);
 
 		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [dao]);
+
+		let bridgeFee = await OFTSrc.getBridgeFee(sendQty);
+
+		await expect(execute('RadiantOFT', {from: dao, value: bridgeFee.div(10)}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
+			refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+			zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+			adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+		})).to.be.revertedWith("InsufficientETHForFee");
 
 		// can transfer accross chain
 		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
