@@ -13,6 +13,11 @@ library Oracle {
 
 	error InvalidPrice();
 
+	/**
+	 * @notice Get latest answer from chainlink feed
+	 * @param chainlinkFeed aggregator address
+	 * @return Answer
+	 */
 	function getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
 		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
 		if(updatedAt == 0) revert RoundNotComplete();
