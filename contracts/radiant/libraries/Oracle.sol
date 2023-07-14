@@ -3,6 +3,8 @@ pragma solidity 0.8.12;
 
 import {AggregatorV3Interface} from "../../interfaces/AggregatorV3Interface.sol";
 
+/// @title Library for oracle utilities
+/// @author Radiant Devs
 library Oracle {
 	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
 	uint256 public constant UPDATE_PERIOD = 86400;
