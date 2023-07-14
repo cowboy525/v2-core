@@ -187,6 +187,32 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	/**
+	 * @notice Quote tokens like USDC, DAI, USDT, WBTC to lp
+	 * @param _asset address of the asset to zap in
+	 * @param _lpAmount the amount of lp to zap
+	 * @param _slippage allowed slippage.
+	 */
+	function quoteAlternateAsset(address _asset, uint256 _lpAmount, uint256 _slippage) public view returns (uint256) {
+		if (_asset == address(0)) revert AddressZero();
+		if (_slippage == 0) _slippage = MAX_SLIPPAGE;
+		if (MAX_SLIPPAGE > _slippage || _slippage > RATIO_DIVISOR) revert SpecifiedSlippageExceedLimit();
+		if (_lpAmount == 0) revert AmountZero();
+
+		uint256 neededWeth = poolHelper.quoteWETH(_lpAmount);
+		uint256 neededAsset = poolHelper.quoteSwap(_asset, neededWeth);
+
+		uint256 assetDecimals = IERC20Metadata(_asset).decimals();
+		IPriceOracle priceOracle = IPriceOracle(lendingPool.getAddressesProvider().getPriceOracle());
+		uint256 ethPrice = uint256(ethOracle.latestAnswer());
+		uint256 expectedEthAmount = ((neededAsset * (10 ** 18) * priceOracle.getAssetPrice(_asset)) / (10 ** assetDecimals)) / ethPrice;
+
+		uint256 minAcceptableWeth = (expectedEthAmount * _slippage) / RATIO_DIVISOR;
+		if (neededWeth < minAcceptableWeth)  revert SlippageTooHigh();
+
+		return neededAsset;
+	}
+
+	/**
 	 * @notice Zap tokens to stake LP
 	 * @param _borrow option to borrow ETH
 	 * @param _wethAmt amount of weth.
