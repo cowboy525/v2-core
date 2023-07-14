@@ -3,12 +3,6 @@
 pragma solidity 0.8.12;
 
 interface IBaseOracle {
-	error RoundNotComplete();
-
-	error StalePrice();
-
-	error InvalidPrice();
-
 	function latestAnswer() external view returns (uint256 price);
 
 	function latestAnswerInEth() external view returns (uint256 price);

@@ -3,23 +3,16 @@ pragma solidity 0.8.12;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {AggregatorV3Interface} from "../../interfaces/AggregatorV3Interface.sol";
+import {Oracle} from "../libraries/Oracle.sol";
 
 /// @notice Provides wstETH/USD price using stETH/USD Chainlink oracle and wstETH/stETH exchange rate provided by stETH smart contract
 contract WSTETHOracle is OwnableUpgradeable {
-	/// @notice The period for price update, this is taken from heartbeats of chainlink price feeds
-	uint256 public constant UPDATE_PERIOD = 86400;
 	/// @notice stETH/USD price feed
 	AggregatorV3Interface public stETHUSDOracle;
 	/// @notice wstETHRatio feed
 	AggregatorV3Interface public stEthPerWstETHOracle;
 
 	error AddressZero();
-	
-	error RoundNotComplete();
-
-	error StalePrice();
-
-	error InvalidPrice();
 
 	constructor() {
 		_disableInitializers();
@@ -73,8 +66,8 @@ contract WSTETHOracle is OwnableUpgradeable {
 	/// @notice Get wstETH/USD price. It does not check Chainlink oracle staleness! If staleness check needed, it's recommended to use latestTimestamp() function
 	/// @return answer wstETH/USD price or 0 if failure
 	function latestAnswer() external view returns (int256 answer) {
-		int256 stETHPrice = _getAnswer(stETHUSDOracle);
-		int256 wstETHRatio = _getAnswer(stEthPerWstETHOracle);
+		int256 stETHPrice = Oracle.getAnswer(stETHUSDOracle);
+		int256 wstETHRatio = Oracle.getAnswer(stEthPerWstETHOracle);
 
 		answer = (stETHPrice * wstETHRatio) / 1 ether;
 	}
@@ -86,11 +79,4 @@ contract WSTETHOracle is OwnableUpgradeable {
 		return 1;
 	}
 
-	function _getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
-		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
-		if(updatedAt == 0) revert RoundNotComplete();
-		if(block.timestamp - updatedAt >= UPDATE_PERIOD) revert StalePrice();
-		if(answer <= 0) revert InvalidPrice();
-		return answer;
-	}
 }
