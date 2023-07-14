@@ -230,14 +230,21 @@ describe(`AutoCompound:`, async () => {
 		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 
+	it('fails when slippage too high', async () => {
+		await multiFeeDistribution.connect(user1).setAutocompound(true, 9999);
+		await generatePlatformRevenue(1 * HOUR);
+		await expect(compounder.connect(user1).claimCompound(user1.address, true)).to.be.revertedWith("SlippageTooHigh");
+		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
+	});
+
 	it('can selfcompound for no Fee', async () => {
 		await generatePlatformRevenue(1 * HOUR);
 		let fee = await compounder.connect(user1).claimCompound(user1.address, false);
-		await expect(fee.value).to.be.equal(0);
+		expect(fee.value).to.be.equal(0);
 
 		await generatePlatformRevenue(1 * HOUR);
 		fee = await compounder.connect(user1).claimCompound(user1.address, true);
-		await expect(fee.value).to.be.equal(0);
+		expect(fee.value).to.be.equal(0);
 	});
 
 	it('Add USDC as Reward and Not Stuck in Compounder', async () => {
