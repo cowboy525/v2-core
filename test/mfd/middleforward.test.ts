@@ -81,78 +81,142 @@ describe('MFDs split Platform Revenue', () => {
 		await middleFeeDistribution.setOperationExpenses(opEx.address, opRatio);
 	});
 
-	it('Deposit and borrow by User 2 + 3, Lock DLPs', async () => {
-		await zapIntoEligibility(user2, deployData);
-
+	it('Deposit and borrow by User 2 + 3, Zap into elgibility', async () => {
 		await USDC.mint(user2.address, usdcPerAccount);
 		await USDC.mint(user3.address, usdcPerAccount);
-
 		await USDC.connect(user2).approve(lendingPool.address, ethers.constants.MaxUint256);
-		await radiantToken.connect(user2).approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
-
 		await USDC.connect(user3).approve(lendingPool.address, ethers.constants.MaxUint256);
-		await radiantToken.connect(user3).approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
-
 		await lendingPool.connect(user2).deposit(usdcAddress, usdcPerAccount, user2.address, 0);
-
 		await lendingPool.connect(user3).deposit(usdcAddress, usdcPerAccount, user3.address, 0);
-
 		await lendingPool.connect(user3).borrow(usdcAddress, borrowAmt, 2, 0, user3.address);
-
 		const bal = Number(await rUSDC.balanceOf(user2.address));
 		assert.notEqual(bal, 0, `Has balance`);
+
+		await zapIntoEligibility(user2, deployData);
 	});
 
-	it('Earns RDNT on Lend/Borrow', async () => {
+	it('User2 starts to vest tokens', async () => {
 		await advanceTimeAndBlock(duration / 10);
 		const vestableRdnt = await chef.pendingRewards(user2.address, deployData.allTokenAddrs);
+		const claimableRdnt = vestableRdnt.reduce((a, b) => a.add(b));
+		expect(claimableRdnt).to.be.gt(0);
 
-		const balances = _.without(
-			vestableRdnt.map((bn) => Number(bn)),
-			0
-		);
-		assert.equal(balances.length, 1, `Earned Rewards`);
-	});
-
-	it('User2 can Vest RDNT', async () => {
 		await chef.claim(user2.address, deployData.allTokenAddrs);
-		await advanceTimeAndBlock(deployConfig.MFD_VEST_DURATION);
 
-		const {amount: mfdRewardAmount, penaltyAmount: penalty0} = await multiFeeDistribution.withdrawableBalance(
+		const {totalVesting: earningAmount} = await multiFeeDistribution.earnedBalances(
 			user2.address
 		);
-		assert.notEqual(mfdRewardAmount, 0, `Can exit w/ rdnt`);
-		assert.equal(penalty0, 0, `no penalty`);
+		expect(earningAmount).to.be.gt(claimableRdnt);
 	});
 
-	it('Send RDNT to MiddleFeeDistribution', async () => {
+	it('Rewards get transferred from MiddleFee to MultiFee.', async () => {
 		await middleFeeDistribution.setOperationExpenses(user2.address, 0);
-		const earnings0 = await multiFeeDistribution.earnedBalances(user2.address);
-
-		// Forward current reward
-		await multiFeeDistribution.connect(user2).getAllRewards();
-
-		// Release all current rewards
-		const rewardDuration = await multiFeeDistribution.rewardsDuration();
-		await advanceTimeAndBlock(rewardDuration.toNumber());
-
-		// Forward reward, notify rewards on MFD
 		const forwardAmount = ethers.utils.parseEther("10000");
 		await radiantToken.connect(dao).transfer(middleFeeDistribution.address, forwardAmount);
+
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount0 = rdntRewardData.amount;
+		const middleBalance0 = await radiantToken.balanceOf(middleFeeDistribution.address);
+		const multiBalance0 = await radiantToken.balanceOf(multiFeeDistribution.address);
+
+		// just forward
+		await multiFeeDistribution.getReward([radiantToken.address]);
+
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount1 = rdntRewardData1.amount;
+		const middleBalance1 = await radiantToken.balanceOf(middleFeeDistribution.address);
+		const multiBalance1 = await radiantToken.balanceOf(multiFeeDistribution.address);
+
+		expect(multiBalance1.sub(multiBalance0)).to.be.equal(middleBalance0);
+		expect(middleBalance1).to.be.equal(0);
+
+		// Check that pending vesting and revenue rewards are as expected.
+		expect(earningAmount0).to.be.equal(earningAmount1);
+		expect(rewardAmount1).to.be.gte(rewardAmount0);
+	});
+
+	it('Rewards get transferred from MiddleFee to MultiFee. 2nd forward', async () => {
+		await advanceTimeAndBlock(REWARDS_DURATION);
+		const forwardAmount = ethers.utils.parseEther("10000");
+		await radiantToken.connect(dao).transfer(middleFeeDistribution.address, forwardAmount);
+
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount0 = rdntRewardData.amount;
+		const middleBalance0 = await radiantToken.balanceOf(middleFeeDistribution.address);
+		const multiBalance0 = await radiantToken.balanceOf(multiFeeDistribution.address);
+
+		// just forward
+		await multiFeeDistribution.getReward([radiantToken.address]);
+
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount1 = rdntRewardData1.amount;
+		const middleBalance1 = await radiantToken.balanceOf(middleFeeDistribution.address);
+		const multiBalance1 = await radiantToken.balanceOf(multiFeeDistribution.address);
+
+		// Check that pending vesting and revenue rewards are as expected.
+		expect(multiBalance1.sub(multiBalance0)).to.be.equal(middleBalance0);
+		expect(middleBalance1).to.be.equal(0);
+		expect(earningAmount0).to.be.equal(earningAmount1);
+		expect(rewardAmount1).to.be.equal(rewardAmount0);
+	});
+
+	it("User withdraws some of the revenue rewards", async () => {
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount0 = rdntRewardData0.amount;
+		const userBal0 = await radiantToken.balanceOf(user2.address);
+
 		await multiFeeDistribution.connect(user2).getAllRewards();
 
-		// Earnings not increased
-		const earnings1 = await multiFeeDistribution.earnedBalances(user2.address);
-		expect(earnings1.length).to.be.equal(earnings0.length);
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount1 = rdntRewardData1.amount;
+		const userBal1 = await radiantToken.balanceOf(user2.address);
 
-		// Forwarded rewards should be fully withdrawable
-		await advanceTimeAndBlock(rewardDuration.toNumber());
+		// Check that pending vesting rewards are as still as expected.
+		expect(earningAmount1).to.be.equal(earningAmount0);
+		expect(rewardAmount1).to.be.equal(0);
+		expect(userBal1.sub(userBal0)).to.be.gte(rewardAmount0); // one block rewards more distributed
+	});
 
-		const rdnt0 = await radiantToken.balanceOf(user2.address);
-		await multiFeeDistribution.connect(user2).getAllRewards();
-		const rdnt1 = await radiantToken.balanceOf(user2.address);
-		// consider rounding
-		expect(rdnt1.sub(rdnt0)).to.be.gt(forwardAmount.sub(10));
-		expect(rdnt1.sub(rdnt0)).to.be.lt(forwardAmount.add(10));
+	it("User withdraws some of the finished vested rewards", async () => {
+		await advanceTimeAndBlock(duration);
+
+		const {unlocked: withdrawable0} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount0 = rdntRewardData0.amount;
+		const userBal0 = await radiantToken.balanceOf(user2.address);
+
+		await multiFeeDistribution.connect(user2).withdraw(withdrawable0);
+
+		const {unlocked: withdrawable1} = await multiFeeDistribution.earnedBalances(
+			user2.address
+		);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const rewardAmount1 = rdntRewardData1.amount;
+		const userBal1 = await radiantToken.balanceOf(user2.address);
+
+		// Check that the pending revenue rewards are still as expected.
+		expect(rewardAmount1).to.be.equal(rewardAmount0);
+		expect(withdrawable1).to.be.equal(0);
+		expect(userBal1.sub(userBal0)).to.be.equal(withdrawable0);
 	});
 });
