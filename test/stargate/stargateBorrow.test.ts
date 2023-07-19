@@ -30,7 +30,7 @@ describe('Stargate Borrow', () => {
 	const usdcAmt = 10000000;
 	const usdcPerAccount = ethers.utils.parseUnits(usdcAmt.toString(), 6);
 	const borrowAmt = ethers.utils.parseUnits((usdcAmt * 0.5).toString(), 6);
-	const INITIAL_MAX_SLIPPAGE = "99";
+	const INITIAL_MAX_SLIPPAGE = '99';
 
 	before(async () => {
 		const fixture = await setupTest();
@@ -64,15 +64,19 @@ describe('Stargate Borrow', () => {
 
 		const StargateBorrow = await ethers.getContractFactory('StargateBorrow');
 		stargateBorrow = <StargateBorrow>(
-			await upgrades.deployProxy(StargateBorrow, [
-				mockRouter.address,
-				mockRouterETH.address,
-				lendingPool.address,
-				wrappedEth.address,
-				fixture.treasury.address,
-				deployConfig.FEE_XCHAIN_BORROW,
-				INITIAL_MAX_SLIPPAGE,
-			], {unsafeAllow: ['constructor']})
+			await upgrades.deployProxy(
+				StargateBorrow,
+				[
+					mockRouter.address,
+					mockRouterETH.address,
+					lendingPool.address,
+					wrappedEth.address,
+					fixture.treasury.address,
+					deployConfig.FEE_XCHAIN_BORROW,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{unsafeAllow: ['constructor']}
+			)
 		);
 		//stargateBorrow = <StargateBorrow> await ethers.getContractAt("StargateBorrow", deployData.stargateBorrow);
 	});
@@ -92,15 +96,13 @@ describe('Stargate Borrow', () => {
 	});
 
 	it('setMaxSlippage', async () => {
-		const NEW_MAX_SLIPPAGE = "98";
-		const TOO_LOW_MAX_SLIPPAGE = "79";
-		await expect(
-			stargateBorrow.connect(user2).setMaxSlippage(NEW_MAX_SLIPPAGE)
-		).to.be.revertedWith('Ownable: caller is not the owner');
+		const NEW_MAX_SLIPPAGE = '98';
+		const TOO_LOW_MAX_SLIPPAGE = '79';
+		await expect(stargateBorrow.connect(user2).setMaxSlippage(NEW_MAX_SLIPPAGE)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
 
-		await expect(
-			stargateBorrow.setMaxSlippage(TOO_LOW_MAX_SLIPPAGE)
-		).to.be.revertedWith('SlippageSetToHigh');
+		await expect(stargateBorrow.setMaxSlippage(TOO_LOW_MAX_SLIPPAGE)).to.be.revertedWith('SlippageSetToHigh');
 		await stargateBorrow.setMaxSlippage(NEW_MAX_SLIPPAGE);
 
 		//Set back to old slippage level
@@ -184,16 +186,14 @@ describe('Stargate Borrow', () => {
 	});
 
 	it('fail when exceeding the value boundaries', async () => {
-		await expect(
-			stargateBorrow.setXChainBorrowFeePercent(101)
-		).to.be.revertedWith('InvalidRatio');
+		await expect(stargateBorrow.setXChainBorrowFeePercent(101)).to.be.revertedWith('InvalidRatio');
 	});
 
-	it("Locked ETH in StargateBorrow contract", async () => {
-		const depositAmount = ethers.utils.parseEther("1");
+	it('Locked ETH in StargateBorrow contract', async () => {
+		const depositAmount = ethers.utils.parseEther('1');
 		await deployer.sendTransaction({
 			to: stargateBorrow.address,
-			value: depositAmount
+			value: depositAmount,
 		});
 
 		const user2Eth0 = await user2.getBalance();

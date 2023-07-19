@@ -120,7 +120,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 	}
 
 	function _updatePrice() internal {
-		if(address(priceProvider) != address(0)) {
+		if (address(priceProvider) != address(0)) {
 			priceProvider.update();
 		}
 	}
@@ -191,10 +191,10 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		bytes memory _adapterParams
 	) internal override nonReentrant whenNotPaused returns (uint amount) {
 		_updatePrice();
-		
-		(amount,) = _removeDust(_amount);
+
+		(amount, ) = _removeDust(_amount);
 		uint256 fee = getBridgeFee(amount);
-		if(msg.value < fee) revert InsufficientETHForFee();
+		if (msg.value < fee) revert InsufficientETHForFee();
 
 		_checkAdapterParams(_dstChainId, PT_SEND_AND_CALL, _adapterParams, _dstGasForCall);
 
@@ -202,7 +202,13 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		_debitFrom(_from, _dstChainId, _toAddress, amount);
 
 		// encode the msg.sender into the payload instead of _from
-		bytes memory lzPayload = _encodeSendAndCallPayload(msg.sender, _toAddress, _ld2sd(amount), _payload, _dstGasForCall);
+		bytes memory lzPayload = _encodeSendAndCallPayload(
+			msg.sender,
+			_toAddress,
+			_ld2sd(amount),
+			_payload,
+			_dstGasForCall
+		);
 		_lzSend(_dstChainId, lzPayload, _refundAddress, _zroPaymentAddress, _adapterParams, msg.value - fee);
 
 		if (fee > 0) {
@@ -239,7 +245,7 @@ contract RadiantOFT is OFTV2, Pausable, ReentrancyGuard {
 		}
 		uint256 priceInEth = priceProvider.getTokenPrice();
 		uint256 priceDecimals = priceProvider.decimals();
-		uint256 rdntInEth = _rdntAmount * priceInEth / (10 ** priceDecimals) * (10 ** 18) / (10 ** decimals());
+		uint256 rdntInEth = (((_rdntAmount * priceInEth) / (10 ** priceDecimals)) * (10 ** 18)) / (10 ** decimals());
 		bridgeFee = (rdntInEth * feeRatio) / FEE_DIVISOR;
 	}
 

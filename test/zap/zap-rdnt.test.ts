@@ -9,7 +9,7 @@ import {
 	LockZap,
 	WETH,
 	PriceProvider,
-	UniswapPoolHelper
+	UniswapPoolHelper,
 } from '../../typechain';
 // import {expect} from 'chai';
 import chai from 'chai';

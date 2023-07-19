@@ -3,12 +3,19 @@ import chai from 'chai';
 import assert from 'assert';
 import {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock, zapIntoEligibility} from '../shared/helpers';
-import {AToken, ChefIncentivesController, LendingPool, MockOnwardIncentivesController, MockToken, MultiFeeDistribution} from '../../typechain';
+import {
+	AToken,
+	ChefIncentivesController,
+	LendingPool,
+	MockOnwardIncentivesController,
+	MockToken,
+	MultiFeeDistribution,
+} from '../../typechain';
 import {getLatestBlockTimestamp} from '../../scripts/utils';
 import {BigNumber} from 'ethers';
 import {setupTest} from '../setup';
 import {solidity} from 'ethereum-waffle';
-import { DeployConfig, DeployData } from '../../scripts/deploy/types';
+import {DeployConfig, DeployData} from '../../scripts/deploy/types';
 
 chai.use(solidity);
 const {expect} = chai;
@@ -76,7 +83,6 @@ describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', ()
 		);
 		await chef.deployed();
 		await chef.addPool(deployData.allTokens['rUSDC'], 10);
-			
 
 		const cicStartTimeOffSets = [100, 500, 1000];
 		const cicRewardsPerSecond = [100, 200, 300];

@@ -77,7 +77,6 @@ const generateGiganticPlatformRevenue = async (duration: number = SKIP_DURATION)
 
 	await doBorrow('rWBTC', '100000', deployer, lendingPool, deployData);
 
-
 	await multiFeeDistribution.connect(deployer).getAllRewards();
 	await advanceTimeAndBlock(duration);
 };
@@ -117,7 +116,7 @@ const loadZappedUserFixture = async () => {
 		user2,
 		deployer,
 		rdntToken,
-		usdc
+		usdc,
 	} = await setupTest());
 
 	hunter = user2;
@@ -265,6 +264,8 @@ describe(`AutoCompound:`, async () => {
 		const quote = await bountyManager.connect(hunter).quote(user1.address);
 		await generateGiganticPlatformRevenue();
 
-		await expect(bountyManager.connect(hunter).claim(user1.address, quote.actionType)).to.be.revertedWith('SwapFailed');
+		await expect(bountyManager.connect(hunter).claim(user1.address, quote.actionType)).to.be.revertedWith(
+			'SwapFailed'
+		);
 	});
 });

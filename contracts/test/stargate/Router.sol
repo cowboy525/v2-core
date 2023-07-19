@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.12;
 
-
 import "./IStargateRouter.sol";
 
 contract MockRouter is IStargateRouter {

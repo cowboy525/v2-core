@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -183,7 +182,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 			bounty = getBaseBounty();
 		} else {
 			if (totalBounty != 0) {
-				bounty = totalBounty * hunterShare / RATIO_DIVISOR;
+				bounty = (totalBounty * hunterShare) / RATIO_DIVISOR;
 			}
 		}
 
@@ -315,7 +314,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function getBaseBounty() public view whenNotPaused returns (uint256 bounty) {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPriceUsd();
-		bounty = baseBountyUsdTarget * 1e8 / rdntPrice;
+		bounty = (baseBountyUsdTarget * 1e8) / rdntPrice;
 		if (bounty > maxBaseBounty) {
 			bounty = maxBaseBounty;
 		}
@@ -326,7 +325,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 */
 	function minDLPBalance() public view returns (uint256 min) {
 		uint256 lpTokenPrice = IPriceProvider(priceProvider).getLpTokenPriceUsd();
-		min = minStakeAmount * 1e8 / lpTokenPrice;
+		min = (minStakeAmount * 1e8) / lpTokenPrice;
 	}
 
 	/**

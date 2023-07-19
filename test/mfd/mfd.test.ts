@@ -6,7 +6,7 @@ import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';
 import {solidity} from 'ethereum-waffle';
-import { mineBlock } from '../shared/helpers';
+import {mineBlock} from '../shared/helpers';
 chai.use(solidity);
 const {expect} = chai;
 
@@ -155,8 +155,8 @@ describe('MultiFeeDistribution', () => {
 	});
 
 	it('removing rewards', async () => {
-		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith("InsufficientPermission");
-		await expect(mfd.removeReward(user1.address)).to.be.revertedWith("InvalidAddress");
+		await expect(mfd.connect(user1).removeReward(user1.address)).to.be.revertedWith('InsufficientPermission');
+		await expect(mfd.removeReward(user1.address)).to.be.revertedWith('InvalidAddress');
 
 		// [RDNT, User1]
 		await mfd.addReward(user1.address);
@@ -1110,7 +1110,7 @@ describe('MultiFeeDistribution', () => {
 		expect(penalty1.sub(burnAmount1)).to.be.equal(treasuryBal1.sub(treasuryBal0));
 		expect(burnAmount1).to.be.equal(sTreasuryBal1.sub(sTreasuryBal0));
 	});
-	describe("Aggregate locks", async () => {
+	describe('Aggregate locks', async () => {
 		it('Scenario #1; should aggregate all of them', async () => {
 			await mfd.connect(user1).setRelock(false);
 

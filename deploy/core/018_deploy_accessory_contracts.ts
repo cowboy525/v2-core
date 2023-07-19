@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			baseAsset.address,
 			config.FEE_LOOPING,
 			treasury,
-			config.LEVERAGER_ZAP_MARGIN
+			config.LEVERAGER_ZAP_MARGIN,
 		],
 	});
 
@@ -54,7 +54,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 						baseAsset.address,
 						treasury,
 						config.FEE_XCHAIN_BORROW,
-						config.STARGATE_MAX_SLIPPAGE
+						config.STARGATE_MAX_SLIPPAGE,
 					],
 				},
 			},

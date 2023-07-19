@@ -31,7 +31,7 @@ export interface DeployConfig {
 	LP_INIT_ETH: BigNumber;
 	LP_INIT_RDNT: BigNumber;
 
-	STARGATE_MAX_SLIPPAGE: string,
+	STARGATE_MAX_SLIPPAGE: string;
 	FEE_LOOPING: string;
 	FEE_XCHAIN_BORROW: string;
 	FEE_BRIDGING: string;
@@ -67,7 +67,7 @@ export interface DeployConfig {
 	LZ_ENDPOINT: string;
 	CHAINLINK_ETH_USD_AGGREGATOR_PROXY: string;
 
-	LEVERAGER_ZAP_MARGIN: string,
+	LEVERAGER_ZAP_MARGIN: string;
 	TOKENS_CONFIG: any[];
 	STARGATE_CONFIG: {
 		ASSETS: string[];

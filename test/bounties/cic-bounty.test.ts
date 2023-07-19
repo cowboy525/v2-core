@@ -277,7 +277,9 @@ runs.forEach(function (run) {
 					expect(quotedBounty).closeTo(expectedBounty, 1);
 
 					await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
-					const bountyReceived = toNum((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting);
+					const bountyReceived = toNum(
+						(await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting
+					);
 					expect(bountyReceived).closeTo(quotedBounty, 0.1);
 				});
 
@@ -360,7 +362,9 @@ runs.forEach(function (run) {
 
 						await bountyManager.connect(hunter).claim(user1.address, quote.actionType);
 						const bountyReceived = parseFloat(
-							ethers.utils.formatEther((await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting)
+							ethers.utils.formatEther(
+								(await multiFeeDistribution.earnedBalances(hunter.address)).totalVesting
+							)
 						);
 						expect(bountyReceived).closeTo(quotedBounty, 0.001);
 					} else {

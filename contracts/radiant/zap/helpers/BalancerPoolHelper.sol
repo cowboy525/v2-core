@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {DustRefunder} from "./DustRefunder.sol";
 import {BNum} from "../../../dependencies/math/BNum.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -47,7 +46,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	address public constant USDT_ADDRESS = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
 	address public constant DAI_ADDRESS = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
 	address public constant USDC_ADDRESS = address(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
-	
+
 	constructor() {
 		_disableInitializers();
 	}
@@ -249,7 +248,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		uint256 rdntBalance = address(tokens[0]) == outTokenAddr ? balances[0] : balances[1];
 		uint256 wethBalance = address(tokens[0]) == outTokenAddr ? balances[1] : balances[0];
 
-		return wethBalance * 1e8 / (rdntBalance / POOL_WEIGHT);
+		return (wethBalance * 1e8) / (rdntBalance / POOL_WEIGHT);
 	}
 
 	/**
@@ -349,7 +348,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function quoteFromToken(uint256 tokenAmount) public view returns (uint256 optimalWETHAmount) {
 		uint256 rdntPriceInEth = getPrice();
 		uint256 p1 = rdntPriceInEth * 1e10;
-		uint256 ethRequiredBeforeWeight = tokenAmount * p1 / 1e18;
+		uint256 ethRequiredBeforeWeight = (tokenAmount * p1) / 1e18;
 		optimalWETHAmount = ethRequiredBeforeWeight / POOL_WEIGHT;
 	}
 

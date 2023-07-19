@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {DustRefunder} from "./DustRefunder.sol";
 import {UniswapV2Library} from "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
 import {IUniswapV2Pair} from "@uniswap/lib/contracts/interfaces/IUniswapV2Pair.sol";
@@ -154,7 +153,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		// fair token1 amt: sqrtK * sqrt(px0/px1)
 		// fair lp price = 2 * sqrt(px0 * px1)
 		// split into 2 sqrts multiplication to prevent uint256 overflow (note the 2**112)
-		uint256 result = sqrtK * 2 * (HomoraMath.sqrt(px0)) / (2 ** 56) * (HomoraMath.sqrt(px1)) / (2 ** 56);
+		uint256 result = (((sqrtK * 2 * (HomoraMath.sqrt(px0))) / (2 ** 56)) * (HomoraMath.sqrt(px1))) / (2 ** 56);
 		priceInEth = result / (2 ** 112);
 	}
 
@@ -217,9 +216,9 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @return priceInEth price of RDNT
 	 */
 	function getPrice() public view returns (uint256 priceInEth) {
-		(uint256 rdnt, uint256 weth,) = getReserves();
+		(uint256 rdnt, uint256 weth, ) = getReserves();
 		if (rdnt > 0) {
-			priceInEth = weth * (10 ** 8) / rdnt;
+			priceInEth = (weth * (10 ** 8)) / rdnt;
 		}
 	}
 

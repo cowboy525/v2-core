@@ -22,9 +22,9 @@ library Oracle {
 	 */
 	function getAnswer(AggregatorV3Interface chainlinkFeed) internal view returns (int256) {
 		(, int256 answer, , uint256 updatedAt, ) = chainlinkFeed.latestRoundData();
-		if(updatedAt == 0) revert RoundNotComplete();
-		if(block.timestamp - updatedAt >= UPDATE_PERIOD) revert StalePrice();
-		if(answer <= 0) revert InvalidPrice();
+		if (updatedAt == 0) revert RoundNotComplete();
+		if (block.timestamp - updatedAt >= UPDATE_PERIOD) revert StalePrice();
+		if (answer <= 0) revert InvalidPrice();
 		return answer;
 	}
 }

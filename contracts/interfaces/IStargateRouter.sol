@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.12;
 
-
 interface IStargateRouter {
 	struct lzTxObj {
 		uint256 dstGasForCall;

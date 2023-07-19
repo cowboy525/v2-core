@@ -243,7 +243,8 @@ describe('Looping/Leverager', () => {
 	});
 
 	it('Eligibility Exempt is Temporary', async () => {
-		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy =
+			await setupTest();
 
 		await leverager.setFeePercent(FEE_LOOPING);
 

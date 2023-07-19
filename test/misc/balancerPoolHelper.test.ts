@@ -129,7 +129,7 @@ describe('Balancer Pool Helper', function () {
 
 		it('Only owner can initialize', async () => {
 			const poolHelperFactory = await ethers.getContractFactory('BalancerPoolHelper');
-			// Deploy 
+			// Deploy
 			const newPoolHelper = <BalancerPoolHelper>(
 				await upgrades.deployProxy(
 					poolHelperFactory,
@@ -144,7 +144,9 @@ describe('Balancer Pool Helper', function () {
 				)
 			);
 
-			await expect(newPoolHelper.connect(dao).initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(newPoolHelper.connect(dao).initializePool('RDNT-WETH', 'RDNTLP')).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('sortTokens: IDENTICAL_ADDRESSES', async () => {

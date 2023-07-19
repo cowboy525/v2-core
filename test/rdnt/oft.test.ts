@@ -6,7 +6,7 @@ import {ethers} from 'hardhat';
 import {getConfigForChain} from '../../config';
 import {DeployConfig} from '../../scripts/deploy/types';
 import {LZEndpointMock, MockPriceProvider, RadiantOFT} from '../../typechain';
-import { MockOFTReceiverV2 } from '../../typechain/contracts/test/MockOFTReceiverV2';
+import {MockOFTReceiverV2} from '../../typechain/contracts/test/MockOFTReceiverV2';
 import {StaticPriceProvider} from '../../typechain/contracts/test/StaticPriceProvider';
 import {advanceTimeAndBlock} from '../shared/helpers';
 chai.use(solidity);
@@ -105,7 +105,7 @@ describe('Radiant OFT: ', function () {
 		await execute('RadiantOFT', {from: admin}, 'setTrustedRemote', chainIdDst, OFTDst.address);
 		await execute('RadiantOFTDst', {from: admin}, 'setTrustedRemote', chainIdSrc, OFTSrc.address);
 
-		const MockOFTReceiverV2 = await ethers.getContractFactory("MockOFTReceiverV2");
+		const MockOFTReceiverV2 = await ethers.getContractFactory('MockOFTReceiverV2');
 		oftReceiver = <MockOFTReceiverV2>await MockOFTReceiverV2.deploy();
 		await oftReceiver.deployed();
 
@@ -179,8 +179,16 @@ describe('Radiant OFT: ', function () {
 
 		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [oftReceiver.address]);
 
-		const dstGasForCall = ethers.utils.parseEther("1").div(10);
-		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
+		const dstGasForCall = ethers.utils.parseEther('1').div(10);
+		let fees = await OFTSrc.estimateSendAndCallFee(
+			chainIdDst,
+			toAddressBytes32,
+			sendQty,
+			'0x',
+			dstGasForCall,
+			false,
+			adapterParams
+		);
 
 		await execute(
 			'RadiantOFT',
@@ -211,11 +219,19 @@ describe('Radiant OFT: ', function () {
 
 		let toAddressBytes32 = ethers.utils.defaultAbiCoder.encode(['address'], [oftReceiver.address]);
 
-		const sendQty = BigNumber.from("19900000000"); // amount to be sent across
-		const dust = BigNumber.from("9900000000"); // amount to be sent across
+		const sendQty = BigNumber.from('19900000000'); // amount to be sent across
+		const dust = BigNumber.from('9900000000'); // amount to be sent across
 
-		const dstGasForCall = ethers.utils.parseEther("1").div(10);
-		let fees = await OFTSrc.estimateSendAndCallFee(chainIdDst, toAddressBytes32, sendQty, '0x', dstGasForCall, false, adapterParams);
+		const dstGasForCall = ethers.utils.parseEther('1').div(10);
+		let fees = await OFTSrc.estimateSendAndCallFee(
+			chainIdDst,
+			toAddressBytes32,
+			sendQty,
+			'0x',
+			dstGasForCall,
+			false,
+			adapterParams
+		);
 
 		const treasuryEth0 = await ethers.provider.getBalance(treasury);
 
@@ -242,7 +258,9 @@ describe('Radiant OFT: ', function () {
 
 		// verify tokens burned on source chain and minted on destination chain
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply.sub(sendQty).add(dust));
-		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', oftReceiver.address)).to.be.equal(sendQty.sub(dust));
+		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', oftReceiver.address)).to.be.equal(
+			sendQty.sub(dust)
+		);
 	});
 
 	it('full Bridge flow', async function () {
@@ -271,11 +289,22 @@ describe('Radiant OFT: ', function () {
 
 		let bridgeFee = await OFTSrc.getBridgeFee(sendQty);
 
-		await expect(execute('RadiantOFT', {from: dao, value: bridgeFee.div(10)}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
-			refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
-			zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
-			adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
-		})).to.be.revertedWith("InsufficientETHForFee");
+		await expect(
+			execute(
+				'RadiantOFT',
+				{from: dao, value: bridgeFee.div(10)},
+				'sendFrom',
+				dao,
+				chainIdDst,
+				toAddressBytes32,
+				sendQty,
+				{
+					refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+					zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+					adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+				}
+			)
+		).to.be.revertedWith('InsufficientETHForFee');
 
 		// can transfer accross chain
 		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
@@ -355,8 +384,6 @@ describe('Radiant OFT: ', function () {
 	});
 
 	it('fails when invalid input', async function () {
-		await expect(execute('RadiantOFT', {from: admin}, 'setFeeRatio', 101)).to.be.revertedWith(
-			'InvalidRatio'
-		);
+		await expect(execute('RadiantOFT', {from: admin}, 'setFeeRatio', 101)).to.be.revertedWith('InvalidRatio');
 	});
 });

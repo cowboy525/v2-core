@@ -31,9 +31,9 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	event PoolHelperUpdated(address indexed _poolHelper);
 
 	event AggregatorUpdated(address indexed _baseTokenPriceInUsdProxyAggregator);
-	
+
 	event UsePoolUpdated(bool indexed _usePool);
-	
+
 	constructor() {
 		_disableInitializers();
 	}
@@ -85,7 +85,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 			// use sparingly, TWAP/CL otherwise
 			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
 			uint256 priceInEth = poolHelper.getPrice();
-			price = priceInEth * ethPrice / (10 ** 8);
+			price = (priceInEth * ethPrice) / (10 ** 8);
 		} else {
 			price = oracle.latestAnswer();
 		}
@@ -108,7 +108,7 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
 		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
-		price = lpPriceInEth * ethPrice / (10 ** 8);
+		price = (lpPriceInEth * ethPrice) / (10 ** 8);
 	}
 
 	/**

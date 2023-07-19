@@ -25,14 +25,14 @@ describe('Zapper', function () {
 		const accounts = await getNamedAccounts();
 		deployer = accounts.deployer;
 
-			const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
+		const BalancerPoolHelper = await ethers.getContractFactory('BalancerPoolHelper');
 
-			poolHelper = await hre.upgrades.deployProxy(
-				BalancerPoolHelper,
-				[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
-				{kind: 'transparent', unsafeAllow: ['constructor']}
-			);
-			await poolHelper.deployed();
+		poolHelper = await hre.upgrades.deployProxy(
+			BalancerPoolHelper,
+			[realWethAddress, realWethAddress, realWethAddress, balancerVault, weightedPoolFactory],
+			{kind: 'transparent', unsafeAllow: ['constructor']}
+		);
+		await poolHelper.deployed();
 
 		const ownerSigner = ethers.provider.getSigner(0);
 		await poolHelper.connect(ownerSigner).setLockZap(lockZapAddress);
@@ -49,7 +49,7 @@ describe('Zapper', function () {
 
 			await network.provider.request({
 				method: 'hardhat_impersonateAccount',
-				params: [lockZapAddress]
+				params: [lockZapAddress],
 			});
 
 			const ownerSigner = ethers.provider.getSigner(0);
@@ -78,8 +78,9 @@ describe('Zapper', function () {
 
 		const unauthorizedSigner = ethers.provider.getSigner(unauthorizedAddress);
 
-		await expect(poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)
-		).to.be.revertedWith("InsufficientPermission");
+		await expect(poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)).to.be.revertedWith(
+			'InsufficientPermission'
+		);
 	});
 
 	it('Can zap USDT & DAI - Live Arbitrum', async () => {
@@ -116,7 +117,7 @@ describe('Zapper', function () {
 
 		await network.provider.request({
 			method: 'hardhat_impersonateAccount',
-			params: [lockZapAddress]
+			params: [lockZapAddress],
 		});
 
 		const ownerSigner = ethers.provider.getSigner(0);

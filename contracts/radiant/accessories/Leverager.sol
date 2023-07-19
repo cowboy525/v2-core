@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -122,7 +121,7 @@ contract Leverager is Ownable {
 		if (address(_weth) == address(0)) revert AddressZero();
 		if (_treasury == address(0)) revert AddressZero();
 		if (_feePercent > MAX_REASONABLE_FEE) revert InvalidRatio();
-		if(_zapMargin >= MAX_MARGIN) revert MarginTooHigh();
+		if (_zapMargin >= MAX_MARGIN) revert MarginTooHigh();
 
 		lendingPool = _lendingPool;
 		eligibilityDataProvider = _rewardEligibleDataProvider;
@@ -158,7 +157,6 @@ contract Leverager is Ownable {
 		feePercent = _feePercent;
 		emit FeePercentUpdated(_feePercent);
 	}
-
 
 	/**
 	 * @notice Sets fee ratio
@@ -219,13 +217,13 @@ contract Leverager is Ownable {
 		uint256 _slippage
 	) external {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
-		if(loopCount == 0) revert InvalidLoopCount();
+		if (loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 fee;
 		if (!isBorrow) {
 			IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			if(fee > 0) {
+			if (fee > 0) {
 				IERC20(asset).safeTransfer(treasury, fee);
 				amount = amount - fee;
 			}
@@ -250,7 +248,7 @@ contract Leverager is Ownable {
 			lendingPool.borrow(asset, amount, interestRateMode, referralCode, msg.sender);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			if(fee > 0) {
+			if (fee > 0) {
 				IERC20(asset).safeTransfer(treasury, fee);
 				amount = amount - fee;
 			}
@@ -277,13 +275,13 @@ contract Leverager is Ownable {
 		uint256 _slippage
 	) external payable {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
-		if(loopCount == 0) revert InvalidLoopCount();
+		if (loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		uint256 amount = msg.value;
 		_approve(address(weth));
 
 		uint256 fee = (amount * feePercent) / RATIO_DIVISOR;
-		if(fee > 0) {
+		if (fee > 0) {
 			TransferHelper.safeTransferETH(treasury, fee);
 			amount = amount - fee;
 		}
@@ -293,7 +291,7 @@ contract Leverager is Ownable {
 		weth.deposit{value: amount}();
 		lendingPool.deposit(address(weth), amount, msg.sender, referralCode);
 
-		for (uint256 i = 0; i < loopCount;) {
+		for (uint256 i = 0; i < loopCount; ) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -303,7 +301,7 @@ contract Leverager is Ownable {
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			if(fee > 0) {
+			if (fee > 0) {
 				weth.withdraw(fee);
 				TransferHelper.safeTransferETH(treasury, fee);
 				amount = amount - fee;
@@ -333,7 +331,7 @@ contract Leverager is Ownable {
 		uint256 _slippage
 	) external {
 		if (!(borrowRatio > 0 && borrowRatio <= RATIO_DIVISOR)) revert InvalidRatio();
-		if(loopCount == 0) revert InvalidLoopCount();
+		if (loopCount == 0) revert InvalidLoopCount();
 		uint16 referralCode = 0;
 		_approve(address(weth));
 
@@ -341,7 +339,7 @@ contract Leverager is Ownable {
 
 		cic.setEligibilityExempt(msg.sender, true);
 
-		for (uint256 i = 0; i < loopCount;) {
+		for (uint256 i = 0; i < loopCount; ) {
 			// Reenable on last deposit
 			if (i == (loopCount - 1)) {
 				cic.setEligibilityExempt(msg.sender, false);
@@ -350,7 +348,7 @@ contract Leverager is Ownable {
 			lendingPool.borrow(address(weth), amount, interestRateMode, referralCode, msg.sender);
 
 			fee = (amount * feePercent) / RATIO_DIVISOR;
-			if(fee > 0) {
+			if (fee > 0) {
 				weth.withdraw(fee);
 				TransferHelper.safeTransferETH(treasury, fee);
 				amount = amount - fee;
@@ -393,7 +391,7 @@ contract Leverager is Ownable {
 
 		required = required + _requiredLocked(asset, amount);
 
-		for (uint256 i = 0; i < loopCount;) {
+		for (uint256 i = 0; i < loopCount; ) {
 			amount = (amount * borrowRatio) / RATIO_DIVISOR;
 			fee = (amount * feePercent) / RATIO_DIVISOR;
 			amount = amount - fee;

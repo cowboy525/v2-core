@@ -392,11 +392,11 @@ describe('Zapper', function () {
 		});
 	});
 
-	it("Locked ETH in lockZap contract", async () => {
-		const depositAmount = ethers.utils.parseEther("1");
+	it('Locked ETH in lockZap contract', async () => {
+		const depositAmount = ethers.utils.parseEther('1');
 		await deployer.sendTransaction({
 			to: lockZap.address,
-			value: depositAmount
+			value: depositAmount,
 		});
 
 		const user2Eth0 = await user2.getBalance();

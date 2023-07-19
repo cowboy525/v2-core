@@ -505,10 +505,10 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	* @notice Returns if the user is eligible for auto compound
-	* @param _user address the be checked
-	* @return eligible `true` if eligible or `false` if not
-	*/
+	 * @notice Returns if the user is eligible for auto compound
+	 * @param _user address the be checked
+	 * @return eligible `true` if eligible or `false` if not
+	 */
 	function _userEligibleForCompound(address _user) internal view returns (bool eligible) {
 		(address[] memory tokens, uint256[] memory amts) = viewPendingRewards(_user);
 		uint256 pendingEth = _quoteSwapWithOracles(tokens, amts, baseToken);
@@ -516,9 +516,9 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	* @notice Validate if the slippage limit is within the boundaries
-	* @param _slippageLimit slippage limit to be validated
-	*/
+	 * @notice Validate if the slippage limit is within the boundaries
+	 * @param _slippageLimit slippage limit to be validated
+	 */
 	function _validateSlippageLimit(uint256 _slippageLimit) internal pure {
 		if (_slippageLimit < MIN_SLIPPAGE_LIMIT || _slippageLimit >= PERCENT_DIVISOR) revert InvalidSlippage();
 	}

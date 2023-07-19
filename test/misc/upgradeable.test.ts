@@ -78,7 +78,9 @@ describe('Upgradeable Contracts', () => {
 
 	it('Upgradeable PriceProvider works.', async () => {
 		const MockNewPriceProvider = await ethers.getContractFactory('MockNewPriceProvider');
-		const mockNewPriceProvider = await upgrades.upgradeProxy(deployData.priceProvider, MockNewPriceProvider, {unsafeAllow: ['constructor']});
+		const mockNewPriceProvider = await upgrades.upgradeProxy(deployData.priceProvider, MockNewPriceProvider, {
+			unsafeAllow: ['constructor'],
+		});
 		const mockNewFunction = await mockNewPriceProvider.mockNewFunction();
 
 		assert.equal(mockNewFunction, true, `Upgrade PriceProvider`);

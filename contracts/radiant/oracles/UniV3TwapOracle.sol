@@ -35,7 +35,7 @@ contract UniV3TwapOracle is BaseOracle {
 	event ObservationCardinalityIncreased(uint16 indexed numCardinals);
 
 	event TWAPLookbackSecUpdated(uint32 indexed _secs);
-	
+
 	event TokenForPricingToggled();
 
 	error InvalidLoopbackSecs();
@@ -130,23 +130,43 @@ contract UniV3TwapOracle is BaseOracle {
 		// Get the quote for selling 1 unit of a token. Assumes 1e18 for both.
 		if (priceInToken0) {
 			if (decimals0 <= 18) {
-				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
-					* (10 ** (18 - decimals0));
+				amountOut =
+					OracleLibrary.getQuoteAtTick(
+						arithmeticMeanTick,
+						uint128(10 ** decimals1),
+						address(token1),
+						address(token0)
+					) *
+					(10 ** (18 - decimals0));
 			} else {
-				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals1), address(token1), address(token0))
-					/ (10 ** (decimals0 - 18));
+				amountOut =
+					OracleLibrary.getQuoteAtTick(
+						arithmeticMeanTick,
+						uint128(10 ** decimals1),
+						address(token1),
+						address(token0)
+					) /
+					(10 ** (decimals0 - 18));
 			}
 		} else {
 			if (decimals1 <= 18) {
-				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
-					* (10 ** (18 - decimals1));
+				amountOut =
+					OracleLibrary.getQuoteAtTick(
+						arithmeticMeanTick,
+						uint128(10 ** decimals0),
+						address(token0),
+						address(token1)
+					) *
+					(10 ** (18 - decimals1));
 			} else {
-				amountOut = OracleLibrary
-					.getQuoteAtTick(arithmeticMeanTick, uint128(10 ** decimals0), address(token0), address(token1))
-					/ (10 ** (decimals1 - 18));
+				amountOut =
+					OracleLibrary.getQuoteAtTick(
+						arithmeticMeanTick,
+						uint128(10 ** decimals0),
+						address(token0),
+						address(token1)
+					) /
+					(10 ** (decimals1 - 18));
 			}
 		}
 	}

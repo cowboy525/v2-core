@@ -1602,9 +1602,9 @@
   resolved "https://registry.yarnpkg.com/@uniswap/lib/-/lib-1.1.1.tgz#0afd29601846c16e5d082866cbb24a9e0758e6bc"
   integrity sha512-2yK7sLpKIT91TiS5sewHtOa7YuM8IuBXVl4GZv2jZFys4D2sY7K5vZh6MqD25TPA95Od+0YzCVq6cTF2IKrOmg==
 
-"@uniswap/lib@github:radiant-capital/uniswapv2-solc0.8":
+"@uniswap/lib@github:radiant-capital/uniswapv2-solc0.8#782ad365dfc384adaedee58bb8fcc1994af20766":
   version "1.0.1"
-  resolved "https://codeload.github.com/radiant-capital/uniswapv2-solc0.8/tar.gz/81fe929d92dbddb549651e2fbf875f1211d0be09"
+  resolved "https://codeload.github.com/radiant-capital/uniswapv2-solc0.8/tar.gz/782ad365dfc384adaedee58bb8fcc1994af20766"
 
 "@uniswap/v2-core@1.0.0":
   version "1.0.0"

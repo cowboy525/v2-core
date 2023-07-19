@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.12;
 
-
 import "./LockedBalance.sol";
 import {IFeeDistribution} from "./IMultiFeeDistribution.sol";
 
