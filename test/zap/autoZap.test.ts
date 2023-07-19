@@ -14,7 +14,7 @@ describe('Looping/Leverager', () => {
 	let vdWETH: VariableDebtToken;
 	let wethAddress = '';
 
-	const FEE_LOOPING = '1000';
+	const FEE_LOOPING = '100';
 
 	const loopingLeverageToLtv = (leverage: number) => {
 		return 1 - 1 / leverage;
@@ -61,7 +61,7 @@ describe('Looping/Leverager', () => {
 		let leverage = 4;
 		let borrowRatio = Math.floor(loopingLeverageToLtv(leverage) * 10000);
 		let loops = significantLoopingCount(leverage);
-		await leverager.connect(user1).loopETH(2, borrowRatio, loops, {
+		await leverager.connect(user1).loopETH(2, borrowRatio, loops, 0, {
 			value: ethers.utils.parseEther('10'),
 		});
 

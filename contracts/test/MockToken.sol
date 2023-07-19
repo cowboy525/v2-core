@@ -12,7 +12,7 @@ contract MockToken is ERC20 {
 		decimals_ = _decimals;
 	}
 
-	function mint(address _to, uint _amount) public {
+	function mint(address _to, uint256 _amount) public {
 		_mint(_to, _amount);
 	}
 

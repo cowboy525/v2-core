@@ -30,7 +30,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	});
 
 	if (rdnt.newlyDeployed) {
-		await execute('RadiantOFT', txnOpts, 'setFee', config.FEE_BRIDGING);
+		await execute('RadiantOFT', txnOpts, 'setFeeRatio', config.FEE_BRIDGING);
 	}
 
 	let rdntRequired = config.LP_INIT_RDNT.add(config.SUPPLY_CIC_RESERVE).add(config.SUPPLY_DQ_RESERVE);

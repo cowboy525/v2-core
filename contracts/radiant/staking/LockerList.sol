@@ -3,16 +3,15 @@ pragma solidity 0.8.12;
 pragma abicoder v2;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {AddressPagination} from "./AddressPagination.sol";
+import {AddressPagination} from "../libraries/AddressPagination.sol";
 
 /// @title Locker List Contract
 /// @author Radiant
-/// @dev All function calls are currently implemented without side effects
 contract LockerList is Ownable {
 	using AddressPagination for address[];
 
 	// Users list
-	address[] internal userlist;
+	address[] internal userList;
 	mapping(address => uint256) internal indexOf;
 	mapping(address => bool) internal inserted;
 
@@ -21,35 +20,40 @@ contract LockerList is Ownable {
 	event LockerAdded(address indexed locker);
 	event LockerRemoved(address indexed locker);
 
-	/**
-	 * @dev Constructor
-	 */
-	constructor() Ownable() {}
+	/********************** Errors ***********************/
+
+	error Ineligible();
 
 	/********************** Lockers list ***********************/
+
 	/**
 	 * @notice Return the number of users.
+	 * @return count The number of users
 	 */
-	function lockersCount() external view returns (uint256) {
-		return userlist.length;
+	function lockersCount() external view returns (uint256 count) {
+		count = userList.length;
 	}
 
 	/**
 	 * @notice Return the list of users.
+	 * @param page The page number to retrieve
+	 * @param limit The number of entries per page
+	 * @return users A paginated list of users
 	 */
-	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory) {
-		return userlist.paginate(page, limit);
+	function getUsers(uint256 page, uint256 limit) external view returns (address[] memory users) {
+		users = userList.paginate(page, limit);
 	}
 
 	/**
 	 * @notice Add a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to be added
 	 */
 	function addToList(address user) external onlyOwner {
 		if (inserted[user] == false) {
 			inserted[user] = true;
-			indexOf[user] = userlist.length;
-			userlist.push(user);
+			indexOf[user] = userList.length;
+			userList.push(user);
 		}
 
 		emit LockerAdded(user);
@@ -58,21 +62,22 @@ contract LockerList is Ownable {
 	/**
 	 * @notice Remove a locker.
 	 * @dev This can be called only by the owner. Owner should be MFD contract.
+	 * @param user address to remove
 	 */
 	function removeFromList(address user) external onlyOwner {
-		assert(inserted[user] == true);
+		if (inserted[user] == false) revert Ineligible();
 
 		delete inserted[user];
 
 		uint256 index = indexOf[user];
-		uint256 lastIndex = userlist.length - 1;
-		address lastUser = userlist[lastIndex];
+		uint256 lastIndex = userList.length - 1;
+		address lastUser = userList[lastIndex];
 
 		indexOf[lastUser] = index;
 		delete indexOf[user];
 
-		userlist[index] = lastUser;
-		userlist.pop();
+		userList[index] = lastUser;
+		userList.pop();
 
 		emit LockerRemoved(user);
 	}
