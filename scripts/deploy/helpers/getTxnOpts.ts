@@ -15,6 +15,9 @@ export const getTxnOpts = async (hre: HardhatRuntimeEnvironment) => {
 		if (config.CHAIN_ID === 56) {
 			waitConfirmations = 5;
 		}
+		if (config.CHAIN_ID === 1) {
+			waitConfirmations = 1;
+		}
 	}
 	return {
 		from: deployer,

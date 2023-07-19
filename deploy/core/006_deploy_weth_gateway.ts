@@ -13,12 +13,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 
-	await deploy('WETHGateway', {
+	let gateway = await deploy('WETHGateway', {
 		...txnOpts,
+		skipIfAlreadyDeployed: true,
 		args: [wethAddr],
 	});
-
-	await execute('WETHGateway', txnOpts, 'authorizeLendingPool', lendingPool);
+	if (gateway.newlyDeployed) {
+		await execute('WETHGateway', txnOpts, 'authorizeLendingPool', lendingPool);
+	}
 };
 export default func;
 func.tags = ['core'];

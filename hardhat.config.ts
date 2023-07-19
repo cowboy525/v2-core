@@ -15,46 +15,58 @@ import './tasks';
 import '@nomiclabs/hardhat-web3';
 import {generateCompilerOverrides} from './utils/compilerOverrides';
 
+let optimizerRuns = parseInt(process.env.OPTIMIZER_RUNS || '1000');
+
 const config: HardhatUserConfig = {
 	namedAccounts: {
 		deployer: {
 			default: 0,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		dao: {
 			default: 1,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		treasury: {
 			default: 2,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		admin: {
 			default: 3,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		vestManager: {
 			default: 4,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		starfleet: {
 			default: 5,
+			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 	},
 	networks: {
 		hardhat: {
-			initialBaseFeePerGas: 0,
 			allowUnlimitedContractSize: false,
-			gasPrice: 0,
 			autoImpersonate: true,
+			initialBaseFeePerGas: 0,
+			gasPrice: 0,
 			blockGasLimit: 30000000000000,
+			chainId: 1,
 			forking: {
-				url: node_url('arbitrum'),
-				blockNumber: 81749742,
+				url: node_url('mainnet'),
+				blockNumber: 17728276,
+				// url: node_url('arbitrum'),
+				// blockNumber: 81749742,
 			},
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			// tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			chainId: 1,
+			tags: ['mocks', 'testing', 'oracle_v2'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -84,11 +96,14 @@ const config: HardhatUserConfig = {
 			},
 			tags: ['post_assets', 'oracle_cl'],
 		},
-		production: {
-			url: node_url('mainnet'),
-			accounts: accounts('mainnet'),
-		},
 		mainnet: {
+			chainId: 1,
+			// url: node_url('mainnet'),
+			url: node_url('localhost'),
+			accounts: [process.env.PRIVATE_KEY || ''],
+			tags: ['mocks', 'testing', 'oracle_v2'],
+		},
+		production: {
 			url: node_url('mainnet'),
 			accounts: accounts('mainnet'),
 		},
@@ -112,7 +127,7 @@ const config: HardhatUserConfig = {
 				settings: {
 					optimizer: {
 						enabled: true,
-						runs: parseInt(process.env.OPTIMIZER_RUNS || '1000'),
+						runs: optimizerRuns,
 						details: {
 							yul: true,
 						},
@@ -171,5 +186,4 @@ if (process.env.IS_CI === 'true') {
 		}
 	}
 }
-
 export default config;

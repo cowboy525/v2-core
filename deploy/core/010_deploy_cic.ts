@@ -3,11 +3,11 @@ import {DeployFunction} from 'hardhat-deploy/types';
 const {ethers} = require('hardhat');
 import {getConfigForChain} from '../../config/index';
 import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
+import {wait} from '../../scripts/getDepenencies';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments, getNamedAccounts} = hre;
+	const {deployments} = hre;
 	const {deploy, execute, read} = deployments;
-	const {deployer, dao} = await getNamedAccounts();
 	const {config} = getConfigForChain(await hre.getChainId());
 	const txnOpts = await getTxnOpts(hre);
 
@@ -17,6 +17,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const lendingPoolConfiguratorProxy = LendingPoolConfiguratorImpl.attach(
 		await read('LendingPoolAddressesProvider', 'getLendingPoolConfigurator')
 	);
+	console.log(lendingPoolConfiguratorProxy.address);
+	console.log(edp.address);
+	console.log(middleFeeDistribution.address);
 
 	const cic = await deploy('ChefIncentivesController', {
 		...txnOpts,
@@ -36,13 +39,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		},
 	});
 
-	if (cic.newlyDeployed) {
-		await execute('ChefIncentivesController', txnOpts, 'start');
-		await execute('RadiantOFT', txnOpts, 'transfer', cic.address, config.SUPPLY_CIC_RESERVE);
-		await execute('ChefIncentivesController', txnOpts, 'registerRewardDeposit', config.SUPPLY_CIC_RESERVE);
-		await execute('EligibilityDataProvider', txnOpts, 'setChefIncentivesController', cic.address);
-		await execute(`ChefIncentivesController`, txnOpts, 'setEndingTimeUpdateCadence', 86400);
-	}
+	// if (cic.newlyDeployed) {
+	await execute('ChefIncentivesController', txnOpts, 'start');
+	await execute('RadiantOFT', txnOpts, 'transfer', cic.address, config.SUPPLY_CIC_RESERVE);
+	await wait(100);
+	await execute('ChefIncentivesController', txnOpts, 'registerRewardDeposit', config.SUPPLY_CIC_RESERVE);
+	await execute('EligibilityDataProvider', txnOpts, 'setChefIncentivesController', cic.address);
+	await execute(`ChefIncentivesController`, txnOpts, 'setEndingTimeUpdateCadence', 86400);
+	return true;
+	// }
 };
 export default func;
+func.id = 'cic';
 func.tags = ['core'];

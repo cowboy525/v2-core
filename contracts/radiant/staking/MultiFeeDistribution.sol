@@ -827,24 +827,19 @@ contract MultiFeeDistribution is
 		IPriceProvider(_priceProvider).update();
 	}
 
-	/**
-	 * @notice Hook to be called on upgrade.
-	 */
-	function onUpgrade() public {}
+	// /**
+	//  * @notice Pause MFD functionalities
+	//  */
+	// function pause() public onlyOwner {
+	// 	_pause();
+	// }
 
-	/**
-	 * @notice Pause MFD functionalities
-	 */
-	function pause() public onlyOwner {
-		_pause();
-	}
-
-	/**
-	 * @notice Resume MFD functionalities
-	 */
-	function unpause() public onlyOwner {
-		_unpause();
-	}
+	// /**
+	//  * @notice Resume MFD functionalities
+	//  */
+	// function unpause() public onlyOwner {
+	// 	_unpause();
+	// }
 
 	/**
 	 * @notice Requalify user for reward elgibility

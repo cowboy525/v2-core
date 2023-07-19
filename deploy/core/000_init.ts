@@ -16,11 +16,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 		const baseAssetPrice = baseAssetWrapped === 'WBNB' ? 300 : 2100;
 
 		const weth = await deploy(baseAssetWrapped, txnOpts);
-		await deploy(`${baseAssetWrapped.toUpperCase()}Aggregator`, {
-			...txnOpts,
-			contract: 'MockChainlinkAggregator',
-			args: [hre.ethers.utils.parseUnits(baseAssetPrice.toString(), 8)],
-		});
+		if (weth.newlyDeployed) {
+			await execute(baseAssetWrapped, txnOpts, 'mint', hre.ethers.utils.parseEther('100000000'));
+
+			await deploy(`${baseAssetWrapped.toUpperCase()}Aggregator`, {
+				...txnOpts,
+				contract: 'MockChainlinkAggregator',
+				args: [hre.ethers.utils.parseUnits(baseAssetPrice.toString(), 8)],
+			});
+		}
 
 		const uniswapV2Factory = await deploy('UniswapV2Factory', {
 			...txnOpts,
@@ -32,8 +36,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 			args: [uniswapV2Factory.address, weth.address],
 		});
 
-		await execute(baseAssetWrapped, txnOpts, 'mint', hre.ethers.utils.parseEther('100000000'));
-
 		const mockAssets = JSON.parse(fs.readFileSync(`./config/mock-assets.json`).toString());
 		const assets = mockAssets[config.CHAIN_ID];
 
@@ -41,21 +43,21 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 			const [name, decimals, price] = assets[i];
 
 			if (name !== baseAssetWrapped) {
-				try {
-					await deployments.get(name);
-				} catch (e) {
-					let mockTokenDep = await deploy(name, {
-						...txnOpts,
-						contract: 'MockToken',
-						args: [name, name, decimals || 18],
-					});
+				let mockTokenDep = await deploy(name, {
+					...txnOpts,
+					skipIfAlreadyDeployed: true,
+					contract: 'MockToken',
+					args: [name, name, decimals || 18],
+				});
 
-					await deploy(`${name.toUpperCase()}Aggregator`, {
-						...txnOpts,
-						contract: 'MockChainlinkAggregator',
-						args: [price],
-					});
+				let agg = await deploy(`${name.toUpperCase()}Aggregator`, {
+					...txnOpts,
+					skipIfAlreadyDeployed: true,
+					contract: 'MockChainlinkAggregator',
+					args: [price],
+				});
 
+				if (agg.newlyDeployed) {
 					const uniswapV2Router02 = await deployments.get('UniswapV2Router02');
 
 					let baseAmt = 1000;

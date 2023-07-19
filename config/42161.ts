@@ -259,5 +259,5 @@ const chainConfig = {
 	],
 };
 
-const HardhatDeployConfig: DeployConfig = {...BaseConfig, ...chainConfig};
-export default HardhatDeployConfig;
+const ArbitrumConfig: DeployConfig = {...BaseConfig, ...chainConfig};
+export default ArbitrumConfig;

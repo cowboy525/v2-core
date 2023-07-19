@@ -44,7 +44,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 	// console.log(`DAO Has: ${await read('RadiantOFT', 'balanceOf', dao)}`);
 
 	if (network.tags.testing) {
-		await execute('RadiantOFT', {from: dao}, 'transfer', deployer, rdntRequired);
+		await execute('RadiantOFT', txnOpts, 'transfer', deployer, rdntRequired);
 	}
 };
 export default func;

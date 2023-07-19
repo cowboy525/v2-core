@@ -1,14 +1,13 @@
 import fs from 'fs';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
-import {getDependency} from '../../scripts/getDepenencies';
 import {getConfigForChain} from '../../config/index';
 import {LendingPool} from '../../typechain';
 import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const {deployments, getNamedAccounts, network, ethers} = hre;
-	const {deploy, execute, read} = deployments;
+	const {execute, read} = deployments;
 	const {deployer} = await getNamedAccounts();
 	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
 	const txnOpts = await getTxnOpts(hre);
@@ -30,6 +29,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		for (let i = 0; i < assets.length; i += 1) {
 			const [name, decimals, price] = assets[i];
+			console.log(name);
+
 			if (name !== baseAssetWrapped) {
 				let token = await ethers.getContract(name);
 				let amt =
@@ -46,6 +47,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			}
 		}
 	}
+	return true;
 };
 export default func;
+func.id = 'populate';
 func.tags = ['populate'];
