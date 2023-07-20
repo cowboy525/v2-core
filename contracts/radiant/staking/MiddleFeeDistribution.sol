@@ -166,7 +166,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/**
 	 * @notice Remove an existing reward token
 	 */
-	function removeReward(address _rewardsToken) external override onlyAdminOrOwner {
+	function removeReward(address _rewardsToken) external onlyAdminOrOwner {
 		if (_rewardsToken == address(0)) revert ZeroAddress();
 		multiFeeDistribution.removeReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = false;
