@@ -49,6 +49,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		});
 	}
 
+	config.TOKENS_CONFIG.forEach(token => {
+    const {assetAddress} = token[1];
+    allTokenAddrs.push(assetAddress);
+    allTokens[token[0]] = assetAddress;
+	});
+
 	let v1;
 	if (!!config.RADIANT_V1 && config.RADIANT_V1 === '0x0000000000000000000000000000000000000000') {
 		v1 = deps['RDNTV1'].address;
