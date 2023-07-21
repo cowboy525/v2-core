@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 	const cic = await deployments.get(`ChefIncentivesController`);
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 
-	await deploy('Multicall', txnOpts);
+	await deploy('Multicall3', txnOpts);
 
 	let leverager = await deploy('Leverager', {
 		...txnOpts,

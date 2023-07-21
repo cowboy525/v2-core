@@ -1,7 +1,6 @@
 import fs from 'fs';
 import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
-import {getDependency} from '../../scripts/getDepenencies';
 import {getConfigForChain} from '../../config/index';
 import {LendingPool} from '../../typechain';
 import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';

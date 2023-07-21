@@ -43,10 +43,11 @@ const config: HardhatUserConfig = {
 			gasPrice: 0,
 			autoImpersonate: true,
 			blockGasLimit: 30000000000000,
-			forking: {
-				url: node_url('arbitrum'),
-				blockNumber: 81749742,
-			},
+			// Had to comment this out to get The Graph to almost work, but I think it is necessary
+			// forking: {
+			// 	url: node_url('arbitrum'),
+			// 	blockNumber: 81749742,
+			// },
 			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
