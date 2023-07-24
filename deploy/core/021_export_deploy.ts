@@ -49,11 +49,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		});
 	}
 
-	config.TOKENS_CONFIG.forEach(token => {
-    const {assetAddress} = token[1];
-    allTokenAddrs.push(assetAddress);
-    allTokens[token[0]] = assetAddress;
+	const allTokenAddrsPromises = config.TOKENS_CONFIG.map(async (token) => {
+		let tokenAddress;
+		let key = token[0];
+
+		if (network.tags.mocks) {
+			tokenAddress = (await deployments.get(key)).address;
+		} else {
+			tokenAddress = token[1].assetAddress;
+		}
+
+		allTokens[key] = tokenAddress;
+		return tokenAddress;
 	});
+
+	const mockTokenAddrs = await Promise.all(allTokenAddrsPromises);
+	mockTokenAddrs.forEach((addr) => allTokenAddrs.push(addr));
 
 	let v1;
 	if (!!config.RADIANT_V1 && config.RADIANT_V1 === '0x0000000000000000000000000000000000000000') {
