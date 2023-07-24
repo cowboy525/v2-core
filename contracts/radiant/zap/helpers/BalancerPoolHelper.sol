@@ -328,7 +328,6 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		bytes memory userDataEncoded = abi.encode(IWeightedPool.JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT, lpAmount, enterTokenIndex);
 		IVault.JoinPoolRequest memory inRequest = IVault.JoinPoolRequest(assets, maxAmountsIn, userDataEncoded, false);
 
-		// (, uint256[] memory amountsIn) = IBalancerQueries(BALANCER_QUERIES).queryJoin(poolId, address(this), address(this), inRequest);
 		(bool success, bytes memory data) = BALANCER_QUERIES.staticcall(
 			abi.encodeCall(IBalancerQueries.queryJoin, (poolId, address(this), address(this), inRequest))
 		);
@@ -400,7 +399,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 
 
 	/**
-	 * @notice Calculate quote in WETH from token
+	 * @notice Calculate tokenAmount from WETH
 	 * @param _inToken input token
 	 * @param _wethAmount WETH amount
 	 * @return tokenAmount token amount
@@ -420,7 +419,6 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 		funds.recipient = payable(address(this));
 		funds.toInternalBalance = false;
 
-		// (, uint256[] memory amountsIn) = IBalancerQueries(BALANCER_QUERIES).querySwap(singleSwap, funds);
 		(bool success, bytes memory data) = BALANCER_QUERIES.staticcall(
 			abi.encodeCall(IBalancerQueries.querySwap, (singleSwap, funds))
 		);

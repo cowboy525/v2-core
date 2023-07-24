@@ -187,6 +187,14 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	/**
+	 * @notice Calculate quote in WETH from token
+	 * @param tokenAmount RDNT amount
+	 */
+	function quoteFromToken(uint256 tokenAmount) external view returns (uint256) {
+		return poolHelper.quoteFromToken(tokenAmount);
+	}
+
+	/**
 	 * @notice Quote tokens like USDC, DAI, USDT, WBTC to lp
 	 * @param _asset address of the asset to zap in
 	 * @param _lpAmount the amount of lp to zap
