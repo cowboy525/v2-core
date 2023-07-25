@@ -18,9 +18,9 @@ const chainConfig = {
 
 	STARGATE_CONFIG: {
 		ASSETS: [
-			'0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
-			'0xa43A5FD4a2ce19B5fFcf00065FcC877392C326bf',
-			'0x479df35c7EDa9AE8B2086F54b6c42115D8a971D9',
+			'0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+			'0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+			'0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
 		],
 		POOL_IDS: [1, 2, 3],
 	},
@@ -29,7 +29,7 @@ const chainConfig = {
 		[
 			'USDC',
 			{
-				assetAddress: '0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
+				assetAddress: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
 				chainlinkAggregator: '0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7',
 				borrowRate: '39000000000000000000000000',
 				reservesParams: {
@@ -62,7 +62,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing USDC',
 					stableDebtTokenSymbol: 'stableDebtUSDC',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
+					underlyingAsset: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
 					underlyingAssetDecimals: '6',
 					underlyingAssetName: 'USDC',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
@@ -75,7 +75,7 @@ const chainConfig = {
 		[
 			'USDT',
 			{
-				assetAddress: '0xa43A5FD4a2ce19B5fFcf00065FcC877392C326bf',
+				assetAddress: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 				chainlinkAggregator: '0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7',
 				borrowRate: '39000000000000000000000000',
 				reservesParams: {
@@ -108,7 +108,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing USDT',
 					stableDebtTokenSymbol: 'stableDebtUSDT',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0xa43A5FD4a2ce19B5fFcf00065FcC877392C326bf',
+					underlyingAsset: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 					underlyingAssetDecimals: '6',
 					underlyingAssetName: 'USDT',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
@@ -121,7 +121,7 @@ const chainConfig = {
 		[
 			'DAI',
 			{
-				assetAddress: '0x479df35c7EDa9AE8B2086F54b6c42115D8a971D9',
+				assetAddress: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
 				chainlinkAggregator: '0x0d79df66BE487753B02D015Fb622DED7f0E9798d',
 				borrowRate: '39000000000000000000000000',
 				reservesParams: {
@@ -154,7 +154,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing DAI',
 					stableDebtTokenSymbol: 'stableDebtDAI',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0x479df35c7EDa9AE8B2086F54b6c42115D8a971D9',
+					underlyingAsset: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
 					underlyingAssetDecimals: '18',
 					underlyingAssetName: 'DAI',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
@@ -167,7 +167,7 @@ const chainConfig = {
 		[
 			'WBTC',
 			{
-				assetAddress: '0x22f8aD679830CEDE98c53f63Ae060A58D001BF94',
+				assetAddress: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
 				chainlinkAggregator: '0xA39434A63A52E749F02807ae27335515BA4b07F7',
 				borrowRate: '30000000000000000000000000',
 				reservesParams: {
@@ -200,7 +200,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing WBTC',
 					stableDebtTokenSymbol: 'stableDebtWBTC',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0x22f8aD679830CEDE98c53f63Ae060A58D001BF94',
+					underlyingAsset: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
 					underlyingAssetDecimals: '8',
 					underlyingAssetName: 'WBTC',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
@@ -213,7 +213,7 @@ const chainConfig = {
 		[
 			'WETH',
 			{
-				assetAddress: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
+				assetAddress: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
 				chainlinkAggregator: '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e',
 				borrowRate: '30000000000000000000000000',
 				reservesParams: {
@@ -246,7 +246,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing WETH',
 					stableDebtTokenSymbol: 'stableDebtWETH',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
+					underlyingAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
 					underlyingAssetDecimals: '18',
 					underlyingAssetName: 'WETH',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
