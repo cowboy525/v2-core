@@ -43,10 +43,6 @@ const config: HardhatUserConfig = {
 			gasPrice: 0,
 			autoImpersonate: true,
 			blockGasLimit: 30000000000000,
-			forking: {
-				url: node_url('arbitrum'),
-				blockNumber: 81749742,
-			},
 			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
@@ -54,7 +50,11 @@ const config: HardhatUserConfig = {
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			forking: {
+				url: node_url('arbitrum'),
+				blockNumber: 81749742,
+			},
+			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
