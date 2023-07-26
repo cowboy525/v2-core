@@ -45,22 +45,18 @@ const config: HardhatUserConfig = {
 			initialBaseFeePerGas: 0,
 			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			// chainId: 1,
-			// forking: {
-			// url: node_url('mainnet'),
-			// blockNumber: 17728276,
-			// url: node_url('arbitrum'),
-			// blockNumber: 81749742,
-			// },
-			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
+			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			chainId: 1,
-			tags: ['mocks', 'testing', 'oracle_v2'],
+			forking: {
+				url: node_url('arbitrum'),
+				blockNumber: 81749742,
+			},
+			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),

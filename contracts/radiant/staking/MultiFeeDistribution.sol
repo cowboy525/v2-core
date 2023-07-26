@@ -363,7 +363,7 @@ contract MultiFeeDistribution is
 	 * @notice Remove an existing reward token.
 	 * @param _rewardToken address to be removed
 	 */
-	function removeReward(address _rewardToken) external override {
+	function removeReward(address _rewardToken) external {
 		if (!minters[msg.sender]) revert InsufficientPermission();
 
 		bool isTokenFound;
