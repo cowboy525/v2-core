@@ -31,7 +31,6 @@ let func = step.setFunction(async function () {
 	if (rdnt.newlyDeployed) {
 		await execute('RadiantOFT', 'setFeeRatio', config.FEE_BRIDGING);
 		if (network.tags.testing) {
-			// TODO: from DAO
 			await executeFrom('RadiantOFT', dao, 'transfer', deployer, rdntRequired);
 		}
 	}

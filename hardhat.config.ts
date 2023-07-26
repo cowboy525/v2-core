@@ -40,12 +40,13 @@ const config: HardhatUserConfig = {
 	},
 	networks: {
 		hardhat: {
+			// chainId: 1,
 			allowUnlimitedContractSize: false,
 			autoImpersonate: true,
 			initialBaseFeePerGas: 0,
 			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
 			url: node_url('localhost'),
@@ -56,7 +57,7 @@ const config: HardhatUserConfig = {
 				url: node_url('arbitrum'),
 				blockNumber: 81749742,
 			},
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -90,8 +91,9 @@ const config: HardhatUserConfig = {
 			chainId: 1,
 			// url: node_url('mainnet'),
 			url: node_url('localhost'),
-			accounts: [process.env.PRIVATE_KEY || ''],
-			tags: ['mocks', 'testing', 'oracle_v2'],
+			// accounts: [process.env.PRIVATE_KEY || ''],
+			accounts: accounts(),
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
 		},
 		production: {
 			url: node_url('mainnet'),
@@ -143,7 +145,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		bail: true,
+		// bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {
