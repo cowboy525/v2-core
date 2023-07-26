@@ -6,10 +6,10 @@ let step = new DeployStep({
 	dependencies: ['lending', 'distributors'],
 });
 let func = step.setFunction(async function () {
-	const {deploy, get} = step;
+	const {deploy, get, read} = step;
 
 	const priceProvider = await get('PriceProvider');
-	const lendingPool = await get('LendingPool');
+	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 	const middleFeeDistribution = await get('MiddleFeeDistribution');
 
 	await deploy('EligibilityDataProvider', {
@@ -18,7 +18,7 @@ let func = step.setFunction(async function () {
 			execute: {
 				init: {
 					methodName: 'initialize',
-					args: [lendingPool.address, middleFeeDistribution.address, priceProvider.address],
+					args: [lendingPool, middleFeeDistribution.address, priceProvider.address],
 				},
 			},
 		},

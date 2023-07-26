@@ -126,8 +126,6 @@ const loadZappedUserFixture = async () => {
 
 	// Deposit assets
 	await deposit('rWETH', '10000', deployer, lendingPool, deployData);
-	console.log(`DEPOSIT ONE`);
-
 	await zapAndDeposit(0, eligibleAmt);
 };
 
@@ -234,7 +232,9 @@ describe(`AutoCompound:`, async () => {
 	it('fails when slippage too high', async () => {
 		await multiFeeDistribution.connect(user1).setAutocompound(true, 9999);
 		await generatePlatformRevenue(1 * HOUR);
-		await expect(compounder.connect(user1).claimCompound(user1.address, true)).to.be.revertedWith("SlippageTooHigh");
+		await expect(compounder.connect(user1).claimCompound(user1.address, true)).to.be.revertedWith(
+			'SlippageTooHigh'
+		);
 		await multiFeeDistribution.connect(user1).setAutocompound(true, acceptableUserSlippage);
 	});
 

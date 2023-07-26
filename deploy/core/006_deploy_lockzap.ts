@@ -7,10 +7,10 @@ let step = new DeployStep({
 	dependencies: ['configure_lp', 'lending'],
 });
 let func = step.setFunction(async function () {
-	const {deploy, config, get, weth} = step;
+	const {deploy, read, config, get, weth} = step;
 
 	const poolHelper = await get('PoolHelper');
-	const lendingPool = await get('LendingPool');
+	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 	const radiantToken = await get('RadiantOFT');
 
 	let useUniswapLpProvider = config.LP_PROVIDER === LP_PROVIDER.UNISWAP;
@@ -28,7 +28,7 @@ let func = step.setFunction(async function () {
 			execute: {
 				init: {
 					methodName: 'initialize',
-					args: [poolHelper.address, lendingPool.address, weth.address, radiantToken.address, ethLpRatio],
+					args: [poolHelper.address, lendingPool, weth.address, radiantToken.address, ethLpRatio],
 				},
 			},
 		},

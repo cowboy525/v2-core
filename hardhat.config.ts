@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
 			initialBaseFeePerGas: 0,
 			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
 		},
 		localhost: {
 			url: node_url('localhost'),
@@ -145,7 +145,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		// bail: true,
+		bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {
