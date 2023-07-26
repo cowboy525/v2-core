@@ -126,6 +126,8 @@ const loadZappedUserFixture = async () => {
 
 	// Deposit assets
 	await deposit('rWETH', '10000', deployer, lendingPool, deployData);
+	console.log(`DEPOSIT ONE`);
+
 	await zapAndDeposit(0, eligibleAmt);
 };
 

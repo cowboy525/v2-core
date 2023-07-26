@@ -1,30 +1,32 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-const {ethers} = require('hardhat');
-import {getConfigForChain} from '../../config/index';
-import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
+import {ethers} from 'hardhat';
+import {DeployStep} from '../../scripts/deploy/depfunc';
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments, getNamedAccounts} = hre;
-	const {deploy, execute, read} = deployments;
-	const {deployer, admin} = await getNamedAccounts();
-	const {config} = getConfigForChain(await hre.getChainId());
-	const txnOpts = await getTxnOpts(hre);
+let step = new DeployStep({
+	id: 'configure_markets',
+	tags: ['core'],
+	dependencies: ['deploy_cic', 'lending'],
+	runOnce: true,
+});
+let func = step.setFunction(async function () {
+	const {config, execute, deploy, read, get, deployer} = step;
 
-	const middleFeeDistribution = await deployments.get(`MiddleFeeDistribution`);
-	const lendingPoolAddressesProvider = await deployments.get(`LendingPoolAddressesProvider`);
-	const aToken = await deployments.get(`AToken`);
-	const stableDebtToken = await deployments.get(`StableDebtToken`);
-	const variableDebtToken = await deployments.get(`VariableDebtToken`);
-	const chefIncentivesController = await deployments.get(`ChefIncentivesController`);
-
+	const middleFeeDistribution = await get(`MiddleFeeDistribution`);
+	const lendingPoolAddressesProvider = await get(`LendingPoolAddressesProvider`);
+	const aToken = await get(`AToken`);
+	const stableDebtToken = await get(`StableDebtToken`);
+	const variableDebtToken = await get(`VariableDebtToken`);
+	const lendingPool = await get(`LendingPool`);
+	const chefIncentivesController = await get(`ChefIncentivesController`);
 	const LendingPoolConfiguratorImpl = await ethers.getContractFactory('LendingPoolConfigurator');
 	const lendingPoolConfiguratorProxy = LendingPoolConfiguratorImpl.attach(
 		await read('LendingPoolAddressesProvider', 'getLendingPoolConfigurator')
 	);
+	const lendingPoolConfigurator = await read('LendingPoolAddressesProvider', 'getLendingPoolConfigurator');
+	await deploy('ATokensAndRatesHelper', {
+		args: [lendingPool.address, lendingPoolAddressesProvider.address, lendingPoolConfigurator],
+	});
 
 	let newStratDeployed = false;
-
 	const strategyAddresses = new Map();
 	let enhancedTokensConfig = new Map<string, any>(config.TOKENS_CONFIG);
 	for (const [key, value] of enhancedTokensConfig) {
@@ -32,7 +34,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 		if (!strategyAddresses.has(strategyName)) {
 			let strat = await deploy(strategyName, {
-				...txnOpts,
 				contract: 'DefaultReserveInterestRateStrategy',
 				args: [
 					lendingPoolAddressesProvider.address,
@@ -80,10 +81,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 	let currentAdmin = await read('MiddleFeeDistribution', 'admin');
 	if (currentAdmin === deployer) {
-		await execute('MiddleFeeDistribution', txnOpts, 'setAdmin', lendingPoolConfiguratorProxy.address);
+		await execute('MiddleFeeDistribution', 'setAdmin', lendingPoolConfiguratorProxy.address);
 
 		const inits = Array.from(enhancedTokensConfig.values()).map((value: any) => value.initInputParams);
-		// console.log(inits);
 
 		// await execute("LendingPoolConfigurator", { from: deployer }, "batchInitReserve", inits);
 		await (await lendingPoolConfiguratorProxy.batchInitReserve(inits)).wait();
@@ -113,32 +113,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 				borrowingEnabled: borrowingEnabled,
 			});
 		}
-		const aTokensAndRatesHelper = await deployments.get('ATokensAndRatesHelper');
-		const aaveProtocolDataProvider = await deployments.get('AaveProtocolDataProvider');
-		await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', aTokensAndRatesHelper.address);
+		const aTokensAndRatesHelper = await get('ATokensAndRatesHelper');
+		const aaveProtocolDataProvider = await get('AaveProtocolDataProvider');
+		await execute('LendingPoolAddressesProvider', 'setPoolAdmin', aTokensAndRatesHelper.address);
 
-		await execute('ATokensAndRatesHelper', txnOpts, 'configureReserves', inputParams);
+		await execute('ATokensAndRatesHelper', 'configureReserves', inputParams);
 
 		// Set deployer back as admin
-		await execute('LendingPoolAddressesProvider', txnOpts, 'setPoolAdmin', deployer);
+		await execute('LendingPoolAddressesProvider', 'setPoolAdmin', deployer);
 
-		let collatManager = await deploy('LendingPoolCollateralManager', txnOpts);
+		let collatManager = await deploy('LendingPoolCollateralManager');
 
-		await execute(
-			'LendingPoolAddressesProvider',
-			txnOpts,
-			'setLendingPoolCollateralManager',
-			collatManager.address
-		);
+		await execute('LendingPoolAddressesProvider', 'setLendingPoolCollateralManager', collatManager.address);
 
 		await execute(
 			'LendingPoolAddressesProvider',
-			txnOpts,
 			'setAddress',
 			'0x0100000000000000000000000000000000000000000000000000000000000000',
 			aaveProtocolDataProvider.address
 		);
 	}
-};
+});
 export default func;
-func.tags = ['core'];

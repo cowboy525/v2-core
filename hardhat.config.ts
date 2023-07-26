@@ -21,27 +21,21 @@ const config: HardhatUserConfig = {
 	namedAccounts: {
 		deployer: {
 			default: 0,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		dao: {
 			default: 1,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		treasury: {
 			default: 2,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		admin: {
 			default: 3,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		vestManager: {
 			default: 4,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 		starfleet: {
 			default: 5,
-			1: '0x63aAA6867d0697de09cf7050C045c44DeA8a5455',
 		},
 	},
 	networks: {
@@ -51,14 +45,14 @@ const config: HardhatUserConfig = {
 			initialBaseFeePerGas: 0,
 			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			chainId: 1,
-			forking: {
-				url: node_url('mainnet'),
-				blockNumber: 17728276,
-				// url: node_url('arbitrum'),
-				// blockNumber: 81749742,
-			},
-			// tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			// chainId: 1,
+			// forking: {
+			// url: node_url('mainnet'),
+			// blockNumber: 17728276,
+			// url: node_url('arbitrum'),
+			// blockNumber: 81749742,
+			// },
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
 		},
 		localhost: {
 			url: node_url('localhost'),
@@ -153,7 +147,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		// bail: true,
+		bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {
