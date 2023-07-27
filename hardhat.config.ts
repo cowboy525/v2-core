@@ -14,6 +14,7 @@ import 'hardhat-deploy-tenderly';
 import './tasks';
 import '@nomiclabs/hardhat-web3';
 import {generateCompilerOverrides} from './utils/compilerOverrides';
+import 'hardhat-ignore-warnings';
 
 const config: HardhatUserConfig = {
 	namedAccounts: {
@@ -159,7 +160,24 @@ const config: HardhatUserConfig = {
 		apiKey: process.env.DEFENDER_API_KEY || '',
 		apiSecret: process.env.DEFENDER_API_SECRET || '',
 	},
-};
+	warnings: {
+		'contracts/dependencies/math/**/*': {
+			default: 'off',
+		},
+		'contracts/dependencies/uniswap/contracts/**/*': {
+			default: 'off',
+		},
+		'contracts/dependencies/openzeppelin/**/*': {
+			default: 'off',
+		},
+		'contracts/lending/**/*': {
+			default: 'off',
+		},
+		'@uniswap/v2-core/contracts/**/*': {
+			default: 'off',
+		},
+	},
+}
 
 if (process.env.IS_CI === 'true') {
 	if (config && config !== undefined) {
