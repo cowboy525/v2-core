@@ -225,7 +225,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		emit SlippageLimitUpdated(_slippageLimit);
 	}
 
-		/**
+	/**
 	 * @notice Claim and swap them into base token.
 	 * @param _user User whose rewards are compounded into dLP
 	 * @param tokens Tokens to claim and turn into dLP
