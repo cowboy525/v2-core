@@ -247,11 +247,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @notice Check slippage for WETH Zap
 	 * @param _wethAmount WETH amount to zap
 	 */
-	function _zapWETHWithSlippageCheck(
-		uint256 _wethAmount,
-		uint256 _lockTypeIndex,
-		uint256 _slippage
-	) internal returns (uint256) {
+	function _zapWETHWithSlippageCheck(uint256 _wethAmount, uint256 _lockTypeIndex, uint256 _slippage) internal {
 		uint256 balanceBeforeZap = weth.balanceOf(address(this));
 		uint256 liquidity = poolHelper.zapWETH(_wethAmount);
 		uint256 balanceAfterZap = weth.balanceOf(address(this));

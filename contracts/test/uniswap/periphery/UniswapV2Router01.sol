@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
 // import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
@@ -17,7 +18,7 @@ contract UniswapV2Router01 is IUniswapV2Router01 {
 		_;
 	}
 
-	constructor(address _factory, address _WETH) public {
+	constructor(address _factory, address _WETH) {
 		factory = _factory;
 		WETH = _WETH;
 	}
