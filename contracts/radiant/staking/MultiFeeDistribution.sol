@@ -828,11 +828,6 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Hook to be called on upgrade.
-	 */
-	function onUpgrade() public {}
-
-	/**
 	 * @notice Pause MFD functionalities
 	 */
 	function pause() public onlyOwner {

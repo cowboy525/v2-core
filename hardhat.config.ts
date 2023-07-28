@@ -15,6 +15,8 @@ import './tasks';
 import '@nomiclabs/hardhat-web3';
 import {generateCompilerOverrides} from './utils/compilerOverrides';
 
+let optimizerRuns = parseInt(process.env.OPTIMIZER_RUNS || '1000');
+
 const config: HardhatUserConfig = {
 	namedAccounts: {
 		deployer: {
@@ -38,12 +40,13 @@ const config: HardhatUserConfig = {
 	},
 	networks: {
 		hardhat: {
-			initialBaseFeePerGas: 0,
+			// chainId: 1,
 			allowUnlimitedContractSize: false,
-			gasPrice: 0,
 			autoImpersonate: true,
+			initialBaseFeePerGas: 0,
+			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
 		},
 		localhost: {
 			url: node_url('localhost'),
@@ -54,7 +57,7 @@ const config: HardhatUserConfig = {
 				url: node_url('arbitrum'),
 				blockNumber: 81749742,
 			},
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -84,11 +87,15 @@ const config: HardhatUserConfig = {
 			},
 			tags: ['post_assets', 'oracle_cl'],
 		},
-		production: {
-			url: node_url('mainnet'),
-			accounts: accounts('mainnet'),
-		},
 		mainnet: {
+			chainId: 1,
+			// url: node_url('mainnet'),
+			url: node_url('localhost'),
+			// accounts: [process.env.PRIVATE_KEY || ''],
+			accounts: accounts(),
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
+		},
+		production: {
 			url: node_url('mainnet'),
 			accounts: accounts('mainnet'),
 		},
@@ -112,7 +119,7 @@ const config: HardhatUserConfig = {
 				settings: {
 					optimizer: {
 						enabled: true,
-						runs: parseInt(process.env.OPTIMIZER_RUNS || '1000'),
+						runs: optimizerRuns,
 						details: {
 							yul: true,
 						},
@@ -138,7 +145,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		// bail: true,
+		bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {
@@ -171,5 +178,4 @@ if (process.env.IS_CI === 'true') {
 		}
 	}
 }
-
 export default config;

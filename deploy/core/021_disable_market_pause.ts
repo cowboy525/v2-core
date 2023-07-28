@@ -1,9 +1,14 @@
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-const {ethers} = require('hardhat');
+import {ethers} from 'hardhat';
+import {DeployStep} from '../../scripts/deploy/depfunc';
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments} = hre;
+let step = new DeployStep({
+	id: 'disable_market_pause',
+	tags: ['core'],
+	dependencies: ['lending', 'distributors'],
+	runOnce: true,
+});
+let func = step.setFunction(async function () {
+	const {get} = step;
 
 	// TODO: better way to handle this proxy
 	let lendingPoolAddressesProvider = await ethers.getContract('LendingPoolAddressesProvider');
@@ -12,6 +17,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		await lendingPoolAddressesProvider.getLendingPoolConfigurator()
 	);
 	await (await lendingPoolConfiguratorProxy.setPoolPause(false)).wait();
-};
+});
 export default func;
-func.tags = ['core'];
