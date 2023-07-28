@@ -360,7 +360,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _startTimeOffset time offset
 	 * @return true if the specified time offset is already registered
 	 */
-	function _checkDuplicateSchedule(uint256 _startTimeOffset) internal returns (bool) {
+	function _checkDuplicateSchedule(uint256 _startTimeOffset) internal view returns (bool) {
 		for (uint256 i = 0; i < emissionSchedule.length; i++) {
 			if (emissionSchedule[i].startTimeOffset == _startTimeOffset) {
 				return true;
