@@ -1,28 +1,25 @@
-import fs from 'fs';
-import {HardhatRuntimeEnvironment} from 'hardhat/types';
-import {DeployFunction} from 'hardhat-deploy/types';
-import {getDependency} from '../../scripts/getDepenencies';
-import {getConfigForChain} from '../../config/index';
+import {ethers} from 'hardhat';
+import {DeployStep} from '../../scripts/deploy/depfunc';
 import {LendingPool} from '../../typechain';
-import {getTxnOpts} from '../../scripts/deploy/helpers/getTxnOpts';
+import fs from 'fs';
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-	const {deployments, getNamedAccounts, network, ethers} = hre;
-	const {deploy, execute, read} = deployments;
-	const {deployer} = await getNamedAccounts();
-	const {config, baseAssetWrapped} = getConfigForChain(await hre.getChainId());
-	const txnOpts = await getTxnOpts(hre);
+let step = new DeployStep({
+	id: 'mock_markets',
+	dependencies: ['core'],
+	runOnce: true,
+});
+let func = step.setFunction(async function () {
+	const {network, weth, baseAssetWrapped, execute, read, deployer, config} = step;
 
 	if (network.tags.mocks) {
 		const formattedAmt = ethers.utils.parseUnits('100000', 18);
-		let weth = await deployments.get(baseAssetWrapped);
 
-		await execute(baseAssetWrapped, txnOpts, 'mint', formattedAmt);
+		await execute(baseAssetWrapped, 'mint', formattedAmt);
 
 		const lendingPoolAddr = await read('LendingPoolAddressesProvider', 'getLendingPool');
 		const lendingPool = <LendingPool>await ethers.getContractAt('LendingPool', lendingPoolAddr);
 
-		await execute(baseAssetWrapped, {from: deployer}, 'approve', lendingPool.address, ethers.constants.MaxUint256);
+		await execute(baseAssetWrapped, 'approve', lendingPool.address, ethers.constants.MaxUint256);
 		await (await lendingPool.deposit(weth.address, formattedAmt, deployer, 0)).wait();
 
 		const mockAssets = JSON.parse(fs.readFileSync(`./config/mock-assets.json`).toString());
@@ -37,8 +34,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 						? ethers.utils.parseUnits('100', decimals)
 						: ethers.utils.parseUnits('200000000', decimals);
 
-				await execute(name, txnOpts, 'mint', deployer, amt.mul(2));
-				await execute(name, txnOpts, 'approve', lendingPool.address, ethers.constants.MaxUint256);
+				await execute(name, 'mint', deployer, amt.mul(2));
+				await execute(name, 'approve', lendingPool.address, ethers.constants.MaxUint256);
 				await (await lendingPool.deposit(token.address, amt, deployer, 0)).wait();
 				await new Promise((res, rej) => {
 					setTimeout(res, 1 * 1000);
@@ -46,6 +43,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			}
 		}
 	}
-};
+});
 export default func;
-func.tags = ['populate'];

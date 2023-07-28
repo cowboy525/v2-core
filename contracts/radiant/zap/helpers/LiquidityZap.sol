@@ -118,6 +118,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		}
 	}
 
+	receive() external payable {
+		if (msg.sender != address(weth)) {
+			addLiquidityETHOnly(payable(msg.sender));
+		}
+	}
+
 	/**
 	 * @notice Set Price Provider.
 	 * @param _provider Price provider contract address.

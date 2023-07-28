@@ -828,11 +828,6 @@ contract MultiFeeDistribution is
 	}
 
 	/**
-	 * @notice Hook to be called on upgrade.
-	 */
-	function onUpgrade() public {}
-
-	/**
 	 * @notice Pause MFD functionalities
 	 */
 	function pause() public onlyOwner {
@@ -1270,16 +1265,12 @@ contract MultiFeeDistribution is
 	/**
 	 * @notice Withdraw all lockings tokens where the unlock time has passed
 	 * @param user address
-	 * @param totalLock total lock amount
-	 * @param totalLockWithMultiplier total lock amount that is multiplied
 	 * @param limit limit for looping operation
 	 * @return lockAmount withdrawable lock amount
 	 * @return lockAmountWithMultiplier withdraw amount with multiplier
 	 */
 	function _cleanWithdrawableLocks(
 		address user,
-		uint256 totalLock,
-		uint256 totalLockWithMultiplier,
 		uint256 limit
 	) internal returns (uint256 lockAmount, uint256 lockAmountWithMultiplier) {
 		LockedBalance[] storage locks = _userLocks[user];
@@ -1330,7 +1321,7 @@ contract MultiFeeDistribution is
 
 		uint256 amountWithMultiplier;
 		Balances storage bal = _balances[address_];
-		(amount, amountWithMultiplier) = _cleanWithdrawableLocks(address_, bal.locked, bal.lockedWithMultiplier, limit);
+		(amount, amountWithMultiplier) = _cleanWithdrawableLocks(address_, limit);
 		bal.locked = bal.locked - amount;
 		bal.lockedWithMultiplier = bal.lockedWithMultiplier - amountWithMultiplier;
 		bal.total = bal.total - amount;

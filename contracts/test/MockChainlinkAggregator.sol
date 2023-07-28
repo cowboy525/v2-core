@@ -23,6 +23,7 @@ contract MockChainlinkAggregator {
 
 	function latestRoundData()
 		public
+		pure
 		returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
 	{
 		roundId = 18446744073709552278;
