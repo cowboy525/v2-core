@@ -17,7 +17,7 @@ async function deployContract(contractName: string, opts: any, ...args: any) {
 }
 
 describe('Balancer Pool Helper', function () {
-	if (hre.network.tags.fork){
+	if (hre.network.tags.fork) {
 		let preTestSnapshotID: any;
 		let deployConfig: DeployConfig;
 

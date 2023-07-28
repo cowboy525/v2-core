@@ -6,7 +6,7 @@ chai.use(solidity);
 const {expect} = chai;
 
 describe('Uniswap Pool Helper', function () {
-	if (hre.network.tags.fork){
+	if (hre.network.tags.fork) {
 		it('Only owner can initialize', async () => {
 			const [deverloper, dao] = await ethers.getSigners();
 			const poolHelperFactory = await ethers.getContractFactory('UniswapPoolHelper');
