@@ -91,7 +91,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Price provider contract address
 	address public priceProvider;
 
-	/// @notice Reward tokens (not being used anymore but kept for storage)
+	/// @notice Reward tokens (not being used anymore but kept to preserve storage layout)
 	address[] public rewardBaseTokens;
 
 	/// @notice Swap route WETH -> RDNT
@@ -225,42 +225,45 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		emit SlippageLimitUpdated(_slippageLimit);
 	}
 
-	/**
+		/**
 	 * @notice Claim and swap them into base token.
-	 * @param _user User for claim
-	 * @param tokens Array of reward tokens to claim
+	 * @param _user User whose rewards are compounded into dLP
+	 * @param tokens Tokens to claim and turn into dLP
+	 * @param amts Amounts of each token to be claimed and turned into dLP
 	 * @return Total base token amount
 	 */
-	function _claimAndSwapToBase(address _user, address[] memory tokens) internal returns (uint256) {
+	function _claimAndSwapToBase(address _user, address[] memory tokens, uint256[] memory amts) internal returns (uint256) {
 		IMultiFeeDistribution mfd = IMultiFeeDistribution(multiFeeDistribution);
 		mfd.claimFromConverter(_user);
 		ILendingPool lendingPool = ILendingPool(ILendingPoolAddressesProvider(addressProvider).getLendingPool());
 
 		uint256 length = tokens.length;
-		for (uint256 i = 0; i < length; i++) {
-			uint256 amount;
-			try lendingPool.withdraw(tokens[i], type(uint256).max, address(this)) returns (uint256 withdrawnAmt) {
-				amount = withdrawnAmt;
-			} catch {
-				amount = IERC20(tokens[i]).balanceOf(address(this));
-			}
-
-			if (amount == 0) {
+		for (uint256 i; i < length; i++) {
+			uint256 balance = amts[i];
+			if (balance == 0) {
 				continue;
 			}
 
-			if (tokens[i] != baseToken) {
-				IERC20(tokens[i]).forceApprove(uniRouter, amount);
+			address tokenToTrade = tokens[i];
+			uint256 amount;
+			try lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this)) returns (uint256 withdrawnAmt) {
+				amount = withdrawnAmt;
+			} catch {
+				amount = balance;
+			}
+
+			if (tokenToTrade != baseToken) {
+				IERC20(tokenToTrade).forceApprove(uniRouter, amount);
 				try
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
 						0,
-						rewardToBaseRoute[tokens[i]],
+						rewardToBaseRoute[tokenToTrade],
 						address(this),
 						block.timestamp
 					)
 				{} catch {
-					revert SwapFailed(tokens[i], amount);
+					revert SwapFailed(tokenToTrade, amount);
 				}
 			}
 		}
@@ -327,7 +330,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 
-		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user, tokens);
+		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user, tokens, amts);
 		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit)
 			revert InvalidSlippage();
 
