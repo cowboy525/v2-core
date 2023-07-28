@@ -91,7 +91,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Price provider contract address
 	address public priceProvider;
 
-	/// @notice Reward tokens
+	/// @notice Reward tokens (not being used anymore but kept for storage)
 	address[] public rewardBaseTokens;
 
 	/// @notice Swap route WETH -> RDNT
@@ -228,41 +228,39 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/**
 	 * @notice Claim and swap them into base token.
 	 * @param _user User for claim
+	 * @param tokens Array of reward tokens to claim
 	 * @return Total base token amount
 	 */
-	function _claimAndSwapToBase(address _user) internal returns (uint256) {
+	function _claimAndSwapToBase(address _user, address[] memory tokens) internal returns (uint256) {
 		IMultiFeeDistribution mfd = IMultiFeeDistribution(multiFeeDistribution);
 		mfd.claimFromConverter(_user);
 		ILendingPool lendingPool = ILendingPool(ILendingPoolAddressesProvider(addressProvider).getLendingPool());
 
-		uint256 length = rewardBaseTokens.length;
-		for (uint256 i; i < length; i++) {
-			uint256 balance = IERC20(rewardBaseTokens[i]).balanceOf(address(this));
-			if (balance == 0) {
-				continue;
-			}
-			address tokenToTrade;
+		uint256 length = tokens.length;
+		for (uint256 i = 0; i < length; i++) {
 			uint256 amount;
-			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
-				tokenToTrade = underlyingAddress;
-				amount = lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this));
+			try lendingPool.withdraw(tokens[i], type(uint256).max, address(this)) returns (uint256 withdrawnAmt) {
+				amount = withdrawnAmt;
 			} catch {
-				tokenToTrade = rewardBaseTokens[i];
-				amount = balance;
+				amount = IERC20(tokens[i]).balanceOf(address(this));
 			}
 
-			if (tokenToTrade != baseToken) {
-				IERC20(tokenToTrade).forceApprove(uniRouter, amount);
+			if (amount == 0) {
+				continue;
+			}
+
+			if (tokens[i] != baseToken) {
+				IERC20(tokens[i]).forceApprove(uniRouter, amount);
 				try
 					IUniswapV2Router(uniRouter).swapExactTokensForTokens(
 						amount,
 						0,
-						rewardToBaseRoute[tokenToTrade],
+						rewardToBaseRoute[tokens[i]],
 						address(this),
 						block.timestamp
 					)
 				{} catch {
-					revert SwapFailed(tokenToTrade, amount);
+					revert SwapFailed(tokens[i], amount);
 				}
 			}
 		}
@@ -329,7 +327,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 
-		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
+		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user, tokens);
 		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit)
 			revert InvalidSlippage();
 
