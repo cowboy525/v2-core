@@ -32,9 +32,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/********************** Events ***********************/
 
-	/// @notice Emitted when reward base tokens are updated
-	event RewardBaseTokensUpdated(address[] _tokens);
-
 	/// @notice Emitted when routes are updated
 	event RoutesUpdated(address _token, address[] _routes);
 
@@ -173,15 +170,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	 */
 	function unpause() external onlyOwner {
 		_unpause();
-	}
-
-	/**
-	 * @notice Add reward base tokens
-	 * @param _tokens Array of token addresses
-	 */
-	function addRewardBaseTokens(address[] memory _tokens) external onlyOwner {
-		rewardBaseTokens = _tokens;
-		emit RewardBaseTokensUpdated(_tokens);
 	}
 
 	/**
