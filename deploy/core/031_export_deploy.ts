@@ -3,8 +3,11 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {upgrades} from 'hardhat';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+	upgrades.silenceWarnings();
+
 	const {deployments, network} = hre;
 	const {read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
