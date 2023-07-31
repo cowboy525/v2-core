@@ -249,13 +249,13 @@ describe(`AutoCompound:`, async () => {
 	});
 
 	it('Add USDC as Reward and Not Stuck in Compounder', async () => {
-    const amount = BigNumber.from('10000000');
-    await middleFeeDistribution.addReward(usdc.address);
-    await usdc.mint(multiFeeDistribution.address, amount);
-    await generatePlatformRevenue(1 * HOUR);
+		const amount = BigNumber.from('10000000');
+		await middleFeeDistribution.addReward(usdc.address);
+		await usdc.mint(multiFeeDistribution.address, amount);
+		await generatePlatformRevenue(1 * HOUR);
 
-    await compounder.connect(user1).selfCompound();
-    expect(await usdc.balanceOf(compounder.address)).equal(BigNumber.from('0'));
+		await compounder.connect(user1).selfCompound();
+		expect(await usdc.balanceOf(compounder.address)).equal(BigNumber.from('0'));
 	});
 
 	it('swap failed', async () => {
