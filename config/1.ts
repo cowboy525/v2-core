@@ -1,33 +1,40 @@
-import {DeployConfig} from '../scripts/deploy/types';
+import {DeployConfig, LP_PROVIDER} from '../scripts/deploy/types';
 import BaseConfig from './BaseConfig';
+const {ethers} = require('hardhat');
 
 const chainConfig = {
 	NETWORK: 'mainnet',
 	CHAIN_ID: 1,
 
-	// TODO: real vals
-	WETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
-	ROUTER_ADDR: '0x1b02da8cb0d097eb8d57a175b88c7d8b47997506',
-	BAL_WEIGHTED_POOL_FACTORY: '0xf1665E19bc105BE4EDD3739F88315cC699cc5b65',
+	WETH: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+	ROUTER_ADDR: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+	LP_PROVIDER: LP_PROVIDER.BALANCER,
+	BAL_WEIGHTED_POOL_FACTORY: '0x897888115Ada5773E02aA29F775430BFB5F34c51',
 	BAL_VAULT: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
-	STARGATE_ROUTER: '0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614',
-	STARGATE_ROUTER_ETH: '0xbf22f0f184bCcbeA268dF387a49fF5238dD23E40',
-	LZ_ENDPOINT: '0x3c2269811836af69497E5F486A85D7316753cf62',
-	CHAINLINK_ETH_USD_AGGREGATOR_PROXY: '0x639fe6ab55c921f74e7fac1ee960c0b6293ba612',
+	BAL_WSTETH_POOL: '',
+	BAL_WSTETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+	WETH_USDC_POOL_ID:
+		ethers.utils.formatBytes32String(0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002),
+	DAI_USDT_USDC_POOL_ID:
+		ethers.utils.formatBytes32String(0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502),
+	STARGATE_ROUTER: '0x8731d54E9D02c286767d56ac03e8037C07e01e98',
+	STARGATE_ROUTER_ETH: '0x150f94B44927F078737562f0fcF3C95c01Cc2376',
+	LZ_ENDPOINT: '0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675',
+	CHAINLINK_ETH_USD_AGGREGATOR_PROXY: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
 	STARGATE_CONFIG: {
 		ASSETS: [
-			'0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
-			'0xa43A5FD4a2ce19B5fFcf00065FcC877392C326bf',
-			'0x479df35c7EDa9AE8B2086F54b6c42115D8a971D9',
+			'0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', //USDC
+			'0xdac17f958d2ee523a2206206994597c13d831ec7', //USDT
+			'0x6b175474e89094c44da98b954eedeac495271d0f', //DAI
 		],
 		POOL_IDS: [1, 2, 3],
 	},
 	TOKENS_CONFIG: [
 		[
-			'USDC',
+			'USDT',
 			{
-				assetAddress: '0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
-				chainlinkAggregator: '0xAb5c49580294Aff77670F839ea425f5b78ab3Ae7',
+				assetAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+				chainlinkAggregator: '0x3E7d1eAB13ad0104d2750B8863b489D65364e32D',
 				borrowRate: '39000000000000000000000000',
 				reservesParams: {
 					aTokenImpl: 'AToken',
@@ -41,11 +48,57 @@ const chainConfig = {
 					strategy: {
 						baseVariableBorrowRate: '0',
 						name: 'rateStrategyStableThree',
-						optimalUtilizationRate: '900000000000000000000000000',
-						variableRateSlope1: '40000000000000000000000000',
-						variableRateSlope2: '600000000000000000000000000',
-						stableRateSlope1: '20000000000000000000000000',
-						stableRateSlope2: '600000000000000000000000000',
+						optimalUtilizationRate: '600000000000000000000000000',
+						variableRateSlope1: '60000000000000000000000000',
+						variableRateSlope2: '650000000000000000000000000',
+						stableRateSlope1: '60000000000000000000000000',
+						stableRateSlope2: '750000000000000000000000000',
+					},
+				},
+				initInputParams: {
+					aTokenImpl: '0x0000000000000000000000000000000000000000',
+					aTokenName: 'Radiant interest bearing USDT',
+					aTokenSymbol: 'rUSDT',
+					incentivesController: '0x0000000000000000000000000000000000000000',
+					interestRateStrategyAddress: '0x0000000000000000000000000000000000000000',
+					params: '0x10',
+					stableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
+					stableDebtTokenName: 'Radiant stable debt bearing USDT',
+					stableDebtTokenSymbol: 'stableDebtUSDT',
+					treasury: '0x0000000000000000000000000000000000000000',
+					underlyingAsset: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+					underlyingAssetDecimals: '6',
+					underlyingAssetName: 'USDT',
+					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
+					variableDebtTokenName: 'Radiant variable debt bearing USDT',
+					variableDebtTokenSymbol: 'variableDebtUSDT',
+					allocPoint: 100,
+				},
+			},
+		],
+		[
+			'USDC',
+			{
+				assetAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+				chainlinkAggregator: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6',
+				borrowRate: '39000000000000000000000000',
+				reservesParams: {
+					aTokenImpl: 'AToken',
+					baseLTVAsCollateral: '8000',
+					borrowingEnabled: true,
+					liquidationBonus: '11500',
+					liquidationThreshold: '8500',
+					reserveDecimals: '6',
+					reserveFactor: BaseConfig.RESERVE_FACTOR,
+					stableBorrowRateEnabled: false,
+					strategy: {
+						baseVariableBorrowRate: '0',
+						name: 'rateStrategyStableThree',
+						optimalUtilizationRate: '600000000000000000000000000',
+						variableRateSlope1: '60000000000000000000000000',
+						variableRateSlope2: '650000000000000000000000000',
+						stableRateSlope1: '60000000000000000000000000',
+						stableRateSlope2: '750000000000000000000000000',
 					},
 				},
 				initInputParams: {
@@ -59,7 +112,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing USDC',
 					stableDebtTokenSymbol: 'stableDebtUSDC',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0xCb2A18E5328Daf9eeF62C6D2DF415a27D7118b23',
+					underlyingAsset: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
 					underlyingAssetDecimals: '6',
 					underlyingAssetName: 'USDC',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
@@ -69,12 +122,57 @@ const chainConfig = {
 				},
 			},
 		],
-
+		[
+			'DAI',
+			{
+				assetAddress: '0x6b175474e89094c44da98b954eedeac495271d0f',
+				chainlinkAggregator: '0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9',
+				borrowRate: '39000000000000000000000000',
+				reservesParams: {
+					aTokenImpl: 'AToken',
+					baseLTVAsCollateral: '7500',
+					borrowingEnabled: true,
+					liquidationBonus: '11500',
+					liquidationThreshold: '8500',
+					reserveDecimals: '18',
+					reserveFactor: BaseConfig.RESERVE_FACTOR,
+					stableBorrowRateEnabled: false,
+					strategy: {
+						baseVariableBorrowRate: '0',
+						name: 'rateStrategyStableTwo',
+						optimalUtilizationRate: '600000000000000000000000000',
+						variableRateSlope1: '60000000000000000000000000',
+						variableRateSlope2: '650000000000000000000000000',
+						stableRateSlope1: '60000000000000000000000000',
+						stableRateSlope2: '750000000000000000000000000',
+					},
+				},
+				initInputParams: {
+					aTokenImpl: '0x0000000000000000000000000000000000000000',
+					aTokenName: 'Radiant interest bearing DAI',
+					aTokenSymbol: 'rDAI',
+					incentivesController: '0x0000000000000000000000000000000000000000',
+					interestRateStrategyAddress: '0x0000000000000000000000000000000000000000',
+					params: '0x10',
+					stableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
+					stableDebtTokenName: 'Radiant stable debt bearing DAI',
+					stableDebtTokenSymbol: 'stableDebtDAI',
+					treasury: '0x0000000000000000000000000000000000000000',
+					underlyingAsset: '0x6b175474e89094c44da98b954eedeac495271d0f',
+					underlyingAssetDecimals: '18',
+					underlyingAssetName: 'DAI',
+					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
+					variableDebtTokenName: 'Radiant variable debt bearing DAI',
+					variableDebtTokenSymbol: 'variableDebtDAI',
+					allocPoint: 100,
+				},
+			},
+		],
 		[
 			'WETH',
 			{
-				assetAddress: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
-				chainlinkAggregator: '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e',
+				assetAddress: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+				chainlinkAggregator: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
 				borrowRate: '30000000000000000000000000',
 				reservesParams: {
 					aTokenImpl: 'AToken',
@@ -106,7 +204,7 @@ const chainConfig = {
 					stableDebtTokenName: 'Radiant stable debt bearing WETH',
 					stableDebtTokenSymbol: 'stableDebtWETH',
 					treasury: '0x0000000000000000000000000000000000000000',
-					underlyingAsset: '0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6',
+					underlyingAsset: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
 					underlyingAssetDecimals: '18',
 					underlyingAssetName: 'WETH',
 					variableDebtTokenImpl: '0x0000000000000000000000000000000000000000',
