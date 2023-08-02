@@ -35,7 +35,7 @@ describe('MiddleFeeDistribution', () => {
 
 		lp = await ethers.getContractAt('CustomERC20', await mfd.stakingToken());
 	});
-	
+
 	describe('remove rewards with mock deployment', () => {
 		it('reward token arrays are adjusted accordingly', async () => {
 			const rewardToken1 = await mfd.rewardTokens(1);
@@ -44,6 +44,7 @@ describe('MiddleFeeDistribution', () => {
 			expect(await middle.isRewardToken(rewardToken1)).to.be.eq(false);
 			const previouslyLastRewardToken = await mfd.rewardTokens(1);
 			expect(previouslyLastRewardToken).to.not.be.eq(rewardToken1);
+		});	
 	});
 
 	describe("addReward", async () => {
