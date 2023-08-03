@@ -33,7 +33,7 @@ describe('CIC Basic functionalties', () => {
 				deployer.address, // rewardMinter, mock value
 				1000 // RPS
 			],
-			{initializer: 'initialize'}
+			{initializer: 'initialize', unsafeAllow: ['constructor']}
 		);
 		await cic.deployed();
 	});
@@ -49,7 +49,7 @@ describe('CIC Basic functionalties', () => {
 					deployer.address, // rewardMinter, mock value
 					1000 // RPS
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -61,7 +61,7 @@ describe('CIC Basic functionalties', () => {
 					deployer.address, // rewardMinter, mock value
 					1000 // RPS
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -73,7 +73,7 @@ describe('CIC Basic functionalties', () => {
 					ethers.constants.AddressZero, // rewardMinter, mock value
 					1000 // RPS
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 	});
@@ -138,7 +138,7 @@ describe('CIC Basic functionalties', () => {
 
 		it("functions when not paused", async () => {
 			await cic.pause();
-			await expect(cic.connect(user1).claim(user1.address, [])).to.be.revertedWith("Pausable: paused");
+			await expect(cic.connect(user1).claimAll(user1.address)).to.be.revertedWith("Pausable: paused");
 		});
 	});
 
