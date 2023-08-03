@@ -136,7 +136,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -154,7 +154,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -172,7 +172,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -190,7 +190,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -208,7 +208,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -226,7 +226,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -244,7 +244,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -262,7 +262,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -280,7 +280,7 @@ describe('MultiFeeDistribution', () => {
 					WHOLE + 1,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -298,7 +298,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					0,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -316,7 +316,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 	});
@@ -352,7 +352,7 @@ describe('MultiFeeDistribution', () => {
 					BURN,
 					MFD_VEST_DURATION,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			);
 			await mfd.deployed();
 			await expect(mfd.setMinters([ethers.constants.AddressZero])).to.be.reverted;
@@ -401,8 +401,8 @@ describe('MultiFeeDistribution', () => {
 		it("functions when not paused", async () => {
 			await mfd.pause();
 			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.mint(user1.address, 100, true)).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.withdrawExpiredLocksFor(user1.address)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.vestTokens(user1.address, 100, true)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.withdrawExpiredLocksForWithOptions(user1.address,0,true)).to.be.revertedWith("Pausable: paused");
 			await expect(mfd.getReward([])).to.be.revertedWith("Pausable: paused");
 			await expect(mfd.stake(0, user1.address, 0)).to.be.revertedWith("Pausable: paused");
 		});
@@ -1330,7 +1330,7 @@ describe('MultiFeeDistribution', () => {
 		expect(await mfd.getRewardForDuration(radiant.address)).to.be.equal(0);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
-		await mfd.mint(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		const earningsData = await mfd.earnedBalances(user1.address);
 		expect(earningsData.unlocked).to.be.equal(depositAmount.mul(2));
 	});
