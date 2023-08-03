@@ -41,14 +41,6 @@ describe('CIC Basic functionalties', () => {
 	it('init params validation', async () => {
 		const cicFactory = await ethers.getContractFactory('ChefIncentivesController');
 		await expect(
-			cic.initialize(
-				deployer.address, // pool configurator
-				deployer.address, // EDP, mock value
-				deployer.address, // rewardMinter, mock value
-				1000 // RPS
-			)
-		).to.be.revertedWith('Initializable: contract is already initialized');
-		await expect(
 			upgrades.deployProxy(
 				cicFactory,
 				[

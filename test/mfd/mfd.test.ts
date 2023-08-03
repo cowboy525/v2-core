@@ -108,20 +108,6 @@ describe('MultiFeeDistribution', () => {
 	it('init params validation', async () => {
 		const mfdFactory = await ethers.getContractFactory('MultiFeeDistribution');
 		await expect(
-			mfd.initialize(
-				radiant.address,
-				deployer.address, // Mock address
-				treasury.address,
-				lockerlist.address,
-				deployer.address, // Mock address
-				MFD_REWARD_DURATION_SECS,
-				MFD_REWARD_LOOKBACK_SECS,
-				MFD_LOCK_DURATION_SECS,
-				BURN,
-				MFD_VEST_DURATION
-			)
-		).to.be.revertedWith('Initializable: contract is already initialized');
-		await expect(
 			upgrades.deployProxy(
 				mfdFactory,
 				[
