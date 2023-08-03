@@ -125,7 +125,7 @@ describe('Radiant OFT: ', function () {
 				dao,
 				0
 			)
-		).to.be.revertedWith("invalid LZ Endpoint");
+		).to.be.revertedWith("AddressZero");
 		await expect(
 			oftFactory.deploy(
 				'token name',
@@ -135,7 +135,7 @@ describe('Radiant OFT: ', function () {
 				dao,
 				0
 			)
-		).to.be.revertedWith("invalid DAO");
+		).to.be.revertedWith("AddressZero");
 		await expect(
 			oftFactory.deploy(
 				'token name',
@@ -145,7 +145,7 @@ describe('Radiant OFT: ', function () {
 				ethers.constants.AddressZero,
 				0
 			)
-		).to.be.revertedWith("invalid treasury");
+		).to.be.revertedWith("AddressZero");
 		await oftFactory.deploy('token name', 'symbol', dao, dao, dao, 0);
 	});
 
