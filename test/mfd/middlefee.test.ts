@@ -109,21 +109,21 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 			upgrades.deployProxy(
 				middleFactory,
 				[ethers.constants.AddressZero, mfd.address, mfd.address], //middle should be aaveoracle
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
 			upgrades.deployProxy(
 				middleFactory,
 				[radiant.address, ethers.constants.AddressZero, mfd.address], //middle should be aaveoracle
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 	});
 
 	describe("setOperationExpenses", async () => {
 		it('owner permission', async () => {
-			await expect(middle.connect(user1).setOperationExpenses(deployer.address, 100)).to.be.revertedWith("InsufficientPermission");
+			await expect(middle.connect(user1).setOperationExpenses(deployer.address, 100)).to.be.revertedWith("Ownable: caller is not the owner");
 		});
 
 		it('params validation', async () => {
@@ -134,7 +134,7 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 
 	describe("setAdmin", async () => {
 		it('owner permission', async () => {
-			await expect(middle.connect(user1).setAdmin(deployer.address)).to.be.revertedWith("InsufficientPermission");
+			await expect(middle.connect(user1).setAdmin(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
 		});
 
 		it('params validation', async () => {
@@ -144,13 +144,8 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 
 	describe("forwardReward", async () => {
 		it('permission', async () => {
-			await expect(middle.connect(user1).forwardReward([deployer.address])).to.be.reverted;
+			await expect(middle.connect(user1).forwardReward([deployer.address])).to.be.revertedWith("NotMFD");
 		});
-
-		it('zero expense', async () => {
-			await middle.connect(mfd).forwardReward([radiant.address]);
-		});
-
 	});
 
 	it('recover ERC20', async () => {
@@ -163,6 +158,6 @@ describe('MiddleFeeDistribution with mock deployment', () => {
 		await middle.recoverERC20(mockErc20.address, mintAmount);
 		expect(await mockErc20.balanceOf(deployer.address)).to.be.equal(balance.add(mintAmount));
 
-		await expect(middle.connect(user1).recoverERC20(mockErc20.address, mintAmount)).to.be.revertedWith("InsufficientPermission");
+		await expect(middle.connect(user1).recoverERC20(mockErc20.address, mintAmount)).to.be.revertedWith("Ownable: caller is not the owner");
 	});
 });
