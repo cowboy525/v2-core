@@ -499,7 +499,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _user address for claim
 	 * @param _tokens array of reward-bearing tokens
 	 */
-	function claim(address _user, address[] memory _tokens) public {
+	function claim(address _user, address[] memory _tokens) public whenNotPaused {
 		if (eligibilityEnabled) {
 			checkAndProcessEligibility(_user, true, true);
 		}
