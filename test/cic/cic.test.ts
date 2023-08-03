@@ -438,7 +438,7 @@ describe('Non-Elig CIC', () => {
 			advanceTimeAndBlock(1000000000);
 
 			await chefIncentivesController.registerRewardDeposit(0);
-			await chefIncentivesController.claim(user1.address, []);
+			await chefIncentivesController.claimAll(user1.address);
 		});
 
 		it('withdraw all', async () => {
