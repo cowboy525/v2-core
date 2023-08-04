@@ -218,7 +218,7 @@ describe('Balancer Pool Helper', function () {
 							deployConfig.BAL_VAULT,
 							deployConfig.BAL_WEIGHTED_POOL_FACTORY,
 						],
-						{initializer: 'initialize'}
+						{initializer: 'initialize', unsafeAllow: ['constructor']}
 					)
 				);
 				await newPoolHelper.deployed();
@@ -252,7 +252,7 @@ describe('Balancer Pool Helper', function () {
 					deployConfig.BAL_VAULT!,
 					deployConfig.BAL_WEIGHTED_POOL_FACTORY!
 				)
-			).to.be.revertedWith('Contract instance has already been initialized');
+			).to.be.revertedWith('Initializable: contract is already initialized');
 			await expect(
 				upgrades.deployProxy(
 					poolHelperFactory,
@@ -264,7 +264,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
 	
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith("AddressZero");
 			await expect(
@@ -278,7 +278,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
 	
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith("AddressZero");
 			await expect(
@@ -292,7 +292,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
 	
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith("AddressZero");
 			await expect(
@@ -306,7 +306,7 @@ describe('Balancer Pool Helper', function () {
 						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
 	
 					],
-					{initializer: 'initialize'}
+					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
 			).to.be.revertedWith("AddressZero");
 		});
@@ -321,23 +321,21 @@ describe('Balancer Pool Helper', function () {
 		});
 	
 		it('swapToWeth', async function () {
-			await expect(poolHelper.connect(dao).swapToWeth(ethers.constants.AddressZero, 10, 10)).to.be.revertedWith(
+			await expect(poolHelper.connect(deployer).swapToWeth(ethers.constants.AddressZero, 10, 10)).to.be.revertedWith(
 				'AddressZero'
 			);
-			await expect(poolHelper.connect(dao).swapToWeth(deployer.address, 0, 10)).to.be.revertedWith(
+			await expect(poolHelper.connect(deployer).swapToWeth(deployer.address, 0, 10)).to.be.revertedWith(
 				'ZeroAmount'
 			);
 		});
 	
 		it('set/get SwapFeePercentage', async function () {
-			await expect(poolHelper.connect(dao).getSwapFeePercentage()).to.be.revertedWith(
-				'Ownable: caller is not the owner'
-			);
-			await poolHelper.getSwapFeePercentage();
 			await expect(poolHelper.connect(dao).setSwapFeePercentage(100)).to.be.revertedWith(
 				'Ownable: caller is not the owner'
 			);
 			await expect(poolHelper.setSwapFeePercentage(100)).to.be.reverted;
+			await poolHelper.setSwapFeePercentage(BigNumber.from("1000000000000000"));
+			expect((await poolHelper.getSwapFeePercentage())).to.be.eq(BigNumber.from("1000000000000000"));
 		});
 	
 		it("view functions", async function () {
@@ -367,9 +365,9 @@ describe('Balancer Pool Helper', function () {
 			await wethContract.deposit({
 				value: amount.mul(10),
 			});
-			await expect(poolHelper.connect(dao).zapWETH(amount)).to.be.revertedWith("InsufficientPermision");
+			await expect(poolHelper.connect(dao).zapWETH(amount)).to.be.revertedWith("InsufficientPermission");
 			await poolHelper.zapWETH(amount);
-			await expect(poolHelper.connect(dao).zapTokens(amount, amount)).to.be.revertedWith("InsufficientPermision");
+			await expect(poolHelper.connect(dao).zapTokens(amount, amount)).to.be.revertedWith("InsufficientPermission");
 			await poolHelper.zapTokens(amount, amount);
 		});
 
