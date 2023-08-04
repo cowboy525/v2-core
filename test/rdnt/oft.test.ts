@@ -372,7 +372,7 @@ describe('Radiant OFT: ', function () {
 				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
 				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
 			})
-		).to.be.revertedWith('OFTCore: amount too small');
+		).to.be.revertedWith('AmountTooSmall');
 
 		// can transfer accross chain
 		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {
