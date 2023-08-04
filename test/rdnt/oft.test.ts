@@ -310,7 +310,7 @@ describe('Radiant OFT: ', function () {
 		);
 		await expect(
 			execute('RadiantOFT', {from: admin}, 'setPriceProvider', ethers.constants.AddressZero)
-		).to.be.revertedWith('invalid PriceProvider');
+		).to.be.revertedWith('AddressZero');
 	});
 
 	it('setTreasury', async function () {
@@ -319,7 +319,7 @@ describe('Radiant OFT: ', function () {
 		);
 		await expect(
 			execute('RadiantOFT', {from: admin}, 'setTreasury', ethers.constants.AddressZero)
-		).to.be.revertedWith('invalid Treasury address');
+		).to.be.revertedWith('AddressZero');
 		await execute('RadiantOFT', {from: admin}, 'setTreasury', treasury);
 	});
 
