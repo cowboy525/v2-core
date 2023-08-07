@@ -195,7 +195,7 @@ describe(`AutoCompound:`, async () => {
 					10,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -210,7 +210,7 @@ describe(`AutoCompound:`, async () => {
 					10,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -225,7 +225,7 @@ describe(`AutoCompound:`, async () => {
 					10,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -240,7 +240,7 @@ describe(`AutoCompound:`, async () => {
 					10,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -255,7 +255,7 @@ describe(`AutoCompound:`, async () => {
 					10,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -270,7 +270,7 @@ describe(`AutoCompound:`, async () => {
 					0,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 		await expect(
@@ -285,7 +285,7 @@ describe(`AutoCompound:`, async () => {
 					3000,
 					1000,
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.reverted;
 	});

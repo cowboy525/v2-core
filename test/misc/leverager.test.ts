@@ -81,7 +81,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -94,7 +94,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -107,7 +107,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -120,7 +120,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -133,7 +133,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -146,7 +146,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -159,7 +159,7 @@ describe('Looping/Leverager', () => {
 				ethers.constants.AddressZero,
 				0
 			)
-		).to.be.revertedWith('Not a valid address');
+		).to.be.revertedWith('AddressZero');
 		await expect(
 			Leverager.deploy(
 				user2.address,
@@ -172,7 +172,7 @@ describe('Looping/Leverager', () => {
 				user2.address,
 				0
 			)
-		).to.be.revertedWith('Invalid ratio');
+		).to.be.revertedWith('InvalidRatio');
 	});
 
 	it('receive not allowed', async () => {
@@ -182,7 +182,7 @@ describe('Looping/Leverager', () => {
 				to: leverager.address,
 				value: ethers.utils.parseEther('1'),
 			})
-		).to.be.revertedWith('Receive not allowed');
+		).to.be.revertedWith('ReceiveNotAllowed');
 	});
 
 	it('fallback not allowed', async () => {
@@ -193,7 +193,7 @@ describe('Looping/Leverager', () => {
 				value: ethers.utils.parseEther('1'),
 				data: '0xabcdef',
 			})
-		).to.be.revertedWith('Fallback not allowed');
+		).to.be.revertedWith('FallbackNotAllowed');
 	});
 
 	it('setFeePercent', async function () {
@@ -202,7 +202,7 @@ describe('Looping/Leverager', () => {
 		await expect(leverager.connect(user2).setFeePercent(1000)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);
-		await expect(leverager.setFeePercent(10001)).to.be.revertedWith('Invalid ratio');
+		await expect(leverager.setFeePercent(10001)).to.be.revertedWith('InvalidRatio');
 	});
 
 	it('setTreasury', async function () {
@@ -211,7 +211,7 @@ describe('Looping/Leverager', () => {
 		await expect(leverager.connect(user2).setTreasury(treasury.address)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);
-		await expect(leverager.setTreasury(ethers.constants.AddressZero)).to.be.revertedWith('treasury is 0 address');
+		await expect(leverager.setTreasury(ethers.constants.AddressZero)).to.be.revertedWith('AddressZero');
 		await leverager.setTreasury(treasury.address);
 	});
 
@@ -255,7 +255,7 @@ describe('Looping/Leverager', () => {
 		let loops = 1;
 
 		await expect(leverager.connect(user2).loop(usdcAddress, amt, 2, 10001, loops, false, 0)).to.be.revertedWith(
-			'Invalid ratio'
+			'InvalidRatio'
 		);
 
 		await leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 0);
@@ -304,7 +304,7 @@ describe('Looping/Leverager', () => {
 		const rWETH0 = await rWETH.balanceOf(user2.address);
 		const vdWETH0 = await vdWETH.balanceOf(user2.address)
 
-		await expect(leverager.connect(user2).loopETH(2, 10001, loops, 0)).to.be.revertedWith('Invalid ratio');
+		await expect(leverager.connect(user2).loopETH(2, 10001, loops, 0)).to.be.revertedWith('InvalidRatio');
 
 		await leverager
 			.connect(user2)
@@ -331,7 +331,7 @@ describe('Looping/Leverager', () => {
 
 		await leverager
 			.connect(user2)
-			.loopETH(2, borrowRatio, loops, {value: amt});
+			.loopETH(2, borrowRatio, loops, 0, {value: amt});
 
 
 		// WETH to Zap estimation
@@ -340,7 +340,7 @@ describe('Looping/Leverager', () => {
 		const value2 = await leverager.wethToZapEstimation(user2.address, "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", amt.div(10), borrowRatio, loops);
 		expect(value2).to.be.gt(0);
 
-		await expect(leverager.zapWETHWithBorrow(amt, user2.address, 0)).to.be.revertedWith("!borrower||lendingpool");
+		await expect(leverager.zapWETHWithBorrow(amt, user2.address, 0)).to.be.revertedWith("InsufficientPermission");
 		await leverager.connect(user2).zapWETHWithBorrow(0, user2.address, 0);
 		await leverager.connect(user2).zapWETHWithBorrow(amt.div(10), user2.address, 0);
 	});
@@ -373,7 +373,7 @@ describe('Looping/Leverager', () => {
 		const vdWETH0 = await vdWETH.balanceOf(user2.address)
 
 		await expect(leverager.connect(user2).loopETHFromBorrow(2, amt, 10001, loops, 0)).to.be.revertedWith(
-			'Invalid ratio'
+			'InvalidRatio'
 		);
 
 		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 0);

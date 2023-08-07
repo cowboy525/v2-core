@@ -142,9 +142,8 @@ describe(`BountyManager:`, async () => {
 				1000,
 				1000,
 				1000,
-				1000
 			)
-		).to.be.revertedWith('Contract instance has already been initialized');
+		).to.be.revertedWith('Initializable: contract is already initialized');
 		await expect(
 			upgrades.deployProxy(
 				BountyManagerFactory,
@@ -158,10 +157,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -177,10 +175,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -196,10 +193,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -215,10 +211,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -234,10 +229,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -253,10 +247,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -272,10 +265,9 @@ describe(`BountyManager:`, async () => {
 					ethers.constants.AddressZero,
 					1000,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -291,10 +283,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					10001,
 					1000,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("InvalidNumber");
 		await expect(
@@ -310,10 +301,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					0,
-					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("InvalidNumber");
 		await expect(
@@ -329,10 +319,9 @@ describe(`BountyManager:`, async () => {
 					user1.address,
 					1000,
 					1000,
-					0,
-					1000
+					0
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("InvalidNumber");
 	});
@@ -347,7 +336,6 @@ describe(`BountyManager:`, async () => {
 
 		it("functions when not paused", async () => {
 			await bountyManager.pause();
-			await expect(bountyManager.connect(user1).quote(user1.address)).to.be.revertedWith("Pausable: paused");
 			await expect(bountyManager.connect(user1).claim(user1.address, 0)).to.be.revertedWith("Pausable: paused");
 			await expect(bountyManager.connect(user1).executeBounty(user1.address, false, 0)).to.be.revertedWith("Pausable: paused");
 			await expect(bountyManager.connect(user1).getBaseBounty()).to.be.revertedWith("Pausable: paused");
@@ -373,7 +361,7 @@ describe(`BountyManager:`, async () => {
 			'Ownable: caller is not the owner'
 		);
 		await expect(bountyManager.setHunterShare(10001)).to.be.revertedWith(
-			'Override'
+			'InvalidNumber'
 		);
 		await bountyManager.setHunterShare(await bountyManager.hunterShare());
 	});
@@ -383,22 +371,6 @@ describe(`BountyManager:`, async () => {
 			'Ownable: caller is not the owner'
 		);
 		await bountyManager.setMaxBaseBounty(await bountyManager.maxBaseBounty());
-	});
-
-	it('setBountyBooster', async function () {
-		await expect(bountyManager.connect(user2).setBountyBooster(1000)).to.be.revertedWith(
-			'Ownable: caller is not the owner'
-		);
-		await bountyManager.setBountyBooster(await bountyManager.bountyBooster());
-	});
-
-	it('setSlippageLimit', async function () {
-		await expect(bountyManager.connect(user2).setSlippageLimit(1000)).to.be.revertedWith(
-			'Ownable: caller is not the owner'
-		);
-		await expect(bountyManager.setSlippageLimit(10001)).to.be.revertedWith(
-			'InvalidSlippage'
-		);
 	});
 
 	it('setBounties', async function () {

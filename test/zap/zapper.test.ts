@@ -151,7 +151,7 @@ describe('Zapper', function () {
 					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -165,7 +165,7 @@ describe('Zapper', function () {
 					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -179,7 +179,7 @@ describe('Zapper', function () {
 					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -193,7 +193,7 @@ describe('Zapper', function () {
 					1000,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("AddressZero");
 		await expect(
@@ -207,7 +207,7 @@ describe('Zapper', function () {
 					10001,
 					1000
 				],
-				{initializer: 'initialize'}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith("InvalidRatio");
 	});

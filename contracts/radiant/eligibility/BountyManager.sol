@@ -61,7 +61,6 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	error InvalidNumber();
 	error QuoteFail();
 	error Ineligible();
-	error Override();
 	error InvalidSlippage();
 	error ActionTypeIndexOutOfBounds();
 	error NotWhitelisted();
@@ -102,7 +101,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		if (_priceProvider == address(0)) revert AddressZero();
 		if (_eligibilityDataProvider == address(0)) revert AddressZero();
 		if (_compounder == address(0)) revert AddressZero();
-		if (_hunterShare > RATIO_DIVISOR) revert Override();
+		if (_hunterShare > RATIO_DIVISOR) revert InvalidNumber();
 		if (_baseBountyUsdTarget == 0) revert InvalidNumber();
 		if (_maxBaseBounty == 0) revert InvalidNumber();
 
@@ -354,7 +353,7 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * @param _newVal New hunter share ratio
 	 */
 	function setHunterShare(uint256 _newVal) external onlyOwner {
-		if (_newVal > RATIO_DIVISOR) revert Override();
+		if (_newVal > RATIO_DIVISOR) revert InvalidNumber();
 		hunterShare = _newVal;
 		emit HunterShareUpdated(_newVal);
 	}
