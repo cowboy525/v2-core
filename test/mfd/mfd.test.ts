@@ -313,13 +313,15 @@ describe('MultiFeeDistribution', () => {
 	//   );
 	// });
 
-	describe("setMinters", async () => {
+	describe('setMinters', async () => {
 		it('mintersArtSet', async () => {
 			await expect(mfd.setMinters([deployer.address])).to.be.reverted;
 		});
 
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).setMinters([deployer.address])).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).setMinters([deployer.address])).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('zero address not allowed', async () => {
@@ -345,9 +347,11 @@ describe('MultiFeeDistribution', () => {
 		});
 	});
 
-	describe("setBountyManager", async () => {
+	describe('setBountyManager', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).setBountyManager(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).setBountyManager(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('zero address not allowed', async () => {
@@ -355,9 +359,11 @@ describe('MultiFeeDistribution', () => {
 		});
 	});
 
-	describe("addRewardConverter", async () => {
+	describe('addRewardConverter', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).addRewardConverter(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).addRewardConverter(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('zero address not allowed', async () => {
@@ -365,53 +371,61 @@ describe('MultiFeeDistribution', () => {
 		});
 	});
 
-	describe("setAddresses", async () => {
+	describe('setAddresses', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).setAddresses(deployer.address, deployer.address, deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(
+				mfd.connect(user1).setAddresses(deployer.address, deployer.address, deployer.address)
+			).to.be.revertedWith('Ownable: caller is not the owner');
 		});
 
 		it('zero address not allowed', async () => {
-			await expect(mfd.setAddresses(ethers.constants.AddressZero, deployer.address, deployer.address)).to.be.reverted;
-			await expect(mfd.setAddresses(deployer.address, ethers.constants.AddressZero, deployer.address)).to.be.reverted;
+			await expect(mfd.setAddresses(ethers.constants.AddressZero, deployer.address, deployer.address)).to.be
+				.reverted;
+			await expect(mfd.setAddresses(deployer.address, ethers.constants.AddressZero, deployer.address)).to.be
+				.reverted;
 		});
 	});
 
-	describe("pause/unpause", async () => {
+	describe('pause/unpause', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).pause()).to.be.revertedWith("Ownable: caller is not the owner");
-			await expect(mfd.connect(user1).unpause()).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).pause()).to.be.revertedWith('Ownable: caller is not the owner');
+			await expect(mfd.connect(user1).unpause()).to.be.revertedWith('Ownable: caller is not the owner');
 			await mfd.pause();
 			await mfd.unpause();
 		});
 
-		it("functions when not paused", async () => {
+		it('functions when not paused', async () => {
 			await mfd.pause();
-			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.vestTokens(user1.address, 100, true)).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.withdrawExpiredLocksForWithOptions(user1.address,0,true)).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.getReward([])).to.be.revertedWith("Pausable: paused");
-			await expect(mfd.stake(0, user1.address, 0)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.vestTokens(user1.address, 100, true)).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.withdrawExpiredLocksForWithOptions(user1.address, 0, true)).to.be.revertedWith(
+				'Pausable: paused'
+			);
+			await expect(mfd.getReward([])).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.stake(0, user1.address, 0)).to.be.revertedWith('Pausable: paused');
 		});
 	});
 
-	describe("claimBounty", async () => {
+	describe('claimBounty', async () => {
 		it('permission', async () => {
 			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.reverted;
 		});
 
 		it('when unpaused', async () => {
 			await mfd.pause();
-			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith('Pausable: paused');
 		});
 	});
 
-	describe("setLPToken", async () => {
+	describe('setLPToken', async () => {
 		it('setLPToken', async () => {
 			await expect(mfd.setLPToken(deployer.address)).to.be.reverted;
 		});
 
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).setLPToken(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).setLPToken(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('zero address not allowed', async () => {
@@ -419,17 +433,19 @@ describe('MultiFeeDistribution', () => {
 		});
 	});
 
-	describe("setLookback", async () => {
+	describe('setLookback', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).setLookback(0)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).setLookback(0)).to.be.revertedWith('Ownable: caller is not the owner');
 			await mfd.setLookback(100);
 			expect(await mfd.rewardsLookback()).to.be.equal(100);
 		});
 	});
 
-	describe("recoverERC20", async () => {
+	describe('recoverERC20', async () => {
 		it('owner permission', async () => {
-			await expect(mfd.connect(user1).recoverERC20(deployer.address, 100)).to.be.revertedWith("Ownable: caller is not the owner");
+			await expect(mfd.connect(user1).recoverERC20(deployer.address, 100)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
 		});
 
 		it('active', async () => {
@@ -450,25 +466,25 @@ describe('MultiFeeDistribution', () => {
 		});
 	});
 
-	describe("claimFromConverter", async () => {
+	describe('claimFromConverter', async () => {
 		it('called by converter', async () => {
 			await expect(mfd.connect(user1).claimFromConverter(deployer.address)).to.be.reverted;
 		});
 
 		it('when not paused', async () => {
 			await mfd.pause();
-			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith('Pausable: paused');
 		});
 	});
 
-	describe("zapVestingToLp", async () => {
+	describe('zapVestingToLp', async () => {
 		it('insufficient permission', async () => {
 			await expect(mfd.connect(user1).zapVestingToLp(user1.address)).to.be.reverted;
 		});
 
 		it('when not paused', async () => {
 			await mfd.pause();
-			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith("Pausable: paused");
+			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith('Pausable: paused');
 		});
 	});
 
@@ -596,13 +612,13 @@ describe('MultiFeeDistribution', () => {
 		await mfd.vestTokens(user1.address, depositAmount, false);
 	});
 
-	it("more stake validation", async () => {
+	it('more stake validation', async () => {
 		const bountyManagerFactory = await ethers.getContractFactory('MockBountyManager');
 		const bountyManager = await bountyManagerFactory.deploy();
 		await bountyManager.deployed();
 		await mfd.setBountyManager(bountyManager.address);
 
- 		// very few amount fails, <= minDLPBalance
+		// very few amount fails, <= minDLPBalance
 		await expect(mfd.connect(user1).stake(1, user1.address, 0)).to.be.reverted;
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
@@ -645,10 +661,10 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 3);
-		expect((await mfd.lockedBalance(user1.address))).to.be.equal(depositAmount.mul(4));
+		expect(await mfd.lockedBalance(user1.address)).to.be.equal(depositAmount.mul(4));
 
 		await advanceTimeAndBlock(MFD_LOCK_DURATION_SECS / 3);
-		expect((await mfd.lockedBalance(user1.address))).to.be.equal(depositAmount.mul(3));
+		expect(await mfd.lockedBalance(user1.address)).to.be.equal(depositAmount.mul(3));
 		expect((await mfd.lockedBalances(user1.address)).unlockable).to.be.equal(depositAmount);
 
 		await advanceTimeAndBlock(MFD_LOCK_DURATION_SECS / 3);
@@ -945,35 +961,37 @@ describe('MultiFeeDistribution', () => {
 		await radiant.mint(mfd.address, amount);
 
 		balances = await mfd.getBalances(user1.address);
-		console.log("User balances:")
-		console.log("Total:", balances.total.toString());
-		console.log("Earned:", balances.earned.toString());
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
 
-		console.log("1) Vesting of 20 RDNT starts...");
-		await mfd.mint(user1.address, amount.div(5), true);
+		console.log('1) Vesting of 20 RDNT starts...');
+		await mfd.vestTokens(user1.address, amount.div(5), true);
 
 		balances = await mfd.getBalances(user1.address);
-		console.log("User balances:")
-		console.log("Total:", balances.total.toString());
-		console.log("Earned:", balances.earned.toString());
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
 
-		console.log("2) User calls exit() for the first time...");
+		console.log('2) User calls exit() for the first time...');
 		await mfd.connect(user1).exit(false);
 
 		balances = await mfd.getBalances(user1.address);
-		console.log("User balances:")
-		console.log("Total:", balances.total.toString());
-		console.log("Earned:", balances.earned.toString());
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
 
-		console.log("3) Another 20 RDNT vesting starts...")
-		await mfd.mint(user1.address, amount.div(5), true);
+		console.log('3) Another 20 RDNT vesting starts...');
+		await mfd.vestTokens(user1.address, amount.div(5), true);
 
 		balances = await mfd.getBalances(user1.address);
-		console.log("User balances:")
-		console.log("Total:", balances.total.toString());
-		console.log("Earned:", balances.earned.toString());
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
 
-		console.log("4) User can trigger the exit() function, no underflow! Attempt to withdraw " + balances.earned.toString());
+		console.log(
+			'4) User can trigger the exit() function, no underflow! Attempt to withdraw ' + balances.earned.toString()
+		);
 		await expect(mfd.connect(user1).exit(false)).to.be.not.reverted;
 	});
 

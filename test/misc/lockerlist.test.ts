@@ -25,11 +25,15 @@ describe('MultiFeeDistribution', () => {
 	});
 
 	it('owner permission', async () => {
-		await expect(lockerlist.connect(user1).addToList(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
-		await expect(lockerlist.connect(user1).removeFromList(deployer.address)).to.be.revertedWith("Ownable: caller is not the owner");
+		await expect(lockerlist.connect(user1).addToList(deployer.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(lockerlist.connect(user1).removeFromList(deployer.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
 	});
 
-	it("operations", async () => {
+	it('operations', async () => {
 		await lockerlist.addToList(deployer.address);
 		await lockerlist.addToList(user1.address);
 		await lockerlist.addToList(user2.address);

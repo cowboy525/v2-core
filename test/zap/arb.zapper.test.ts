@@ -8,7 +8,7 @@ const {expect} = chai;
 const {deployments, getNamedAccounts, network} = hre;
 
 describe('Zapper', function () {
-	if (hre.network.tags.fork){
+	if (hre.network.tags.fork) {
 		let deployer: string;
 		let poolHelper: BalancerPoolHelper;
 
@@ -79,9 +79,9 @@ describe('Zapper', function () {
 
 			const unauthorizedSigner = ethers.provider.getSigner(unauthorizedAddress);
 
-			await expect(poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)).to.be.revertedWith(
-				'InsufficientPermission'
-			);
+			await expect(
+				poolHelper.connect(unauthorizedSigner).swapToWeth(usdcAddress, zapAmount, 0)
+			).to.be.revertedWith('InsufficientPermission');
 		});
 
 		it('Can zap USDT & DAI - Live Arbitrum', async () => {

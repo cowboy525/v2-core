@@ -184,7 +184,7 @@ const config: HardhatUserConfig = {
 			default: 'off',
 		},
 	},
-}
+};
 
 if (process.env.IS_CI === 'true') {
 	if (config && config !== undefined) {

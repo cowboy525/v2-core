@@ -117,35 +117,14 @@ describe('Radiant OFT: ', function () {
 	it('constructor params', async function () {
 		const oftFactory = await ethers.getContractFactory('RadiantOFT');
 		await expect(
-			oftFactory.deploy(
-				'token name',
-				'symbol',
-				ethers.constants.AddressZero,
-				dao,
-				dao,
-				0
-			)
-		).to.be.revertedWith("AddressZero");
+			oftFactory.deploy('token name', 'symbol', ethers.constants.AddressZero, dao, dao, 0)
+		).to.be.revertedWith('AddressZero');
 		await expect(
-			oftFactory.deploy(
-				'token name',
-				'symbol',
-				dao,
-				ethers.constants.AddressZero,
-				dao,
-				0
-			)
-		).to.be.revertedWith("AddressZero");
+			oftFactory.deploy('token name', 'symbol', dao, ethers.constants.AddressZero, dao, 0)
+		).to.be.revertedWith('AddressZero');
 		await expect(
-			oftFactory.deploy(
-				'token name',
-				'symbol',
-				dao,
-				dao,
-				ethers.constants.AddressZero,
-				0
-			)
-		).to.be.revertedWith("AddressZero");
+			oftFactory.deploy('token name', 'symbol', dao, dao, ethers.constants.AddressZero, 0)
+		).to.be.revertedWith('AddressZero');
 		await oftFactory.deploy('token name', 'symbol', dao, dao, dao, 0);
 	});
 

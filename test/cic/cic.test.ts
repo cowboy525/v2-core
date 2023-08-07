@@ -135,7 +135,10 @@ describe('Non-Elig CIC', () => {
 
 		it('update works', async () => {
 			const rUSDCInfo = await chefIncentivesController.poolInfo(deployData.allTokens['rUSDC']);
-			await chefIncentivesController.batchUpdateAllocPoint([deployData.allTokens['rUSDC']], [rUSDCInfo.allocPoint]);
+			await chefIncentivesController.batchUpdateAllocPoint(
+				[deployData.allTokens['rUSDC']],
+				[rUSDCInfo.allocPoint]
+			);
 		});
 	});
 
@@ -449,7 +452,9 @@ describe('Non-Elig CIC', () => {
 	});
 
 	it('afterLockUpdate', async () => {
-		await expect(chefIncentivesController.connect(user1).afterLockUpdate(user1.address)).to.be.revertedWith("NotMFD");
+		await expect(chefIncentivesController.connect(user1).afterLockUpdate(user1.address)).to.be.revertedWith(
+			'NotMFD'
+		);
 	});
 
 	it('registerRewardDeposit', async () => {

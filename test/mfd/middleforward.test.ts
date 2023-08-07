@@ -103,21 +103,17 @@ describe('MFDs split Platform Revenue', () => {
 
 		await chef.claim(user2.address, deployData.allTokenAddrs);
 
-		const {totalVesting: earningAmount} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
+		const {totalVesting: earningAmount} = await multiFeeDistribution.earnedBalances(user2.address);
 		expect(earningAmount).to.be.gt(claimableRdnt);
 	});
 
 	it('Rewards get transferred from MiddleFee to MultiFee.', async () => {
 		await middleFeeDistribution.setOperationExpenses(user2.address, 0);
-		const forwardAmount = ethers.utils.parseEther("10000");
+		const forwardAmount = ethers.utils.parseEther('10000');
 		await radiantToken.connect(dao).transfer(middleFeeDistribution.address, forwardAmount);
 
-		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount0 = rdntRewardData.amount;
 		const middleBalance0 = await radiantToken.balanceOf(middleFeeDistribution.address);
 		const multiBalance0 = await radiantToken.balanceOf(multiFeeDistribution.address);
@@ -125,10 +121,8 @@ describe('MFDs split Platform Revenue', () => {
 		// just forward
 		await multiFeeDistribution.getReward([radiantToken.address]);
 
-		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount1 = rdntRewardData1.amount;
 		const middleBalance1 = await radiantToken.balanceOf(middleFeeDistribution.address);
 		const multiBalance1 = await radiantToken.balanceOf(multiFeeDistribution.address);
@@ -143,13 +137,11 @@ describe('MFDs split Platform Revenue', () => {
 
 	it('Rewards get transferred from MiddleFee to MultiFee. 2nd forward', async () => {
 		await advanceTimeAndBlock(REWARDS_DURATION);
-		const forwardAmount = ethers.utils.parseEther("10000");
+		const forwardAmount = ethers.utils.parseEther('10000');
 		await radiantToken.connect(dao).transfer(middleFeeDistribution.address, forwardAmount);
 
-		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount0 = rdntRewardData.amount;
 		const middleBalance0 = await radiantToken.balanceOf(middleFeeDistribution.address);
 		const multiBalance0 = await radiantToken.balanceOf(multiFeeDistribution.address);
@@ -157,10 +149,8 @@ describe('MFDs split Platform Revenue', () => {
 		// just forward
 		await multiFeeDistribution.getReward([radiantToken.address]);
 
-		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount1 = rdntRewardData1.amount;
 		const middleBalance1 = await radiantToken.balanceOf(middleFeeDistribution.address);
 		const multiBalance1 = await radiantToken.balanceOf(multiFeeDistribution.address);
@@ -172,20 +162,16 @@ describe('MFDs split Platform Revenue', () => {
 		expect(rewardAmount1).to.be.equal(rewardAmount0);
 	});
 
-	it("User withdraws some of the revenue rewards", async () => {
-		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address)
+	it('User withdraws some of the revenue rewards', async () => {
+		const {totalVesting: earningAmount0} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount0 = rdntRewardData0.amount;
 		const userBal0 = await radiantToken.balanceOf(user2.address);
 
 		await multiFeeDistribution.connect(user2).getAllRewards();
 
-		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {totalVesting: earningAmount1} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount1 = rdntRewardData1.amount;
 		const userBal1 = await radiantToken.balanceOf(user2.address);
 
@@ -195,22 +181,18 @@ describe('MFDs split Platform Revenue', () => {
 		expect(userBal1.sub(userBal0)).to.be.gte(rewardAmount0); // one block rewards more distributed
 	});
 
-	it("User withdraws some of the finished vested rewards", async () => {
+	it('User withdraws some of the finished vested rewards', async () => {
 		await advanceTimeAndBlock(duration);
 
-		const {unlocked: withdrawable0} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {unlocked: withdrawable0} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData0] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount0 = rdntRewardData0.amount;
 		const userBal0 = await radiantToken.balanceOf(user2.address);
 
 		await multiFeeDistribution.connect(user2).withdraw(withdrawable0);
 
-		const {unlocked: withdrawable1} = await multiFeeDistribution.earnedBalances(
-			user2.address
-		);
-		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address)
+		const {unlocked: withdrawable1} = await multiFeeDistribution.earnedBalances(user2.address);
+		const [rdntRewardData1] = await multiFeeDistribution.claimableRewards(user2.address);
 		const rewardAmount1 = rdntRewardData1.amount;
 		const userBal1 = await radiantToken.balanceOf(user2.address);
 

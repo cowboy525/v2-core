@@ -17,7 +17,7 @@ async function deployContract(contractName: string, opts: any, ...args: any) {
 }
 
 describe('Balancer Pool Helper', function () {
-	if (hre.network.tags.fork){
+	if (hre.network.tags.fork) {
 		let preTestSnapshotID: any;
 		let deployConfig: DeployConfig;
 
@@ -222,16 +222,16 @@ describe('Balancer Pool Helper', function () {
 					)
 				);
 				await newPoolHelper.deployed();
-	
+
 				await wethContract.deposit({
 					value: deployConfig.LP_INIT_ETH,
 				});
 				await wethContract.transfer(newPoolHelper.address, deployConfig.LP_INIT_ETH);
 				await radiantToken.connect(dao).transfer(newPoolHelper.address, deployConfig.LP_INIT_RDNT);
-	
+
 				await newPoolHelper.initializePool('RDNT-WETH', 'RDNTLP');
 				await newPoolHelper.setLockZap(deployer.address);
-	
+
 				const amount = ethers.utils.parseUnits('1', 18);
 				await wethContract.deposit({
 					value: amount.mul(10),
@@ -261,12 +261,11 @@ describe('Balancer Pool Helper', function () {
 						radiantToken.address,
 						wethContract.address,
 						deployConfig.BAL_VAULT!,
-						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
-	
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY!,
 					],
 					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
-			).to.be.revertedWith("AddressZero");
+			).to.be.revertedWith('AddressZero');
 			await expect(
 				upgrades.deployProxy(
 					poolHelperFactory,
@@ -275,12 +274,11 @@ describe('Balancer Pool Helper', function () {
 						ethers.constants.AddressZero,
 						wethContract.address,
 						deployConfig.BAL_VAULT!,
-						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
-	
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY!,
 					],
 					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
-			).to.be.revertedWith("AddressZero");
+			).to.be.revertedWith('AddressZero');
 			await expect(
 				upgrades.deployProxy(
 					poolHelperFactory,
@@ -289,12 +287,11 @@ describe('Balancer Pool Helper', function () {
 						radiantToken.address,
 						ethers.constants.AddressZero,
 						deployConfig.BAL_VAULT!,
-						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
-	
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY!,
 					],
 					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
-			).to.be.revertedWith("AddressZero");
+			).to.be.revertedWith('AddressZero');
 			await expect(
 				upgrades.deployProxy(
 					poolHelperFactory,
@@ -303,42 +300,39 @@ describe('Balancer Pool Helper', function () {
 						radiantToken.address,
 						wethContract.address,
 						ethers.constants.AddressZero,
-						deployConfig.BAL_WEIGHTED_POOL_FACTORY!
-	
+						deployConfig.BAL_WEIGHTED_POOL_FACTORY!,
 					],
 					{initializer: 'initialize', unsafeAllow: ['constructor']}
 				)
-			).to.be.revertedWith("AddressZero");
+			).to.be.revertedWith('AddressZero');
 		});
-	
+
 		it('setLockZap', async function () {
 			await expect(poolHelper.connect(dao).setLockZap(deployer.address)).to.be.revertedWith(
 				'Ownable: caller is not the owner'
 			);
-			await expect(poolHelper.setLockZap(ethers.constants.AddressZero)).to.be.revertedWith(
-				'AddressZero'
-			);
+			await expect(poolHelper.setLockZap(ethers.constants.AddressZero)).to.be.revertedWith('AddressZero');
 		});
-	
+
 		it('swapToWeth', async function () {
-			await expect(poolHelper.connect(deployer).swapToWeth(ethers.constants.AddressZero, 10, 10)).to.be.revertedWith(
-				'AddressZero'
-			);
+			await expect(
+				poolHelper.connect(deployer).swapToWeth(ethers.constants.AddressZero, 10, 10)
+			).to.be.revertedWith('AddressZero');
 			await expect(poolHelper.connect(deployer).swapToWeth(deployer.address, 0, 10)).to.be.revertedWith(
 				'ZeroAmount'
 			);
 		});
-	
+
 		it('set/get SwapFeePercentage', async function () {
 			await expect(poolHelper.connect(dao).setSwapFeePercentage(100)).to.be.revertedWith(
 				'Ownable: caller is not the owner'
 			);
 			await expect(poolHelper.setSwapFeePercentage(100)).to.be.reverted;
-			await poolHelper.setSwapFeePercentage(BigNumber.from("1000000000000000"));
-			expect((await poolHelper.getSwapFeePercentage())).to.be.eq(BigNumber.from("1000000000000000"));
+			await poolHelper.setSwapFeePercentage(BigNumber.from('1000000000000000'));
+			expect(await poolHelper.getSwapFeePercentage()).to.be.eq(BigNumber.from('1000000000000000'));
 		});
-	
-		it("view functions", async function () {
+
+		it('view functions', async function () {
 			await poolHelper.getLpPrice(100000);
 			await poolHelper.getPrice();
 		});
@@ -365,9 +359,11 @@ describe('Balancer Pool Helper', function () {
 			await wethContract.deposit({
 				value: amount.mul(10),
 			});
-			await expect(poolHelper.connect(dao).zapWETH(amount)).to.be.revertedWith("InsufficientPermission");
+			await expect(poolHelper.connect(dao).zapWETH(amount)).to.be.revertedWith('InsufficientPermission');
 			await poolHelper.zapWETH(amount);
-			await expect(poolHelper.connect(dao).zapTokens(amount, amount)).to.be.revertedWith("InsufficientPermission");
+			await expect(poolHelper.connect(dao).zapTokens(amount, amount)).to.be.revertedWith(
+				'InsufficientPermission'
+			);
 			await poolHelper.zapTokens(amount, amount);
 		});
 
