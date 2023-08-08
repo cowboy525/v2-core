@@ -97,6 +97,26 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	/**
+	 * @notice Gets needed WETH for adding LP
+	 * @param lpAmount LP amount
+	 * @return wethAmount WETH amount
+	 */
+	function quoteWETH(uint256 lpAmount) public view returns (uint256 wethAmount) {
+		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
+
+		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
+		uint256 weth = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
+		uint256 rdnt = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
+		uint256 lpTokenSupply = lpToken.totalSupply();
+
+		uint256 neededRdnt = rdnt * lpAmount / lpTokenSupply;
+		uint256 neededWeth = rdnt * lpAmount / lpTokenSupply;
+
+		uint256 neededRdntInWeth = router.getAmountIn(neededRdnt, weth, rdnt);
+		return neededWeth + neededRdntInWeth;
+	}
+
+	/**
 	 * @notice Zap WETH into LP
 	 * @param amount of WETH
 	 * @return liquidity LP token amount
@@ -220,6 +240,20 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		if (rdnt > 0) {
 			priceInEth = (weth * (10 ** 8)) / rdnt;
 		}
+	}
+
+	/**
+	 * @notice Calculate quote in WETH from token
+	 * @param _inToken input token
+	 * @param _wethAmount WETH amount
+	 * @return tokenAmount token amount
+	 */
+	function quoteSwap(address _inToken, uint256 _wethAmount) public view returns (uint256 tokenAmount) {
+		address[] memory path = new address[](2);
+		path[0] = _inToken;
+		path[1] = wethAddr;
+		uint256[] memory amountsIn = router.getAmountsIn(_wethAmount, path);
+		return amountsIn[0];
 	}
 
 	/**

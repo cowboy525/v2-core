@@ -439,6 +439,30 @@ describe('Zapper', function () {
 
 			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 		});
+
+		it('Quote works', async () => {
+			await lockZap.setPriceProvider(priceProvider.address);
+			const minAcceptedRatio = 9500;
+			const bpsUnit = 10_000;
+			const zapAmount = ethers.BigNumber.from(100);
+			const lpAmountWanted = zapAmount
+			.mul(10 ** 12)
+			.mul(minAcceptedRatio)
+			.div(bpsUnit);
+
+			const quotedZapAmount = await lockZap.quoteAlternateAsset(usdcAddress, lpAmountWanted, 0);
+
+			await USDC.approve(lockZap.address, quotedZapAmount);
+			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
+			await lockZap.zapAlternateAsset(usdcAddress, quotedZapAmount, 0, 0);
+			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
+			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
+
+			const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
+			const lpValueGained = lockedLpBalanceGained.mul(lpTokenPriceUsd).div(10 ** 8);
+
+			expect(lpValueGained).to.be.gt(lpAmountWanted);
+		});
 	});
 
 	it('Locked ETH in lockZap contract', async () => {
