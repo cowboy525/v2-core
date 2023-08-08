@@ -104,12 +104,12 @@ describe('Zapper', function () {
 				deployer.address, // router
 				deployer.address // liquidity zap
 			)
-		).to.be.revertedWith('Contract instance has already been initialized');
+		).to.be.revertedWith('Initializable: contract is already initialized');
 	});
 
 	it('poolHelper perms and views', async () => {
-		await expect(poolHelper.zapWETH(0)).to.be.revertedWith('InsufficientPermision');
-		await expect(poolHelper.zapTokens(10, 10)).to.be.revertedWith('InsufficientPermision');
+		await expect(poolHelper.zapWETH(0)).to.be.revertedWith('InsufficientPermission');
+		await expect(poolHelper.zapTokens(10, 10)).to.be.revertedWith('InsufficientPermission');
 		await expect(poolHelper.setLiquidityZap(ethers.constants.AddressZero)).to.be.revertedWith('AddressZero');
 		await expect(poolHelper.connect(user2).setLockZap(ethers.constants.AddressZero)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
@@ -123,40 +123,40 @@ describe('Zapper', function () {
 	it('init params validation', async () => {
 		const zapFactory = await ethers.getContractFactory('LockZap');
 		await expect(
-			lockZap.initialize(poolHelper.address, lendingPool.address, wethAddress, radiant.address, 1000, 1000)
-		).to.be.revertedWith('Contract instance has already been initialized');
+			lockZap.initialize(poolHelper.address, lendingPool.address, wethAddress, radiant.address, 1000)
+		).to.be.revertedWith('Initializable: contract is already initialized');
 		await expect(
 			upgrades.deployProxy(
 				zapFactory,
-				[ethers.constants.AddressZero, lendingPool.address, wethAddress, radiant.address, 1000, 1000],
+				[ethers.constants.AddressZero, lendingPool.address, wethAddress, radiant.address, 1000],
 				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith('AddressZero');
 		await expect(
 			upgrades.deployProxy(
 				zapFactory,
-				[poolHelper.address, ethers.constants.AddressZero, wethAddress, radiant.address, 1000, 1000],
+				[poolHelper.address, ethers.constants.AddressZero, wethAddress, radiant.address, 1000],
 				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith('AddressZero');
 		await expect(
 			upgrades.deployProxy(
 				zapFactory,
-				[poolHelper.address, lendingPool.address, ethers.constants.AddressZero, radiant.address, 1000, 1000],
+				[poolHelper.address, lendingPool.address, ethers.constants.AddressZero, radiant.address, 1000],
 				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith('AddressZero');
 		await expect(
 			upgrades.deployProxy(
 				zapFactory,
-				[poolHelper.address, lendingPool.address, wethAddress, ethers.constants.AddressZero, 1000, 1000],
+				[poolHelper.address, lendingPool.address, wethAddress, ethers.constants.AddressZero, 1000],
 				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith('AddressZero');
 		await expect(
 			upgrades.deployProxy(
 				zapFactory,
-				[poolHelper.address, lendingPool.address, wethAddress, radiant.address, 10001, 1000],
+				[poolHelper.address, lendingPool.address, wethAddress, radiant.address, 10001],
 				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		).to.be.revertedWith('InvalidRatio');
@@ -197,12 +197,11 @@ describe('Zapper', function () {
 			await expect(lockZap.connect(user2).zapOnBehalf(true, 10, 10, user3.address, 0)).to.be.revertedWith(
 				'Pausable: paused'
 			);
-			await expect(lockZap.connect(user2).zapFromVesting(true, 0, 0)).to.be.revertedWith('Pausable: paused');
+			await expect(lockZap.connect(user2).zapFromVesting(true, 1, 0)).to.be.revertedWith('Pausable: paused');
 		});
 	});
 
 	it('zapAlternateAsset', async () => {
-		await lockZap.pause();
 		await expect(
 			lockZap.connect(user2).zapAlternateAsset(ethers.constants.AddressZero, 10, 0, 0)
 		).to.be.revertedWith('AddressZero');
@@ -385,7 +384,7 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		await lockZap.connect(user4).zapFromVesting(true, 0, 0);
+		await lockZap.connect(user4).zapFromVesting(true, 1, 0);
 
 		totalVesting = (await mfd.earnedBalances(user4.address)).totalVesting;
 
@@ -425,7 +424,7 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 10000)).to.be.revertedWith('SlippageTooHigh');
+		await expect(lockZap.connect(user4).zapFromVesting(true, 1, 10000)).to.be.revertedWith('SlippageTooHigh');
 	});
 
 	it('can early exit after zapping vesting w/ borrow', async function () {
@@ -483,7 +482,7 @@ describe('Zapper', function () {
 		it('initLiquidityZap again fails', async () => {
 			if (liquidityZap) {
 				await expect(liquidityZap.initialize()).to.be.revertedWith(
-					'Contract instance has already been initialized'
+					'Initializable: contract is already initialized'
 				);
 
 				await expect(
@@ -539,7 +538,7 @@ describe('Zapper', function () {
 		it('addLiquidityWETHOnly validation', async () => {
 			if (liquidityZap) {
 				await expect(liquidityZap.addLiquidityWETHOnly(10, deployer.address)).to.be.revertedWith(
-					'InsufficientPermision'
+					'InsufficientPermission'
 				);
 			}
 		});
