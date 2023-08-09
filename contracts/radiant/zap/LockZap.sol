@@ -248,6 +248,8 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @param _asset address of the asset to zap in
 	 * @param _amount the amount of asset to zap
 	 * @param _lockTypeIndex lock length index.
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
+	 * @return LP amount
 	 */
 	function zapAlternateAsset(
 		address _asset,
