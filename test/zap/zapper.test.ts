@@ -124,12 +124,16 @@ describe('Zapper', function () {
 	});
 
 	it('zap fails with high slippage', async function () {
-		await expect(lockZap.connect(user2).zap(false, 0, 0, 0, 9999, {
-			value: ethers.utils.parseEther('1'),
-		})).to.be.revertedWith("SlippageTooHigh");
-		await expect(lockZap.connect(user2).zapOnBehalf(false, 0, 0, user2.address, 9999, {
-			value: ethers.utils.parseEther('1'),
-		})).to.be.revertedWith("SlippageTooHigh");
+		await expect(
+			lockZap.connect(user2).zap(false, 0, 0, 0, 9999, {
+				value: ethers.utils.parseEther('1'),
+			})
+		).to.be.revertedWith('SlippageTooHigh');
+		await expect(
+			lockZap.connect(user2).zapOnBehalf(false, 0, 0, user2.address, 9999, {
+				value: ethers.utils.parseEther('1'),
+			})
+		).to.be.revertedWith('SlippageTooHigh');
 	});
 
 	it('can zap from Vesting', async function () {
@@ -287,7 +291,7 @@ describe('Zapper', function () {
 
 		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
 
-		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 10000)).to.be.revertedWith("SlippageTooHigh");
+		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 10000)).to.be.revertedWith('SlippageTooHigh');
 	});
 
 	it('can early exit after zapping vesting w/ borrow', async function () {
@@ -413,7 +417,9 @@ describe('Zapper', function () {
 			await lockZap.setPriceProvider(priceProvider.address);
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 			await USDC.approve(lockZap.address, zapAmount);
-			await expect(lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 9999)).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+			await expect(lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 9999)).to.be.revertedWith(
+				'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT'
+			);
 		});
 
 		it('slippage limits are not breached', async () => {

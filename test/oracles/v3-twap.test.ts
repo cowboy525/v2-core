@@ -20,7 +20,7 @@ const {expect} = chai;
  *
  */
 describe('Uni V3 TWAP', () => {
-	if (hre.network.tags.fork){
+	if (hre.network.tags.fork) {
 		let oracle: UniV3TwapOracle;
 		let owner: SignerWithAddress;
 		let wethContract: WETH;

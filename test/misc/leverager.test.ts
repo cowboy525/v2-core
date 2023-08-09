@@ -140,7 +140,9 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await expect(leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 9999)).to.be.revertedWith("SlippageTooHigh");
+		await expect(
+			leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 9999)
+		).to.be.revertedWith('SlippageTooHigh');
 	});
 
 	it('autoZap while looping', async () => {
@@ -277,7 +279,9 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = ethers.utils.parseEther('1');
 		let loops = 2;
-		await expect(leverager.connect(user2).loopETH(2, borrowRatio, loops, 9999, {value: amt})).to.be.revertedWith("SlippageTooHigh");
+		await expect(leverager.connect(user2).loopETH(2, borrowRatio, loops, 9999, {value: amt})).to.be.revertedWith(
+			'SlippageTooHigh'
+		);
 	});
 
 	it('Eligibility Exempt is Temporary', async () => {
@@ -312,7 +316,8 @@ describe('Looping/Leverager', () => {
 	});
 
 	it('loop eth from borrow fails with high slippage', async () => {
-		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy =
+			await setupTest();
 
 		await leverager.setFeePercent(FEE_LOOPING);
 
@@ -330,11 +335,14 @@ describe('Looping/Leverager', () => {
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;
 		let loops = 1;
-		await expect(leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 9999)).to.be.revertedWith("SlippageTooHigh");
+		await expect(leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 9999)).to.be.revertedWith(
+			'SlippageTooHigh'
+		);
 	});
 
 	it('zap weth with borrow fails with high slippage', async () => {
-		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy =
+			await setupTest();
 
 		await leverager.setFeePercent(FEE_LOOPING);
 
@@ -350,7 +358,9 @@ describe('Looping/Leverager', () => {
 		});
 
 		let amt = ethers.utils.parseEther('10');
-		await expect(leverager.connect(user2).zapWETHWithBorrow(amt, user2.address, 9999)).to.be.revertedWith("SlippageTooHigh");
+		await expect(leverager.connect(user2).zapWETHWithBorrow(amt, user2.address, 9999)).to.be.revertedWith(
+			'SlippageTooHigh'
+		);
 	});
 
 	it('fail when loopCount is 0', async () => {

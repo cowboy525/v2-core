@@ -56,10 +56,7 @@ let func = step.setFunction(async function () {
 	await execute('MFD', 'addRewardConverter', compounder.address);
 
 	let {tickers} = await parseReserveTokens();
-	let aTokens = tickers.map((ticker: any) => ticker.deposit);
 	let underlying = tickers.map((ticker: any) => ticker.addr);
-
-	await execute('Compounder', 'addRewardBaseTokens', aTokens);
 
 	for (let i = 0; i < underlying.length; i++) {
 		const u = underlying[i];

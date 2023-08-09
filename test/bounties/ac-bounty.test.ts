@@ -251,17 +251,6 @@ describe(`AutoCompound:`, async () => {
 	it('Add USDC as Reward and Not Stuck in Compounder', async () => {
 		const amount = BigNumber.from('10000000');
 		await middleFeeDistribution.addReward(usdc.address);
-		const rewardBaseTokens = [];
-		for (let i = 0; ; i++) {
-			try {
-				const token = await compounder.rewardBaseTokens(i);
-				rewardBaseTokens.push(token);
-			} catch (e) {
-				break;
-			}
-		}
-		rewardBaseTokens.push(usdc.address);
-		await compounder.addRewardBaseTokens(rewardBaseTokens);
 		await usdc.mint(multiFeeDistribution.address, amount);
 		await generatePlatformRevenue(1 * HOUR);
 

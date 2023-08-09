@@ -32,9 +32,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/********************** Events ***********************/
 
-	/// @notice Emitted when reward base tokens are updated
-	event RewardBaseTokensUpdated(address[] _tokens);
-
 	/// @notice Emitted when routes are updated
 	event RoutesUpdated(address _token, address[] _routes);
 
@@ -91,7 +88,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Price provider contract address
 	address public priceProvider;
 
-	/// @notice Reward tokens
+	/// @notice Reward tokens (not being used anymore but kept to preserve storage layout)
 	address[] public rewardBaseTokens;
 
 	/// @notice Swap route WETH -> RDNT
@@ -176,15 +173,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	}
 
 	/**
-	 * @notice Add reward base tokens
-	 * @param _tokens Array of token addresses
-	 */
-	function addRewardBaseTokens(address[] memory _tokens) external onlyOwner {
-		rewardBaseTokens = _tokens;
-		emit RewardBaseTokensUpdated(_tokens);
-	}
-
-	/**
 	 * @notice Set swap routes
 	 * @param _token Token for swap
 	 * @param _routes Swap route for token
@@ -227,27 +215,28 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 
 	/**
 	 * @notice Claim and swap them into base token.
-	 * @param _user User for claim
+	 * @param _user User whose rewards are compounded into dLP
+	 * @param tokens Tokens to claim and turn into dLP
+	 * @param amts Amounts of each token to be claimed and turned into dLP
 	 * @return Total base token amount
 	 */
-	function _claimAndSwapToBase(address _user) internal returns (uint256) {
+	function _claimAndSwapToBase(address _user, address[] memory tokens, uint256[] memory amts) internal returns (uint256) {
 		IMultiFeeDistribution mfd = IMultiFeeDistribution(multiFeeDistribution);
 		mfd.claimFromConverter(_user);
 		ILendingPool lendingPool = ILendingPool(ILendingPoolAddressesProvider(addressProvider).getLendingPool());
 
-		uint256 length = rewardBaseTokens.length;
+		uint256 length = tokens.length;
 		for (uint256 i; i < length; i++) {
-			uint256 balance = IERC20(rewardBaseTokens[i]).balanceOf(address(this));
+			uint256 balance = amts[i];
 			if (balance == 0) {
 				continue;
 			}
-			address tokenToTrade;
+
+			address tokenToTrade = tokens[i];
 			uint256 amount;
-			try IAToken(rewardBaseTokens[i]).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
-				tokenToTrade = underlyingAddress;
-				amount = lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this));
+			try lendingPool.withdraw(tokenToTrade, type(uint256).max, address(this)) returns (uint256 withdrawnAmt) {
+				amount = withdrawnAmt;
 			} catch {
-				tokenToTrade = rewardBaseTokens[i];
 				amount = balance;
 			}
 
@@ -329,7 +318,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 			}
 		}
 
-		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user);
+		uint256 actualWethAfterSwap = _claimAndSwapToBase(_user, tokens, amts);
 		if ((PERCENT_DIVISOR * actualWethAfterSwap) / noSlippagePendingEth < userSlippageLimit)
 			revert InvalidSlippage();
 
