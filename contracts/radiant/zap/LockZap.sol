@@ -307,6 +307,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 
 	/**
 	 * @notice Zap into LP
+	 * @param _wethAlreadyGained whether the LockZap contract has already attained the necessary ETH for a Zap
 	 * @param _borrow option to borrow ETH
 	 * @param _wethAmt amount of weth.
 	 * @param _rdntAmt amount of RDNT.
