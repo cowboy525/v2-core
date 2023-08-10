@@ -167,15 +167,17 @@ describe('Non-Elig CIC', () => {
 				method: 'hardhat_impersonateAccount',
 				params: [chefIncentivesController.address],
 			});
-			const cicSigner =  await ethers.getSigner(chefIncentivesController.address);
+			const cicSigner = await ethers.getSigner(chefIncentivesController.address);
 			transferAmount = await rdntToken.balanceOf(chefIncentivesController.address);
-			await rdntToken.connect(cicSigner).transfer(user1.address,transferAmount);
+			await rdntToken.connect(cicSigner).transfer(user1.address, transferAmount);
 			await advanceTimeAndBlock(100);
-			await expect(chefIncentivesController.connect(user1).claimAll(user1.address)).to.be.revertedWith('OutOfRewards');
+			await expect(chefIncentivesController.connect(user1).claimAll(user1.address)).to.be.revertedWith(
+				'OutOfRewards'
+			);
 		});
 
 		it('CIC continues when rewards filled up', async () => {
-			await rdntToken.connect(user1).transfer(chefIncentivesController.address,transferAmount);
+			await rdntToken.connect(user1).transfer(chefIncentivesController.address, transferAmount);
 			await chefIncentivesController.connect(user1).claimAll(user1.address);
 		});
 	});
@@ -269,8 +271,9 @@ describe('Non-Elig CIC', () => {
 		});
 
 		it('claim for middlefeedistribution', async () => {
-			await expect(chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)).to
-				.be.revertedWith('NothingToMint');
+			await expect(
+				chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)
+			).to.be.revertedWith('NothingToMint');
 		});
 
 		it('should claim rewards', async () => {
@@ -304,7 +307,6 @@ describe('Non-Elig CIC', () => {
 	});
 
 	describe('ChefIncentivesController Rewards Schedule and Manual Setting RPS.', () => {
-
 		it('setEmissionSchedule before start', async () => {
 			const chefFactory = await ethers.getContractFactory('ChefIncentivesController');
 			const chef = await upgrades.deployProxy(
@@ -341,8 +343,12 @@ describe('Non-Elig CIC', () => {
 			const cicStartTimeOffSets1 = [100, 100, 1000];
 			const cicStartTimeOffSets2 = [100, 1000, 1000];
 			const cicRewardsPerSecond = [100, 200, 300];
-			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets1, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
-			await expect(chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets2, cicRewardsPerSecond)).to.be.revertedWith("DuplicateSchedule");
+			await expect(
+				chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets1, cicRewardsPerSecond)
+			).to.be.revertedWith('DuplicateSchedule');
+			await expect(
+				chef.connect(deployer).setEmissionSchedule(cicStartTimeOffSets2, cicRewardsPerSecond)
+			).to.be.revertedWith('DuplicateSchedule');
 		});
 
 		it('manually set rewards', async () => {

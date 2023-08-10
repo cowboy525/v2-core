@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.12;
 
 import "../libraries/SafeMath.sol";
@@ -20,7 +21,7 @@ contract DeflatingERC20 {
 	event Approval(address indexed owner, address indexed spender, uint value);
 	event Transfer(address indexed from, address indexed to, uint value);
 
-	constructor(uint _totalSupply) public {
+	constructor(uint _totalSupply) {
 		uint chainId;
 		assembly {
 			chainId := chainid()

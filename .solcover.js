@@ -13,6 +13,7 @@ module.exports = {
 		'lock/',
 		'staking/MerkleDistributor.sol',
 		'uniswap/',
+		'lending',
 	],
 	// solcOptimizerDetails: {
 	//     peephole: false,

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {ILendingPool} from "../../interfaces/ILendingPool.sol";
@@ -14,7 +13,6 @@ import {LockedBalance, Balances} from "../../interfaces/LockedBalance.sol";
 /// @title Eligible Deposit Provider
 /// @author Radiant Labs
 contract EligibilityDataProvider is OwnableUpgradeable {
-
 	/********************** Common Info ***********************/
 
 	/// @notice RATIO BASE equal to 100%
@@ -150,7 +148,8 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 * @param _priceToleranceRatio Ratio in bips.
 	 */
 	function setPriceToleranceRatio(uint256 _priceToleranceRatio) external onlyOwner {
-		if (_priceToleranceRatio < MIN_PRICE_TOLERANCE_RATIO || _priceToleranceRatio > RATIO_DIVISOR) revert InvalidRatio();
+		if (_priceToleranceRatio < MIN_PRICE_TOLERANCE_RATIO || _priceToleranceRatio > RATIO_DIVISOR)
+			revert InvalidRatio();
 		priceToleranceRatio = _priceToleranceRatio;
 
 		emit PriceToleranceRatioUpdated(_priceToleranceRatio);
@@ -190,7 +189,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function requiredUsdValue(address user) public view returns (uint256 required) {
 		(uint256 totalCollateralUSD, , , , , ) = lendingPool.getUserAccountData(user);
-		required = totalCollateralUSD * requiredDepositRatio / RATIO_DIVISOR;
+		required = (totalCollateralUSD * requiredDepositRatio) / RATIO_DIVISOR;
 	}
 
 	/**
@@ -199,7 +198,7 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function isEligibleForRewards(address _user) public view returns (bool) {
 		uint256 lockedValue = lockedUsdValue(_user);
-		uint256 requiredValue = requiredUsdValue(_user) * priceToleranceRatio / RATIO_DIVISOR;
+		uint256 requiredValue = (requiredUsdValue(_user) * priceToleranceRatio) / RATIO_DIVISOR;
 		return requiredValue != 0 && lockedValue >= requiredValue;
 	}
 
@@ -277,6 +276,6 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 	 */
 	function _lockedUsdValue(uint256 lockedLP) internal view returns (uint256) {
 		uint256 lpPrice = priceProvider.getLpTokenPriceUsd();
-		return lockedLP * lpPrice / 10 ** 18;
+		return (lockedLP * lpPrice) / 10 ** 18;
 	}
 }

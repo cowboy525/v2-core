@@ -123,6 +123,15 @@ describe('Zapper', function () {
 		expect((await mfd.lockedBalances(user2.address)).locked).to.be.gt(BigNumber.from(0));
 	});
 
+	it('zap fails with high slippage', async function () {
+		await expect(lockZap.connect(user2).zap(false, 0, 0, 0, 9999, {
+			value: ethers.utils.parseEther('1'),
+		})).to.be.revertedWith("SlippageTooHigh");
+		await expect(lockZap.connect(user2).zapOnBehalf(false, 0, 0, user2.address, 9999, {
+			value: ethers.utils.parseEther('1'),
+		})).to.be.revertedWith("SlippageTooHigh");
+	});
+
 	it('can zap from Vesting', async function () {
 		await lockZap.connect(user2).zap(false, 0, 0, 0, 0, {
 			value: ethers.utils.parseEther('1'),
@@ -248,6 +257,39 @@ describe('Zapper', function () {
 		// console.log(await lendingPool.getUserAccountData(user4.address));
 	});
 
+	it('zap from Vesting fails with high slippage', async function () {
+		await lockZap.setPriceProvider(priceProvider.address);
+
+		// Become eligilble for rewards;
+		await lockZap.connect(user4).zap(false, 0, 0, 0, 0, {
+			value: wethPerAccount,
+		});
+
+		await WETH.connect(user4).deposit({
+			value: wethPerAccount,
+		});
+
+		await WETH.connect(user4).approve(lockZap.address, ethers.constants.MaxUint256);
+
+		await WETH.connect(user4).approve(lendingPool.address, ethers.constants.MaxUint256);
+
+		const debtTokenAddress = await lockZap.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', debtTokenAddress);
+		await vdWETH.connect(user4).approveDelegation(lockZap.address, ethers.constants.MaxUint256);
+
+		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
+
+		await advanceTimeAndBlock(100000);
+
+		await chefIncentivesController.claim(user4.address, [rWETHAddress]);
+
+		await lendingPool.connect(user4).borrow(wethAddress, depositAmtWeth.mul(4), 2, 0, user4.address);
+
+		await lendingPool.connect(user4).deposit(wethAddress, depositAmtWeth.mul(5), user4.address, 0);
+
+		await expect(lockZap.connect(user4).zapFromVesting(true, 0, 10000)).to.be.revertedWith("SlippageTooHigh");
+	});
+
 	it('can early exit after zapping vesting w/ borrow', async function () {
 		await WETH.connect(user4).deposit({
 			value: wethPerAccount,
@@ -367,6 +409,13 @@ describe('Zapper', function () {
 			expect(lpValueGained).to.be.gt(minAcceptedLpValue);
 		});
 
+		it('Zap fails with high slippage', async () => {
+			await lockZap.setPriceProvider(priceProvider.address);
+			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
+			await USDC.approve(lockZap.address, zapAmount);
+			await expect(lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 9999)).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+		});
+
 		it('slippage limits are not breached', async () => {
 			const reserves = await poolHelper.getReserves();
 			const lpTokens = reserves.lpTokenSupply;
@@ -390,13 +439,37 @@ describe('Zapper', function () {
 
 			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
 		});
+
+		it('Quote works', async () => {
+			await lockZap.setPriceProvider(priceProvider.address);
+			const minAcceptedRatio = 9500;
+			const bpsUnit = 10_000;
+			const zapAmount = ethers.BigNumber.from(100);
+			const lpAmountWanted = zapAmount
+			.mul(10 ** 12)
+			.mul(minAcceptedRatio)
+			.div(bpsUnit);
+
+			const quotedZapAmount = await lockZap.quoteAlternateAsset(usdcAddress, lpAmountWanted, 0);
+
+			await USDC.approve(lockZap.address, quotedZapAmount);
+			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
+			await lockZap.zapAlternateAsset(usdcAddress, quotedZapAmount, 0, 0);
+			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
+			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
+
+			const lpTokenPriceUsd = await priceProvider.getLpTokenPriceUsd();
+			const lpValueGained = lockedLpBalanceGained.mul(lpTokenPriceUsd).div(10 ** 8);
+
+			expect(lpValueGained).to.be.gt(lpAmountWanted);
+		});
 	});
 
-	it("Locked ETH in lockZap contract", async () => {
-		const depositAmount = ethers.utils.parseEther("1");
+	it('Locked ETH in lockZap contract', async () => {
+		const depositAmount = ethers.utils.parseEther('1');
 		await deployer.sendTransaction({
 			to: lockZap.address,
-			value: depositAmount
+			value: depositAmount,
 		});
 
 		const user2Eth0 = await user2.getBalance();

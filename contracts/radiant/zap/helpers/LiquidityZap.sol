@@ -72,8 +72,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	address public poolHelper;
 
 	constructor() {
-			_disableInitializers();
-		}
+		_disableInitializers();
+	}
 
 	/// @notice Acceptable ratio
 	uint256 public acceptableRatio;
@@ -98,7 +98,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @param tokenWethPair_ LP pair
 	 * @param helper_ Pool helper contract
 	 */
-	function initLiquidityZap(address token_, address weth_, address tokenWethPair_, address helper_) external onlyOwner {
+	function initLiquidityZap(
+		address token_,
+		address weth_,
+		address tokenWethPair_,
+		address helper_
+	) external onlyOwner {
 		if (initializedLiquidityZap) revert ZapExists();
 		token = token_;
 		weth = IWETH(weth_);
@@ -108,6 +113,12 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	fallback() external payable {
+		if (msg.sender != address(weth)) {
+			addLiquidityETHOnly(payable(msg.sender));
+		}
+	}
+
+	receive() external payable {
 		if (msg.sender != address(weth)) {
 			addLiquidityETHOnly(payable(msg.sender));
 		}
@@ -286,7 +297,7 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 		(uint256 _reserve0, uint256 _reserve1) = token0 == token
 			? (reserveTokens, reserveWeth)
 			: (reserveWeth, reserveTokens);
-		liquidity = Math.min(amount0 * _totalSupply / _reserve0, amount1 * _totalSupply / _reserve1);
+		liquidity = Math.min((amount0 * _totalSupply) / _reserve0, (amount1 * _totalSupply) / _reserve1);
 	}
 
 	/**
@@ -307,8 +318,8 @@ contract LiquidityZap is Initializable, OwnableUpgradeable, DustRefunder {
 	 */
 	function _calcSlippage(uint256 _ethAmt, uint256 _tokens) internal returns (uint256 ratio) {
 		priceProvider.update();
-		uint256 tokenAmtEth = _tokens * priceProvider.getTokenPrice() * 1e18 / (10 ** priceProvider.decimals()); // price decimal is 8
-		ratio = tokenAmtEth * RATIO_DIVISOR / _ethAmt;
+		uint256 tokenAmtEth = (_tokens * priceProvider.getTokenPrice() * 1e18) / (10 ** priceProvider.decimals()); // price decimal is 8
+		ratio = (tokenAmtEth * RATIO_DIVISOR) / _ethAmt;
 		ratio = ratio / 1E18;
 	}
 }

@@ -115,12 +115,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 	 * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
 	 *   0 if the action is executed directly by the user, without any middle-man
 	 **/
-	function deposit(
-		address asset,
-		uint256 amount,
-		address onBehalfOf,
-		uint16 referralCode
-	) public whenNotPaused {
+	function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) public whenNotPaused {
 		DataTypes.ReserveData storage reserve = _reserves[asset];
 
 		ValidationLogic.validateDeposit(reserve, amount);
@@ -444,14 +439,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 		(bool success, bytes memory result) = collateralManager.delegatecall(
 			abi.encodeCall(
 				ILendingPoolCollateralManager.liquidationCall,
-				(
-					collateralAsset,
-					debtAsset,
-					user,
-					debtToCover,
-					receiveAToken,
-					liquidationFeeTo
-				)
+				(collateralAsset, debtAsset, user, debtToCover, receiveAToken, liquidationFeeTo)
 			)
 		);
 

@@ -67,10 +67,9 @@ contract ChainlinkV3Adapter is IBaseOracle, AggregatorV3Interface, OwnableUpgrad
 	}
 
 	/**
-	* @dev this function only exists so that the contract is compatible with the IBaseOracle Interface
-	*/
-	function update() public {
-	}
+	 * @dev this function only exists so that the contract is compatible with the IBaseOracle Interface
+	 */
+	function update() public {}
 
 	/**
 	 * @notice Returns current price.

@@ -120,6 +120,29 @@ describe('Looping/Leverager', () => {
 		expect(await usdc.balanceOf(treasuryAddress)).to.equal(totalFees);
 	});
 
+	it('Reverts if slippage too high', async () => {
+		const {leverager, wethGateway, lendingPool, user2, usdc}: FixtureDeploy = await setupTest();
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+
+		await vdUSDC.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
+			value: ethers.utils.parseEther('1000'),
+		});
+
+		await usdc.connect(user2).mint(user2.address, usdcPerAccount);
+		await usdc.connect(user2).approve(leverager.address, ethers.constants.MaxUint256);
+
+		let borrowRatio = 8000;
+		let amt = usdcPerAccount;
+		let loops = 1;
+		await expect(leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 9999)).to.be.revertedWith("SlippageTooHigh");
+	});
+
 	it('autoZap while looping', async () => {
 		const {
 			leverager,
@@ -242,8 +265,24 @@ describe('Looping/Leverager', () => {
 		expect(tresuryEth1.sub(treasuryEth0)).to.equal(totalFees);
 	});
 
+	it('loop ETH reverts with high slippage', async () => {
+		const {leverager, user2}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		let borrowRatio = 8000;
+		let amt = ethers.utils.parseEther('1');
+		let loops = 2;
+		await expect(leverager.connect(user2).loopETH(2, borrowRatio, loops, 9999, {value: amt})).to.be.revertedWith("SlippageTooHigh");
+	});
+
 	it('Eligibility Exempt is Temporary', async () => {
-		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy =
+			await setupTest();
 
 		await leverager.setFeePercent(FEE_LOOPING);
 
@@ -270,6 +309,48 @@ describe('Looping/Leverager', () => {
 		await leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 0);
 
 		expect(await chefIncentivesController.eligibilityExempt(user2.address)).to.equal(isEligibleExempt);
+	});
+
+	it('loop eth from borrow fails with high slippage', async () => {
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+
+		await vdUSDC.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
+			value: ethers.utils.parseEther('1000'),
+		});
+
+		let borrowRatio = 8000;
+		let amt = usdcPerAccount;
+		let loops = 1;
+		await expect(leverager.connect(user2).loopETHFromBorrow(2, amt, borrowRatio, loops, 9999)).to.be.revertedWith("SlippageTooHigh");
+	});
+
+	it('zap weth with borrow fails with high slippage', async () => {
+		const {leverager, wethGateway, lendingPool, user2, usdc, chefIncentivesController}: FixtureDeploy = await setupTest();
+
+		await leverager.setFeePercent(FEE_LOOPING);
+
+		let vdWETHAddress = await leverager.getVDebtToken(wethAddress);
+		vdWETH = <VariableDebtToken>await ethers.getContractAt('VariableDebtToken', vdWETHAddress);
+
+		await vdUSDC.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await vdWETH.connect(user2).approveDelegation(leverager.address, ethers.constants.MaxUint256);
+
+		await wethGateway.connect(user2).depositETH(lendingPool.address, user2.address, 0, {
+			value: ethers.utils.parseEther('1000'),
+		});
+
+		let amt = ethers.utils.parseEther('10');
+		await expect(leverager.connect(user2).zapWETHWithBorrow(amt, user2.address, 9999)).to.be.revertedWith("SlippageTooHigh");
 	});
 
 	it('fail when loopCount is 0', async () => {

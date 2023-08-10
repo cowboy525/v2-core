@@ -252,3 +252,30 @@ interface IVault {
 
 	function setPaused(bool paused) external;
 }
+
+interface IBalancerQueries {
+    function querySwap(IVault.SingleSwap memory singleSwap, IVault.FundManagement memory funds)
+        external
+        returns (uint256);
+
+    function queryBatchSwap(
+        IVault.SwapKind kind,
+        IVault.BatchSwapStep[] memory swaps,
+        IAsset[] memory assets,
+        IVault.FundManagement memory funds
+    ) external returns (int256[] memory assetDeltas);
+
+    function queryJoin(
+        bytes32 poolId,
+        address sender,
+        address recipient,
+        IVault.JoinPoolRequest memory request
+    ) external returns (uint256 bptOut, uint256[] memory amountsIn);
+
+    function queryExit(
+        bytes32 poolId,
+        address sender,
+        address recipient,
+        IVault.ExitPoolRequest memory request
+    ) external returns (uint256 bptIn, uint256[] memory amountsOut);
+}

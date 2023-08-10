@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.12;
 
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IPoolHelper {
@@ -14,11 +13,15 @@ interface IPoolHelper {
 
 	function quoteFromToken(uint256 tokenAmount) external view returns (uint256 optimalWETHAmount);
 
+	function quoteWETH(uint256 lpAmount) external view returns (uint256 wethAmount);
+
 	function getLpPrice(uint256 rdntPriceInEth) external view returns (uint256 priceInEth);
 
 	function getReserves() external view returns (uint256 rdnt, uint256 weth, uint256 lpTokenSupply);
 
 	function getPrice() external view returns (uint256 priceInEth);
+
+	function quoteSwap(address _inToken, uint256 _wethAmount) external view returns (uint256 tokenAmount);
 
 	function swapToWeth(address _inToken, uint256 _amount, uint256 _minAmountOut) external;
 }

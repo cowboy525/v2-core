@@ -24,8 +24,8 @@ contract WSTETHOracle is OwnableUpgradeable {
 	 * @param _stEthPerWstETHOracle wstETHRatio feed
 	 */
 	function initialize(address _stETHUSDOracle, address _stEthPerWstETHOracle) public initializer {
-		if(_stETHUSDOracle == address(0)) revert AddressZero();
-		if(_stEthPerWstETHOracle == address(0)) revert AddressZero();
+		if (_stETHUSDOracle == address(0)) revert AddressZero();
+		if (_stEthPerWstETHOracle == address(0)) revert AddressZero();
 
 		stETHUSDOracle = AggregatorV3Interface(_stETHUSDOracle); //8 decimals
 		stEthPerWstETHOracle = AggregatorV3Interface(_stEthPerWstETHOracle); //18 decimals
@@ -78,5 +78,4 @@ contract WSTETHOracle is OwnableUpgradeable {
 	function version() external pure returns (uint256) {
 		return 1;
 	}
-
 }

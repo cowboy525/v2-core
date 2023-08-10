@@ -3,8 +3,11 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {upgrades} from 'hardhat';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+	upgrades.silenceWarnings();
+
 	const {deployments, network} = hre;
 	const {read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
@@ -48,6 +51,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 			deposit: aTokenAddress,
 		});
 	}
+
+	const allTokenAddrsPromises = config.TOKENS_CONFIG.map(async (token) => {
+		let tokenAddress;
+		let key = token[0];
+
+		if (network.tags.mocks) {
+			tokenAddress = (await deployments.get(key)).address;
+		} else {
+			tokenAddress = token[1].assetAddress;
+		}
+
+		allTokens[key] = tokenAddress;
+		return tokenAddress;
+	});
+
+	const mockTokenAddrs = await Promise.all(allTokenAddrsPromises);
+	mockTokenAddrs.forEach((addr) => allTokenAddrs.push(addr));
 
 	let v1;
 	if (!!config.RADIANT_V1 && config.RADIANT_V1 === '0x0000000000000000000000000000000000000000') {

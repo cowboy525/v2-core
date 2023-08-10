@@ -81,12 +81,7 @@ contract WETHGateway is IWETHGateway, Ownable {
 	 * @param rateMode the rate mode to repay
 	 * @param onBehalfOf the address for which msg.sender is repaying
 	 */
-	function repayETH(
-		address lendingPool,
-		uint256 amount,
-		uint256 rateMode,
-		address onBehalfOf
-	) external payable {
+	function repayETH(address lendingPool, uint256 amount, uint256 rateMode, address onBehalfOf) external payable {
 		(uint256 stableDebt, uint256 variableDebt) = Helpers.getUserCurrentDebtMemory(
 			onBehalfOf,
 			ILendingPool(lendingPool).getReserveData(address(WETH))
@@ -114,12 +109,7 @@ contract WETHGateway is IWETHGateway, Ownable {
 	 * @param interesRateMode the interest rate mode
 	 * @param referralCode integrators are assigned a referral code and can potentially receive rewards
 	 */
-	function borrowETH(
-		address lendingPool,
-		uint256 amount,
-		uint256 interesRateMode,
-		uint16 referralCode
-	) external {
+	function borrowETH(address lendingPool, uint256 amount, uint256 interesRateMode, uint16 referralCode) external {
 		ILendingPool(lendingPool).borrow(address(WETH), amount, interesRateMode, referralCode, msg.sender);
 		WETH.withdraw(amount);
 		_safeTransferETH(msg.sender, amount);

@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.12;
 
-
 import "../radiant/staking/ChefIncentivesController.sol";
 import "../interfaces/IOnwardIncentivesController.sol";
 

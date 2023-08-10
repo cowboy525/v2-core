@@ -14,6 +14,9 @@ import 'hardhat-deploy-tenderly';
 import './tasks';
 import '@nomiclabs/hardhat-web3';
 import {generateCompilerOverrides} from './utils/compilerOverrides';
+import 'hardhat-ignore-warnings';
+
+let optimizerRuns = parseInt(process.env.OPTIMIZER_RUNS || '1000');
 
 const config: HardhatUserConfig = {
 	namedAccounts: {
@@ -38,24 +41,24 @@ const config: HardhatUserConfig = {
 	},
 	networks: {
 		hardhat: {
-			initialBaseFeePerGas: 0,
+			// chainId: 1,
 			allowUnlimitedContractSize: false,
-			gasPrice: 0,
 			autoImpersonate: true,
+			initialBaseFeePerGas: 0,
+			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			// Had to comment this out to get The Graph to almost work, but I think it is necessary
-			// forking: {
-			// 	url: node_url('arbitrum'),
-			// 	blockNumber: 81749742,
-			// },
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
 		},
 		localhost: {
 			url: node_url('localhost'),
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			tags: ['mocks', 'testing', 'oracle_v2', 'post_assets'],
+			forking: {
+				url: node_url('arbitrum'),
+				blockNumber: 81749742,
+			},
+			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {
 			url: node_url('arbitrum_goerli'),
@@ -85,11 +88,15 @@ const config: HardhatUserConfig = {
 			},
 			tags: ['post_assets', 'oracle_cl'],
 		},
-		production: {
-			url: node_url('mainnet'),
-			accounts: accounts('mainnet'),
-		},
 		mainnet: {
+			chainId: 1,
+			// url: node_url('mainnet'),
+			url: node_url('localhost'),
+			// accounts: [process.env.PRIVATE_KEY || ''],
+			accounts: accounts(),
+			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
+		},
+		production: {
 			url: node_url('mainnet'),
 			accounts: accounts('mainnet'),
 		},
@@ -113,7 +120,7 @@ const config: HardhatUserConfig = {
 				settings: {
 					optimizer: {
 						enabled: true,
-						runs: parseInt(process.env.OPTIMIZER_RUNS || '1000'),
+						runs: optimizerRuns,
 						details: {
 							yul: true,
 						},
@@ -139,7 +146,7 @@ const config: HardhatUserConfig = {
 	},
 	mocha: {
 		timeout: 1000000,
-		// bail: true,
+		bail: true,
 	},
 	external: process.env.HARDHAT_FORK
 		? {
@@ -160,7 +167,24 @@ const config: HardhatUserConfig = {
 		apiKey: process.env.DEFENDER_API_KEY || '',
 		apiSecret: process.env.DEFENDER_API_SECRET || '',
 	},
-};
+	warnings: {
+		'contracts/dependencies/math/**/*': {
+			default: 'off',
+		},
+		'contracts/dependencies/uniswap/contracts/**/*': {
+			default: 'off',
+		},
+		'contracts/dependencies/openzeppelin/**/*': {
+			default: 'off',
+		},
+		'contracts/lending/**/*': {
+			default: 'off',
+		},
+		'@uniswap/v2-core/contracts/**/*': {
+			default: 'off',
+		},
+	},
+}
 
 if (process.env.IS_CI === 'true') {
 	if (config && config !== undefined) {
@@ -172,5 +196,4 @@ if (process.env.IS_CI === 'true') {
 		}
 	}
 }
-
 export default config;

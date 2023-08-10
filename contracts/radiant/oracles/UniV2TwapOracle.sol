@@ -66,7 +66,7 @@ contract UniV2TwapOracle is BaseOracle {
 	event ConsultLeniencyUpdated(uint256 indexed _consultLeniency);
 
 	event AllowStaleConsultsUpdated(bool indexed _allowStaleConsults);
-	
+
 	constructor() {
 		_disableInitializers();
 	}

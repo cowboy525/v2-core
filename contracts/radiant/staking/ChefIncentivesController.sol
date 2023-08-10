@@ -360,9 +360,9 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _startTimeOffset time offset
 	 * @return true if the specified time offset is already registered
 	 */
-	function _checkDuplicateSchedule (uint256 _startTimeOffset) internal returns(bool) {
+	function _checkDuplicateSchedule(uint256 _startTimeOffset) internal view returns (bool) {
 		for (uint256 i = 0; i < emissionSchedule.length; i++) {
-			if(emissionSchedule[i].startTimeOffset == _startTimeOffset) {
+			if (emissionSchedule[i].startTimeOffset == _startTimeOffset) {
 				return true;
 			}
 		}
@@ -486,7 +486,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 				(, uint256 newAccRewardPerShare) = _newRewards(pool, totalAllocPoint);
 				accRewardPerShare = accRewardPerShare + newAccRewardPerShare;
 			}
-			claimable[i] = user.amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
+			claimable[i] = (user.amount * accRewardPerShare) / ACC_REWARD_PRECISION - user.rewardDebt;
 			unchecked {
 				i++;
 			}
@@ -516,7 +516,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (pool.lastRewardTime == 0) revert UnknownPool();
 			_updatePool(pool, _totalAllocPoint);
 			UserInfo storage user = userInfo[_tokens[i]][_user];
-			uint256 rewardDebt = user.amount * pool.accRewardPerShare / ACC_REWARD_PRECISION;
+			uint256 rewardDebt = (user.amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION;
 			pending = pending + rewardDebt - user.rewardDebt;
 			user.rewardDebt = rewardDebt;
 			user.lastClaimTime = block.timestamp;
@@ -610,7 +610,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	) internal {
 		PoolInfo storage pool = poolInfo[_token];
 		if (pool.lastRewardTime == 0) revert UnknownPool();
-		// Although we would want the pools to be as up to date as possible when users 
+		// Although we would want the pools to be as up to date as possible when users
 		// transfer rTokens or dTokens, updating all pools on every r-/d-Token interaction would be too gas intensive.
 		// _updateEmissions();
 		_updatePool(pool, totalAllocPoint);
@@ -618,14 +618,14 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 amount = user.amount;
 		uint256 accRewardPerShare = pool.accRewardPerShare;
 		if (amount != 0) {
-			uint256 pending = amount * accRewardPerShare / ACC_REWARD_PRECISION - user.rewardDebt;
+			uint256 pending = (amount * accRewardPerShare) / ACC_REWARD_PRECISION - user.rewardDebt;
 			if (pending != 0) {
 				userBaseClaimable[_user] = userBaseClaimable[_user] + pending;
 			}
 		}
 		pool.totalSupply = pool.totalSupply - user.amount;
 		user.amount = _balance;
-		user.rewardDebt = _balance * accRewardPerShare / ACC_REWARD_PRECISION;
+		user.rewardDebt = (_balance * accRewardPerShare) / ACC_REWARD_PRECISION;
 		pool.totalSupply = pool.totalSupply + _balance;
 		if (pool.onwardIncentives != IOnwardIncentivesController(address(0))) {
 			pool.onwardIncentives.handleAction(_token, _user, _balance, _totalSupply);
@@ -907,7 +907,10 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param pool pool info
 	 * @param _totalAllocPoint allocation point of the pool
 	 */
-	function _newRewards(PoolInfo memory pool, uint256 _totalAllocPoint) internal view returns (uint256 newReward, uint256 newAccRewardPerShare) {
+	function _newRewards(
+		PoolInfo memory pool,
+		uint256 _totalAllocPoint
+	) internal view returns (uint256 newReward, uint256 newAccRewardPerShare) {
 		uint256 lpSupply = pool.totalSupply;
 		if (lpSupply > 0) {
 			uint256 duration = block.timestamp - pool.lastRewardTime;
@@ -917,8 +920,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			if (rewards < rawReward) {
 				rawReward = rewards;
 			}
-			newReward = rawReward * pool.allocPoint / _totalAllocPoint;
-			newAccRewardPerShare = newReward * ACC_REWARD_PRECISION / lpSupply;
+			newReward = (rawReward * pool.allocPoint) / _totalAllocPoint;
+			newAccRewardPerShare = (newReward * ACC_REWARD_PRECISION) / lpSupply;
 		}
 	}
 }

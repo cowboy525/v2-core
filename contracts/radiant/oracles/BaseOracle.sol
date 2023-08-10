@@ -76,7 +76,7 @@ abstract contract BaseOracle is Initializable, OwnableUpgradeable {
 		// returns decimals 8
 		uint256 ethPrice = uint256(IChainlinkAggregator(ethChainlinkFeed).latestAnswer());
 
-		price = priceInEth * ethPrice / (10 ** 8);
+		price = (priceInEth * ethPrice) / (10 ** 8);
 	}
 
 	/**

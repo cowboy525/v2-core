@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -79,7 +78,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @dev Throws if called by any account other than the admin or owner.
 	 */
 	modifier onlyAdminOrOwner() {
-		if(admin != _msgSender() && owner() != _msgSender()) revert InsufficientPermission();
+		if (admin != _msgSender() && owner() != _msgSender()) revert InsufficientPermission();
 		_;
 	}
 
@@ -166,7 +165,7 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	/**
 	 * @notice Remove an existing reward token
 	 */
-	function removeReward(address _rewardsToken) external override onlyAdminOrOwner {
+	function removeReward(address _rewardsToken) external onlyAdminOrOwner {
 		if (_rewardsToken == address(0)) revert ZeroAddress();
 		multiFeeDistribution.removeReward(_rewardsToken);
 		isRewardToken[_rewardsToken] = false;
@@ -181,12 +180,12 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 		if (msg.sender != address(multiFeeDistribution)) revert NotMFD();
 
 		uint256 length = _rewardTokens.length;
-		for (uint256 i = 0; i < length;) {
+		for (uint256 i = 0; i < length; ) {
 			address rewardToken = _rewardTokens[i];
 			uint256 total = IERC20(rewardToken).balanceOf(address(this));
 
 			if (operationExpenses != address(0) && operationExpenseRatio != 0) {
-				uint256 opExAmount = total * operationExpenseRatio / RATIO_DIVISOR;
+				uint256 opExAmount = (total * operationExpenseRatio) / RATIO_DIVISOR;
 				if (opExAmount != 0) {
 					IERC20(rewardToken).safeTransfer(operationExpenses, opExAmount);
 				}
@@ -237,17 +236,13 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(underlyingAddress);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
-					10 ** assetDecimals
-				);
+				lpUsdValue = (assetPrice * lpReward * (10 ** DECIMALS)) / (10 ** priceDecimal) / (10 ** assetDecimals);
 			} catch {
 				uint256 assetPrice = IAaveOracle(_aaveOracle).getAssetPrice(asset);
 				address sourceOfAsset = IAaveOracle(_aaveOracle).getSourceOfAsset(asset);
 				uint8 priceDecimal = IChainlinkAggregator(sourceOfAsset).decimals();
 				uint8 assetDecimals = IERC20Metadata(asset).decimals();
-				lpUsdValue = assetPrice * lpReward * (10 ** DECIMALS) / (10 ** priceDecimal) / (
-					10 ** assetDecimals
-				);
+				lpUsdValue = (assetPrice * lpReward * (10 ** DECIMALS)) / (10 ** priceDecimal) / (10 ** assetDecimals);
 			}
 			emit NewTransferAdded(asset, lpUsdValue);
 		}

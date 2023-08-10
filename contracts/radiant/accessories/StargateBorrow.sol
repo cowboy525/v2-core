@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -182,7 +181,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
 		uint256 length = assets.length;
 		if (length != poolIDs.length) revert LengthMismatch();
-		for (uint256 i = 0; i < length;) {
+		for (uint256 i = 0; i < length; ) {
 			poolIdPerChain[assets[i]] = poolIDs[i];
 			unchecked {
 				i++;
@@ -244,7 +243,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		} else {
 			lendingPool.borrow(asset, amount, interestRateMode, REFERRAL_CODE, msg.sender);
 			uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-			if(feeAmount > 0) {
+			if (feeAmount > 0) {
 				IERC20(asset).safeTransfer(daoTreasury, feeAmount);
 				amount = amount - feeAmount;
 			}
@@ -273,7 +272,7 @@ contract StargateBorrow is OwnableUpgradeable {
 		lendingPool.borrow(address(weth), amount, interestRateMode, REFERRAL_CODE, msg.sender);
 		weth.withdraw(amount);
 		uint256 feeAmount = getXChainBorrowFeeAmount(amount);
-		if(feeAmount > 0) {
+		if (feeAmount > 0) {
 			TransferHelper.safeTransferETH(daoTreasury, feeAmount);
 			amount = amount - feeAmount;
 		}
@@ -283,7 +282,7 @@ contract StargateBorrow is OwnableUpgradeable {
 			payable(msg.sender), // receive address
 			abi.encodePacked(msg.sender),
 			amount, // transfer amount
-			amount * maxSlippage / 100 // max slippage: 1%
+			(amount * maxSlippage) / 100 // max slippage: 1%
 		);
 	}
 

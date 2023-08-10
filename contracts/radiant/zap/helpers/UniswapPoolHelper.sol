@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.12;
 
-
 import {DustRefunder} from "./DustRefunder.sol";
 import {UniswapV2Library} from "@uniswap/lib/contracts/libraries/UniswapV2Library.sol";
 import {IUniswapV2Pair} from "@uniswap/lib/contracts/interfaces/IUniswapV2Pair.sol";
@@ -98,6 +97,26 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	}
 
 	/**
+	 * @notice Gets needed WETH for adding LP
+	 * @param lpAmount LP amount
+	 * @return wethAmount WETH amount
+	 */
+	function quoteWETH(uint256 lpAmount) public view returns (uint256 wethAmount) {
+		IUniswapV2Pair lpToken = IUniswapV2Pair(lpTokenAddr);
+
+		(uint256 reserve0, uint256 reserve1, ) = lpToken.getReserves();
+		uint256 weth = lpToken.token0() != address(rdntAddr) ? reserve0 : reserve1;
+		uint256 rdnt = lpToken.token0() == address(rdntAddr) ? reserve0 : reserve1;
+		uint256 lpTokenSupply = lpToken.totalSupply();
+
+		uint256 neededRdnt = rdnt * lpAmount / lpTokenSupply;
+		uint256 neededWeth = rdnt * lpAmount / lpTokenSupply;
+
+		uint256 neededRdntInWeth = router.getAmountIn(neededRdnt, weth, rdnt);
+		return neededWeth + neededRdntInWeth;
+	}
+
+	/**
 	 * @notice Zap WETH into LP
 	 * @param amount of WETH
 	 * @return liquidity LP token amount
@@ -154,7 +173,7 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 		// fair token1 amt: sqrtK * sqrt(px0/px1)
 		// fair lp price = 2 * sqrt(px0 * px1)
 		// split into 2 sqrts multiplication to prevent uint256 overflow (note the 2**112)
-		uint256 result = sqrtK * 2 * (HomoraMath.sqrt(px0)) / (2 ** 56) * (HomoraMath.sqrt(px1)) / (2 ** 56);
+		uint256 result = (((sqrtK * 2 * (HomoraMath.sqrt(px0))) / (2 ** 56)) * (HomoraMath.sqrt(px1))) / (2 ** 56);
 		priceInEth = result / (2 ** 112);
 	}
 
@@ -217,10 +236,24 @@ contract UniswapPoolHelper is Initializable, OwnableUpgradeable, DustRefunder {
 	 * @return priceInEth price of RDNT
 	 */
 	function getPrice() public view returns (uint256 priceInEth) {
-		(uint256 rdnt, uint256 weth,) = getReserves();
+		(uint256 rdnt, uint256 weth, ) = getReserves();
 		if (rdnt > 0) {
-			priceInEth = weth * (10 ** 8) / rdnt;
+			priceInEth = (weth * (10 ** 8)) / rdnt;
 		}
+	}
+
+	/**
+	 * @notice Calculate quote in WETH from token
+	 * @param _inToken input token
+	 * @param _wethAmount WETH amount
+	 * @return tokenAmount token amount
+	 */
+	function quoteSwap(address _inToken, uint256 _wethAmount) public view returns (uint256 tokenAmount) {
+		address[] memory path = new address[](2);
+		path[0] = _inToken;
+		path[1] = wethAddr;
+		uint256[] memory amountsIn = router.getAmountsIn(_wethAmount, path);
+		return amountsIn[0];
 	}
 
 	/**
