@@ -14,7 +14,7 @@ let func = step.setFunction(async function () {
 	const cic = await get(`ChefIncentivesController`);
 	const lendingPool = await read('LendingPoolAddressesProvider', 'getLendingPool');
 
-	await deploy('Multicall');
+	await deploy('Multicall3');
 
 	await deploy('Leverager', {
 		args: [

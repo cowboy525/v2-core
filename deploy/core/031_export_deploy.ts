@@ -93,7 +93,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		aTokensAndRatesHelper: deps['ATokensAndRatesHelper'].address,
 		aaveOracle: deps['AaveOracle'].address,
 		lendingRateOracle: deps['LendingRateOracle'].address,
-		multicall: deps['Multicall'].address,
+		multicall3: deps['Multicall3'].address,
 		leverager: deps['Leverager'].address,
 		stargateBorrow: deps['StargateBorrow'].address,
 		stargateRouter: config.STARGATE_ROUTER,
