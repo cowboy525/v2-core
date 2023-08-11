@@ -9,6 +9,9 @@ export const getTxnOpts = async (hre: HardhatRuntimeEnvironment) => {
 
 	let waitConfirmations = 0;
 	if (hre.network.live) {
+		if (config.CHAIN_ID === 5) {
+			waitConfirmations = 1;
+		}
 		if (config.CHAIN_ID === 42161) {
 			waitConfirmations = 3;
 		}

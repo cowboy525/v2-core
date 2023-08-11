@@ -14,6 +14,7 @@ module.exports = {
 		'staking/MerkleDistributor.sol',
 		'uniswap/',
 		'lending',
+		'radiant/accessories/Multicall.sol',
 	],
 	// solcOptimizerDetails: {
 	//     peephole: false,

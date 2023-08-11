@@ -75,16 +75,96 @@ describe('Stargate Borrow', () => {
 					deployConfig.FEE_XCHAIN_BORROW,
 					INITIAL_MAX_SLIPPAGE,
 				],
-				{unsafeAllow: ['constructor']}
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
 			)
 		);
 		//stargateBorrow = <StargateBorrow> await ethers.getContractAt("StargateBorrow", deployData.stargateBorrow);
+	});
+
+	it('initialize', async () => {
+		const StargateBorrow = await ethers.getContractFactory('StargateBorrow');
+		await expect(
+			upgrades.deployProxy(
+				StargateBorrow,
+				[
+					ethers.constants.AddressZero,
+					user2.address,
+					lendingPool.address,
+					wrappedEth.address,
+					user2.address,
+					deployConfig.FEE_XCHAIN_BORROW,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			upgrades.deployProxy(
+				StargateBorrow,
+				[
+					user2.address,
+					lendingPool.address,
+					ethers.constants.AddressZero,
+					wrappedEth.address,
+					user2.address,
+					deployConfig.FEE_XCHAIN_BORROW,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			upgrades.deployProxy(
+				StargateBorrow,
+				[
+					user2.address,
+					lendingPool.address,
+					wrappedEth.address,
+					ethers.constants.AddressZero,
+					user2.address,
+					deployConfig.FEE_XCHAIN_BORROW,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			upgrades.deployProxy(
+				StargateBorrow,
+				[
+					user2.address,
+					lendingPool.address,
+					wrappedEth.address,
+					user2.address,
+					ethers.constants.AddressZero,
+					deployConfig.FEE_XCHAIN_BORROW,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			upgrades.deployProxy(
+				StargateBorrow,
+				[
+					user2.address,
+					user2.address,
+					lendingPool.address,
+					wrappedEth.address,
+					user2.address,
+					10001,
+					INITIAL_MAX_SLIPPAGE,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.revertedWith('AddressZero');
 	});
 
 	it('setDAOTreasury', async () => {
 		await expect(stargateBorrow.connect(user2).setDAOTreasury(treasury.address)).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);
+		await expect(stargateBorrow.setDAOTreasury(ethers.constants.AddressZero)).to.be.revertedWith('AddressZero');
 		await stargateBorrow.setDAOTreasury(treasury.address);
 	});
 
@@ -92,6 +172,7 @@ describe('Stargate Borrow', () => {
 		await expect(
 			stargateBorrow.connect(user2).setXChainBorrowFeePercent(deployConfig.FEE_XCHAIN_BORROW)
 		).to.be.revertedWith('Ownable: caller is not the owner');
+		await expect(stargateBorrow.setXChainBorrowFeePercent(10001)).to.be.revertedWith('InvalidRatio');
 		await stargateBorrow.setXChainBorrowFeePercent(deployConfig.FEE_XCHAIN_BORROW);
 	});
 
@@ -107,6 +188,13 @@ describe('Stargate Borrow', () => {
 
 		//Set back to old slippage level
 		await stargateBorrow.setMaxSlippage(INITIAL_MAX_SLIPPAGE);
+	});
+
+	it('setPoolIDs', async () => {
+		await expect(stargateBorrow.connect(user2).setPoolIDs([], [])).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(stargateBorrow.setPoolIDs([], [1])).to.be.revertedWith('LengthMismatch');
 	});
 
 	it('Check X Chain Borrow Fee', async () => {

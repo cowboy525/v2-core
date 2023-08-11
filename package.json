@@ -56,7 +56,7 @@
     "fork:test": "node ./_scripts.js fork:test",
     "tenderly:push": "node ./_scripts.js tenderly:push",
     "size": "npx hardhat size-contracts",
-    "test-ci": "IS_CI=true hardhat test",
+    "test-ci": "IS_CI=true npx hardhat test",
     "solhint": "npx solhint 'contracts/**/*.sol'",
     "mine": "npx hardhat run scripts/set-interval-mining.ts --network localhost",
     "skip": "npx hardhat run scripts/skip.ts --network localhost"

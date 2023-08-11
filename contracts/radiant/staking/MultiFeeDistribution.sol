@@ -613,6 +613,8 @@ contract MultiFeeDistribution is
 
 		Balances storage bal = _balances[onBehalfOf];
 		bal.total = bal.total - bal.unlocked - bal.earned;
+		bal.unlocked = 0;
+		bal.earned = 0;
 
 		_withdrawTokens(onBehalfOf, amount, penaltyAmount, burnAmount, claimRewards);
 	}

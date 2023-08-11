@@ -114,6 +114,26 @@ describe('Radiant OFT: ', function () {
 		srcSupply = await OFTSrc.balanceOf(dao);
 	});
 
+	it('constructor params', async function () {
+		const oftFactory = await ethers.getContractFactory('RadiantOFT');
+		await expect(
+			oftFactory.deploy('token name', 'symbol', ethers.constants.AddressZero, dao, dao, 0)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			oftFactory.deploy('token name', 'symbol', dao, ethers.constants.AddressZero, dao, 0)
+		).to.be.revertedWith('AddressZero');
+		await expect(
+			oftFactory.deploy('token name', 'symbol', dao, dao, ethers.constants.AddressZero, 0)
+		).to.be.revertedWith('AddressZero');
+		await oftFactory.deploy('token name', 'symbol', dao, dao, dao, 0);
+	});
+
+	it('admin perms', async function () {
+		await expect(execute('RadiantOFT', {from: dao}, 'unpause')).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+	});
+
 	it('minted', async function () {
 		// ensure they're both starting with correct amounts
 		let daoSrcBal = await read('RadiantOFT', {from: dao}, 'balanceOf', dao);
@@ -212,7 +232,7 @@ describe('Radiant OFT: ', function () {
 		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', oftReceiver.address)).to.be.equal(sendQty);
 	});
 
-	it('sendAndCall() with very few amount', async function () {
+	it('sendAndCall() with low amount', async function () {
 		// ensure they're both starting with correct amounts
 		expect(await read('RadiantOFT', {from: dao}, 'balanceOf', dao)).to.be.equal(srcSupply);
 		expect(await read('RadiantOFTDst', {from: dao}, 'balanceOf', dao)).to.be.equal(dstSupply);
@@ -263,6 +283,25 @@ describe('Radiant OFT: ', function () {
 		);
 	});
 
+	it('setPriceProvider', async function () {
+		await expect(execute('RadiantOFT', {from: dao}, 'setPriceProvider', priceProvider.address)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(
+			execute('RadiantOFT', {from: admin}, 'setPriceProvider', ethers.constants.AddressZero)
+		).to.be.revertedWith('AddressZero');
+	});
+
+	it('setTreasury', async function () {
+		await expect(execute('RadiantOFT', {from: dao}, 'setTreasury', treasury)).to.be.revertedWith(
+			'Ownable: caller is not the owner'
+		);
+		await expect(
+			execute('RadiantOFT', {from: admin}, 'setTreasury', ethers.constants.AddressZero)
+		).to.be.revertedWith('AddressZero');
+		await execute('RadiantOFT', {from: admin}, 'setTreasury', treasury);
+	});
+
 	it('full Bridge flow', async function () {
 		let feeVal = 90;
 		await execute('RadiantOFT', {from: admin}, 'setFeeRatio', feeVal);
@@ -305,6 +344,14 @@ describe('Radiant OFT: ', function () {
 				}
 			)
 		).to.be.revertedWith('InsufficientETHForFee');
+
+		await expect(
+			execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, 0, {
+				refundAddress: dao, // refund address (if too much message fee is sent, it gets refunded)
+				zroPaymentAddress: ethers.constants.AddressZero, // address(0x0) if not paying in ZRO (LayerZero Token)
+				adapterParams: adapterParams, // flexible bytes array to indicate messaging adapter services
+			})
+		).to.be.revertedWith('AmountTooSmall');
 
 		// can transfer accross chain
 		await execute('RadiantOFT', {from: dao, value: fee}, 'sendFrom', dao, chainIdDst, toAddressBytes32, sendQty, {

@@ -105,18 +105,387 @@ describe('MultiFeeDistribution', () => {
 		await hre.network.provider.send('evm_revert', [preTestSnapshotID]);
 	});
 
+	it('init params validation', async () => {
+		const mfdFactory = await ethers.getContractFactory('MultiFeeDistribution');
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					ethers.constants.AddressZero,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					ethers.constants.AddressZero, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					ethers.constants.AddressZero,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					ethers.constants.AddressZero,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					ethers.constants.AddressZero,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					0,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					0,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					0,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					WHOLE + 1,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					0,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+		await expect(
+			upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_DURATION_SECS + 1,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			)
+		).to.be.reverted;
+	});
+
 	// it("getMFDstatsAddress", async () => {
 	//   expect(await mfd.getMFDstatsAddress()).to.be.equal(
 	//     ethers.constants.AddressZero
 	//   );
 	// });
 
-	it('mintersArtSet', async () => {
-		await expect(mfd.setMinters([deployer.address])).to.be.reverted;
+	describe('setMinters', async () => {
+		it('mintersArtSet', async () => {
+			await expect(mfd.setMinters([deployer.address])).to.be.reverted;
+		});
+
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).setMinters([deployer.address])).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
+		});
+
+		it('zero address not allowed', async () => {
+			const mfdFactory = await ethers.getContractFactory('MultiFeeDistribution');
+			const mfd = <MultiFeeDistribution>await upgrades.deployProxy(
+				mfdFactory,
+				[
+					radiant.address,
+					deployer.address, // Mock address
+					treasury.address,
+					lockerlist.address,
+					deployer.address,
+					MFD_REWARD_DURATION_SECS,
+					MFD_REWARD_LOOKBACK_SECS,
+					MFD_LOCK_DURATION_SECS,
+					BURN,
+					MFD_VEST_DURATION,
+				],
+				{initializer: 'initialize', unsafeAllow: ['constructor']}
+			);
+			await mfd.deployed();
+			await expect(mfd.setMinters([ethers.constants.AddressZero])).to.be.reverted;
+		});
 	});
 
-	it('setLPToken', async () => {
-		await expect(mfd.setLPToken(deployer.address)).to.be.reverted;
+	describe('setBountyManager', async () => {
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).setBountyManager(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
+		});
+
+		it('zero address not allowed', async () => {
+			await expect(mfd.setBountyManager(ethers.constants.AddressZero)).to.be.reverted;
+		});
+	});
+
+	describe('addRewardConverter', async () => {
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).addRewardConverter(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
+		});
+
+		it('zero address not allowed', async () => {
+			await expect(mfd.addRewardConverter(ethers.constants.AddressZero)).to.be.reverted;
+		});
+	});
+
+	describe('setAddresses', async () => {
+		it('owner permission', async () => {
+			await expect(
+				mfd.connect(user1).setAddresses(deployer.address, deployer.address, deployer.address)
+			).to.be.revertedWith('Ownable: caller is not the owner');
+		});
+
+		it('zero address not allowed', async () => {
+			await expect(mfd.setAddresses(ethers.constants.AddressZero, deployer.address, deployer.address)).to.be
+				.reverted;
+			await expect(mfd.setAddresses(deployer.address, ethers.constants.AddressZero, deployer.address)).to.be
+				.reverted;
+		});
+	});
+
+	describe('pause/unpause', async () => {
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).pause()).to.be.revertedWith('Ownable: caller is not the owner');
+			await expect(mfd.connect(user1).unpause()).to.be.revertedWith('Ownable: caller is not the owner');
+			await mfd.pause();
+			await mfd.unpause();
+		});
+
+		it('functions when not paused', async () => {
+			await mfd.pause();
+			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.vestTokens(user1.address, 100, true)).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.withdrawExpiredLocksForWithOptions(user1.address, 0, true)).to.be.revertedWith(
+				'Pausable: paused'
+			);
+			await expect(mfd.getReward([])).to.be.revertedWith('Pausable: paused');
+			await expect(mfd.stake(0, user1.address, 0)).to.be.revertedWith('Pausable: paused');
+		});
+	});
+
+	describe('claimBounty', async () => {
+		it('permission', async () => {
+			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.reverted;
+		});
+
+		it('when unpaused', async () => {
+			await mfd.pause();
+			await expect(mfd.connect(user1).claimBounty(user1.address, true)).to.be.revertedWith('Pausable: paused');
+		});
+	});
+
+	describe('setLPToken', async () => {
+		it('setLPToken', async () => {
+			await expect(mfd.setLPToken(deployer.address)).to.be.reverted;
+		});
+
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).setLPToken(deployer.address)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
+		});
+
+		it('zero address not allowed', async () => {
+			await expect(mfd.setLPToken(ethers.constants.AddressZero)).to.be.reverted;
+		});
+	});
+
+	describe('setLookback', async () => {
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).setLookback(0)).to.be.revertedWith('Ownable: caller is not the owner');
+			await mfd.setLookback(100);
+			expect(await mfd.rewardsLookback()).to.be.equal(100);
+		});
+	});
+
+	describe('recoverERC20', async () => {
+		it('owner permission', async () => {
+			await expect(mfd.connect(user1).recoverERC20(deployer.address, 100)).to.be.revertedWith(
+				'Ownable: caller is not the owner'
+			);
+		});
+
+		it('active', async () => {
+			await expect(mfd.recoverERC20(radiant.address, 100)).to.be.reverted;
+		});
+
+		it('recover ERC20', async () => {
+			const mintAmount = ethers.utils.parseUnits('604800', 18);
+			await radiant.mint(mfd.address, mintAmount);
+
+			const erc20Factory = await ethers.getContractFactory('CustomERC20');
+			const mockErc20 = <CustomERC20>await erc20Factory.deploy(amount);
+			await mockErc20.mint(mfd.address, mintAmount);
+			expect(await mockErc20.balanceOf(mfd.address)).to.be.equal(mintAmount);
+			const balance = await mockErc20.balanceOf(deployer.address);
+			await mfd.recoverERC20(mockErc20.address, mintAmount);
+			expect(await mockErc20.balanceOf(deployer.address)).to.be.equal(balance.add(mintAmount));
+		});
+	});
+
+	describe('claimFromConverter', async () => {
+		it('called by converter', async () => {
+			await expect(mfd.connect(user1).claimFromConverter(deployer.address)).to.be.reverted;
+		});
+
+		it('when not paused', async () => {
+			await mfd.pause();
+			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith('Pausable: paused');
+		});
+	});
+
+	describe('zapVestingToLp', async () => {
+		it('insufficient permission', async () => {
+			await expect(mfd.connect(user1).zapVestingToLp(user1.address)).to.be.reverted;
+		});
+
+		it('when not paused', async () => {
+			await mfd.pause();
+			await expect(mfd.claimFromConverter(deployer.address)).to.be.revertedWith('Pausable: paused');
+		});
 	});
 
 	it('setDefaultRelockTypeIndex', async () => {
@@ -151,6 +520,7 @@ describe('MultiFeeDistribution', () => {
 
 	it('addReward', async () => {
 		await expect(mfd.connect(user1).addReward(user1.address)).to.be.reverted;
+		await expect(mfd.addReward(ethers.constants.AddressZero)).to.be.reverted;
 		await expect(mfd.addReward(radiant.address)).to.be.reverted;
 	});
 
@@ -235,24 +605,32 @@ describe('MultiFeeDistribution', () => {
 		expect(await radiant.balanceOf(mfd.address)).to.be.equal(mintAmount.mul(2));
 	});
 
-	it('recover ERC20', async () => {
-		const mintAmount = ethers.utils.parseUnits('604800', 18);
-		await radiant.mint(mfd.address, mintAmount);
-
-		const erc20Factory = await ethers.getContractFactory('CustomERC20');
-		const mockErc20 = <CustomERC20>await erc20Factory.deploy(amount);
-		await mockErc20.mint(mfd.address, mintAmount);
-		expect(await mockErc20.balanceOf(mfd.address)).to.be.equal(mintAmount);
-		const balance = await mockErc20.balanceOf(deployer.address);
-		await mfd.recoverERC20(mockErc20.address, mintAmount);
-		expect(await mockErc20.balanceOf(deployer.address)).to.be.equal(balance.add(mintAmount));
-	});
-
 	it('mint & stake vlidation', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await expect(mfd.connect(user1).vestTokens(user1.address, depositAmount, true)).to.be.reverted;
 		await mfd.vestTokens(user1.address, 0, true);
 		await mfd.vestTokens(user1.address, depositAmount, false);
+	});
+
+	it('more stake validation', async () => {
+		const bountyManagerFactory = await ethers.getContractFactory('MockBountyManager');
+		const bountyManager = await bountyManagerFactory.deploy();
+		await bountyManager.deployed();
+		await mfd.setBountyManager(bountyManager.address);
+
+		// very few amount fails, <= minDLPBalance
+		await expect(mfd.connect(user1).stake(1, user1.address, 0)).to.be.reverted;
+
+		const LOCK_DURATION = await mfd.defaultLockDuration();
+		const depositAmount = ethers.utils.parseUnits('100', 18);
+
+		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+		await mfd.connect(user1).stake(depositAmount, user2.address, 0);
+		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
+		await mfd.connect(user1).stake(depositAmount, user2.address, 0);
+		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
+		await mfd.connect(user1).setRelock(false);
+		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 	});
 
 	it('Withdraw expired locks', async () => {
@@ -283,8 +661,10 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 1);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 2);
 		await mfd.connect(user1).stake(depositAmount, user1.address, 3);
+		expect(await mfd.lockedBalance(user1.address)).to.be.equal(depositAmount.mul(4));
 
 		await advanceTimeAndBlock(MFD_LOCK_DURATION_SECS / 3);
+		expect(await mfd.lockedBalance(user1.address)).to.be.equal(depositAmount.mul(3));
 		expect((await mfd.lockedBalances(user1.address)).unlockable).to.be.equal(depositAmount);
 
 		await advanceTimeAndBlock(MFD_LOCK_DURATION_SECS / 3);
@@ -572,6 +952,47 @@ describe('MultiFeeDistribution', () => {
 		const balance11 = await radiant.balanceOf(user1.address);
 
 		expect(balance11.sub(balance10)).to.be.equal(depositAmount);
+	});
+
+	it('Consecutive exits break accounting PoC', async () => {
+		let balances;
+
+		const amount = ethers.utils.parseUnits('100', 18);
+		await radiant.mint(mfd.address, amount);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
+
+		console.log('1) Vesting of 20 RDNT starts...');
+		await mfd.vestTokens(user1.address, amount.div(5), true);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
+
+		console.log('2) User calls exit() for the first time...');
+		await mfd.connect(user1).exit(false);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
+
+		console.log('3) Another 20 RDNT vesting starts...');
+		await mfd.vestTokens(user1.address, amount.div(5), true);
+
+		balances = await mfd.getBalances(user1.address);
+		console.log('User balances:');
+		console.log('Total:', balances.total.toString());
+		console.log('Earned:', balances.earned.toString());
+
+		console.log(
+			'4) User can trigger the exit() function, no underflow! Attempt to withdraw ' + balances.earned.toString()
+		);
+		await expect(mfd.connect(user1).exit(false)).to.be.not.reverted;
 	});
 
 	it('withdraw; empty earnings', async () => {
@@ -945,12 +1366,16 @@ describe('MultiFeeDistribution', () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
+		await mfd.vestTokens(user1.address, depositAmount, true);
+		const earningsData0 = await mfd.earnedBalances(user1.address);
+		expect(earningsData0.unlocked).to.be.equal(0);
 
 		expect(await mfd.getRewardForDuration(radiant.address)).to.be.equal(0);
 
 		await advanceTimeAndBlock(MFD_VEST_DURATION);
+		await mfd.vestTokens(user1.address, depositAmount, true);
 		const earningsData = await mfd.earnedBalances(user1.address);
-		expect(earningsData.unlocked).to.be.equal(depositAmount);
+		expect(earningsData.unlocked).to.be.equal(depositAmount.mul(2));
 	});
 
 	it('getReward; unknown token', async () => {
