@@ -371,7 +371,7 @@ describe('Looping/Leverager', () => {
 		await expect(
 			leverager.connect(user2).loop(usdcAddress, amt, 2, borrowRatio, loops, false, 9999)
 		).to.be.revertedWith('SlippageTooHigh');
-    
+		
 		const rWETH0 = await rWETH.balanceOf(user2.address);
 		const vdWETH0 = await vdWETH.balanceOf(user2.address);
 

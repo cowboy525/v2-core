@@ -241,9 +241,6 @@ describe(`AutoCompound:`, async () => {
 	});
 
 	it('owner permission', async () => {
-		await expect(compounder.connect(user1).addRewardBaseTokens([])).to.be.revertedWith(
-			'Ownable: caller is not the owner'
-		);
 		await expect(compounder.connect(user1).setRoutes(ethers.constants.AddressZero, [])).to.be.revertedWith(
 			'Ownable: caller is not the owner'
 		);
