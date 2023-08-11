@@ -246,6 +246,7 @@ describe('Zapper', function () {
 				value: ethers.utils.parseEther('1'),
 			})
 		).to.be.revertedWith('SlippageTooHigh');
+	});
 
 	it('zap errors', async function () {
 		await expect(
