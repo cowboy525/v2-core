@@ -149,7 +149,7 @@ contract MultiFeeDistribution is
 
 	/********************** Events ***********************/
 
-	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, bool isLP);
+	event Locked(address indexed user, uint256 amount, uint256 lockedBalance, uint256 indexed lockLength, bool isLP);
 	event Withdrawn(
 		address indexed user,
 		uint256 receivedAmount,
@@ -1112,7 +1112,7 @@ contract MultiFeeDistribution is
 		}
 
 		incentivesController.afterLockUpdate(onBehalfOf);
-		emit Locked(onBehalfOf, amount, _balances[onBehalfOf].locked, stakingToken != address(rdntToken));
+		emit Locked(onBehalfOf, amount, _balances[onBehalfOf].locked, _lockPeriod[typeIndex], stakingToken != address(rdntToken));
 	}
 
 	/**

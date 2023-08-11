@@ -6,16 +6,16 @@ pragma solidity 0.8.12;
 library AddressPagination {
 	/**
 	 * @notice Paginate address array.
-	 * @param array source address array.
+	 * @param array storage slot of the array to paginate.
 	 * @param page number
 	 * @param limit per page
 	 * @return result address array.
 	 */
 	function paginate(
-		address[] memory array,
+		address[] storage array,
 		uint256 page,
 		uint256 limit
-	) internal pure returns (address[] memory result) {
+	) internal view returns (address[] memory result) {
 		result = new address[](limit);
 		for (uint256 i = 0; i < limit; ) {
 			if (page * limit + i >= array.length) {

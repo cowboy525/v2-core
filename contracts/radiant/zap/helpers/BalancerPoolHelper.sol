@@ -10,7 +10,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {IBalancerPoolHelper} from "../../../interfaces/IPoolHelper.sol";
 import {IWETH} from "../../../interfaces/IWETH.sol";
-import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
+import {IWeightedPoolFactory, IWeightedPool, IAsset, IVault, IBalancerQueries} from "../../../interfaces/balancer/IWeightedPoolFactory.sol";
 import {VaultReentrancyLib} from "../../libraries/balancer-reentrancy/VaultReentrancyLib.sol";
 
 /// @title Balance Pool Helper Contract
@@ -23,6 +23,7 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	error InsufficientPermission();
 	error IdenticalAddresses();
 	error ZeroAmount();
+	error QuoteFail();
 
 	address public inTokenAddr;
 	address public outTokenAddr;
@@ -42,6 +43,8 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	bytes32 public constant WBTC_WETH_USDC_POOL_ID = 0x64541216bafffeec8ea535bb71fbc927831d0595000100000000000000000002;
 	bytes32 public constant DAI_USDT_USDC_POOL_ID = 0x1533a3278f3f9141d5f820a184ea4b017fce2382000000000000000000000016;
 	address public constant REAL_WETH_ADDR = address(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+
+	address public constant BALANCER_QUERIES = 0xE39B5e3B6D74016b2F6A9673D7d7493B6DF549d5;
 
 	address public constant USDT_ADDRESS = address(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
 	address public constant DAI_ADDRESS = address(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
@@ -300,6 +303,40 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	}
 
 	/**
+	 * @notice Gets needed WETH for adding LP
+	 * @param lpAmount LP amount
+	 * @return wethAmount WETH amount
+	 */
+	function quoteWETH(uint256 lpAmount) public override view returns (uint256 wethAmount) {
+		(address token0, address token1) = _sortTokens(outTokenAddr, inTokenAddr);
+		IAsset[] memory assets = new IAsset[](2);
+		assets[0] = IAsset(token0);
+		assets[1] = IAsset(token1);
+
+		uint256[] memory maxAmountsIn = new uint256[](2);
+		uint256 enterTokenIndex;
+		if (token0 == inTokenAddr) {
+			enterTokenIndex = 0;
+			maxAmountsIn[0] = type(uint256).max;
+			maxAmountsIn[1] = 0;
+		} else {
+			enterTokenIndex = 1;
+			maxAmountsIn[0] = 0;
+			maxAmountsIn[1] = type(uint256).max;
+		}
+
+		bytes memory userDataEncoded = abi.encode(IWeightedPool.JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT, lpAmount, enterTokenIndex);
+		IVault.JoinPoolRequest memory inRequest = IVault.JoinPoolRequest(assets, maxAmountsIn, userDataEncoded, false);
+
+		(bool success, bytes memory data) = BALANCER_QUERIES.staticcall(
+			abi.encodeCall(IBalancerQueries.queryJoin, (poolId, address(this), address(this), inRequest))
+		);
+		if (!success) revert QuoteFail();
+		(, uint256[] memory amountsIn) = abi.decode(data, (uint256, uint256[]));
+		return amountsIn[enterTokenIndex];
+	}
+
+	/**
 	 * @notice Zap WETH
 	 * @param amount to zap
 	 * @return liquidity token amount
@@ -358,6 +395,36 @@ contract BalancerPoolHelper is IBalancerPoolHelper, Initializable, OwnableUpgrad
 	function setLockZap(address _lockZap) external onlyOwner {
 		if (_lockZap == address(0)) revert AddressZero();
 		lockZap = _lockZap;
+	}
+
+
+	/**
+	 * @notice Calculate tokenAmount from WETH
+	 * @param _inToken input token
+	 * @param _wethAmount WETH amount
+	 * @return tokenAmount token amount
+	 */
+	function quoteSwap(address _inToken, uint256 _wethAmount) public override view returns (uint256 tokenAmount) {
+		IVault.SingleSwap memory singleSwap;
+		singleSwap.poolId = poolId;
+		singleSwap.kind = IVault.SwapKind.GIVEN_OUT;
+		singleSwap.assetIn = IAsset(_inToken);
+		singleSwap.assetOut = IAsset(wethAddr);
+		singleSwap.amount = _wethAmount;
+		singleSwap.userData = abi.encode(0);
+
+		IVault.FundManagement memory funds;
+		funds.sender = address(this);
+		funds.fromInternalBalance = false;
+		funds.recipient = payable(address(this));
+		funds.toInternalBalance = false;
+
+		(bool success, bytes memory data) = BALANCER_QUERIES.staticcall(
+			abi.encodeCall(IBalancerQueries.querySwap, (singleSwap, funds))
+		);
+		if (!success) revert QuoteFail();
+		uint256 amountIn = abi.decode(data, (uint256));
+		return amountIn;
 	}
 
 	/**

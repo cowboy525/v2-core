@@ -3,8 +3,11 @@ import {HardhatRuntimeEnvironment} from 'hardhat/types';
 import {DeployFunction} from 'hardhat-deploy/types';
 import {getConfigForChain} from '../../config/index';
 import {getWeth} from '../../scripts/getDepenencies';
+import {upgrades} from 'hardhat';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+	upgrades.silenceWarnings();
+
 	const {deployments, network} = hre;
 	const {read} = deployments;
 	const {deployer, dao, treasury} = await getNamedAccounts();
@@ -90,7 +93,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		aTokensAndRatesHelper: deps['ATokensAndRatesHelper'].address,
 		aaveOracle: deps['AaveOracle'].address,
 		lendingRateOracle: deps['LendingRateOracle'].address,
-		// multicall: deps['Multicall'].address,
+		multicall3: deps['Multicall3'].address,
 		leverager: deps['Leverager'].address,
 		stargateBorrow: deps['StargateBorrow'].address,
 		stargateRouter: config.STARGATE_ROUTER,

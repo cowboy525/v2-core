@@ -39,6 +39,8 @@ typechain/
 !.vscode/launch.json.default
 !.vscode/extensions.json.default
 
+.idea/
+
 node_modules/
 .env
 

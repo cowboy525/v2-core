@@ -35,6 +35,7 @@ contract LockerList is Ownable {
 
 	/**
 	 * @notice Return the list of users.
+	 * @dev This is a very gas intensive function to execute and thus should only by utilized by off-chain entities.
 	 * @param page The page number to retrieve
 	 * @param limit The number of entries per page
 	 * @return users A paginated list of users
