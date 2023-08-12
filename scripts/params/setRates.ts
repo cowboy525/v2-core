@@ -18,7 +18,7 @@ const {deployments, getNamedAccounts, network} = hre;
 	const TOKENS_CONFIG = new Map(paramData[network.name].rates);
 	const strategyAddresses = new Map();
 	for (const [key, value] of TOKENS_CONFIG) {
-		const strategyName = value.reservesParams.strategy.name;
+		const strategyName = value.name;
 		if (!strategyAddresses.has(strategyName)) {
 			const DefaultReserveInterestRateStrategy = await hre.ethers.getContractFactory(
 				'DefaultReserveInterestRateStrategy'
@@ -27,12 +27,12 @@ const {deployments, getNamedAccounts, network} = hre;
 
 			const defaultReserveInterestRateStrategy = await DefaultReserveInterestRateStrategy.deploy(
 				addressProvider.address,
-				value.reservesParams.strategy.optimalUtilizationRate,
-				value.reservesParams.strategy.baseVariableBorrowRate,
-				value.reservesParams.strategy.variableRateSlope1,
-				value.reservesParams.strategy.variableRateSlope2,
-				value.reservesParams.strategy.stableRateSlope1,
-				value.reservesParams.strategy.variableRateSlope2
+				hre.ethers.utils.parseUnits(value.optimalUtilizationRate.toString(), 27),
+				0,
+				hre.ethers.utils.parseUnits(value.variableRateSlope1.toString(), 27),
+				hre.ethers.utils.parseUnits(value.variableRateSlope2.toString(), 27),
+				0,
+				0
 			);
 			await defaultReserveInterestRateStrategy.deployed();
 			console.log(`${strategyName}:`, defaultReserveInterestRateStrategy.address);
@@ -68,7 +68,7 @@ const {deployments, getNamedAccounts, network} = hre;
 
 		for (const [key, value] of Object.entries(addrs)) {
 			let assetDetails = TOKENS_CONFIG.get(key);
-			let stratName = assetDetails?.reservesParams.strategy.name;
+			let stratName = assetDetails?.name;
 			let stratAddr = strategyAddresses.get(stratName);
 			let underlyingAddr = addrs[key];
 			console.log(' ');
@@ -87,7 +87,7 @@ const {deployments, getNamedAccounts, network} = hre;
 		console.log(`===== DEFENDER PARAMS =====`);
 		for (const [key, value] of Object.entries(addrs)) {
 			let assetDetails = TOKENS_CONFIG.get(key);
-			let stratName = assetDetails?.reservesParams.strategy.name;
+			let stratName = assetDetails?.name;
 			let stratAddr = strategyAddresses.get(stratName);
 			let underlyingAddr = addrs[key];
 			console.log(
