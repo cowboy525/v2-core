@@ -57,10 +57,27 @@ const {deployments, getNamedAccounts, network} = hre;
 			amount: 0.00003,
 			decimals: 8,
 		},
+		BUSD: {
+			amount: 1,
+			decimals: 18,
+		},
+		BTCB: {
+			amount: 0.00003,
+			decimals: 18,
+		},
+		WBNB: {
+			amount: 0.003,
+			decimals: 18,
+		},
 	};
 
 	for (const [assetName, assetAddress] of Object.entries(networkParams.underlying)) {
-		const {amount, decimals} = borrowData[assetName];
+		let {amount, decimals} = borrowData[assetName];
+		if (network.name === 'bsc') {
+			if (assetName === 'USDT' || assetName === 'USDC') {
+				decimals = 18;
+			}
+		}
 		const amt = hre.ethers.utils.parseUnits(amount.toString(), decimals);
 		await (await lendingPool.borrow(assetAddress, amt, 2, 0, deployer)).wait();
 		console.log(`${assetName} borrow done.`);
