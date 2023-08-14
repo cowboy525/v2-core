@@ -88,9 +88,6 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	/// @notice Price provider contract address
 	address public priceProvider;
 
-	/// @notice Reward tokens (not being used anymore but kept to preserve storage layout)
-	address[] public rewardBaseTokens;
-
 	/// @notice Swap route WETH -> RDNT
 	address[] public wethToRadiant;
 
