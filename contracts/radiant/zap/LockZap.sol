@@ -307,12 +307,13 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @return LP amount
 	 */
 	function zapAlternateAsset(
+		uint256 _rdntAmt,
 		address _asset,
 		uint256 _amount,
 		uint256 _lockTypeIndex,
 		uint256 _slippage
 	) public whenNotPaused returns (uint256) {
-		return _zapAlternateAsset(0, _asset, _amount, _lockTypeIndex, _slippage);
+		return _zapAlternateAsset(_rdntAmt, _asset, _amount, _lockTypeIndex, _slippage);
 	}
 
 	/**
