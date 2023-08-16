@@ -203,9 +203,9 @@ describe('Zapper', function () {
 
 	it('zapAlternateAsset', async () => {
 		await expect(
-			lockZap.connect(user2).zapAlternateAsset(ethers.constants.AddressZero, 10, 0, 0)
+			lockZap.connect(user2).zapAlternateAsset(0, ethers.constants.AddressZero, 10, 0, 0)
 		).to.be.revertedWith('AddressZero');
-		await expect(lockZap.connect(user2).zapAlternateAsset(usdcAddress, 0, 0, 0)).to.be.revertedWith('AmountZero');
+		await expect(lockZap.connect(user2).zapAlternateAsset(0, usdcAddress, 0, 0, 0)).to.be.revertedWith('AmountZero');
 	});
 
 	it('setLiquidityZap', async function () {
@@ -549,7 +549,7 @@ describe('Zapper', function () {
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 			await USDC.approve(lockZap.address, zapAmount);
 			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
-			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
+			await lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, 0);
 			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
 			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
 
@@ -569,7 +569,7 @@ describe('Zapper', function () {
 			await lockZap.setPriceProvider(priceProvider.address);
 			const zapAmount = ethers.BigNumber.from(100 * 10 ** 6);
 			await USDC.approve(lockZap.address, zapAmount);
-			await expect(lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 9999)).to.be.revertedWith(
+			await expect(lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, 9999)).to.be.revertedWith(
 				'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT'
 			);
 		});
@@ -587,15 +587,15 @@ describe('Zapper', function () {
 			await USDC.approve(lockZap.address, zapAmount);
 			const tooTightSlippageLimit = SLIPPAGE_DIVISOR.mul(999).div(1000); // 0.1% slippage
 			await expect(
-				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooTightSlippageLimit)
+				lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, tooTightSlippageLimit)
 			).to.be.revertedWith('UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
 
 			const tooLooseSlippageLimit = SLIPPAGE_DIVISOR.mul(95).div(100).sub(1); // >5% slippage
 			await expect(
-				lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, tooLooseSlippageLimit)
+				lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, tooLooseSlippageLimit)
 			).to.be.revertedWith('SpecifiedSlippageExceedLimit');
 
-			await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
+			await lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, 0);
 		});
 
 		it('Quote works', async () => {
@@ -612,7 +612,7 @@ describe('Zapper', function () {
 
 			await USDC.approve(lockZap.address, quotedZapAmount);
 			const lockedLpBalanceBefore = (await mfd.lockedBalances(deployer.address)).locked;
-			await lockZap.zapAlternateAsset(usdcAddress, quotedZapAmount, 0, 0);
+			await lockZap.zapAlternateAsset(0, usdcAddress, quotedZapAmount, 0, 0);
 			const lockedLpBalanceAfter = (await mfd.lockedBalances(deployer.address)).locked;
 			const lockedLpBalanceGained = lockedLpBalanceAfter.sub(lockedLpBalanceBefore);
 
@@ -760,6 +760,6 @@ describe('Zapper', function () {
 		// await lockZap.setAcceptableRatio(10000);
 		// await expect(lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0)).to.be.revertedWith("InvalidSlippage");
 
-		await lockZap.zapAlternateAsset(usdcAddress, zapAmount, 0, 0);
+		await lockZap.zapAlternateAsset(0, usdcAddress, zapAmount, 0, 0);
 	});
 });
