@@ -214,6 +214,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (address(_rewardMinter) == address(0)) revert AddressZero();
 
 		__Ownable_init();
+		__Pausable_init();
 
 		poolConfigurator = _poolConfigurator;
 		eligibleDataProvider = _eligibleDataProvider;
