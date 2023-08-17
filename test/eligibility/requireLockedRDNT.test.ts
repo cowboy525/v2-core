@@ -11,6 +11,9 @@ import {
 	PriceProvider,
 	RadiantOFT,
 	EligibilityDataProvider,
+	WETHGateway,
+	LockZap,
+	WETH
 } from '../../typechain';
 import _ from 'lodash';
 import chai from 'chai';
@@ -31,7 +34,7 @@ describe('Require Locked Value', () => {
 
 	let USDC: MockToken;
 	let LPToken: MockToken;
-
+	
 	let rUSDC: MockERC20;
 	let lendingPool: LendingPool;
 	let chef: ChefIncentivesController;
@@ -39,6 +42,9 @@ describe('Require Locked Value', () => {
 	let radiantToken: RadiantOFT;
 	let eligibilityDataProvider: EligibilityDataProvider;
 	let priceProvider: PriceProvider;
+	let wethGateway: WETHGateway;
+	let lockZap: LockZap;
+	let weth: WETH;
 
 	// let duration = REWARDS_DURATION * 40;
 	let duration = 0;
@@ -67,6 +73,9 @@ describe('Require Locked Value', () => {
 		(RDNT_LIQUDITY = deployConfig.LP_INIT_RDNT), 18;
 
 		USDC = fixture.usdc;
+		wethGateway = fixture.wethGateway;
+		weth = fixture.weth;
+		lockZap = fixture.lockZap;
 		usdcAddress = USDC.address;
 		rUSDC = <MockERC20>await ethers.getContractAt('mockERC20', deployData.allTokens.rUSDC);
 
@@ -207,5 +216,48 @@ describe('Require Locked Value', () => {
 		await multiFeeDistribution.connect(user2).exit(true);
 		const bal0 = await getRdntBal(radiantToken, user2);
 		assert.equal(bal0.gt(0), true, `Got RDNT on exit`);
+	});
+
+	it('Rewards get re-registered.', async () => {
+		expect(await eligibilityDataProvider.isEligibleForRewards(user3.address)).to.be.equal(false);
+
+		let ethAmt = ethers.utils.parseEther('10');
+		// Mint
+		await USDC.mint(user3.address, usdcPerAccount);
+
+		// Approve
+		await USDC.connect(user3).approve(lendingPool.address, ethers.constants.MaxUint256);
+		await radiantToken.connect(user3).approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
+
+		// Deposit
+		await lendingPool.connect(user3).deposit(usdcAddress, usdcPerAccount, user3.address, 0);
+		await wethGateway.connect(user3).depositETH(lendingPool.address, user3.address, 0, {value: ethAmt});
+
+		//Borrow
+		await lendingPool.connect(user3).borrow(usdcAddress, borrowAmt, 2, 0, user3.address);
+		
+		await weth.connect(user3).deposit({value: ethAmt});
+
+		await advanceTimeAndBlock(864000);
+
+		//Not Eligible
+		expect(await eligibilityDataProvider.isEligibleForRewards(user3.address)).to.be.equal(false);
+
+		await weth.connect(user3).approve(lockZap.address, ethAmt);
+		await lockZap.connect(user3).zap(false, ethAmt, 0, 0, 9500);
+
+		//Get Eligible Again
+		expect(await eligibilityDataProvider.isEligibleForRewards(user3.address)).to.be.equal(true);
+
+		const poolLength = (await chef.poolLength()).toNumber();
+		for (let i = 0; i < poolLength; i++) {
+			const registeredTokenAddr = await chef.registeredTokens(i);
+			const registeredToken = await ethers.getContractAt('ERC20', registeredTokenAddr);
+			const newBal = await registeredToken.balanceOf(user3.address);
+			const userInfo = await chef.userInfo(registeredTokenAddr, user3.address);
+			const registeredBal = userInfo.amount;
+			//Each Token is Registered Correctly
+			expect(registeredBal).to.be.equal(newBal);
+		}
 	});
 });

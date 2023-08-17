@@ -583,9 +583,14 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			return;
 		}
 		if (eligibilityEnabled) {
+			bool lastEligibleStatus = eligibleDataProvider.lastEligibleStatus(_user);
 			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
 			if (isCurrentlyEligible) {
-				_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
+				if (lastEligibleStatus) {
+					_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
+				} else {
+					updateRegisteredBalance(_user);
+				}
 			} else {
 				_processEligibility(_user, isCurrentlyEligible, true);
 			}
@@ -657,24 +662,28 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (eligibilityEnabled) {
 			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
 			if (isCurrentlyEligible) {
-				uint256 length = poolLength();
-				for (uint256 i; i < length; ) {
-					uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
-					uint256 registeredBal = userInfo[registeredTokens[i]][_user].amount;
-					if (newBal != 0 && newBal != registeredBal) {
-						_handleActionAfterForToken(
-							registeredTokens[i],
-							_user,
-							newBal,
-							poolInfo[registeredTokens[i]].totalSupply + newBal - registeredBal
-						);
-					}
-					unchecked {
-						i++;
-					}
-				}
+				updateRegisteredBalance(_user);
 			} else {
 				_processEligibility(_user, isCurrentlyEligible, true);
+			}
+		}
+	}
+
+	function updateRegisteredBalance (address _user) internal {
+		uint256 length = poolLength();
+		for (uint256 i; i < length; ) {
+			uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
+			uint256 registeredBal = userInfo[registeredTokens[i]][_user].amount;
+			if (newBal != 0 && newBal != registeredBal) {
+				_handleActionAfterForToken(
+					registeredTokens[i],
+					_user,
+					newBal,
+					poolInfo[registeredTokens[i]].totalSupply + newBal - registeredBal
+				);
+			}
+			unchecked {
+				i++;
 			}
 		}
 	}
