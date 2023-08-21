@@ -589,7 +589,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 				if (lastEligibleStatus) {
 					_handleActionAfterForToken(msg.sender, _user, _balance, _totalSupply);
 				} else {
-					updateRegisteredBalance(_user);
+					_updateRegisteredBalance(_user);
 				}
 			} else {
 				_processEligibility(_user, isCurrentlyEligible, true);
@@ -662,14 +662,18 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		if (eligibilityEnabled) {
 			bool isCurrentlyEligible = eligibleDataProvider.refresh(_user);
 			if (isCurrentlyEligible) {
-				updateRegisteredBalance(_user);
+				_updateRegisteredBalance(_user);
 			} else {
 				_processEligibility(_user, isCurrentlyEligible, true);
 			}
 		}
 	}
 
-	function updateRegisteredBalance (address _user) internal {
+	/**
+	 * @notice Update balance if there are any unregistered.
+	 * @param _user address
+	 */
+	function _updateRegisteredBalance (address _user) internal {
 		uint256 length = poolLength();
 		for (uint256 i; i < length; ) {
 			uint256 newBal = IERC20(registeredTokens[i]).balanceOf(_user);
