@@ -281,6 +281,24 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	}
 
 	/**
+	 * @notice Zap tokens from vesting with alternate asset
+	 * @param _asset address of the asset to zap in
+	 * @param _amount the amount of asset to zap
+	 * @param _lockTypeIndex lock length index.
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
+	 * @return LP amount
+	 */
+	function zapFromVestingWithAlternativeAsset(
+		address _asset,
+		uint256 _amount,
+		uint256 _lockTypeIndex,
+		uint256 _slippage
+	) public payable whenNotPaused returns (uint256) {
+		uint256 rdntAmt = mfd.zapVestingToLp(msg.sender);
+		return _zapAlternateAsset(rdntAmt, _asset, _amount, _lockTypeIndex, _slippage);
+	}
+
+	/**
 	 * @notice Zap tokens like USDC, DAI, USDT, WBTC to lp
 	 * @param _asset address of the asset to zap in
 	 * @param _amount the amount of asset to zap
@@ -289,11 +307,31 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 	 * @return LP amount
 	 */
 	function zapAlternateAsset(
+		uint256 _rdntAmt,
 		address _asset,
 		uint256 _amount,
 		uint256 _lockTypeIndex,
 		uint256 _slippage
 	) public whenNotPaused returns (uint256) {
+		return _zapAlternateAsset(_rdntAmt, _asset, _amount, _lockTypeIndex, _slippage);
+	}
+
+	/**
+	 * @notice Zap tokens like USDC, DAI, USDT, WBTC to lp
+	 * @param _rdntAmt the amount of RDNT to zap
+	 * @param _asset address of the asset to zap in
+	 * @param _amount the amount of asset to zap
+	 * @param _lockTypeIndex lock length index.
+	 * @param _slippage maximum amount of slippage allowed for any occurring trades
+	 * @return LP amount
+	 */
+	function _zapAlternateAsset(
+		uint256 _rdntAmt,
+		address _asset,
+		uint256 _amount,
+		uint256 _lockTypeIndex,
+		uint256 _slippage
+	) internal returns (uint256) {
 		if (_asset == address(0)) revert AddressZero();
 		if (_amount == 0) revert AmountZero();
 
@@ -315,7 +353,7 @@ contract LockZap is Initializable, OwnableUpgradeable, PausableUpgradeable, Dust
 			wethGained = weth.balanceOf(address(this)) - wethBalanceBefore;
 		}
 
-		return _zap(true, false, wethGained, 0, msg.sender, msg.sender, _lockTypeIndex, msg.sender, _slippage);
+		return _zap(true, false, wethGained, _rdntAmt, msg.sender, msg.sender, _lockTypeIndex, msg.sender, _slippage);
 	}
 
 	/**
