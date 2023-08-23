@@ -14,10 +14,6 @@ let func = step.setFunction(async function () {
 	const aaveOracle = await get('AaveOracle');
 	const dataProvider = await get('AaveProtocolDataProvider');
 
-	const lockerList = await deploy('LockerList', {
-		contract: 'LockerList',
-	});
-
 	const mfd = await deploy('MFD', {
 		contract: 'MultiFeeDistribution',
 		proxy: {
@@ -29,7 +25,6 @@ let func = step.setFunction(async function () {
 						radiantToken.address,
 						lockZap.address,
 						dao,
-						lockerList.address,
 						priceProvider.address,
 						config.MFD_REWARD_DURATION_SECS,
 						config.MFD_REWARD_LOOKBACK_SECS,

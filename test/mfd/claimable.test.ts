@@ -2,7 +2,7 @@ import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import assert from 'assert';
 import {ethers} from 'hardhat';
 import {advanceTimeAndBlock} from '../../scripts/utils';
-import {LendingPool, MultiFeeDistribution, MockERC20, MockToken, LockerList} from '../../typechain';
+import {LendingPool, MultiFeeDistribution, MockERC20, MockToken} from '../../typechain';
 import _ from 'lodash';
 import chai, {expect} from 'chai';
 import {solidity} from 'ethereum-waffle';
@@ -22,7 +22,6 @@ describe('Ensure lockers can claim Platform Revenue', () => {
 	let rUSDC: MockERC20;
 	let lendingPool: LendingPool;
 	let multiFeeDistribution: MultiFeeDistribution;
-	let lockerlist: LockerList;
 
 	let REWARDS_DURATION = 0; // oneDay * 7;
 	let usdcAddress = '';
@@ -46,7 +45,6 @@ describe('Ensure lockers can claim Platform Revenue', () => {
 
 		lendingPool = fixture.lendingPool;
 		multiFeeDistribution = fixture.multiFeeDistribution;
-		lockerlist = <LockerList>await ethers.getContractAt('LockerList', await multiFeeDistribution.userlist());
 
 		REWARDS_DURATION = (await multiFeeDistribution.rewardsDuration()).toNumber();
 	});
@@ -55,10 +53,8 @@ describe('Ensure lockers can claim Platform Revenue', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		const lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 
 		expect(lockedBal).to.be.gt(BigNumber.from(0));
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 	});
 
 	it('Deposit USDC', async () => {

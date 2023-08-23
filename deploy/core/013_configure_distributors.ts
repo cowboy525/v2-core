@@ -11,7 +11,6 @@ let func = step.setFunction(async function () {
 
 	const mfd = await get('MFD');
 
-	await execute('LockerList', 'transferOwnership', mfd.address);
 	await execute('MiddleFeeDistribution', 'setOperationExpenses', treasury, config.OPEX_RATIO);
 	await execute('LockZap', 'setMfd', mfd.address);
 	await execute('MFD', 'setLockTypeInfo', config.LOCK_INFO.LOCK_PERIOD, config.LOCK_INFO.MULTIPLIER);

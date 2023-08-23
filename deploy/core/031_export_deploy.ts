@@ -100,7 +100,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 		priceProvider: deps['PriceProvider'].address,
 		stakingToken: stakingAddress,
 		lockZap: deps['LockZap'].address,
-		lpLockerList: deps['LockerList'].address,
 
 		bountyManager: deps['BountyManager'].address,
 		poolHelper: deps['PoolHelper'].address,

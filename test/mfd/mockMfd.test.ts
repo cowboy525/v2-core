@@ -1,7 +1,7 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import hre, {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock, getLatestBlockTimestamp} from '../../scripts/utils';
-import {CustomERC20, LockerList, MultiFeeDistribution} from '../../typechain';
+import {CustomERC20, MultiFeeDistribution} from '../../typechain';
 import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';
@@ -19,7 +19,6 @@ describe('MultiFeeDistribution', () => {
 	let treasury: SignerWithAddress;
 	let mfd: MultiFeeDistribution;
 	let radiant: CustomERC20;
-	let lockerlist: LockerList;
 
 	const QUART = 25000; //  25%
 	const HALF = 65000; //  65%
@@ -60,10 +59,6 @@ describe('MultiFeeDistribution', () => {
 		);
 		await priceProvider.deployed();
 
-		const LockerList = await ethers.getContractFactory('LockerList');
-		lockerlist = await LockerList.deploy();
-		await lockerlist.deployed();
-
 		const mfdFactory = await ethers.getContractFactory('MockMFD');
 		mfd = <MultiFeeDistribution>await upgrades.deployProxy(
 			mfdFactory,
@@ -71,7 +66,6 @@ describe('MultiFeeDistribution', () => {
 				radiant.address,
 				deployer.address, // Mock address
 				treasury.address,
-				lockerlist.address,
 				priceProvider.address,
 				MFD_REWARD_DURATION_SECS,
 				MFD_REWARD_LOOKBACK_SECS,
@@ -83,7 +77,6 @@ describe('MultiFeeDistribution', () => {
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
-		await lockerlist.transferOwnership(mfd.address);
 
 		const mockChefFactory = await ethers.getContractFactory('MockIncentivesController');
 		const mockChef = await mockChefFactory.deploy();
@@ -115,9 +108,6 @@ describe('MultiFeeDistribution', () => {
 		const autoRelockDisabled = await mfd.autoRelockDisabled(user1.address);
 		expect(autoRelockDisabled).to.be.equal(true);
 
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
-
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
@@ -132,9 +122,6 @@ describe('MultiFeeDistribution', () => {
 		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
-
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());

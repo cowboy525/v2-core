@@ -3,7 +3,6 @@ import assert from 'assert';
 import {advanceTimeAndBlock} from '../../scripts/utils';
 import {
 	BountyManager,
-	LockerList,
 	ERC20,
 	Leverager,
 	WETH,
@@ -33,7 +32,6 @@ describe('MFD Relocking', () => {
 	let weth: WETH;
 	let lendingPool: LendingPool;
 	let vdWETH: VariableDebtToken;
-	let lockerlist: LockerList;
 	let lpToken: ERC20;
 
 	let deployData: DeployData;
@@ -42,7 +40,6 @@ describe('MFD Relocking', () => {
 		({multiFeeDistribution, leverager, weth, wethGateway, deployData, lendingPool, bountyManager, user2, user3} =
 			await setupTest());
 
-		lockerlist = <LockerList>await ethers.getContractAt('LockerList', await multiFeeDistribution.userlist());
 		lpToken = await ethers.getContractAt('ERC20', deployData.stakingToken);
 	});
 
@@ -51,11 +48,9 @@ describe('MFD Relocking', () => {
 		await multiFeeDistribution.connect(user2).setRelock(false);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
@@ -74,11 +69,9 @@ describe('MFD Relocking', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
@@ -99,11 +92,9 @@ describe('MFD Relocking', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
@@ -123,11 +114,9 @@ describe('MFD Relocking', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
@@ -147,11 +136,9 @@ describe('MFD Relocking', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 
@@ -177,11 +164,9 @@ describe('MFD Relocking', () => {
 		await zapIntoEligibility(user2, deployData);
 
 		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
-		const lockerCount = await lockerlist.lockersCount();
 		const totalLockedLPValue = await multiFeeDistribution.lockedSupply();
 
 		assert.equal(lockedBal.toString(), totalLockedLPValue.toString(), `Locked Supply`);
-		assert.equal(lockerCount.toNumber(), 1, `Locked Count checks`);
 
 		const lockDuration = await multiFeeDistribution.defaultLockDuration();
 		await advanceTimeAndBlock(parseInt(lockDuration.toString()) * 2);
