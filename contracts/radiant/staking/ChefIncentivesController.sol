@@ -671,7 +671,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	/**
 	 * @notice Update balance if there are any unregistered.
-	 * @param _user address
+	 * @param _user address of the user whose balances will be updated
 	 */
 	function _updateRegisteredBalance (address _user) internal {
 		uint256 length = poolLength();
