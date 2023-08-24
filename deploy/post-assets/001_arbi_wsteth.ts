@@ -83,4 +83,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.id = 'arbi_wsteth';
-func.tags = ['arbi_wsteth'];
+func.tags = ['arbi_wsteth', 'post_assets'];

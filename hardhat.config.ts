@@ -54,10 +54,10 @@ const config: HardhatUserConfig = {
 			autoImpersonate: true,
 			accounts: accounts(),
 			timeout: 10000000000000,
-			forking: {
-				url: node_url('arbitrum'),
-				blockNumber: 81749742,
-			},
+			// forking: {
+			// 	url: node_url('arbitrum'),
+			// 	blockNumber: 81749742,
+			// },
 			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets', 'fork'],
 		},
 		arbitrum_goerli: {

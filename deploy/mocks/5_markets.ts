@@ -5,7 +5,7 @@ import fs from 'fs';
 
 let step = new DeployStep({
 	id: 'mock_markets',
-	dependencies: ['core'],
+	dependencies: ['core', 'post_assets'],
 	runOnce: true,
 });
 let func = step.setFunction(async function () {
