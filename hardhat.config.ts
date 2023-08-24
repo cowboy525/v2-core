@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
 			initialBaseFeePerGas: 0,
 			gasPrice: 0,
 			blockGasLimit: 30000000000000,
-			tags: ['core', 'mocks', 'testing', 'oracle_v2'],
+			tags: ['core', 'mocks', 'testing', 'oracle_v2', 'post_assets'],
 		},
 		localhost: {
 			url: node_url('localhost'),
