@@ -431,6 +431,9 @@ contract MultiFeeDistribution is
 	 * @param lookback in seconds
 	 */
 	function setLookback(uint256 lookback) external onlyOwner {
+		if (lookback == uint256(0)) revert AmountZero();
+		if (lookback > rewardsDuration) revert InvalidLookback();
+
 		rewardsLookback = lookback;
 	}
 
