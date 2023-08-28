@@ -559,7 +559,7 @@ describe('Looping/Leverager', () => {
 		await usdc.connect(user2).approve(leverager.address, ethers.constants.MaxUint256);
 
 		const isEligibleExempt = await chefIncentivesController.eligibilityExempt(user2.address);
-		expect(isEligibleExempt).to.equal(0);
+		expect(isEligibleExempt).to.equal(false);
 
 		let borrowRatio = 8000;
 		let amt = usdcPerAccount;

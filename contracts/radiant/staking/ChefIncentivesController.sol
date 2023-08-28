@@ -157,7 +157,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	mapping(address => uint256) public userBaseClaimable;
 
 	// MFD, bounties, AC, middlefee
-	mapping(address => uint256) public eligibilityExempt;
+	mapping(address => bool) public eligibilityExempt;
 
 	// The block number when reward mining starts.
 	uint256 public startTime;
@@ -560,7 +560,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _contract address to exempt
 	 * @param _value flag for exempt
 	 */
-	function setEligibilityExempt(address _contract, uint256 _value) public {
+	function setEligibilityExempt(address _contract, bool _value) public {
 		if (msg.sender != owner() && msg.sender != address(leverager)) revert InsufficientPermission();
 		eligibilityExempt[_contract] = _value;
 	}
@@ -586,7 +586,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	function handleActionAfter(address _user, uint256 _balance, uint256 _totalSupply) external {
 		if (!validRTokens[msg.sender] && msg.sender != address(_getMfd())) revert NotRTokenOrMfd();
 
-		if (_user == address(rewardMinter) || _user == address(_getMfd()) || eligibilityExempt[_user] > 0) {
+		if (_user == address(rewardMinter) || _user == address(_getMfd()) || eligibilityExempt[_user]) {
 			return;
 		}
 		if (eligibilityEnabled) {
