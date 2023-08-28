@@ -14,7 +14,6 @@ import {IMiddleFeeDistribution} from "../../interfaces/IMiddleFeeDistribution.so
 import {IBountyManager} from "../../interfaces/IBountyManager.sol";
 import {IMultiFeeDistribution, IFeeDistribution} from "../../interfaces/IMultiFeeDistribution.sol";
 import {IMintableToken} from "../../interfaces/IMintableToken.sol";
-import {ILockerList} from "../../interfaces/ILockerList.sol";
 import {LockedBalance, Balances, Reward, EarnedBalance} from "../../interfaces/LockedBalance.sol";
 import {IPriceProvider} from "../../interfaces/IPriceProvider.sol";
 
@@ -135,9 +134,6 @@ contract MultiFeeDistribution is
 	/// @notice Flag to prevent more minter addings
 	bool public mintersAreSet;
 
-	/// @notice Users list
-	ILockerList public userlist;
-
 	/// @notice Last claim time of the user
 	mapping(address => uint256) public lastClaimTime;
 
@@ -170,6 +166,8 @@ contract MultiFeeDistribution is
 	);
 	event LPTokenUpdated(address indexed _stakingToken);
 	event RewardAdded(address indexed _rewardToken);
+	event LockerAdded(address indexed locker);
+	event LockerRemoved(address indexed locker);
 
 	/********************** Errors ***********************/
 	error AddressZero();
@@ -201,7 +199,6 @@ contract MultiFeeDistribution is
 	 * @param rdntToken_ RDNT token address
 	 * @param lockZap_ LockZap contract address
 	 * @param dao_ DAO address
-	 * @param userlist_ UserList contract address
 	 * @param priceProvider_ PriceProvider contract address
 	 * @param rewardsDuration_ Duration that rewards are streamed over
 	 * @param rewardsLookback_ Duration that rewards loop back
@@ -213,7 +210,6 @@ contract MultiFeeDistribution is
 		address rdntToken_,
 		address lockZap_,
 		address dao_,
-		address userlist_,
 		address priceProvider_,
 		uint256 rewardsDuration_,
 		uint256 rewardsLookback_,
@@ -224,7 +220,6 @@ contract MultiFeeDistribution is
 		if (rdntToken_ == address(0)) revert AddressZero();
 		if (lockZap_ == address(0)) revert AddressZero();
 		if (dao_ == address(0)) revert AddressZero();
-		if (userlist_ == address(0)) revert AddressZero();
 		if (priceProvider_ == address(0)) revert AddressZero();
 		if (rewardsDuration_ == uint256(0)) revert AmountZero();
 		if (rewardsLookback_ == uint256(0)) revert AmountZero();
@@ -240,7 +235,6 @@ contract MultiFeeDistribution is
 		_lockZap = lockZap_;
 		daoTreasury = dao_;
 		_priceProvider = priceProvider_;
-		userlist = ILockerList(userlist_);
 		rewardTokens.push(rdntToken_);
 		rewardData[rdntToken_].lastUpdateTime = block.timestamp;
 
@@ -1092,7 +1086,7 @@ contract MultiFeeDistribution is
 						duration: _lockPeriod[typeIndex]
 					})
 				);
-				userlist.addToList(onBehalfOf);
+				emit LockerAdded(onBehalfOf);
 			}
 		} else {
 			_insertLock(
@@ -1104,7 +1098,7 @@ contract MultiFeeDistribution is
 					duration: _lockPeriod[typeIndex]
 				})
 			);
-			userlist.addToList(onBehalfOf);
+			emit LockerAdded(onBehalfOf);
 		}
 
 		if (!isRelock) {
@@ -1299,7 +1293,7 @@ contract MultiFeeDistribution is
 				}
 			}
 			if (locks.length == 0) {
-				userlist.removeFromList(user);
+				emit LockerRemoved(user);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import hre, {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock, getLatestBlockTimestamp} from '../../scripts/utils';
-import {ChefIncentivesController, CustomERC20, LockerList, MultiFeeDistribution} from '../../typechain';
+import {ChefIncentivesController, CustomERC20, MultiFeeDistribution} from '../../typechain';
 import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';

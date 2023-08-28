@@ -1,7 +1,7 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import hre, {ethers, upgrades} from 'hardhat';
 import {advanceTimeAndBlock, getLatestBlockTimestamp, setNextBlockTimestamp} from '../../scripts/utils';
-import {CustomERC20, LockerList, MultiFeeDistribution} from '../../typechain';
+import {CustomERC20, MultiFeeDistribution} from '../../typechain';
 import HardhatDeployConfig from '../../config/31337';
 import {setupTest} from '../setup';
 import chai from 'chai';
@@ -19,7 +19,6 @@ describe('MultiFeeDistribution', () => {
 	let treasury: SignerWithAddress;
 	let mfd: MultiFeeDistribution;
 	let radiant: CustomERC20;
-	let lockerlist: LockerList;
 
 	const QUART = 25000; //  25%
 	const HALF = 65000; //  65%
@@ -60,10 +59,6 @@ describe('MultiFeeDistribution', () => {
 		);
 		await priceProvider.deployed();
 
-		const LockerList = await ethers.getContractFactory('LockerList');
-		lockerlist = await LockerList.deploy();
-		await lockerlist.deployed();
-
 		const mfdFactory = await ethers.getContractFactory('MultiFeeDistribution');
 		mfd = <MultiFeeDistribution>await upgrades.deployProxy(
 			mfdFactory,
@@ -71,7 +66,6 @@ describe('MultiFeeDistribution', () => {
 				radiant.address,
 				deployer.address, // Mock address
 				treasury.address,
-				lockerlist.address,
 				priceProvider.address,
 				MFD_REWARD_DURATION_SECS,
 				MFD_REWARD_LOOKBACK_SECS,
@@ -83,7 +77,6 @@ describe('MultiFeeDistribution', () => {
 		);
 		await mfd.deployed();
 		await mfd.setLPToken(radiant.address);
-		await lockerlist.transferOwnership(mfd.address);
 
 		const mockChefFactory = await ethers.getContractFactory('MockIncentivesController');
 		const mockChef = await mockChefFactory.deploy();
@@ -114,7 +107,6 @@ describe('MultiFeeDistribution', () => {
 					ethers.constants.AddressZero,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -132,7 +124,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					ethers.constants.AddressZero, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -150,7 +141,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					ethers.constants.AddressZero,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -186,7 +176,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					ethers.constants.AddressZero,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -204,7 +193,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					0,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -222,7 +210,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					0,
@@ -240,7 +227,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -258,7 +244,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -276,7 +261,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -294,7 +278,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_DURATION_SECS + 1,
@@ -332,7 +315,6 @@ describe('MultiFeeDistribution', () => {
 					radiant.address,
 					deployer.address, // Mock address
 					treasury.address,
-					lockerlist.address,
 					deployer.address,
 					MFD_REWARD_DURATION_SECS,
 					MFD_REWARD_LOOKBACK_SECS,
@@ -543,12 +525,9 @@ describe('MultiFeeDistribution', () => {
 		await mfd.removeReward(radiant.address);
 
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+		await expect(mfd.connect(user1).stake(depositAmount, user1.address, 0)).to.emit(mfd, 'LockerAdded').withArgs(user1.address);
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
-
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
@@ -635,19 +614,16 @@ describe('MultiFeeDistribution', () => {
 
 	it('Withdraw expired locks', async () => {
 		const depositAmount = ethers.utils.parseUnits('100', 18);
-		await mfd.connect(user1).stake(depositAmount, user1.address, 0);
+		await expect(mfd.connect(user1).stake(depositAmount, user1.address, 0)).to.emit(mfd, 'LockerAdded').withArgs(user1.address);
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
-
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
 
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 
 		const balance0 = await radiant.balanceOf(user1.address);
 		await mfd.connect(user1).setRelock(false);
-		await mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false);
+		await expect(mfd.connect(user1).withdrawExpiredLocksForWithOptions(user1.address, 0, false)).to.emit(mfd, 'LockerRemoved').withArgs(user1.address);
 		const balance1 = await radiant.balanceOf(user1.address);
 
 		expect(balance1.sub(balance0)).to.be.equal(depositAmount);
@@ -709,9 +685,6 @@ describe('MultiFeeDistribution', () => {
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
 
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
-
 		const LOCK_DURATION = await mfd.defaultLockDuration();
 		await advanceTimeAndBlock(LOCK_DURATION.toNumber());
 		await mfd.connect(user1).relock();
@@ -731,9 +704,6 @@ describe('MultiFeeDistribution', () => {
 		await radiant.mint(mfd.address, depositAmount);
 		await mfd.vestTokens(user1.address, depositAmount, true);
 		await mfd.connect(user1).setRelock(true);
-
-		const users = await lockerlist.getUsers(0, 1);
-		expect(users[0]).to.be.equal(user1.address);
 
 		const lockedBal1 = (await mfd.lockedBalances(user2.address)).locked;
 
@@ -1437,7 +1407,6 @@ describe('MultiFeeDistribution', () => {
 				radiant.address,
 				deployer.address, // Mock address
 				treasury.address,
-				lockerlist.address,
 				priceProvider.address,
 				MFD_REWARD_DURATION_SECS,
 				MFD_REWARD_LOOKBACK_SECS,
