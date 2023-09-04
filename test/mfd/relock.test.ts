@@ -214,4 +214,28 @@ describe('MFD Relocking', () => {
 		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
 		expect(lockedBal).to.be.eq(relockable, "Didn't relock properly");
 	});
+
+	it('0xriptide - Relock Expired Locks and 2x Lock', async () => {
+		await lpToken.connect(user2).approve(multiFeeDistribution.address, ethers.constants.MaxUint256);
+
+		await zapIntoEligibility(user2, deployData);
+
+		let lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
+
+		const lockDuration = await multiFeeDistribution.defaultLockDuration();
+		await advanceTimeAndBlock(parseInt(lockDuration.toString()));
+
+		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
+		let unlockableBal1 = (await multiFeeDistribution.lockedBalances(user2.address)).unlockable;
+		assert.equal(lockedBal.toString(), '0', `Locking expired`);
+
+		await multiFeeDistribution.connect(user2).setRelock(true);
+
+		await multiFeeDistribution.connect(user2).stake(await bountyManager.minDLPBalance(), user2.address, 0);
+
+		lockedBal = (await multiFeeDistribution.lockedBalances(user2.address)).locked;
+		let unlockableBal2 = (await multiFeeDistribution.lockedBalances(user2.address)).unlockable;
+
+		expect(unlockableBal1).equals(unlockableBal2);
+	});
 });
