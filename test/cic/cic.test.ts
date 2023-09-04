@@ -281,7 +281,7 @@ describe('Non-Elig CIC', () => {
 		it('claim for middlefeedistribution', async () => {
 			await expect(
 				chefIncentivesController.claim(deployData.middleFeeDistribution, deployData.allTokenAddrs)
-			).to.be.revertedWith('NothingToMint');
+			).to.be.revertedWith('NothingToVest');
 		});
 
 		it('should claim rewards', async () => {
