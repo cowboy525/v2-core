@@ -647,9 +647,10 @@ contract MultiFeeDistribution is
 
 		_updateReward(user);
 
+		uint256 currentTimestamp = block.timestamp;
 		LockedBalance[] storage earnings = _userEarnings[user];
 		for (uint256 i = earnings.length; i > 0; ) {
-			if (earnings[i - 1].unlockTime > block.timestamp) {
+			if (earnings[i - 1].unlockTime > currentTimestamp) {
 				zapped = zapped + earnings[i - 1].amount;
 				earnings.pop();
 			} else {
@@ -896,8 +897,9 @@ contract MultiFeeDistribution is
 	function lockedBalance(address user) public view returns (uint256 locked) {
 		LockedBalance[] storage locks = _userLocks[user];
 		uint256 length = locks.length;
+		uint256 currentTimestamp = block.timestamp;
 		for (uint256 i; i < length; ) {
-			if (locks[i].unlockTime > block.timestamp) {
+			if (locks[i].unlockTime > currentTimestamp) {
 				locked = locked + locks[i].amount;
 			}
 			unchecked {
@@ -920,8 +922,9 @@ contract MultiFeeDistribution is
 		LockedBalance[] storage earnings = _userEarnings[user];
 		uint256 idx;
 		uint256 length = earnings.length;
+		uint256 currentTimestamp = block.timestamp;
 		for (uint256 i; i < length; ) {
-			if (earnings[i].unlockTime > block.timestamp) {
+			if (earnings[i].unlockTime > currentTimestamp) {
 				if (idx == 0) {
 					earningsData = new EarnedBalance[](earnings.length - i);
 				}
@@ -1041,18 +1044,19 @@ contract MultiFeeDistribution is
 		_updateReward(onBehalfOf);
 
 		uint256 transferAmount = amount;
-		if (_userLocks[onBehalfOf].length != 0) {
+		LockedBalance[] memory userLocks = _userLocks[onBehalfOf];
+		if (userLocks.length != 0) {
 			//if user has any locks
-			if (_userLocks[onBehalfOf][0].unlockTime <= block.timestamp) {
+			if (userLocks[0].unlockTime <= block.timestamp) {
 				//if user's soonest unlock has already elapsed
 				if (onBehalfOf == msg.sender || msg.sender == _lockZap) {
 					//if the user is msg.sender or the lockzap contract
 					uint256 withdrawnAmt;
 					if (!autoRelockDisabled[onBehalfOf]) {
-						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, _userLocks[onBehalfOf].length);
+						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, userLocks.length);
 						amount = amount + withdrawnAmt;
 					} else {
-						_withdrawExpiredLocksFor(onBehalfOf, true, true, _userLocks[onBehalfOf].length);
+						_withdrawExpiredLocksFor(onBehalfOf, true, true, userLocks.length);
 					}
 				}
 			}
@@ -1063,17 +1067,18 @@ contract MultiFeeDistribution is
 		bal.locked = bal.locked + amount;
 		lockedSupply = lockedSupply + amount;
 
-		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * _rewardMultipliers[typeIndex]);
-		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * _rewardMultipliers[typeIndex]);
+		uint256 rewardMultiplier = _rewardMultipliers[typeIndex];
+		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * rewardMultiplier);
+		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * rewardMultiplier);
 
-		uint256 userLocksLength = _userLocks[onBehalfOf].length;
+		uint256 userLocksLength = userLocks.length;
 		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
 		if (userLocksLength > 0) {
-			LockedBalance memory lastUserLock = _userLocks[onBehalfOf][lastIndex];
+			LockedBalance memory lastUserLock = userLocks[lastIndex];
 			uint256 unlockDay = (block.timestamp + _lockPeriod[typeIndex]) / 1 days;
 			if (
 				(lastUserLock.unlockTime / 1 days == unlockDay) &&
-				lastUserLock.multiplier == _rewardMultipliers[typeIndex]
+				lastUserLock.multiplier == rewardMultiplier
 			) {
 				_userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount + amount;
 			} else {
@@ -1082,7 +1087,7 @@ contract MultiFeeDistribution is
 					LockedBalance({
 						amount: amount,
 						unlockTime: block.timestamp + _lockPeriod[typeIndex],
-						multiplier: _rewardMultipliers[typeIndex],
+						multiplier: rewardMultiplier,
 						duration: _lockPeriod[typeIndex]
 					})
 				);
@@ -1094,7 +1099,7 @@ contract MultiFeeDistribution is
 				LockedBalance({
 					amount: amount,
 					unlockTime: block.timestamp + _lockPeriod[typeIndex],
-					multiplier: _rewardMultipliers[typeIndex],
+					multiplier: rewardMultiplier,
 					duration: _lockPeriod[typeIndex]
 				})
 			);
