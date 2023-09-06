@@ -1045,7 +1045,8 @@ contract MultiFeeDistribution is
 
 		uint256 transferAmount = amount;
 		LockedBalance[] memory userLocks = _userLocks[onBehalfOf];
-		if (userLocks.length != 0) {
+		uint256 userLocksLength = userLocks.length;
+		if (userLocksLength != 0) {
 			//if user has any locks
 			if (userLocks[0].unlockTime <= block.timestamp) {
 				//if user's soonest unlock has already elapsed
@@ -1053,10 +1054,10 @@ contract MultiFeeDistribution is
 					//if the user is msg.sender or the lockzap contract
 					uint256 withdrawnAmt;
 					if (!autoRelockDisabled[onBehalfOf]) {
-						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, userLocks.length);
+						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, userLocksLength);
 						amount = amount + withdrawnAmt;
 					} else {
-						_withdrawExpiredLocksFor(onBehalfOf, true, true, userLocks.length);
+						_withdrawExpiredLocksFor(onBehalfOf, true, true, userLocksLength);
 					}
 				}
 			}
@@ -1071,15 +1072,11 @@ contract MultiFeeDistribution is
 		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * rewardMultiplier);
 		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * rewardMultiplier);
 
-		uint256 userLocksLength = userLocks.length;
 		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
 		if (userLocksLength > 0) {
 			LockedBalance memory lastUserLock = userLocks[lastIndex];
 			uint256 unlockDay = (block.timestamp + _lockPeriod[typeIndex]) / 1 days;
-			if (
-				(lastUserLock.unlockTime / 1 days == unlockDay) &&
-				lastUserLock.multiplier == rewardMultiplier
-			) {
+			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultiplier) {
 				_userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount + amount;
 			} else {
 				_insertLock(
@@ -1111,7 +1108,13 @@ contract MultiFeeDistribution is
 		}
 
 		incentivesController.afterLockUpdate(onBehalfOf);
-		emit Locked(onBehalfOf, amount, _balances[onBehalfOf].locked, _lockPeriod[typeIndex], stakingToken != address(rdntToken));
+		emit Locked(
+			onBehalfOf,
+			amount,
+			_balances[onBehalfOf].locked,
+			_lockPeriod[typeIndex],
+			stakingToken != address(rdntToken)
+		);
 	}
 
 	/**
