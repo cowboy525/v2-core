@@ -62,6 +62,8 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 
 	event RewardsUpdated(address indexed _rewardsToken);
 
+	event ProtocolDataProviderUpdated(address indexed _providerAddress);
+
 	/********************** Errors ***********************/
 
 	error ZeroAddress();
@@ -93,18 +95,19 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @param multiFeeDistribution_ Multi fee distribution contract
 	 */
 	function initialize(
-		address rdntToken_,
+		IMintableToken rdntToken_,
 		address aaveOracle_,
 		IMultiFeeDistribution multiFeeDistribution_,
 		IAaveProtocolDataProvider aaveProtocolDataProvider_
 	) public initializer {
-		if (rdntToken_ == address(0)) revert ZeroAddress();
 		if (aaveOracle_ == address(0)) revert ZeroAddress();
+		if (address(rdntToken_) == address(0)) revert ZeroAddress();
 		if (address(multiFeeDistribution_) == address(0)) revert ZeroAddress();
+		if (address(aaveProtocolDataProvider_) == address(0)) revert ZeroAddress();
 
 		__Ownable_init();
 
-		rdntToken = IMintableToken(rdntToken_);
+		rdntToken = rdntToken_;
 		_aaveOracle = aaveOracle_;
 		multiFeeDistribution = multiFeeDistribution_;
 		aaveProtocolDataProvider = aaveProtocolDataProvider_;
@@ -139,9 +142,10 @@ contract MiddleFeeDistribution is IMiddleFeeDistribution, Initializable, Ownable
 	 * @notice Set the Protocol Data Provider address
 	 * @param _providerAddress The address of the protocol data provider contract
 	 */
-	function setProtocolDataProvider(address _providerAddress) external onlyOwner {
-		if (_providerAddress == address(0)) revert ZeroAddress();
-		aaveProtocolDataProvider = IAaveProtocolDataProvider(_providerAddress);
+	function setProtocolDataProvider(IAaveProtocolDataProvider _providerAddress) external onlyOwner {
+		if (address(_providerAddress) == address(0)) revert ZeroAddress();
+		aaveProtocolDataProvider = _providerAddress;
+		emit ProtocolDataProviderUpdated(address(_providerAddress));
 	}
 
 	/**
