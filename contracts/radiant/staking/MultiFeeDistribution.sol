@@ -1043,23 +1043,6 @@ contract MultiFeeDistribution is
 
 		_updateReward(onBehalfOf);
 
-		uint256 transferAmount = amount;
-		if (_userLocks[onBehalfOf].length != 0) {
-			//if user has any locks
-			if (_userLocks[onBehalfOf][0].unlockTime <= block.timestamp) {
-				//if user's soonest unlock has already elapsed
-				if (onBehalfOf == msg.sender || msg.sender == _lockZap) {
-					//if the user is msg.sender or the lockzap contract
-					uint256 withdrawnAmt;
-					if (!autoRelockDisabled[onBehalfOf]) {
-						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, _userLocks[onBehalfOf].length);
-						amount = amount + withdrawnAmt;
-					} else {
-						_withdrawExpiredLocksFor(onBehalfOf, true, true, _userLocks[onBehalfOf].length);
-					}
-				}
-			}
-		}
 		Balances storage bal = _balances[onBehalfOf];
 		bal.total = bal.total + amount;
 
@@ -1105,11 +1088,17 @@ contract MultiFeeDistribution is
 		}
 
 		if (!isRelock) {
-			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), transferAmount);
+			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), amount);
 		}
 
 		incentivesController.afterLockUpdate(onBehalfOf);
-		emit Locked(onBehalfOf, amount, _balances[onBehalfOf].locked, _lockPeriod[typeIndex], stakingToken != address(rdntToken));
+		emit Locked(
+			onBehalfOf,
+			amount,
+			_balances[onBehalfOf].locked,
+			_lockPeriod[typeIndex],
+			stakingToken != address(rdntToken)
+		);
 	}
 
 	/**
