@@ -1046,6 +1046,9 @@ contract MultiFeeDistribution is
 
 		_updateReward(onBehalfOf);
 
+		LockedBalance[] memory userLocks = _userLocks[onBehalfOf];
+		uint256 userLocksLength = userLocks.length;
+
 		Balances storage bal = _balances[onBehalfOf];
 		bal.total = bal.total + amount;
 
