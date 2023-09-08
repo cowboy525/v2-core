@@ -421,6 +421,12 @@ describe('MultiFeeDistribution', () => {
 			await mfd.setLookback(100);
 			expect(await mfd.rewardsLookback()).to.be.equal(100);
 		});
+
+		it('validation', async () => {
+			await expect(mfd.setLookback(0)).to.be.revertedWith("AmountZero");
+			const rewardsDuration = await mfd.rewardsDuration();
+			await expect(mfd.setLookback(rewardsDuration.add(1))).to.be.revertedWith("InvalidLookback");
+		});
 	});
 
 	describe('recoverERC20', async () => {

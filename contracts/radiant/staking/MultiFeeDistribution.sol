@@ -425,6 +425,9 @@ contract MultiFeeDistribution is
 	 * @param lookback in seconds
 	 */
 	function setLookback(uint256 lookback) external onlyOwner {
+		if (lookback == uint256(0)) revert AmountZero();
+		if (lookback > rewardsDuration) revert InvalidLookback();
+
 		rewardsLookback = lookback;
 	}
 
@@ -1043,25 +1046,6 @@ contract MultiFeeDistribution is
 
 		_updateReward(onBehalfOf);
 
-		uint256 transferAmount = amount;
-		LockedBalance[] memory userLocks = _userLocks[onBehalfOf];
-		uint256 userLocksLength = userLocks.length;
-		if (userLocksLength != 0) {
-			//if user has any locks
-			if (userLocks[0].unlockTime <= block.timestamp) {
-				//if user's soonest unlock has already elapsed
-				if (onBehalfOf == msg.sender || msg.sender == _lockZap) {
-					//if the user is msg.sender or the lockzap contract
-					uint256 withdrawnAmt;
-					if (!autoRelockDisabled[onBehalfOf]) {
-						withdrawnAmt = _withdrawExpiredLocksFor(onBehalfOf, true, false, userLocksLength);
-						amount = amount + withdrawnAmt;
-					} else {
-						_withdrawExpiredLocksFor(onBehalfOf, true, true, userLocksLength);
-					}
-				}
-			}
-		}
 		Balances storage bal = _balances[onBehalfOf];
 		bal.total = bal.total + amount;
 
@@ -1104,7 +1088,7 @@ contract MultiFeeDistribution is
 		}
 
 		if (!isRelock) {
-			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), transferAmount);
+			IERC20(stakingToken).safeTransferFrom(msg.sender, address(this), amount);
 		}
 
 		incentivesController.afterLockUpdate(onBehalfOf);

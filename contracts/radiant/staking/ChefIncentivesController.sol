@@ -51,7 +51,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 		uint256 updateCadence;
 	}
 
-	/********************** Errors ***********************/
+	/********************** Events ***********************/
 	// Emitted when rewardPerSecond is updated
 	event RewardsPerSecondUpdated(uint256 indexed rewardsPerSecond, bool persist);
 
@@ -112,7 +112,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 	error OutOfRewards();
 
-	error NothingToMint();
+	error NothingToVest();
 
 	error DuplicateSchedule();
 
@@ -362,9 +362,13 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @return true if the specified time offset is already registered
 	 */
 	function _checkDuplicateSchedule(uint256 _startTimeOffset) internal view returns (bool) {
-		for (uint256 i = 0; i < emissionSchedule.length; i++) {
+		uint256 length = emissionSchedule.length;
+		for (uint256 i = 0; i < length;) {
 			if (emissionSchedule[i].startTimeOffset == _startTimeOffset) {
 				return true;
+			}
+			unchecked {
+				i++;
 			}
 		}
 		return false;
@@ -507,6 +511,8 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 		_updateEmissions();
 
+		uint256 currentTimestamp = block.timestamp;
+
 		uint256 pending = userBaseClaimable[_user];
 		userBaseClaimable[_user] = 0;
 		uint256 _totalAllocPoint = totalAllocPoint;
@@ -520,7 +526,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 			uint256 rewardDebt = (user.amount * pool.accRewardPerShare) / ACC_REWARD_PRECISION;
 			pending = pending + rewardDebt - user.rewardDebt;
 			user.rewardDebt = rewardDebt;
-			user.lastClaimTime = block.timestamp;
+			user.lastClaimTime = currentTimestamp;
 			unchecked {
 				i++;
 			}
@@ -530,7 +536,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 
 		eligibleDataProvider.updatePrice();
 
-		if (endRewardTime() < block.timestamp + 5 days) {
+		if (endRewardTime() < currentTimestamp + 5 days) {
 			address rdntToken = rewardMinter.getRdntTokenAddress();
 			emit ChefReserveLow(IERC20(rdntToken).balanceOf(address(this)));
 		}
@@ -542,7 +548,7 @@ contract ChefIncentivesController is Initializable, PausableUpgradeable, Ownable
 	 * @param _amount to vest
 	 */
 	function _vestTokens(address _user, uint256 _amount) internal {
-		if (_amount == 0) revert NothingToMint();
+		if (_amount == 0) revert NothingToVest();
 		IMultiFeeDistribution mfd = _getMfd();
 		_sendRadiant(address(mfd), _amount);
 		mfd.vestTokens(_user, _amount, true);
