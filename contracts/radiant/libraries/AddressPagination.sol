@@ -17,8 +17,9 @@ library AddressPagination {
 		uint256 limit
 	) internal view returns (address[] memory result) {
 		result = new address[](limit);
+		uint256 length = array.length;
 		for (uint256 i = 0; i < limit; ) {
-			if (page * limit + i >= array.length) {
+			if (page * limit + i >= length) {
 				result[i] = address(0);
 			} else {
 				result[i] = array[page * limit + i];

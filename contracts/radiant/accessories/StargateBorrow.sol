@@ -178,7 +178,7 @@ contract StargateBorrow is OwnableUpgradeable {
 	 * @param assets array.
 	 * @param poolIDs array.
 	 */
-	function setPoolIDs(address[] memory assets, uint256[] memory poolIDs) external onlyOwner {
+	function setPoolIDs(address[] calldata assets, uint256[] calldata poolIDs) external onlyOwner {
 		uint256 length = assets.length;
 		if (length != poolIDs.length) revert LengthMismatch();
 		for (uint256 i = 0; i < length; ) {

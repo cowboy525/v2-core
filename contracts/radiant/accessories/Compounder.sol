@@ -352,7 +352,7 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 		amts = new uint256[](pending.length - 1);
 		uint256 index;
 		uint256 length = pending.length;
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length;) {
 			if (pending[i].token != address(rdntToken)) {
 				try IAToken(pending[i].token).UNDERLYING_ASSET_ADDRESS() returns (address underlyingAddress) {
 					tokens[index] = underlyingAddress;
@@ -360,7 +360,12 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 					tokens[index] = pending[i].token;
 				}
 				amts[index] = pending[i].amount;
-				index++;
+				unchecked {
+					index++;
+				}
+			}
+			unchecked {
+				i++;
 			}
 		}
 	}
@@ -394,8 +399,11 @@ contract Compounder is OwnableUpgradeable, PausableUpgradeable {
 	) internal view returns (uint256 amtOut) {
 		if (_in.length != _amtsIn.length) revert ArrayLengthMismatch();
 		uint256 length = _in.length;
-		for (uint256 i; i < length; i++) {
+		for (uint256 i; i < length;) {
 			amtOut += _estimateTokensOut(_in[i], _out, _amtsIn[i]);
+			unchecked {
+				i++;
+			}
 		}
 	}
 

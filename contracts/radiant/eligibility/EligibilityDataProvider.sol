@@ -231,14 +231,15 @@ contract EligibilityDataProvider is OwnableUpgradeable {
 		LockedBalance[] memory lpLockData = multiFeeDistribution.lockInfo(user);
 
 		uint256 lockedLP;
-		uint256 i = lpLockData.length;
-		while (i > 0) {
-			i = i - 1;
-			lastEligibleTimestamp = lpLockData[i].unlockTime;
-			lockedLP = lockedLP + lpLockData[i].amount;
+		for (uint256 i = lpLockData.length; i > 0; ) {
+			LockedBalance memory currentLockData = lpLockData[i - 1];
+			lockedLP += currentLockData.amount;
 
 			if (_lockedUsdValue(lockedLP) >= requiredValue) {
-				break;
+				return currentLockData.unlockTime;
+			}
+			unchecked {
+				i--;
 			}
 		}
 	}

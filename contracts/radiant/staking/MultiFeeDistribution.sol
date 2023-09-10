@@ -650,9 +650,10 @@ contract MultiFeeDistribution is
 
 		_updateReward(user);
 
+		uint256 currentTimestamp = block.timestamp;
 		LockedBalance[] storage earnings = _userEarnings[user];
 		for (uint256 i = earnings.length; i > 0; ) {
-			if (earnings[i - 1].unlockTime > block.timestamp) {
+			if (earnings[i - 1].unlockTime > currentTimestamp) {
 				zapped = zapped + earnings[i - 1].amount;
 				earnings.pop();
 			} else {
@@ -899,8 +900,9 @@ contract MultiFeeDistribution is
 	function lockedBalance(address user) public view returns (uint256 locked) {
 		LockedBalance[] storage locks = _userLocks[user];
 		uint256 length = locks.length;
+		uint256 currentTimestamp = block.timestamp;
 		for (uint256 i; i < length; ) {
-			if (locks[i].unlockTime > block.timestamp) {
+			if (locks[i].unlockTime > currentTimestamp) {
 				locked = locked + locks[i].amount;
 			}
 			unchecked {
@@ -923,8 +925,9 @@ contract MultiFeeDistribution is
 		LockedBalance[] storage earnings = _userEarnings[user];
 		uint256 idx;
 		uint256 length = earnings.length;
+		uint256 currentTimestamp = block.timestamp;
 		for (uint256 i; i < length; ) {
-			if (earnings[i].unlockTime > block.timestamp) {
+			if (earnings[i].unlockTime > currentTimestamp) {
 				if (idx == 0) {
 					earningsData = new EarnedBalance[](earnings.length - i);
 				}
@@ -1043,24 +1046,24 @@ contract MultiFeeDistribution is
 
 		_updateReward(onBehalfOf);
 
+		LockedBalance[] memory userLocks = _userLocks[onBehalfOf];
+		uint256 userLocksLength = userLocks.length;
+
 		Balances storage bal = _balances[onBehalfOf];
 		bal.total = bal.total + amount;
 
 		bal.locked = bal.locked + amount;
 		lockedSupply = lockedSupply + amount;
 
-		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * _rewardMultipliers[typeIndex]);
-		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * _rewardMultipliers[typeIndex]);
+		uint256 rewardMultiplier = _rewardMultipliers[typeIndex];
+		bal.lockedWithMultiplier = bal.lockedWithMultiplier + (amount * rewardMultiplier);
+		lockedSupplyWithMultiplier = lockedSupplyWithMultiplier + (amount * rewardMultiplier);
 
-		uint256 userLocksLength = _userLocks[onBehalfOf].length;
 		uint256 lastIndex = userLocksLength > 0 ? userLocksLength - 1 : 0;
 		if (userLocksLength > 0) {
-			LockedBalance memory lastUserLock = _userLocks[onBehalfOf][lastIndex];
+			LockedBalance memory lastUserLock = userLocks[lastIndex];
 			uint256 unlockDay = (block.timestamp + _lockPeriod[typeIndex]) / 1 days;
-			if (
-				(lastUserLock.unlockTime / 1 days == unlockDay) &&
-				lastUserLock.multiplier == _rewardMultipliers[typeIndex]
-			) {
+			if ((lastUserLock.unlockTime / 1 days == unlockDay) && lastUserLock.multiplier == rewardMultiplier) {
 				_userLocks[onBehalfOf][lastIndex].amount = lastUserLock.amount + amount;
 			} else {
 				_insertLock(
@@ -1068,7 +1071,7 @@ contract MultiFeeDistribution is
 					LockedBalance({
 						amount: amount,
 						unlockTime: block.timestamp + _lockPeriod[typeIndex],
-						multiplier: _rewardMultipliers[typeIndex],
+						multiplier: rewardMultiplier,
 						duration: _lockPeriod[typeIndex]
 					})
 				);
@@ -1080,7 +1083,7 @@ contract MultiFeeDistribution is
 				LockedBalance({
 					amount: amount,
 					unlockTime: block.timestamp + _lockPeriod[typeIndex],
-					multiplier: _rewardMultipliers[typeIndex],
+					multiplier: rewardMultiplier,
 					duration: _lockPeriod[typeIndex]
 				})
 			);
