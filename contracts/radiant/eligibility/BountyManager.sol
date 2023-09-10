@@ -315,12 +315,10 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 	 * Base Bounty used to incentivize operations that don't generate their own reward to pay to Hunter.
 	 * @return bounty in RDNT
 	 */
-	function getBaseBounty() public view whenNotPaused returns (uint256 bounty) {
+	function getBaseBounty() public view whenNotPaused returns (uint256) {
 		uint256 rdntPrice = IPriceProvider(priceProvider).getTokenPriceUsd();
-		bounty = (baseBountyUsdTarget * 1e8) / rdntPrice;
-		if (bounty > maxBaseBounty) {
-			bounty = maxBaseBounty;
-		}
+		uint256 bounty = (baseBountyUsdTarget * 1e8) / rdntPrice;
+		return bounty > maxBaseBounty ? maxBaseBounty : bounty;
 	}
 
 	/**
