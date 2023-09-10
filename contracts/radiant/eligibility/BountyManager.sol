@@ -246,7 +246,11 @@ contract BountyManager is Initializable, OwnableUpgradeable, PausableUpgradeable
 		address _user,
 		bool _execute
 	) internal returns (address incentivizer, uint256, bool issueBaseBounty) {
-		issueBaseBounty = IMFDPlus(mfd).claimBounty(_user, _execute);
+		try IMFDPlus(mfd).claimBounty(_user, _execute) returns (bool issueBaseBounty_) {
+			issueBaseBounty = issueBaseBounty_;
+		} catch {
+			issueBaseBounty = false;
+		}
 		incentivizer = mfd;
 		return (incentivizer, 0, issueBaseBounty);
 	}
