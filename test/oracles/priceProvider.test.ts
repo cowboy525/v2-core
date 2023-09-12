@@ -69,7 +69,12 @@ describe('Price Provider ', function () {
 	it('returns initial token price (ETH)', async function () {
 		const tokenPriceEth = priceToJsNum(await priceProvider.getTokenPrice());
 
-		const ethPrice = priceToJsNum(await chainlinkAggregator.latestAnswer());
+		const roundData = await chainlinkAggregator.latestRoundData();
+		const ethPrice = priceToJsNum(roundData[1]);
+		const updatedAt = priceToJsNum(roundData[3]);
+
+		if (updatedAt == 0) throw new Error('RoundNotComplete');
+		if (ethPrice <= 0) throw new Error('InvalidPrice');
 
 		let expected = startingRdntPrice / ethPrice;
 
