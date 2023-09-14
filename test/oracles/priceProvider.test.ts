@@ -75,18 +75,17 @@ describe('Price Provider ', function () {
 
 		const roundData = await chainlinkAggregator.latestRoundData();
 		const ethPrice = priceToJsNum(roundData[1]);
-		const updatedAt = priceToJsNum(roundData[3]);
 
-		if (updatedAt == 0) throw new Error('RoundNotComplete');
-		if (ethPrice <= 0) throw new Error('InvalidPrice');
-
-		let expected = startingRdntPrice / ethPrice;
+		const expected = startingRdntPrice / ethPrice;
 
 		expect(tokenPriceEth).to.be.closeTo(expected, 0.0001);
 	});
 
 	it('emits custom error when Chainlink feed returns 0 values', async function () {
-		const mockAggregator = await ethers.getContractAt('MockChainlinkAggregator', deployConfig.CHAINLINK_ETH_USD_AGGREGATOR_PROXY);
+		const mockAggregator = await ethers.getContractAt(
+			'MockChainlinkAggregator',
+			deployConfig.CHAINLINK_ETH_USD_AGGREGATOR_PROXY
+		);
 		await mockAggregator.setPrice(0);
 		await mockAggregator.setUpdatedAt(0);
 		await priceProvider.setUsePool(true);
