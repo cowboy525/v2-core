@@ -24,6 +24,10 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 
 	error InvalidOracle();
 
+	error RoundNotComplete();
+
+	error InvalidPrice();
+
 	/********************** Events ***********************/
 
 	event OracleUpdated(address indexed _newOracle);
@@ -83,9 +87,11 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 	function getTokenPriceUsd() public view returns (uint256 price) {
 		if (usePool) {
 			// use sparingly, TWAP/CL otherwise
-			uint256 ethPrice = uint256(IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestAnswer());
+			(, int256 ethPrice, , uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
+			if (updatedAt == 0) revert RoundNotComplete();
+			if (ethPrice <= 0) revert InvalidPrice();
 			uint256 priceInEth = poolHelper.getPrice();
-			price = (priceInEth * ethPrice) / (10 ** 8);
+			price = (priceInEth * uint256(ethPrice)) / (10 ** 8);
 		} else {
 			price = oracle.latestAnswer();
 		}
@@ -107,8 +113,10 @@ contract PriceProvider is Initializable, OwnableUpgradeable {
 		// decimals 8
 		uint256 lpPriceInEth = getLpTokenPrice();
 		// decimals 8
-		uint256 ethPrice = uint256(baseTokenPriceInUsdProxyAggregator.latestAnswer());
-		price = (lpPriceInEth * ethPrice) / (10 ** 8);
+		(, int256 ethPrice, , uint256 updatedAt,) = IChainlinkAggregator(baseTokenPriceInUsdProxyAggregator).latestRoundData();
+		if (updatedAt == 0) revert RoundNotComplete();
+		if (ethPrice <= 0) revert InvalidPrice();
+		price = (lpPriceInEth * uint256(ethPrice)) / (10 ** 8);
 	}
 
 	/**
