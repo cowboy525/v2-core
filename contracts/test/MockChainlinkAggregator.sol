@@ -4,6 +4,7 @@ pragma solidity 0.8.12;
 
 contract MockChainlinkAggregator {
 	int256 price;
+	uint256 newUpdatedAt = 1681179848;
 
 	constructor(int256 _price) {
 		price = _price;
@@ -21,6 +22,10 @@ contract MockChainlinkAggregator {
 		price = _price;
 	}
 
+	function setUpdatedAt(uint256 _updatedAt) external {
+		newUpdatedAt = _updatedAt;
+	}
+
 	function latestRoundData()
 		public
 		view
@@ -29,7 +34,7 @@ contract MockChainlinkAggregator {
 		roundId = 18446744073709552278;
 		answer = price;
 		startedAt = 1681179848;
-		updatedAt = 1681179848;
+		updatedAt = newUpdatedAt;
 		answeredInRound = 18446744073709552278;
 	}
 }

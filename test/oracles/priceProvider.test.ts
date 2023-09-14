@@ -1,13 +1,17 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {ethers} from 'hardhat';
-import {IChainlinkAggregator, MockToken, TestnetLockZap, UniV2TwapOracle} from '../../typechain';
+import {IChainlinkAggregator, MockToken, PriceProvider, TestnetLockZap, UniV2TwapOracle} from '../../typechain';
 import {BigNumber} from 'ethers';
-import {expect} from 'chai';
+import chai from 'chai';
+import {solidity} from 'ethereum-waffle';
 import {advanceTimeAndBlock, sellRdnt, toJsNum} from '../shared/helpers';
 import {DeployConfig, DeployData} from '../../scripts/deploy/types';
 import {RadiantOFT} from '../../typechain/contracts/oft';
 import {targetPrice} from '../../config/BaseConfig';
 import {setupTest} from '../setup';
+
+chai.use(solidity);
+const {expect} = chai;
 
 const priceToJsNum = (oracleAnswer: BigNumber) => {
 	return parseFloat(ethers.utils.formatUnits(oracleAnswer, 8));
@@ -26,7 +30,7 @@ describe('Price Provider ', function () {
 	let lpToken: MockToken;
 	let uniV2TwapOracle: UniV2TwapOracle;
 	let radiant: RadiantOFT;
-	let priceProvider: any;
+	let priceProvider: PriceProvider;
 	let chainlinkAggregator: IChainlinkAggregator;
 	let priceDecimals: number;
 
@@ -79,6 +83,20 @@ describe('Price Provider ', function () {
 		let expected = startingRdntPrice / ethPrice;
 
 		expect(tokenPriceEth).to.be.closeTo(expected, 0.0001);
+	});
+
+	it('emits custom error when Chainlink feed returns 0 values', async function () {
+		const mockAggregator = await ethers.getContractAt('MockChainlinkAggregator', deployConfig.CHAINLINK_ETH_USD_AGGREGATOR_PROXY);
+		await mockAggregator.setPrice(0);
+		await mockAggregator.setUpdatedAt(0);
+		await priceProvider.setUsePool(true);
+
+		await expect(priceProvider.getLpTokenPriceUsd()).to.be.revertedWith('RoundNotComplete');
+		await expect(priceProvider.getTokenPriceUsd()).to.be.revertedWith('RoundNotComplete');
+		await mockAggregator.setUpdatedAt(1681179848);
+
+		await expect(priceProvider.getLpTokenPriceUsd()).to.be.revertedWith('InvalidPrice');
+		await expect(priceProvider.getTokenPriceUsd()).to.be.revertedWith('InvalidPrice');
 	});
 
 	it('returns LP token price', async function () {
